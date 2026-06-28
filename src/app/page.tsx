@@ -1,0 +1,355 @@
+import Link from "next/link";
+import {
+  ArrowRight,
+  Bike,
+  CalendarDays,
+  MapPin,
+  Newspaper,
+  Route,
+  Signal,
+  Star,
+  Users,
+  Wrench,
+} from "lucide-react";
+import {
+  communityFeed,
+  communityStats,
+  featuredRoads,
+  newsArticles,
+  upcomingRides,
+} from "@/data/community";
+import { siteImages } from "@/data/images";
+
+const statIcons = [Users, Bike, Route, MapPin];
+
+const exploreFeatures = [
+  {
+    title: "Riders",
+    href: "/members",
+    icon: Users,
+    description: "Meet the people behind the engines. Find riders near you and see who shares your roads.",
+  },
+  {
+    title: "Garage",
+    href: "/garage",
+    icon: Wrench,
+    description: "Browse the machines our members ride, from naked bikes to long-haul adventure rigs.",
+  },
+  {
+    title: "Events",
+    href: "/events",
+    icon: CalendarDays,
+    description: "Weekly group rides with clear routes, meetup points, and pace guidance for every level.",
+  },
+  {
+    title: "News",
+    href: "/news",
+    icon: Newspaper,
+    description: "Ride reports, gear talk, and stories from riders who actually log the miles.",
+  },
+];
+
+export default function Home() {
+  return (
+    <div>
+      {/* HERO */}
+      <section className="relative w-full overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${siteImages.hero})` }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-linear-to-r from-asphalt via-asphalt/85 to-asphalt/10"
+          aria-hidden="true"
+        />
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
+          <div className="max-w-xl text-white">
+            <h1 className="font-display text-5xl font-bold leading-[0.95] tracking-tight sm:text-7xl">
+              DISTRICT 76
+            </h1>
+            <p className="mt-3 font-display text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              RIDE LOCAL.
+              <br />
+              RIDE TOGETHER.
+            </p>
+            <p className="mt-5 max-w-md text-sm text-slate-200 sm:text-base">
+              Born in Clarksville, Tennessee. Built for riders who enjoy great roads, great people, and unforgettable rides.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/join" className="rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white hover:bg-[#cf5a26]">
+                Join the Community
+              </Link>
+              <Link href="/events" className="rounded-md border border-white/40 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/10">
+                Upcoming Rides
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">About District 76</p>
+            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+              A Community Built for Riders
+            </h2>
+            <p className="mt-4 max-w-lg text-muted">
+              District 76 is a motorcycle community for riders in Clarksville and throughout Middle Tennessee. We ride, explore, and support our local community while building friendships that last a lifetime.
+            </p>
+            <Link href="/about" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              Read Our History <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div
+            className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
+            style={{ backgroundImage: `url(${siteImages.aboutTown})` }}
+            role="img"
+            aria-label="Aerial view of Clarksville, Tennessee"
+          />
+        </div>
+      </section>
+
+      {/* EXPLORE FEATURES */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-asphalt sm:text-3xl">
+              Explore <span className="text-sunset">District 76</span>
+            </h2>
+            <p className="mt-2 text-sm text-muted">Your gateway to the core of our riding community.</p>
+          </div>
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {exploreFeatures.map((feature) => {
+              const Icon = feature.icon;
+              return (
+                <Link
+                  key={feature.title}
+                  href={feature.href}
+                  className="group rounded-xl border border-border bg-surface p-6 shadow-soft transition hover:border-sunset"
+                >
+                  <Icon className="h-8 w-8 text-sunset" />
+                  <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-tight text-asphalt">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-muted">{feature.description}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset">
+                    Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* UPCOMING RIDES */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
+            <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              View All Rides <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
+            {upcomingRides.map((ride, i) => (
+              <article key={ride.title} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                <div
+                  className="relative h-44 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${siteImages.rides[i]})` }}
+                >
+                  <div className="absolute left-3 top-3 flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
+                    <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{ride.month}</span>
+                    <span className="font-display text-xl font-bold leading-none">{ride.day}</span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-display text-lg font-bold text-asphalt">{ride.title}</h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+                    <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />{ride.location}</span>
+                    <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{ride.distance}</span>
+                    <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{ride.difficulty}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                    <span className="text-xs font-medium text-muted">{ride.ridersGoing} Riders Going</span>
+                    <div className="flex -space-x-2">
+                      {Array.from({ length: 3 }).map((_, a) => (
+                        <span key={a} className="h-6 w-6 rounded-full border-2 border-surface bg-sunset/80" />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED ROADS */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Featured Roads</h2>
+            <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              Explore All Roads <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            {featuredRoads.map((road, i) => (
+              <article
+                key={road.name}
+                className="relative h-32 overflow-hidden rounded-lg bg-cover bg-center"
+                style={{ backgroundImage: `url(${siteImages.roads[i]})` }}
+              >
+                <div className="absolute inset-0 bg-linear-to-t from-asphalt/90 via-asphalt/30 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                  <h3 className="text-sm font-bold leading-tight">{road.name}</h3>
+                  <div className="mt-1 flex items-center justify-between text-[0.65rem] text-slate-200">
+                    <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{road.distance}</span>
+                    <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-sunset text-sunset" />{road.rating}</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 gap-6 rounded-2xl border border-border bg-surface p-6 shadow-soft md:grid-cols-4">
+            {communityStats.map((stat, i) => {
+              const Icon = statIcons[i] ?? Users;
+              return (
+                <div key={stat.label} className="flex items-center gap-3">
+                  <Icon className="h-7 w-7 shrink-0 text-sunset" />
+                  <div>
+                    <p className="font-display text-2xl font-bold text-asphalt">{stat.value}</p>
+                    <p className="text-xs text-muted">{stat.label}</p>
+                    <p className="text-[0.65rem] font-semibold text-forest">{stat.delta}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ACTIVITY + GALLERY */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+          <div>
+            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
+            <div className="mt-5 space-y-4">
+              {communityFeed.map((item) => (
+                <div key={item.id} className="flex items-start gap-3">
+                  <span className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-sunset/15 text-center text-sm font-bold leading-8 text-sunset">
+                    {item.summary.charAt(0)}
+                  </span>
+                  <div>
+                    <p className="text-sm text-asphalt">{item.summary}</p>
+                    <p className="text-xs text-muted">{item.when}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              View All Activity <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">From Our Community</h2>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <div
+                className="col-span-2 row-span-2 min-h-45 rounded-lg bg-cover bg-center"
+                style={{ backgroundImage: `url(${siteImages.galleryLarge})` }}
+              />
+              {siteImages.gallery.map((src, i) => (
+                <div
+                  key={i}
+                  className="h-21 rounded-lg bg-cover bg-center"
+                  style={{ backgroundImage: `url(${src})` }}
+                />
+              ))}
+            </div>
+            <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              View Full Gallery <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* THE HAPPENINGS */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between">
+            <div>
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+                The <span className="text-sunset">Happenings</span>
+              </h2>
+              <p className="mt-1 text-sm text-muted">Latest stories from the District 76 community.</p>
+            </div>
+            <Link href="/news" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+              All News <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="mt-6 grid gap-6 md:grid-cols-3">
+            {newsArticles.slice(0, 3).map((article, i) => (
+              <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                <Link href={`/news/${article.id}`} className="block">
+                  <div
+                    className="relative h-44 bg-cover bg-center"
+                    style={{ backgroundImage: `url(${siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
+                  >
+                    <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
+                      {article.category}
+                    </span>
+                  </div>
+                </Link>
+                <div className="p-5">
+                  <Link href={`/news/${article.id}`}>
+                    <h3 className="font-display text-base font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
+                      {article.title}
+                    </h3>
+                  </Link>
+                  <p className="mt-2 text-sm text-muted">{article.excerpt}</p>
+                  <Link href={`/news/${article.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                    Read More <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative w-full overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${siteImages.ctaRoad})` }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-asphalt/85" aria-hidden="true" />
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-6 px-4 py-14 sm:px-6 lg:flex-row lg:items-center lg:px-8">
+          <div className="text-white">
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Ready to Ride With Us?</h2>
+            <p className="mt-2 max-w-lg text-slate-200">
+              Join District 76 and connect with riders, discover new roads, and be part of something more.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/join" className="rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white hover:bg-[#cf5a26]">
+              Join the Community
+            </Link>
+            <Link href="/about" className="inline-flex items-center gap-1 text-sm font-semibold text-white hover:text-sunset">
+              Learn More <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
