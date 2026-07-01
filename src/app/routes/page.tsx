@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RoutePlannerLoader } from "@/components/routes/route-planner-loader";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Route Planner · District 76 Riders",
@@ -8,10 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RoutesPage() {
-  // Fill the viewport beneath the sticky navbar for an immersive planner.
-  return (
-    <div className="relative h-[calc(100svh-4.25rem)] w-full overflow-hidden">
-      <RoutePlannerLoader />
-    </div>
-  );
+  redirect("/events/new");
 }

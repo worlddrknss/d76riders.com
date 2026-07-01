@@ -31,6 +31,25 @@ npm run db:seed
 npm run db:studio
 ```
 
+## Docker
+
+Build the app image:
+
+```bash
+docker build -t d76riders:local .
+```
+
+Run with external Postgres and Minio already running in Orbstack:
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e DATABASE_URL="postgresql://USER:PASSWORD@host.docker.internal:5432/d76riders?schema=public" \
+  -e NEXT_PUBLIC_MAPTILER_KEY="your-maptiler-key" \
+  d76riders:local
+```
+
+If your app later adds object storage integration, point it at your Orbstack Minio endpoint from environment variables.
+
 ## Open Source and Brand
 
 - Software: Open source under AGPLv3.

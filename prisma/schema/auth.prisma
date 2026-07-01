@@ -1,19 +1,46 @@
 // Auth domain — Auth.js (NextAuth) identity.
 // The User is the auth principal; the public-facing profile lives in Rider.
 
+enum Role {
+  USER
+  MODERATOR
+  CONTRIBUTOR
+  SPONSOR
+  ADMINISTRATOR
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String    @unique
+  passwordHash  String?
   emailVerified DateTime?
   image         String?
 
-  accounts Account[]
-  sessions Session[]
-  rider    Rider?
+  accounts        Account[]
+  sessions        Session[]
+  rider           Rider?
+  roles           UserRole[]
+  newsPosts       NewsPost[]
+  resolvedReports Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model UserRole {
+  id     String @id @default(cuid())
+  userId String
+  role   Role   @default(USER)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, role])
+  @@index([userId])
+  @@index([role])
 }
 
 model Account {

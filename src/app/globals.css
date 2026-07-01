@@ -130,3 +130,63 @@ button {
 main {
   width: 100%;
 }
+
+.admin-tiptap p {
+  margin: 0.5rem 0;
+}
+
+.admin-tiptap h2,
+.admin-tiptap h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.admin-tiptap h2 {
+  font-size: 1.3rem;
+}
+
+.admin-tiptap h3 {
+  font-size: 1.15rem;
+}
+
+.admin-tiptap ul,
+.admin-tiptap ol,
+.admin-preview ul,
+.admin-preview ol {
+  margin: 0.75rem 0;
+  padding-left: 1.4rem;
+}
+
+.admin-tiptap blockquote,
+.admin-preview blockquote {
+  margin: 0.9rem 0;
+  border-left: 3px solid rgba(59, 130, 246, 0.65);
+  padding-left: 0.75rem;
+  color: #bfdbfe;
+}
+
+.admin-tiptap a,
+.admin-preview a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+.admin-tiptap code,
+.admin-preview code {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.35rem;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.05rem 0.35rem;
+  font-size: 0.85em;
+}
+
+.admin-tiptap .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #64748b;
+  pointer-events: none;
+  height: 0;
+}

@@ -9,6 +9,7 @@ model Rider {
   location       String?
   bio            String?
   avatarUrl      String?
+  coverUrl       String?
   yearsRiding    Int?
   favoriteRoad   String?
   ridesCompleted Int      @default(0)
@@ -19,12 +20,14 @@ model Rider {
   bikes          Bike[]
   events         RideEvent[]
   routes         Route[]
+  roads          Road[]
   journalEntries JournalEntry[]
   comments       Comment[]
   likes          Like[]
   rsvps          Rsvp[]
   galleryItems   GalleryItem[]
   activities     Activity[]
+  reports        Report[]     @relation("ReportsSubmitted")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

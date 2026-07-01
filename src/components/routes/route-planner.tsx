@@ -41,6 +41,19 @@ function uid() {
 
 type PlannerMode = "waypoints" | "trace";
 
+export type PlannerRoutePayload = {
+  planningMode: PlannerMode;
+  waypoints: Array<{ lng: number; lat: number; kind: WaypointKind; label?: string }>;
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+  geometry: { type: "LineString"; coordinates: [number, number][] } | null;
+  geometryPoints: number;
+};
+
+type RoutePlannerProps = {
+  onRouteDataChange?: (payload: PlannerRoutePayload | null) => void;
+};
+
 type TracePoint = {
   id: string;
   lng: number;
@@ -137,7 +150,7 @@ function snapshotsEqual(a: PlannerSnapshot, b: PlannerSnapshot): boolean {
   return true;
 }
 
-export function RoutePlanner() {
+export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
   const token = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 
   const [mode, setMode] = useState<PlannerMode>("waypoints");
@@ -541,6 +554,38 @@ export function RoutePlanner() {
       2,
     );
   }, [mode, waypoints, tracePoints, activeRoute, displayedCoordinates]);
+
+  useEffect(() => {
+    if (!onRouteDataChange) {
+      return;
+    }
+
+    if (!activeRoute || displayedCoordinates.length < 2) {
+      onRouteDataChange(null);
+      return;
+    }
+
+    const plannerWaypoints =
+      mode === "waypoints"
+        ? waypoints.map(({ lng, lat, kind, label }) => ({ lng, lat, kind, label }))
+        : traceMarkerWaypoints.map(({ lng, lat, kind, label }) => ({ lng, lat, kind, label }));
+
+    onRouteDataChange({
+      planningMode: mode,
+      waypoints: plannerWaypoints,
+      distanceMeters: activeRoute.distanceMeters,
+      durationSeconds: activeRoute.durationSeconds,
+      geometry: { type: "LineString", coordinates: displayedCoordinates },
+      geometryPoints: displayedCoordinates.length,
+    });
+  }, [
+    activeRoute,
+    displayedCoordinates,
+    mode,
+    onRouteDataChange,
+    traceMarkerWaypoints,
+    waypoints,
+  ]);
 
   if (!token) {
     return (

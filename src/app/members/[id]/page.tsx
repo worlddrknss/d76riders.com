@@ -1,12 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, CalendarDays, ChevronRight, Gauge, Heart, MapPin, MessageCircle, Route } from "lucide-react";
-import { members } from "@/data/community";
-import { siteImages } from "@/data/images";
+import { Bike, BookText, CalendarDays, MapPin, Route } from "lucide-react";
 
-export function generateStaticParams() {
-  return members.map((member) => ({ id: member.id }));
-}
+import { prisma } from "@/lib/prisma";
+import { mediaUrl } from "@/lib/media-url";
 
 export default async function MemberProfilePage({
   params,
@@ -14,207 +11,188 @@ export default async function MemberProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const member = members.find((m) => m.id === id);
 
-  if (!member) {
+  const rider = await prisma.rider.findUnique({
+    where: { handle: id },
+    select: {
+      handle: true,
+      name: true,
+      bio: true,
+      location: true,
+      avatarUrl: true,
+      yearsRiding: true,
+      ridesCompleted: true,
+      favoriteRoad: true,
+      joinedAt: true,
+      bikes: {
+        select: { id: true, name: true, make: true, model: true },
+        take: 5,
+      },
+      journalEntries: {
+        orderBy: { createdAt: "desc" },
+        take: 10,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          createdAt: true,
+          galleryItems: {
+            orderBy: { createdAt: "asc" },
+            take: 1,
+            select: { url: true, caption: true },
+          },
+        },
+      },
+      events: {
+        where: { status: "UPCOMING" },
+        orderBy: { startsAt: "asc" },
+        take: 5,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          startsAt: true,
+        },
+      },
+    },
+  });
+
+  if (!rider) {
     notFound();
   }
 
-  const firstName = member.name.split(" ")[0];
-  const memberIndex = members.findIndex((m) => m.id === member.id);
-
-  const photoGrid = Array.from({ length: 9 }, (_, i) =>
-    siteImages.galleryPage[(memberIndex + i) % siteImages.galleryPage.length],
-  );
-
-  const stats = [
-    { label: "Rides", value: String(member.ridesCompleted ?? 0) },
-    { label: "Years", value: String(member.yearsRiding) },
-    { label: "Since", value: (member.joined ?? "").split(" ")[1] ?? "—" },
-  ];
-
-  const details = [
-    { label: "Motorcycle", value: member.motorcycle, icon: Bike },
-    { label: "Member Since", value: member.joined ?? "Unknown", icon: CalendarDays },
-    { label: "Favorite Road", value: member.favoriteRoad ?? "Still exploring", icon: Route },
-    { label: "Home Base", value: member.location, icon: MapPin },
-  ];
-
-  const journal = [
-    {
-      date: `${member.joined ?? "Recently"}`,
-      photo: siteImages.roads[memberIndex % siteImages.roads.length],
-      text: `Spent the morning out on the ${member.favoriteRoad ?? "back roads"} with the ${member.motorcycle}. Cool air, empty lanes, and that easy rhythm you only find when the road opens up. Days like this are exactly why I started riding around ${member.location}.`,
-      likes: 24 + memberIndex * 3,
-      comments: [
-        {
-          author: members[(memberIndex + 1) % members.length],
-          text: "That stretch is unbeatable early in the morning. Save me a spot next time.",
-        },
-        {
-          author: members[(memberIndex + 2) % members.length],
-          text: "Bike is looking clean. Those new lines suit it.",
-        },
-      ],
-    },
-    {
-      date: "Earlier this season",
-      photo: siteImages.galleryPage[(memberIndex + 3) % siteImages.galleryPage.length],
-      text: `Rolled out with the District 76 crew for a long loop and a coffee stop halfway through. Good people, good pace, and a few new faces who picked their lines like naturals. Already looking forward to the next one.`,
-      likes: 18 + memberIndex * 2,
-      comments: [
-        {
-          author: members[(memberIndex + 3) % members.length],
-          text: "Great day out. The coffee stop might be the real reason I show up.",
-        },
-      ],
-    },
-  ];
+  const avatar = mediaUrl(rider.avatarUrl);
 
   return (
-    <div>
-      {/* PROFILE HEADER */}
-      <section className="relative w-full overflow-hidden bg-asphalt">
-        <div className="route-lines absolute inset-0 opacity-30" aria-hidden="true" />
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <nav className="flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-slate-400">
-            <Link href="/" className="hover:text-white">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <Link href="/members" className="hover:text-white">Members</Link>
-            <ChevronRight className="h-3 w-3 text-sunset" />
-            <span className="text-sunset">Profile</span>
-          </nav>
-          <h1 className="mt-3 font-display text-4xl font-bold uppercase tracking-tight text-white sm:text-5xl">
-            {member.name}
-          </h1>
-        </div>
-      </section>
-
-      {/* PROFILE BODY */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:grid-cols-[20rem_1fr] lg:px-8">
-          {/* LEFT: PROFILE CARD + PHOTOS */}
-          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-xl border border-border bg-surface p-6 text-center shadow-soft">
-              <span className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border-4 border-sunset bg-asphalt text-2xl font-bold text-white">
-                {member.avatar}
-              </span>
-              <h2 className="mt-4 font-display text-xl font-bold uppercase tracking-tight text-asphalt">{member.name}</h2>
-              <p className="text-sm text-muted">{member.motorcycle}</p>
-
-              <div className="mt-6 grid grid-cols-3 divide-x divide-border border-y border-border py-4">
-                {stats.map((stat) => (
-                  <div key={stat.label}>
-                    <p className="font-display text-lg font-bold text-asphalt">{stat.value}</p>
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 text-left">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-asphalt">About Me</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {member.bio ?? "This rider has not added a bio yet."}
+    <section className="page-shell">
+      <div className="content-wrap">
+        <div className="grid gap-8 lg:grid-cols-[20rem_1fr]">
+          {/* SIDEBAR */}
+          <aside className="space-y-5">
+            <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
+              {avatar ? (
+                <img src={avatar} alt={rider.name} className="mx-auto h-20 w-20 rounded-full border-2 border-sunset/30 object-cover" />
+              ) : (
+                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sunset/10 font-display text-2xl font-bold text-sunset">
+                  {rider.name.charAt(0)}
+                </div>
+              )}
+              <h1 className="mt-4 text-center font-display text-2xl font-semibold text-ink">{rider.name}</h1>
+              <p className="text-center text-sm text-muted">@{rider.handle}</p>
+              {rider.location && (
+                <p className="mt-2 flex items-center justify-center gap-1 text-xs text-muted">
+                  <MapPin className="h-3 w-3 text-sunset" />{rider.location}
                 </p>
+              )}
+              <p className="mt-3 text-center text-sm text-muted">{rider.bio || "No bio yet."}</p>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
+                <div className="rounded-lg bg-canvas p-3 text-center">
+                  <p className="font-display text-xl font-bold text-asphalt">{rider.bikes.length}</p>
+                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
+                </div>
+                <div className="rounded-lg bg-canvas p-3 text-center">
+                  <p className="font-display text-xl font-bold text-asphalt">{rider.ridesCompleted}</p>
+                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
+                </div>
+                <div className="rounded-lg bg-canvas p-3 text-center">
+                  <p className="font-display text-xl font-bold text-asphalt">{rider.yearsRiding ?? "—"}</p>
+                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Years</p>
+                </div>
               </div>
 
-              <dl className="mt-6 space-y-4 border-t border-border pt-6 text-left">
-                {details.map((detail) => {
-                  const Icon = detail.icon;
-                  return (
-                    <div key={detail.label} className="flex items-start gap-3">
-                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                      <div>
-                        <dt className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted">{detail.label}</dt>
-                        <dd className="text-sm font-medium text-asphalt">{detail.value}</dd>
-                      </div>
+              {/* Details */}
+              <dl className="mt-5 space-y-3 border-t border-border pt-4 text-left">
+                {rider.favoriteRoad && (
+                  <div className="flex items-start gap-3">
+                    <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                    <div>
+                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
+                      <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
                     </div>
-                  );
-                })}
+                  </div>
+                )}
+                <div className="flex items-start gap-3">
+                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                  <div>
+                    <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
+                    <dd className="text-sm font-medium text-asphalt">
+                      {rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                    </dd>
+                  </div>
+                </div>
+                {rider.bikes.length > 0 && (
+                  <div className="flex items-start gap-3">
+                    <Bike className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                    <div>
+                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Rides</dt>
+                      <dd className="text-sm font-medium text-asphalt">
+                        {rider.bikes.map((b) => b.name || `${b.make} ${b.model ?? ""}`.trim()).join(", ")}
+                      </dd>
+                    </div>
+                  </div>
+                )}
               </dl>
             </div>
 
-            <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-              <h3 className="text-center text-xs font-semibold uppercase tracking-widest text-asphalt">Photos</h3>
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                {photoGrid.map((src, i) => (
-                  <div
-                    key={i}
-                    className="aspect-square rounded-md bg-cover bg-center"
-                    style={{ backgroundImage: `url(${src})` }}
-                  />
-                ))}
+            {/* Upcoming Events */}
+            {rider.events.length > 0 && (
+              <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
+                <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+                  <CalendarDays className="h-3.5 w-3.5 text-sunset" />Upcoming Events
+                </h2>
+                <ul className="mt-3 space-y-2">
+                  {rider.events.map((event) => (
+                    <li key={event.id}>
+                      <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
+                        <span className="font-medium text-ink">{event.title}</span>
+                        <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </div>
+            )}
           </aside>
 
-          {/* RIGHT: RIDE JOURNAL FEED */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <Gauge className="h-5 w-5 text-sunset" />
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Ride Journal</h2>
-            </div>
+          {/* MAIN — Ride Journal */}
+          <div>
+            <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
+              <BookText className="h-5 w-5 text-sunset" />
+              Ride Journal
+            </h2>
 
-            {journal.map((entry, i) => (
-              <article key={i} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                <div className="flex items-center gap-3 p-5">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-sunset bg-asphalt text-sm font-bold text-white">
-                    {member.avatar}
-                  </span>
-                  <div>
-                    <p className="font-semibold text-asphalt">{member.name}</p>
-                    <p className="text-xs text-muted">{entry.date}</p>
-                  </div>
+            <div className="mt-6 space-y-5">
+              {rider.journalEntries.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+                  <BookText className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm text-muted">{rider.name} hasn&apos;t shared any ride journal entries yet.</p>
                 </div>
-                <p className="px-5 pb-5 leading-relaxed text-muted">{entry.text}</p>
-                <div
-                  className="aspect-16/10 w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${entry.photo})` }}
-                />
-
-                {/* ENGAGEMENT BAR */}
-                <div className="flex items-center gap-6 border-b border-border px-5 py-4 text-sm text-muted">
-                  <span className="inline-flex items-center gap-2">
-                    <Heart className="h-4 w-4 fill-sunset text-sunset" />
-                    <span className="font-medium text-asphalt">{entry.likes}</span> likes
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-sunset" />
-                    <span className="font-medium text-asphalt">{entry.comments.length}</span> comments
-                  </span>
-                </div>
-
-                {/* COMMENTS */}
-                <div className="space-y-4 px-5 py-5">
-                  {entry.comments.map((comment, c) => (
-                    <div key={c} className="flex items-start gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunset/15 text-xs font-bold text-sunset">
-                        {comment.author.avatar}
-                      </span>
-                      <div className="rounded-lg bg-canvas px-3 py-2">
-                        <p className="text-xs font-semibold text-asphalt">{comment.author.name}</p>
-                        <p className="mt-0.5 text-sm text-muted">{comment.text}</p>
+              ) : (
+                rider.journalEntries.map((entry) => {
+                  const entryImage = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
+                  return (
+                    <article key={entry.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                      {entryImage && (
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
+                          {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                        {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
+                        <p className="mt-2 leading-relaxed text-muted">{entry.body}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))}
-
-            <div className="overflow-hidden rounded-xl border border-border shadow-soft">
-              <div className="asphalt-panel flex flex-col items-center gap-4 p-8 text-center sm:flex-row sm:justify-between sm:text-left">
-                <p className="text-sm text-slate-300">Want to ride with {firstName}? Find the next group ride.</p>
-                <Link
-                  href="/events"
-                  className="inline-flex shrink-0 justify-center rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
-                >
-                  Browse Upcoming Rides
-                </Link>
-              </div>
+                    </article>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }

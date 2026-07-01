@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NewsPostStatus } from "@prisma/client";
 import {
   ArrowRight,
   Bike,
@@ -13,20 +14,19 @@ import {
 } from "lucide-react";
 import {
   communityFeed,
-  communityStats,
-  featuredRoads,
   newsArticles,
-  upcomingRides,
 } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { mediaUrl } from "@/lib/media-url";
+import { prisma } from "@/lib/prisma";
 
 const statIcons = [Users, Bike, Route, MapPin];
 
 const exploreFeatures = [
   {
     title: "Riders",
-    href: "/members",
+    href: "/riders",
     icon: Users,
     description: "Meet the people behind the engines. Find riders near you and see who shares your roads.",
   },
@@ -50,7 +50,54 @@ const exploreFeatures = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const now = new Date();
+  const upcomingEvents = await prisma.rideEvent.findMany({
+    where: { startsAt: { gte: now } },
+    orderBy: { startsAt: "asc" },
+    take: 3,
+    include: {
+      rsvps: {
+        where: { status: "GOING" },
+        include: {
+          rider: { select: { avatarUrl: true, name: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+
+  const publishedNews = "newsPost" in prisma
+    ? await prisma.newsPost.findMany({
+        where: { status: NewsPostStatus.PUBLISHED },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+        take: 3,
+      })
+    : [];
+
+  const roads = await prisma.road.findMany({
+    include: {
+      galleryItems: { orderBy: { createdAt: "asc" }, take: 1 },
+    },
+    orderBy: [{ scenicRating: "desc" }, { createdAt: "desc" }],
+    take: 6,
+  });
+
+  const [userCount, bikeCount, eventCount, roadCount, activities] = await Promise.all([
+    prisma.user.count(),
+    prisma.bike.count(),
+    prisma.rideEvent.count(),
+    prisma.road.count(),
+    prisma.activity.findMany({ orderBy: { createdAt: "desc" }, take: 4 }),
+  ]);
+
+  const statValues = [
+    { label: "Community Members", value: String(userCount), delta: "Live from database" },
+    { label: "Registered Bikes", value: String(bikeCount), delta: "Live from database" },
+    { label: "Group Rides", value: String(eventCount), delta: "Live from database" },
+    { label: "Featured Roads", value: String(roadCount), delta: "Live from database" },
+  ];
+
   return (
     <div>
       {/* HERO */}
@@ -143,30 +190,53 @@ export default function Home() {
             </Link>
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
-            {upcomingRides.map((ride, i) => (
+            {(upcomingEvents.length > 0 ? upcomingEvents : []).map((ride, i) => (
               <article key={ride.title} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div
                   className="relative h-44 bg-cover bg-center"
                   style={{ backgroundImage: `url(${siteImages.rides[i]})` }}
                 >
                   <div className="absolute left-3 top-3 flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
-                    <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{ride.month}</span>
-                    <span className="font-display text-xl font-bold leading-none">{ride.day}</span>
+                    <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{ride.startsAt.toLocaleString("en-US", { month: "short" }).toUpperCase()}</span>
+                    <span className="font-display text-xl font-bold leading-none">{String(ride.startsAt.getDate()).padStart(2, "0")}</span>
                   </div>
                 </div>
                 <div className="p-4">
                   <h3 className="font-display text-lg font-bold text-asphalt">{ride.title}</h3>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-                    <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />{ride.location}</span>
-                    <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{ride.distance}</span>
-                    <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{ride.difficulty}</span>
+                    <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />{ride.meetLocation || ride.ksuLocation || "Location TBD"}</span>
+                    <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{ride.distanceMiles ? `${ride.distanceMiles} miles` : "Distance TBD"}</span>
+                    <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{ride.difficulty ? ride.difficulty.replaceAll("_", " ") : "TBD"}</span>
                   </div>
                   <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                    <span className="text-xs font-medium text-muted">{ride.ridersGoing} Riders Going</span>
+                    <span className="text-xs font-medium text-muted">
+                      {ride.rsvps.length > 0
+                        ? `${ride.rsvps.length} registered`
+                        : "Starts " + ride.startsAt.toLocaleDateString()}
+                    </span>
                     <div className="flex -space-x-2">
-                      {Array.from({ length: 3 }).map((_, a) => (
-                        <span key={a} className="h-6 w-6 rounded-full border-2 border-surface bg-sunset/80" />
+                      {ride.rsvps.slice(0, 3).map((rsvp) => (
+                        rsvp.rider.avatarUrl ? (
+                          <img
+                            key={rsvp.id}
+                            src={mediaUrl(rsvp.rider.avatarUrl)}
+                            alt={rsvp.rider.name}
+                            className="h-6 w-6 rounded-full border-2 border-surface object-cover"
+                          />
+                        ) : (
+                          <span
+                            key={rsvp.id}
+                            className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-surface bg-sunset/80 text-[0.5rem] font-bold text-white"
+                          >
+                            {rsvp.rider.name.charAt(0).toUpperCase()}
+                          </span>
+                        )
                       ))}
+                      {ride.rsvps.length > 3 && (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-surface bg-canvas text-[0.5rem] font-bold text-muted">
+                          +{ride.rsvps.length - 3}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -181,23 +251,23 @@ export default function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Featured Roads</h2>
-            <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+            <Link href="/roads" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               Explore All Roads <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
-            {featuredRoads.map((road, i) => (
+            {roads.map((road, i) => (
               <article
                 key={road.name}
                 className="relative h-32 overflow-hidden rounded-lg bg-cover bg-center"
-                style={{ backgroundImage: `url(${siteImages.roads[i]})` }}
+                style={{ backgroundImage: `url(${mediaUrl(road.galleryItems[0]?.url) || siteImages.roads[i % siteImages.roads.length]})` }}
               >
                 <div className="absolute inset-0 bg-linear-to-t from-asphalt/90 via-asphalt/30 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-3 text-white">
                   <h3 className="text-sm font-bold leading-tight">{road.name}</h3>
                   <div className="mt-1 flex items-center justify-between text-[0.65rem] text-slate-200">
-                    <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{road.distance}</span>
-                    <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-sunset text-sunset" />{road.rating}</span>
+                    <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} mi` : "TBD"}</span>
+                    <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-sunset text-sunset" />{road.scenicRating ? road.scenicRating.toFixed(1) : "N/A"}</span>
                   </div>
                 </div>
               </article>
@@ -210,7 +280,7 @@ export default function Home() {
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 gap-6 rounded-2xl border border-border bg-surface p-6 shadow-soft md:grid-cols-4">
-            {communityStats.map((stat, i) => {
+            {statValues.map((stat, i) => {
               const Icon = statIcons[i] ?? Users;
               return (
                 <div key={stat.label} className="flex items-center gap-3">
@@ -233,7 +303,7 @@ export default function Home() {
           <div>
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
             <div className="mt-5 space-y-4">
-              {communityFeed.map((item) => (
+              {(activities.length > 0 ? activities.map((item) => ({ id: item.id, summary: item.summary, when: item.createdAt.toLocaleDateString() })) : communityFeed).map((item) => (
                 <div key={item.id} className="flex items-start gap-3">
                   <span className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-sunset/15 text-center text-sm font-bold leading-8 text-sunset">
                     {item.summary.charAt(0)}
@@ -286,12 +356,26 @@ export default function Home() {
             </Link>
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
-            {newsArticles.slice(0, 3).map((article, i) => (
+            {(publishedNews.length > 0
+              ? publishedNews.map((article) => ({
+                  id: article.slug,
+                  title: article.title,
+                  category: article.category,
+                  excerpt: article.excerpt,
+                  coverImageUrl: article.coverImageUrl,
+                }))
+              : newsArticles.slice(0, 3).map((article) => ({
+                  id: article.id,
+                  title: article.title,
+                  category: article.category,
+                  excerpt: article.excerpt,
+                  coverImageUrl: null,
+                }))).map((article, i) => (
               <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <Link href={`/news/${article.id}`} className="block">
                   <div
                     className="relative h-44 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
+                    style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
                   >
                     <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
                       {article.category}

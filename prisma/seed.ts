@@ -77,6 +77,20 @@ async function main() {
       create: { name: member.name, email: `${handle}@d76riders.local` },
     });
 
+    await prisma.userRole.upsert({
+      where: {
+        userId_role: {
+          userId: user.id,
+          role: "USER",
+        },
+      },
+      update: {},
+      create: {
+        userId: user.id,
+        role: "USER",
+      },
+    });
+
     const rider = await prisma.rider.upsert({
       where: { handle },
       update: {
@@ -152,12 +166,14 @@ async function main() {
   }
 
   // Curated Featured Roads.
-  for (const road of featuredRoads) {
+  for (const [index, road] of featuredRoads.entries()) {
     const slug = slugify(road.name);
+    const riderId = riderIds[index % riderIds.length];
     await prisma.road.upsert({
       where: { slug },
       update: {},
       create: {
+        riderId,
         name: road.name,
         slug,
         distanceMiles: toMiles(road.distance),

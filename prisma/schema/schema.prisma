@@ -15,6 +15,7 @@
 //   roads.prisma    — curated Featured Roads (Road)
 //   gallery.prisma  — polymorphic media (GalleryItem)
 //   activity.prisma — derived activity feed (Activity)
+//   news.prisma      — admin-authored public news posts (NewsPost)
 
 generator client {
   provider = "prisma-client-js"

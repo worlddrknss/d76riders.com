@@ -1,7 +1,9 @@
-// Roads domain — curated Featured Roads, editor-maintained (community-level).
+// Roads domain — rider-owned featured roads with saved route data.
 
 model Road {
   id            String          @id @default(cuid())
+  riderId       String
+  routeId       String?         @unique
   name          String
   slug          String          @unique
   distanceMiles Int?
@@ -10,8 +12,12 @@ model Road {
   description   String?
   imageLabel    String?
 
+  rider        Rider         @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
   galleryItems GalleryItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([riderId])
 }

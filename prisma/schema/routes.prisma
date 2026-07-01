@@ -13,6 +13,7 @@ model Route {
 
   rider     Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
   event     RideEvent?
+  road      Road?
   waypoints Waypoint[]
 
   createdAt DateTime @default(now())

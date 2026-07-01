@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
+import { NewsPostStatus } from "@prisma/client";
+import { deleteNewsPostAction } from "@/app/news/[id]/actions";
 import { newsArticles, newsCategories, popularTags } from "@/data/community";
 import { siteImages } from "@/data/images";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
-export function generateStaticParams() {
-  return newsArticles.map((article) => ({ id: article.id }));
+export async function generateStaticParams() {
+  const posts = "newsPost" in prisma
+    ? await prisma.newsPost.findMany({
+        where: { status: NewsPostStatus.PUBLISHED },
+        select: { slug: true },
+      })
+    : [];
+
+  return [...newsArticles.map((article) => ({ id: article.id })), ...posts.map((post) => ({ id: post.slug }))];
 }
 
 export default async function NewsArticlePage({
@@ -14,15 +25,69 @@ export default async function NewsArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = newsArticles.find((a) => a.id === id);
+  const currentUser = await getCurrentUser();
+  const dbPost = "newsPost" in prisma
+    ? await prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED } })
+    : null;
+  const mockArticle = newsArticles.find((a) => a.id === id);
+
+  const article = dbPost
+    ? {
+        id: dbPost.slug,
+        title: dbPost.title,
+        category: dbPost.category,
+        date: dbPost.publishedAt.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }),
+        author: dbPost.authorName,
+        excerpt: dbPost.excerpt,
+        body: [dbPost.contentHtml],
+        pullQuote: undefined,
+        tags: dbPost.tags,
+        coverImageUrl: dbPost.coverImageUrl,
+        isHtml: true,
+      }
+    : mockArticle
+      ? {
+          ...mockArticle,
+          coverImageUrl: null,
+          isHtml: false,
+        }
+      : null;
 
   if (!article) {
     notFound();
   }
 
-  const articleIndex = newsArticles.findIndex((a) => a.id === article.id);
-  const heroPhoto = siteImages.galleryPage[articleIndex % siteImages.galleryPage.length];
-  const recent = newsArticles.filter((a) => a.id !== article.id).slice(0, 3);
+  const articleIndex = Math.max(newsArticles.findIndex((a) => a.id === article.id), 0);
+  const heroPhoto = article.coverImageUrl || siteImages.galleryPage[articleIndex % siteImages.galleryPage.length];
+  const recentDbPosts = "newsPost" in prisma
+    ? await prisma.newsPost.findMany({
+        where: { slug: { not: id }, status: NewsPostStatus.PUBLISHED },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+        take: 3,
+      })
+    : [];
+  const recent = recentDbPosts.length > 0
+    ? recentDbPosts.map((post) => ({
+        id: post.slug,
+        title: post.title,
+        date: post.publishedAt.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }),
+        coverImageUrl: post.coverImageUrl,
+      }))
+    : newsArticles.filter((a) => a.id !== article.id).slice(0, 3).map((post) => ({
+        id: post.id,
+        title: post.title,
+        date: post.date,
+        coverImageUrl: null,
+      }));
+  const isAdmin = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
   return (
     <div>
@@ -59,7 +124,11 @@ export default async function NewsArticlePage({
             <div className="mt-6 space-y-5 text-muted">
               {article.body.map((paragraph, i) => (
                 <div key={i}>
-                  <p className="leading-relaxed">{paragraph}</p>
+                  {article.isHtml ? (
+                    <div className="prose prose-neutral max-w-none leading-relaxed" dangerouslySetInnerHTML={{ __html: paragraph }} />
+                  ) : (
+                    <p className="leading-relaxed">{paragraph}</p>
+                  )}
                   {article.pullQuote && i === 0 ? (
                     <blockquote className="my-8 flex gap-4 rounded-xl bg-surface p-6 shadow-soft">
                       <Quote className="h-8 w-8 shrink-0 fill-sunset text-sunset" />
@@ -97,6 +166,13 @@ export default async function NewsArticlePage({
             <Link href="/news" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               <ArrowLeft className="h-4 w-4" /> Back to News
             </Link>
+            {dbPost && isAdmin ? (
+              <form action={deleteNewsPostAction.bind(null, dbPost.slug)} className="mt-4">
+                <button className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-red-700">
+                  Delete News Post
+                </button>
+              </form>
+            ) : null}
           </article>
 
           {/* SIDEBAR */}
@@ -121,7 +197,7 @@ export default async function NewsArticlePage({
                     <Link href={`/news/${post.id}`} className="flex items-center gap-3">
                       <span
                         className="h-14 w-14 shrink-0 rounded-md bg-cover bg-center"
-                        style={{ backgroundImage: `url(${siteImages.galleryPage[(articleIndex + i + 1) % siteImages.galleryPage.length]})` }}
+                        style={{ backgroundImage: `url(${post.coverImageUrl || siteImages.galleryPage[(articleIndex + i + 1) % siteImages.galleryPage.length]})` }}
                       />
                       <span>
                         <span className="block text-sm font-semibold uppercase leading-tight tracking-tight text-asphalt hover:text-sunset">

@@ -1,0 +1,34 @@
+// News domain — admin-authored articles published to the public news section.
+
+enum NewsPostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model NewsPost {
+  id             String         @id @default(cuid())
+  slug           String         @unique
+  authorUserId   String?
+  title          String
+  category       String
+  excerpt        String
+  contentHtml    String
+  authorName     String
+  coverImageUrl  String?
+  tags           String[]
+  status         NewsPostStatus @default(PUBLISHED)
+  seoTitle       String?
+  seoDescription String?
+  featured       Boolean        @default(false)
+  publishedAt    DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  authorUser User? @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+
+  @@index([publishedAt])
+  @@index([category])
+  @@index([status])
+  @@index([featured])
+  @@index([authorUserId])
+}

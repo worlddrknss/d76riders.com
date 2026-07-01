@@ -15,7 +15,7 @@ const columns = [
     links: [
       { label: "Events", href: "/events" },
       { label: "Garage", href: "/garage" },
-      { label: "Members", href: "/members" },
+      { label: "Riders", href: "/riders" },
       { label: "News", href: "/news" },
     ],
   },
@@ -23,7 +23,7 @@ const columns = [
     title: "Connect",
     links: [
       { label: "Gallery", href: "/gallery" },
-      { label: "Featured Roads", href: "/events" },
+      { label: "Featured Roads", href: "/roads" },
       { label: "Join the Community", href: "/join" },
       { label: "Email Newsletter", href: "/join" },
     ],

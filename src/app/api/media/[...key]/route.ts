@@ -1,0 +1,53 @@
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+
+const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
+
+function createClient() {
+  return new S3Client({
+    region: process.env.S3_REGION ?? "us-east-1",
+    endpoint: process.env.S3_ENDPOINT,
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+    credentials: {
+      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? "",
+      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? "",
+    },
+  });
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ key: string[] }> },
+) {
+  const { key } = await params;
+  const objectKey = key.join("/");
+
+  if (!objectKey || objectKey.includes("..")) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  try {
+    const s3 = createClient();
+    const response = await s3.send(
+      new GetObjectCommand({ Bucket: bucket, Key: objectKey }),
+    );
+
+    if (!response.Body) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    const stream = response.Body as ReadableStream;
+    return new Response(stream as unknown as BodyInit, {
+      headers: {
+        "Content-Type": response.ContentType ?? "application/octet-stream",
+        "Cache-Control": "public, max-age=31536000, immutable",
+        "Content-Length": response.ContentLength?.toString() ?? "",
+      },
+    });
+  } catch (err: unknown) {
+    const code = (err as { name?: string }).name;
+    if (code === "NoSuchKey" || code === "NotFound") {
+      return new Response("Not found", { status: 404 });
+    }
+    return new Response("Internal error", { status: 500 });
+  }
+}

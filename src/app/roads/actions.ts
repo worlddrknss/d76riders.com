@@ -1,0 +1,338 @@
+"use server";
+
+import crypto from "node:crypto";
+
+import { RideDifficulty } from "@prisma/client";
+import { redirect } from "next/navigation";
+
+import { requireUserId } from "@/lib/authz";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
+import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
+
+export type RoadFormState = {
+  error: string | null;
+  success: string | null;
+};
+
+function normalizeText(value: FormDataEntryValue | null): string {
+  return (value?.toString() ?? "").trim();
+}
+
+function toOptionalInt(value: string): number | null {
+  if (!value) return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toOptionalFloat(value: string): number | null {
+  if (!value) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toSlug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
+}
+
+async function buildUniqueRoadSlug(baseName: string): Promise<string> {
+  const baseSlug = toSlug(baseName) || `road-${Date.now()}`;
+  let candidate = baseSlug;
+  let suffix = 2;
+
+  while (true) {
+    const existing = await prisma.road.findUnique({ where: { slug: candidate }, select: { id: true } });
+    if (!existing) return candidate;
+    candidate = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+}
+
+type PlannerWaypointInput = {
+  lng: number;
+  lat: number;
+  kind: "START" | "KSU" | "FUEL" | "FOOD" | "REST" | "STOP" | "END";
+  label?: string;
+};
+
+function parseJsonValue<T>(value: string): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+export async function createRoadAction(_previousState: RoadFormState, formData: FormData): Promise<RoadFormState> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const name = normalizeText(formData.get("name"));
+  const description = normalizeText(formData.get("description"));
+  const difficultyInput = normalizeText(formData.get("difficulty"));
+  const scenicRating = toOptionalFloat(normalizeText(formData.get("scenicRating")));
+  const routeName = normalizeText(formData.get("routeName"));
+  const routeDescription = normalizeText(formData.get("routeDescription"));
+  const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
+  const routeGeometry = parseJsonValue<{ type: "LineString"; coordinates: [number, number][] }>(normalizeText(formData.get("routeGeometryJson")));
+  const routeWaypoints = parseJsonValue<PlannerWaypointInput[]>(normalizeText(formData.get("routeWaypointsJson"))) ?? [];
+  const coverImage = formData.get("coverImage");
+
+  if (!name) {
+    return { error: "Road name is required.", success: null };
+  }
+
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) {
+    return { error: "No rider profile found for your account yet.", success: null };
+  }
+
+  const slug = await buildUniqueRoadSlug(name);
+  const difficulty = difficultyInput ? (difficultyInput as RideDifficulty) : null;
+  const routeKsuWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "KSU");
+  const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
+  const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
+  const ksuLng = routeKsuWaypoint?.lng ?? routeStartWaypoint?.lng ?? null;
+
+  let coverImageUrl: string | null = null;
+  if (coverImage instanceof File && coverImage.size > 0) {
+    if (!allowedImageTypes.has(coverImage.type)) {
+      return { error: "Road image must be a JPG, PNG, or WebP image.", success: null };
+    }
+    if (!isS3Configured()) {
+      return { error: "Storage is not configured for image uploads yet.", success: null };
+    }
+    const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const key = `roads/${rider.id}/${slug}-${crypto.randomUUID()}.${ext}`;
+    coverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    let routeId: string | undefined;
+    if (routeGeometry?.coordinates.length) {
+      const route = await tx.route.create({
+        data: {
+          riderId: rider.id,
+          name: routeName || `${name} Route`,
+          description: routeDescription || null,
+          distanceMiles: routeDistanceMiles,
+          geometry: routeGeometry,
+          ksuLat,
+          ksuLng,
+          waypoints: routeWaypoints.length
+            ? {
+                create: routeWaypoints.map((waypoint, index) => ({
+                  label: waypoint.label || null,
+                  type: waypoint.kind,
+                  lat: waypoint.lat,
+                  lng: waypoint.lng,
+                  order: index,
+                })),
+              }
+            : undefined,
+        },
+        select: { id: true },
+      });
+      routeId = route.id;
+    }
+
+    await tx.road.create({
+      data: {
+        riderId: rider.id,
+        routeId,
+        name,
+        slug,
+        distanceMiles: routeDistanceMiles ? Math.round(routeDistanceMiles) : null,
+        difficulty,
+        scenicRating,
+        description: description || null,
+        imageLabel: coverImageUrl ? `${name} cover image` : null,
+        galleryItems: coverImageUrl
+          ? {
+              create: {
+                url: coverImageUrl,
+                caption: `${name} cover image`,
+              },
+            }
+          : undefined,
+      },
+    });
+  });
+
+  redirect(`/roads/${slug}`);
+}
+
+export async function deleteRoadAction(roadId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const road = await prisma.road.findFirst({
+    where: { id: roadId, rider: { userId } },
+    include: { galleryItems: true },
+  });
+
+  if (!road) {
+    redirect("/roads");
+  }
+
+  const urls = road.galleryItems.map((item) => item.url);
+  await prisma.$transaction(async (tx) => {
+    await tx.road.delete({ where: { id: road.id } });
+    if (road.routeId) {
+      await tx.route.delete({ where: { id: road.routeId } });
+    }
+  });
+  await Promise.all(urls.map((url) => deleteFileByUrl(url)));
+  redirect("/roads");
+}
+
+export async function updateRoadAction(roadId: string, formData: FormData): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const road = await prisma.road.findFirst({
+    where: { id: roadId, rider: { userId } },
+    include: {
+      galleryItems: true,
+      route: { include: { waypoints: true } },
+      rider: { select: { id: true } },
+    },
+  });
+
+  if (!road) {
+    redirect("/roads");
+  }
+
+  const name = normalizeText(formData.get("name"));
+  const description = normalizeText(formData.get("description"));
+  const difficultyInput = normalizeText(formData.get("difficulty"));
+  const scenicRating = toOptionalFloat(normalizeText(formData.get("scenicRating")));
+  const routeName = normalizeText(formData.get("routeName"));
+  const routeDescription = normalizeText(formData.get("routeDescription"));
+  const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
+  const routeGeometry = parseJsonValue<{ type: "LineString"; coordinates: [number, number][] }>(normalizeText(formData.get("routeGeometryJson")));
+  const routeWaypoints = parseJsonValue<PlannerWaypointInput[]>(normalizeText(formData.get("routeWaypointsJson"))) ?? [];
+  const coverImage = formData.get("coverImage");
+  const removeCoverImage = formData.get("removeCoverImage") === "on";
+  const removeRoute = formData.get("removeRoute") === "on";
+
+  if (!name) {
+    redirect(`/roads/${road.slug}`);
+  }
+
+  const difficulty = difficultyInput ? (difficultyInput as RideDifficulty) : null;
+  const routeKsuWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "KSU");
+  const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
+  const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
+  const ksuLng = routeKsuWaypoint?.lng ?? routeStartWaypoint?.lng ?? null;
+  const previousImageUrls = road.galleryItems.map((item) => item.url);
+  let nextCoverImageUrl: string | null = road.galleryItems[0]?.url ?? null;
+
+  if (coverImage instanceof File && coverImage.size > 0) {
+    if (allowedImageTypes.has(coverImage.type) && isS3Configured()) {
+      const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
+      const key = `roads/${road.rider.id}/${road.slug}-${crypto.randomUUID()}.${ext}`;
+      nextCoverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+    }
+  }
+
+  if (removeCoverImage && !(coverImage instanceof File && coverImage.size > 0)) {
+    nextCoverImageUrl = null;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    let routeId = road.routeId ?? null;
+
+    if (removeRoute && road.routeId) {
+      await tx.route.delete({ where: { id: road.routeId } });
+      routeId = null;
+    }
+
+    if (routeGeometry?.coordinates.length) {
+      if (road.routeId) {
+        await tx.waypoint.deleteMany({ where: { routeId: road.routeId } });
+        await tx.route.update({
+          where: { id: road.routeId },
+          data: {
+            name: routeName || `${name} Route`,
+            description: routeDescription || null,
+            distanceMiles: routeDistanceMiles,
+            geometry: routeGeometry,
+            ksuLat,
+            ksuLng,
+            waypoints: routeWaypoints.length
+              ? {
+                  create: routeWaypoints.map((waypoint, index) => ({
+                    label: waypoint.label || null,
+                    type: waypoint.kind,
+                    lat: waypoint.lat,
+                    lng: waypoint.lng,
+                    order: index,
+                  })),
+                }
+              : undefined,
+          },
+        });
+      } else {
+        const route = await tx.route.create({
+          data: {
+            riderId: road.rider.id,
+            name: routeName || `${name} Route`,
+            description: routeDescription || null,
+            distanceMiles: routeDistanceMiles,
+            geometry: routeGeometry,
+            ksuLat,
+            ksuLng,
+            waypoints: routeWaypoints.length
+              ? {
+                  create: routeWaypoints.map((waypoint, index) => ({
+                    label: waypoint.label || null,
+                    type: waypoint.kind,
+                    lat: waypoint.lat,
+                    lng: waypoint.lng,
+                    order: index,
+                  })),
+                }
+              : undefined,
+          },
+          select: { id: true },
+        });
+        routeId = route.id;
+      }
+    }
+
+    await tx.road.update({
+      where: { id: road.id },
+      data: {
+        name,
+        description: description || null,
+        difficulty,
+        scenicRating,
+        distanceMiles: routeDistanceMiles ? Math.round(routeDistanceMiles) : road.distanceMiles,
+        routeId,
+      },
+    });
+
+    if (nextCoverImageUrl !== (road.galleryItems[0]?.url ?? null)) {
+      await tx.galleryItem.deleteMany({ where: { roadId: road.id } });
+      if (nextCoverImageUrl) {
+        await tx.galleryItem.create({
+          data: {
+            roadId: road.id,
+            url: nextCoverImageUrl,
+            caption: `${name} cover image`,
+          },
+        });
+      }
+    }
+  });
+
+  if (nextCoverImageUrl !== (road.galleryItems[0]?.url ?? null)) {
+    await deleteFilesByUrls(previousImageUrls);
+  }
+
+  redirect(`/roads/${road.slug}`);
+}

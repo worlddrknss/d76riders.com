@@ -9,6 +9,7 @@ model JournalEntry {
   author       Rider         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   likes        Like[]
+  reports      Report[]
   galleryItems GalleryItem[]
 
   createdAt DateTime @default(now())
@@ -48,5 +49,43 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([riderId, journalEntryId])
+}
+
+// Reports — flagged content for moderator review.
+model Report {
+  id             String       @id @default(cuid())
+  reporterId     String
+  journalEntryId String
+  reason         ReportReason
+  details        String?
+  status         ReportStatus @default(PENDING)
+  resolvedById   String?
+  resolvedAt     DateTime?
+
+  reporter     Rider        @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  resolvedBy   User?        @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([journalEntryId])
+  @@index([status])
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE
+  MISINFORMATION
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  REMOVED
+}
   @@index([journalEntryId])
 }

@@ -1,11 +1,45 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
+import { NewsPostStatus } from "@prisma/client";
 import { newsArticles, newsCategories, popularTags } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { prisma } from "@/lib/prisma";
 
-export default function NewsPage() {
-  const recent = newsArticles.slice(0, 3);
+export default async function NewsPage() {
+  const dbPosts = "newsPost" in prisma
+    ? await prisma.newsPost.findMany({
+        where: { status: NewsPostStatus.PUBLISHED },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+        take: 24,
+      })
+    : [];
+
+  const articles = dbPosts.length > 0
+    ? dbPosts.map((post) => ({
+        id: post.slug,
+        title: post.title,
+        category: post.category,
+        date: post.publishedAt.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }),
+        author: post.authorName,
+        excerpt: post.excerpt,
+        coverImageUrl: post.coverImageUrl,
+      }))
+    : newsArticles.map((article) => ({
+        id: article.id,
+        title: article.title,
+        category: article.category,
+        date: article.date,
+        author: article.author,
+        excerpt: article.excerpt,
+        coverImageUrl: null,
+      }));
+
+  const recent = articles.slice(0, 3);
 
   return (
     <div>
@@ -20,10 +54,10 @@ export default function NewsPage() {
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
           {/* ARTICLE GRID */}
           <div className="grid gap-8 sm:grid-cols-2">
-            {newsArticles.map((article, i) => (
+            {articles.map((article, i) => (
               <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <Link href={`/news/${article.id}`} className="block">
-                  <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}>
+                  <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}>
                     <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
                       {article.category}
                     </span>
@@ -70,7 +104,7 @@ export default function NewsPage() {
                     <Link href={`/news/${article.id}`} className="flex items-center gap-3">
                       <span
                         className="h-14 w-14 shrink-0 rounded-md bg-cover bg-center"
-                        style={{ backgroundImage: `url(${siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
+                        style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
                       />
                       <span>
                         <span className="block text-sm font-semibold uppercase leading-tight tracking-tight text-asphalt hover:text-sunset">
