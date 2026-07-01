@@ -1,0 +1,25 @@
+// District 76 — Prisma schema (multi-file).
+//
+// This folder uses Prisma's multi-file schema feature: every `.prisma` file in
+// `prisma/schema/` is merged into a single schema at generate/migrate time, so
+// models, enums, and relations may be split across domain files and still
+// reference one another freely.
+//
+// Domain files:
+//   auth.prisma     — Auth.js identity (User, Account, Session, VerificationToken)
+//   rider.prisma    — public rider profile (Rider)
+//   garage.prisma   — per-rider machines (Bike)
+//   events.prisma   — rider-created rides (RideEvent, Rsvp)
+//   routes.prisma   — Mapbox routes (Route, Waypoint)
+//   journal.prisma  — ride journal (JournalEntry, Comment, Like)
+//   roads.prisma    — curated Featured Roads (Road)
+//   gallery.prisma  — polymorphic media (GalleryItem)
+//   activity.prisma — derived activity feed (Activity)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}

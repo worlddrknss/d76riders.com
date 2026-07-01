@@ -12,7 +12,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-asphalt text-white">
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex flex-col leading-none" aria-label="District 76 home">
           <span className="font-display text-2xl font-bold tracking-tight">
             DISTRICT <span className="text-sunset">76</span> RIDERS

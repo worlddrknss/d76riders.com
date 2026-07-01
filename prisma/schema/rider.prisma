@@ -1,0 +1,33 @@
+// Rider domain — the public, editable rider profile.
+// One Rider per authenticated User. Owns all rider-created content.
+
+model Rider {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  handle         String   @unique
+  name           String
+  location       String?
+  bio            String?
+  avatarUrl      String?
+  yearsRiding    Int?
+  favoriteRoad   String?
+  ridesCompleted Int      @default(0)
+  joinedAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bikes          Bike[]
+  events         RideEvent[]
+  routes         Route[]
+  journalEntries JournalEntry[]
+  comments       Comment[]
+  likes          Like[]
+  rsvps          Rsvp[]
+  galleryItems   GalleryItem[]
+  activities     Activity[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

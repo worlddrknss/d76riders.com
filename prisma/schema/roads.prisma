@@ -1,0 +1,17 @@
+// Roads domain — curated Featured Roads, editor-maintained (community-level).
+
+model Road {
+  id            String          @id @default(cuid())
+  name          String
+  slug          String          @unique
+  distanceMiles Int?
+  difficulty    RideDifficulty?
+  scenicRating  Float?
+  description   String?
+  imageLabel    String?
+
+  galleryItems GalleryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

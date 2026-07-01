@@ -1,0 +1,28 @@
+// Activity domain — derived feed entries generated from domain events.
+
+model Activity {
+  id       String       @id @default(cuid())
+  riderId  String
+  type     ActivityType
+  summary  String
+  // Loose reference + payload for the source entity (event, journal, bike...).
+  refId    String?
+  metadata Json?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([riderId])
+  @@index([createdAt])
+}
+
+enum ActivityType {
+  JOINED
+  POSTED_JOURNAL
+  CREATED_EVENT
+  RSVP
+  COMPLETED_RIDE
+  UPLOADED_PHOTO
+  ADDED_BIKE
+}

@@ -1,0 +1,65 @@
+// Events domain — rider-created rides with KSU details, route, RSVP, and gallery.
+
+model RideEvent {
+  id            String          @id @default(cuid())
+  hostId        String
+  title         String
+  slug          String          @unique
+  description   String?
+  startsAt      DateTime
+  ksuAt         DateTime?
+  ksuLocation   String?
+  meetLocation  String?
+  distanceMiles Int?
+  difficulty    RideDifficulty?
+  status        EventStatus     @default(UPCOMING)
+  routeId       String?         @unique
+
+  host         Rider         @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  rsvps        Rsvp[]
+  comments     Comment[]
+  galleryItems GalleryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostId])
+  @@index([startsAt])
+}
+
+model Rsvp {
+  id      String     @id @default(cuid())
+  eventId String
+  riderId String
+  status  RsvpStatus @default(GOING)
+
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, riderId])
+  @@index([riderId])
+}
+
+// Shared by RideEvent and Road.
+enum RideDifficulty {
+  BEGINNER_FRIENDLY
+  INTERMEDIATE
+  SCENIC
+}
+
+enum EventStatus {
+  DRAFT
+  UPCOMING
+  COMPLETED
+  CANCELLED
+}
+
+enum RsvpStatus {
+  GOING
+  INTERESTED
+  NOT_GOING
+}

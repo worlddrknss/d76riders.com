@@ -19,6 +19,7 @@ import {
   upcomingRides,
 } from "@/data/community";
 import { siteImages } from "@/data/images";
+import { PageHero } from "@/components/layout/page-hero";
 
 const statIcons = [Users, Bike, Route, MapPin];
 
@@ -53,40 +54,29 @@ export default function Home() {
   return (
     <div>
       {/* HERO */}
-      <section className="relative w-full overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${siteImages.hero})` }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0 bg-linear-to-r from-asphalt via-asphalt/85 to-asphalt/10"
-          aria-hidden="true"
-        />
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
-          <div className="max-w-xl text-white">
-            <h1 className="font-display text-5xl font-bold leading-[0.95] tracking-tight sm:text-7xl">
-              DISTRICT 76
-            </h1>
-            <p className="mt-3 font-display text-2xl font-semibold leading-tight tracking-tight sm:text-4xl">
-              RIDE LOCAL.
-              <br />
-              RIDE TOGETHER.
-            </p>
-            <p className="mt-5 max-w-md text-sm text-slate-200 sm:text-base">
-              Born in Clarksville, Tennessee. Built for riders who enjoy great roads, great people, and unforgettable rides.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/join" className="rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white hover:bg-[#cf5a26]">
-                Join the Community
-              </Link>
-              <Link href="/events" className="rounded-md border border-white/40 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur hover:bg-white/10">
-                Upcoming Rides
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PageHero
+        image={siteImages.hero}
+        variant="home"
+        title="DISTRICT 76"
+        description="Born in Clarksville, Tennessee. Built for riders who enjoy great roads, great people, and unforgettable rides."
+        actions={
+          <>
+            <Link
+              href="/join"
+              className="group inline-flex items-center gap-2 rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-[#cf5a26]"
+            >
+              Join District 76
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              href="/events"
+              className="inline-flex items-center rounded-md border border-white/30 bg-black/20 px-5 py-3 text-sm font-medium text-white/90 backdrop-blur transition hover:border-white/45 hover:bg-black/30 hover:text-white"
+            >
+              View Upcoming Rides
+            </Link>
+          </>
+        }
+      />
 
       {/* ABOUT */}
       <section className="w-full bg-canvas">

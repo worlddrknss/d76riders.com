@@ -1,0 +1,46 @@
+// Routes domain — Mapbox route geometry with KSU and stop waypoints.
+
+model Route {
+  id            String  @id @default(cuid())
+  riderId       String
+  name          String
+  description   String?
+  distanceMiles Float?
+  // Mapbox GeoJSON LineString geometry for the full route.
+  geometry      Json?
+  ksuLat        Float?
+  ksuLng        Float?
+
+  rider     Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  event     RideEvent?
+  waypoints Waypoint[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId])
+}
+
+model Waypoint {
+  id      String       @id @default(cuid())
+  routeId String
+  label   String?
+  type    WaypointType @default(STOP)
+  lat     Float
+  lng     Float
+  order   Int
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@index([routeId])
+}
+
+enum WaypointType {
+  START
+  KSU
+  FUEL
+  FOOD
+  REST
+  STOP
+  END
+}

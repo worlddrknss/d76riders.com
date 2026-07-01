@@ -1,0 +1,33 @@
+// Garage domain — per-rider machines (replaces the global garage).
+
+model Bike {
+  id           String    @id @default(cuid())
+  riderId      String
+  name         String
+  make         String
+  model        String?
+  year         Int?
+  type         BikeType?
+  engineType   String?
+  enginePower  String?
+  displacement String?
+  boreStroke   String?
+
+  rider  Rider         @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  photos GalleryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId])
+}
+
+enum BikeType {
+  NAKED
+  CRUISER
+  ADVENTURE
+  SPORT
+  TOURING
+  STANDARD
+  OTHER
+}

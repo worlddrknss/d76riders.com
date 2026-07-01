@@ -1,0 +1,30 @@
+// Gallery domain — a media item that can belong to a Rider, RideEvent, Bike,
+// JournalEntry, or Road. At most one owner is set per item.
+
+model GalleryItem {
+  id      String  @id @default(cuid())
+  url     String
+  caption String?
+  width   Int?
+  height  Int?
+
+  riderId        String?
+  eventId        String?
+  bikeId         String?
+  journalEntryId String?
+  roadId         String?
+
+  rider        Rider?        @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  event        RideEvent?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bike         Bike?         @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  road         Road?         @relation(fields: [roadId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([riderId])
+  @@index([eventId])
+  @@index([bikeId])
+  @@index([journalEntryId])
+  @@index([roadId])
+}

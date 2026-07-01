@@ -46,7 +46,7 @@ export default function EventsPage() {
                     className="relative h-48 bg-cover bg-center lg:h-full"
                     style={{ backgroundImage: `url(${siteImages.rides[i % siteImages.rides.length]})` }}
                   >
-                    <div className="absolute inset-0 bg-linear-to-t from-asphalt/70 to-transparent" />
+                    <div className="absolute inset-0 bg-linear-to-t from-asphalt/50 to-transparent" />
                     <div className="absolute bottom-3 left-3 flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
                       <span className="font-display text-2xl font-bold leading-none">{badge.day}</span>
                       <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{badge.month}</span>
