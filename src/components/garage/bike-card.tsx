@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { updateBikeAction, deleteBikeAction } from "@/app/garage/mine/actions";
+import { updateBikeAction, deleteBikeAction } from "@/app/(site)/garage/mine/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

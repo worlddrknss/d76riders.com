@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
-import { newsArticles, newsCategories, popularTags } from "@/data/community";
+import { newsArticles } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +14,10 @@ export default async function NewsPage() {
         take: 24,
       })
     : [];
+
+  // Derive categories and tags from published posts
+  const newsCategories = [...new Set(dbPosts.map((p) => p.category))].sort();
+  const popularTags = [...new Set(dbPosts.flatMap((p) => p.tags))].sort();
 
   const articles = dbPosts.length > 0
     ? dbPosts.map((post) => ({

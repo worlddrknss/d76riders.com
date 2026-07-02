@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { createBikeAction, type GarageFormState } from "@/app/garage/mine/actions";
+import { createBikeAction, type GarageFormState } from "@/app/(site)/garage/mine/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

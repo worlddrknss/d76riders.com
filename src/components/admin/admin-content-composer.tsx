@@ -22,8 +22,8 @@ export function AdminContentComposer() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-      <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-200">Editor</p>
+      <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Editor</p>
         <h1 className="mt-2 font-display text-2xl font-semibold text-white">New Content Draft</h1>
         <p className="mt-2 text-sm text-slate-300">
           Same WYSIWYG foundation as Vara Performance, now wired for admin publishing workflows in District 76.
@@ -35,7 +35,7 @@ export function AdminContentComposer() {
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none"
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none"
               placeholder="Post title"
             />
           </label>
@@ -46,7 +46,7 @@ export function AdminContentComposer() {
               value={summary}
               onChange={(event) => setSummary(event.target.value)}
               rows={3}
-              className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none"
+              className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none"
               placeholder="Short summary for list cards"
             />
           </label>
@@ -59,7 +59,7 @@ export function AdminContentComposer() {
       </section>
 
       <aside className="space-y-4">
-        <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20">
+        <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">Draft Metrics</p>
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
@@ -75,7 +75,7 @@ export function AdminContentComposer() {
           <div className="mt-4 space-y-2">
             <button
               type="button"
-              className="w-full rounded-lg bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-400"
+              className="w-full rounded-lg bg-sunset px-3 py-2.5 text-sm font-semibold text-white hover:bg-sunset/85"
             >
               Save Draft (UI Wired)
             </button>
@@ -88,7 +88,7 @@ export function AdminContentComposer() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20">
+        <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Preview</p>
           <h2 className="mt-2 font-display text-xl font-semibold text-white">{title || "Untitled draft"}</h2>
           <p className="mt-1 text-sm text-slate-300">{summary || "No summary yet."}</p>

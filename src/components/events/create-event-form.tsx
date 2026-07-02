@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import {
   createEventAction,
   type CreateEventFormState,
-} from "@/app/events/new/actions";
+} from "@/app/(site)/events/new/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { EventRoutePlannerField } from "@/components/events/event-route-planner-field";
 

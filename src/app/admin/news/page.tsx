@@ -12,20 +12,22 @@ export default async function AdminNewsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-200">Publishing</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Publishing</p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-white">News Posts</h1>
           <p className="mt-2 text-sm text-slate-300">Manage published and draft news content.</p>
         </div>
-        <Link href="/admin/news/new" className="rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">
+        <Link href="/admin/news/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-sunset/85">
           Create News Post
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#020817]/85 shadow-2xl shadow-black/20">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/3 shadow-lg">
         <table className="min-w-full divide-y divide-white/10 text-sm text-slate-200">
           <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.12em] text-slate-400">
             <tr>
               <th className="px-4 py-3 text-left">Title</th>
+              <th className="px-4 py-3 text-left">Category</th>
+              <th className="px-4 py-3 text-left">Tags</th>
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Featured</th>
               <th className="px-4 py-3 text-left">Published</th>
@@ -35,7 +37,7 @@ export default async function AdminNewsPage() {
           <tbody className="divide-y divide-white/10">
             {posts.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">No news posts yet.</td>
+                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">No news posts yet.</td>
               </tr>
             ) : (
               posts.map((post) => (
@@ -44,6 +46,24 @@ export default async function AdminNewsPage() {
                     <div>
                       <p className="font-semibold text-white">{post.title}</p>
                       <p className="text-xs text-slate-400">/{post.slug}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="rounded-full border border-sunset/30 bg-sunset/10 px-2 py-0.5 text-xs font-semibold text-orange-200">
+                      {post.category}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {post.tags.length === 0 ? (
+                        <span className="text-xs text-slate-500">—</span>
+                      ) : (
+                        post.tags.map((tag) => (
+                          <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.65rem] text-slate-300">
+                            {tag}
+                          </span>
+                        ))
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3">{post.status}</td>

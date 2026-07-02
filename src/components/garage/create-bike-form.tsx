@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { createBikeAction, type GarageFormState } from "@/app/garage/mine/actions";
+import { createBikeAction, type GarageFormState } from "@/app/(site)/garage/mine/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 
 const initialGarageFormState: GarageFormState = {

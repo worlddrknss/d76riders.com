@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/riders/actions";
+import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/riders/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

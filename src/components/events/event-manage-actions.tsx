@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 
-import { updateEventAction, deleteEventAction } from "@/app/events/[slug]/actions";
+import { updateEventAction, deleteEventAction } from "@/app/(site)/events/[slug]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

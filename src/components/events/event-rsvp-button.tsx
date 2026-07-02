@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { UserCheck, UserPlus } from "lucide-react";
 
-import { rsvpAction } from "@/app/events/[slug]/actions";
+import { rsvpAction } from "@/app/(site)/events/[slug]/actions";
 import { Button } from "@/components/ui/button";
 
 type RsvpButtonProps = {

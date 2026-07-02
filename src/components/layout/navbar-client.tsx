@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown, UserCog, UserRound, Bike, CalendarPlus2, LogOut, Shield } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-import { logoutAction } from "@/app/(auth)/actions";
+import { logoutAction } from "@/app/(site)/(auth)/actions";
 import { navItems } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
 

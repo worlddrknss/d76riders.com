@@ -87,5 +87,3 @@ enum ReportStatus {
   DISMISSED
   REMOVED
 }
-  @@index([journalEntryId])
-}

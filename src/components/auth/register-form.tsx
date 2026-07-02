@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 
-import { type AuthFormState, registerAction } from "@/app/(auth)/actions";
+import { type AuthFormState, registerAction } from "@/app/(site)/(auth)/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 
 const initialAuthFormState: AuthFormState = {

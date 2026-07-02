@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
-import { deleteNewsPostAction } from "@/app/news/[id]/actions";
+import { deleteNewsPostAction } from "@/app/(site)/news/[id]/actions";
 import { newsArticles, newsCategories, popularTags } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";

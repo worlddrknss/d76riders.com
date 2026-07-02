@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
 
-import { deleteRoadAction, updateRoadAction } from "@/app/roads/actions";
+import { deleteRoadAction, updateRoadAction } from "@/app/(site)/roads/actions";
 import { RoutePlannerField } from "@/components/routes/route-planner-field";
 import { RouteMap } from "@/components/routes/route-map";
 import { prisma } from "@/lib/prisma";

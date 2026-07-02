@@ -11,6 +11,8 @@ const initialCreateNewsPostFormState: CreateNewsPostFormState = {
 
 type CreateNewsPostFormProps = {
   action: (_previousState: CreateNewsPostFormState, formData: FormData) => Promise<CreateNewsPostFormState>;
+  existingCategories?: string[];
+  existingTags?: string[];
   initialValues?: {
     title?: string;
     category?: string;
@@ -30,6 +32,8 @@ type CreateNewsPostFormProps = {
 
 export function CreateNewsPostForm({
   action,
+  existingCategories = [],
+  existingTags = [],
   initialValues,
   heading,
   description,
@@ -48,55 +52,68 @@ export function CreateNewsPostForm({
 
   return (
     <form action={formAction} className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-      <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-200">Editor</p>
+      <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Editor</p>
         <h1 className="mt-2 font-display text-2xl font-semibold text-white">{heading}</h1>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
 
         <div className="mt-5 grid gap-4">
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Title</span>
-            <input name="title" defaultValue={initialValues?.title ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Post title" required />
+            <input name="title" defaultValue={initialValues?.title ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Post title" required />
           </label>
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Category</span>
-              <input name="category" defaultValue={initialValues?.category ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Community" required />
+              <select name="category" defaultValue={initialValues?.category ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-sunset/70 focus:outline-none" required>
+                <option value="" disabled>Select category…</option>
+                {existingCategories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+                <option value="__custom">+ New category…</option>
+              </select>
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Tags</span>
-              <input name="tags" defaultValue={initialValues?.tags ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Safety, Touring, Community" />
+              <input name="tags" defaultValue={initialValues?.tags ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Safety, Touring, Community" />
+              {existingTags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {existingTags.map((tag) => (
+                    <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.6rem] text-slate-400">{tag}</span>
+                  ))}
+                </div>
+              )}
             </label>
           </div>
 
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Excerpt</span>
-            <textarea name="excerpt" defaultValue={initialValues?.excerpt ?? ""} rows={3} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Short summary for list cards" required />
+            <textarea name="excerpt" defaultValue={initialValues?.excerpt ?? ""} rows={3} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Short summary for list cards" required />
           </label>
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Status</span>
-              <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-400/70 focus:outline-none">
+              <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-sunset/70 focus:outline-none">
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
               </select>
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Published At</span>
-              <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-400/70 focus:outline-none" />
+              <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-sunset/70 focus:outline-none" />
             </label>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">SEO Title</span>
-              <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Optional SEO title" />
+              <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Optional SEO title" />
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">SEO Description</span>
-              <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-blue-400/70 focus:outline-none" placeholder="Optional meta description" />
+              <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Optional meta description" />
             </label>
           </div>
 
@@ -107,7 +124,7 @@ export function CreateNewsPostForm({
 
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Cover Image</span>
-            <input name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 file:mr-3 file:rounded-md file:border-0 file:bg-blue-500 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
+            <input name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 file:mr-3 file:rounded-md file:border-0 file:bg-sunset file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
           </label>
 
           <div>
@@ -121,7 +138,7 @@ export function CreateNewsPostForm({
       </section>
 
       <aside className="space-y-4">
-        <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20">
+        <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">Publish</p>
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
@@ -134,12 +151,12 @@ export function CreateNewsPostForm({
             </div>
           </dl>
 
-          <button type="submit" className="mt-4 w-full rounded-lg bg-blue-500 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-400">
+          <button type="submit" className="mt-4 w-full rounded-lg bg-sunset px-3 py-2.5 text-sm font-semibold text-white hover:bg-sunset/85">
             {submitLabel}
           </button>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-[#020817]/85 p-5 shadow-2xl shadow-black/20">
+        <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Preview</p>
           <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-3">
             <div className="admin-preview prose prose-invert prose-sm max-w-none text-slate-200" dangerouslySetInnerHTML={{ __html: contentHtml }} />

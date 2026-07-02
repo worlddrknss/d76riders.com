@@ -4,7 +4,7 @@ import { useActionState, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { createJournalEntryAction, type JournalFormState } from "@/app/riders/actions";
+import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/riders/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

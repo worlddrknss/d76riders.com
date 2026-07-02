@@ -7,7 +7,7 @@ import {
   type DeleteAccountFormState,
   deleteAccountAction,
   updateAccountProfileAction,
-} from "@/app/account/actions";
+} from "@/app/(site)/account/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 
 type AccountProfileFormProps = {

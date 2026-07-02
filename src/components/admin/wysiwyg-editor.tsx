@@ -31,7 +31,7 @@ function ToolbarButton({ onClick, active, disabled, label, icon: Icon }: Toolbar
       aria-label={label}
       className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-slate-200 transition ${
         active
-          ? "border-blue-400/60 bg-blue-500/20"
+          ? "border-sunset/60 bg-sunset/20"
           : "border-white/15 bg-white/5 hover:border-white/30 hover:bg-white/10"
       } disabled:cursor-not-allowed disabled:opacity-45`}
     >

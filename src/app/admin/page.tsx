@@ -33,26 +33,26 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-white/10 bg-[linear-gradient(120deg,rgba(6,78,59,0.2),rgba(30,64,175,0.2))] p-6 shadow-2xl shadow-black/20">
+      <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Operations</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-white">Control Room</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-200">
+        <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Administrative overview for District 76 Riders. Metrics are live from your production database models.
         </p>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article key={card.title} className="rounded-xl border border-white/10 bg-[#020817]/85 p-5 shadow-xl shadow-black/20">
+          <article key={card.title} className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
             <p className="text-sm font-semibold text-slate-300">{card.title}</p>
-            <p className="mt-2 font-display text-4xl font-bold text-white">{card.value}</p>
+            <p className="mt-2 font-display text-4xl font-bold text-sunset">{card.value}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.08em] text-slate-400">{card.helper}</p>
           </article>
         ))}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
-        <article className="rounded-xl border border-white/10 bg-[#020817]/85 p-5 shadow-xl shadow-black/20">
+        <article className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <h2 className="font-display text-xl font-semibold text-white">Admin Scope (Phase 1)</h2>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
             <li>Role-gated control room route under /admin.</li>
@@ -61,7 +61,7 @@ export default async function AdminOverviewPage() {
           </ul>
         </article>
 
-        <article className="rounded-xl border border-white/10 bg-[#020817]/85 p-5 shadow-xl shadow-black/20">
+        <article className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <h2 className="font-display text-xl font-semibold text-white">Next Wiring</h2>
           <ul className="mt-3 space-y-2 text-sm text-slate-300">
             <li>Persist editor drafts to a dedicated admin content model.</li>
