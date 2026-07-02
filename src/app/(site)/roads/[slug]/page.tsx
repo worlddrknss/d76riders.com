@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, Star, UserRound } from "lucide-react";
@@ -5,10 +7,36 @@ import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, Star, UserR
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
 import { StarRating } from "@/components/roads/star-rating";
 import { RouteMap } from "@/components/routes/route-map";
+import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
 import type { PlannerWaypoint, WaypointKind } from "@/lib/routing";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const road = await prisma.road.findUnique({
+    where: { slug },
+    select: { name: true, description: true, difficulty: true, distanceMiles: true, scenicRating: true, galleryItems: { take: 1, select: { url: true } } },
+  });
+  if (!road) return { title: "Road Not Found" };
+
+  const description = road.description
+    ? road.description.slice(0, 160)
+    : `Explore ${road.name}${road.distanceMiles ? ` — a ${road.distanceMiles}-mile` : " — a"} scenic motorcycle road rated by the District 76 community.`;
+
+  return {
+    title: road.name,
+    description,
+    alternates: { canonical: `/roads/${slug}` },
+    openGraph: {
+      title: `${road.name} — Scenic Road`,
+      description,
+      type: "article",
+      ...(road.galleryItems[0]?.url && { images: [{ url: mediaUrl(road.galleryItems[0].url) }] }),
+    },
+  };
+}
 
 function difficultyLabel(value: string | null): string {
   switch (value) {
@@ -79,6 +107,20 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <section className="page-shell">
+      <JsonLd data={roadJsonLd({
+        name: road.name,
+        slug: road.slug,
+        description: road.description,
+        distanceMiles: road.distanceMiles,
+        scenicRating: averageRating,
+        totalRatings,
+        imageUrl: road.galleryItems[0]?.url ? mediaUrl(road.galleryItems[0].url) : undefined,
+      })} />
+      <JsonLd data={breadcrumbJsonLd([
+        { name: "Home", href: "/" },
+        { name: "Roads", href: "/roads" },
+        { name: road.name, href: `/roads/${road.slug}` },
+      ])} />
       <div className="content-wrap space-y-6">
         {/* BREADCRUMB */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
@@ -154,9 +196,12 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
           {/* COVER IMAGE */}
           {road.galleryItems[0]?.url ? (
             <div className="relative overflow-hidden rounded-xl border border-border shadow-soft lg:self-stretch">
-              <img
+              <Image
                 src={mediaUrl(road.galleryItems[0].url)}
                 alt={road.galleryItems[0].caption || road.name}
+                width={480}
+                height={640}
+                priority
                 className="h-full w-full object-cover"
               />
             </div>

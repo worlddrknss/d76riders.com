@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
 
@@ -8,6 +10,17 @@ import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
+
+export const metadata: Metadata = {
+  title: "Scenic Motorcycle Roads",
+  description:
+    "Discover the best motorcycle roads in Tennessee and beyond — community-rated scenic routes, twisties, and cruising roads curated by District 76 Riders.",
+  alternates: { canonical: "/roads" },
+  openGraph: {
+    title: "Scenic Roads — District 76 Riders",
+    description: "Community-rated motorcycle roads and scenic routes in Middle Tennessee.",
+  },
+};
 
 function difficultyLabel(value: string | null): string {
   return value ? value.replaceAll("_", " ") : "Not specified";
@@ -69,7 +82,7 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {roads.map((road) => (
                 <Link key={road.id} href={`/roads/${road.slug}`} className="group overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
-                  {road.galleryItems[0]?.url ? <img src={mediaUrl(road.galleryItems[0].url)} alt={road.galleryItems[0].caption || road.name} className="h-44 w-full object-cover transition group-hover:scale-[1.02]" /> : null}
+                  {road.galleryItems[0]?.url ? <Image src={mediaUrl(road.galleryItems[0].url)} alt={road.galleryItems[0].caption || road.name} width={400} height={176} className="h-44 w-full object-cover transition group-hover:scale-[1.02]" /> : null}
                   <div className="p-5">
                     <p className="font-display text-lg font-semibold text-asphalt group-hover:text-sunset">{road.name}</p>
                     <p className="mt-2 line-clamp-2 text-sm text-muted">{road.description || "No road description yet."}</p>

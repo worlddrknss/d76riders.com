@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
@@ -5,6 +6,17 @@ import { newsArticles } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "News & Updates",
+  description:
+    "The latest news, ride recaps, and announcements from District 76 Riders — your source for Clarksville motorcycle community updates.",
+  alternates: { canonical: "/news" },
+  openGraph: {
+    title: "News — District 76 Riders",
+    description: "Community news, ride recaps, and announcements.",
+  },
+};
 
 export default async function NewsPage() {
   const dbPosts = "newsPost" in prisma

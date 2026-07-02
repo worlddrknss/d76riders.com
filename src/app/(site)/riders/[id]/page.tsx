@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bike, BookText, CalendarDays, MapPin, Route } from "lucide-react";
@@ -8,6 +9,30 @@ import { ReportJournalButton } from "@/components/profile/report-journal-button"
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const rider = await prisma.rider.findUnique({
+    where: { handle: id },
+    select: { name: true, handle: true, bio: true, avatarUrl: true },
+  });
+  if (!rider) return { title: "Rider Not Found" };
+
+  const description = rider.bio
+    ? rider.bio.slice(0, 160)
+    : `${rider.name}'s rider profile on District 76 Riders.`;
+
+  return {
+    title: `${rider.name} (@${rider.handle})`,
+    description,
+    alternates: { canonical: `/riders/${rider.handle}` },
+    openGraph: {
+      title: `${rider.name} — District 76 Rider`,
+      description,
+      ...(rider.avatarUrl && { images: [{ url: mediaUrl(rider.avatarUrl) }] }),
+    },
+  };
+}
 
 export default async function RiderProfilePage({
   params,

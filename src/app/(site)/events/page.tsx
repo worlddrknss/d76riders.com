@@ -1,8 +1,20 @@
+import type { Metadata } from "next";
 import { CalendarDays, Clock, MapPin, Route, Signal, Ticket, Users } from "lucide-react";
 import Link from "next/link";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Upcoming Rides & Events",
+  description:
+    "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders in Clarksville, Tennessee and surrounding areas.",
+  alternates: { canonical: "/events" },
+  openGraph: {
+    title: "Rides & Events — District 76 Riders",
+    description: "Find your next group ride in Middle Tennessee.",
+  },
+};
 
 function dateBadge(date: string) {
   const parsed = new Date(date);

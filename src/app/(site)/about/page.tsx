@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { Flag, ShieldCheck, Users } from "lucide-react";
 import { faqs, guidelines, missionValues } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+
+export const metadata: Metadata = {
+  title: "Our History — Clarksville Motorcycle Community Since Day One",
+  description:
+    "Learn about District 76 Riders — how a military town, a love for motorcycles, and the roads of Middle Tennessee brought our community together in Clarksville, TN.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "Our History — District 76 Riders",
+    description: "The story of how Clarksville's motorcycle community came together.",
+  },
+};
 
 export default function AboutPage() {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { NewsPostStatus } from "@prisma/client";
 import {
@@ -20,6 +21,10 @@ import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const statIcons = [Users, Bike, Route, MapPin];
 

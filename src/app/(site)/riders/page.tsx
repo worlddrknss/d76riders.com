@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Bike, MapPin, UserRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+
+export const metadata: Metadata = {
+  title: "Riders — Meet the Community",
+  description:
+    "Meet the riders of District 76 — motorcycle enthusiasts in Clarksville, Tennessee who share a passion for the open road.",
+  alternates: { canonical: "/riders" },
+  openGraph: {
+    title: "Our Riders — District 76 Riders",
+    description: "The people behind the handlebars in Clarksville, TN.",
+  },
+};
 
 export default async function RidersPage() {
   const riders = await prisma.rider.findMany({

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
@@ -7,6 +8,28 @@ import { newsArticles, newsCategories, popularTags } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const dbPost = "newsPost" in prisma
+    ? await prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED }, select: { title: true, excerpt: true, coverImageUrl: true } })
+    : null;
+  const staticArticle = newsArticles.find((a) => a.id === id);
+  const title = dbPost?.title || staticArticle?.title || "Article Not Found";
+  const description = dbPost?.excerpt || staticArticle?.excerpt || "";
+
+  return {
+    title,
+    description: description.slice(0, 160) || `Read ${title} on District 76 Riders.`,
+    alternates: { canonical: `/news/${id}` },
+    openGraph: {
+      title,
+      description: description.slice(0, 160) || `Read ${title} on District 76 Riders.`,
+      type: "article",
+      ...(dbPost?.coverImageUrl && { images: [{ url: dbPost.coverImageUrl }] }),
+    },
+  };
+}
 
 export async function generateStaticParams() {
   const posts = "newsPost" in prisma

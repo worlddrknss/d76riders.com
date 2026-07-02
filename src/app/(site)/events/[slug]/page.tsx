@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
@@ -7,10 +8,35 @@ import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
 import { RouteMap } from "@/components/routes/route-map";
+import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
 import type { PlannerWaypoint, WaypointKind } from "@/lib/routing";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const event = await prisma.rideEvent.findUnique({
+    where: { slug },
+    select: { title: true, description: true, meetLocation: true, startsAt: true },
+  });
+  if (!event) return { title: "Event Not Found" };
+
+  const description = event.description
+    ? event.description.slice(0, 160)
+    : `Join this ride event${event.meetLocation ? ` departing from ${event.meetLocation}` : ""} organized by District 76 Riders.`;
+
+  return {
+    title: event.title,
+    description,
+    alternates: { canonical: `/events/${slug}` },
+    openGraph: {
+      title: event.title,
+      description,
+      type: "article",
+    },
+  };
+}
 
 function difficultyLabel(value: string | null): string {
   switch (value) {
@@ -123,15 +149,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <section className="page-shell">
+      <JsonLd data={eventJsonLd({
+        title: event.title,
+        slug: event.slug,
+        description: event.description,
+        date: event.startsAt,
+        location: event.meetLocation,
+        imageUrl: event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : undefined,
+      })} />
+      <JsonLd data={breadcrumbJsonLd([
+        { name: "Home", href: "/" },
+        { name: "Events", href: "/events" },
+        { name: event.title, href: `/events/${event.slug}` },
+      ])} />
       <div className="content-wrap space-y-6">
         {/* BREADCRUMB */}
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
-          <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
-          <ChevronRight className="h-3 w-3 text-border" />
-          <Link href="/events" className="text-muted transition hover:text-sunset">Events</Link>
-          <ChevronRight className="h-3 w-3 text-border" />
-          <span className="text-asphalt">{event.title}</span>
-        </nav>
 
         {/* TWO-COLUMN: Details | Flyer */}
         <div className="grid gap-6 lg:grid-cols-[1fr_20rem] xl:grid-cols-[1fr_24rem]">
