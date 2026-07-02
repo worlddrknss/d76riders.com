@@ -15,9 +15,27 @@ model Road {
   rider        Rider         @relation(fields: [riderId], references: [id], onDelete: Cascade)
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
   galleryItems GalleryItem[]
+  ratings      RoadRating[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([riderId])
+}
+
+model RoadRating {
+  id      String @id @default(cuid())
+  roadId  String
+  riderId String
+  score   Int // 1-5
+
+  road  Road  @relation(fields: [roadId], references: [id], onDelete: Cascade)
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([roadId, riderId])
+  @@index([roadId])
   @@index([riderId])
 }

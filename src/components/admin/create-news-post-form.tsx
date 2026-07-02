@@ -11,8 +11,6 @@ const initialCreateNewsPostFormState: CreateNewsPostFormState = {
 
 type CreateNewsPostFormProps = {
   action: (_previousState: CreateNewsPostFormState, formData: FormData) => Promise<CreateNewsPostFormState>;
-  existingCategories?: string[];
-  existingTags?: string[];
   initialValues?: {
     title?: string;
     category?: string;
@@ -32,8 +30,6 @@ type CreateNewsPostFormProps = {
 
 export function CreateNewsPostForm({
   action,
-  existingCategories = [],
-  existingTags = [],
   initialValues,
   heading,
   description,
@@ -66,24 +62,11 @@ export function CreateNewsPostForm({
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Category</span>
-              <select name="category" defaultValue={initialValues?.category ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-sunset/70 focus:outline-none" required>
-                <option value="" disabled>Select category…</option>
-                {existingCategories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-                <option value="__custom">+ New category…</option>
-              </select>
+              <input name="category" defaultValue={initialValues?.category ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Community" required />
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Tags</span>
               <input name="tags" defaultValue={initialValues?.tags ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Safety, Touring, Community" />
-              {existingTags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {existingTags.map((tag) => (
-                    <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.6rem] text-slate-400">{tag}</span>
-                  ))}
-                </div>
-              )}
             </label>
           </div>
 

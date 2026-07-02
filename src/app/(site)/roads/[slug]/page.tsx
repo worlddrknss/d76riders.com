@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
+import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, Star, UserRound } from "lucide-react";
 
-import { deleteRoadAction, updateRoadAction } from "@/app/(site)/roads/actions";
-import { RoutePlannerField } from "@/components/routes/route-planner-field";
+import { RoadManageActions } from "@/components/roads/road-manage-actions";
+import { StarRating } from "@/components/roads/star-rating";
 import { RouteMap } from "@/components/routes/route-map";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -11,7 +11,16 @@ import { getCurrentUser } from "@/lib/session";
 import type { PlannerWaypoint, WaypointKind } from "@/lib/routing";
 
 function difficultyLabel(value: string | null): string {
-  return value ? value.replaceAll("_", " ") : "Not specified";
+  switch (value) {
+    case "BEGINNER_FRIENDLY":
+      return "Beginner Friendly";
+    case "INTERMEDIATE":
+      return "Intermediate";
+    case "SCENIC":
+      return "Scenic";
+    default:
+      return "Not specified";
+  }
 }
 
 function extractCoordinates(value: unknown): [number, number][] {
@@ -35,6 +44,28 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
 
   if (!road) notFound();
 
+  // Fetch community rating aggregate + current user's rating
+  const ratingAggregate = await prisma.roadRating.aggregate({
+    where: { roadId: road.id },
+    _avg: { score: true },
+    _count: { score: true },
+  });
+
+  let userRating: number | null = null;
+  if (currentUser) {
+    const rider = await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } });
+    if (rider) {
+      const existing = await prisma.roadRating.findUnique({
+        where: { roadId_riderId: { roadId: road.id, riderId: rider.id } },
+        select: { score: true },
+      });
+      userRating = existing?.score ?? null;
+    }
+  }
+
+  const averageRating = ratingAggregate._avg.score ?? road.scenicRating;
+  const totalRatings = ratingAggregate._count.score;
+
   const coordinates = extractCoordinates(road.route?.geometry);
   const waypoints: PlannerWaypoint[] = (road.route?.waypoints ?? []).map((waypoint) => ({
     id: waypoint.id,
@@ -49,72 +80,99 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
   return (
     <section className="page-shell">
       <div className="content-wrap space-y-6">
-        <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Featured Road</p>
-              <h1 className="mt-2 font-display text-3xl font-semibold text-ink">{road.name}</h1>
-              <p className="mt-2 max-w-3xl text-sm text-muted">{road.description || "No road description yet."}</p>
+        {/* BREADCRUMB */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
+          <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
+          <ChevronRight className="h-3 w-3 text-border" />
+          <Link href="/roads" className="text-muted transition hover:text-sunset">Roads</Link>
+          <ChevronRight className="h-3 w-3 text-border" />
+          <span className="text-asphalt">{road.name}</span>
+        </nav>
+
+        {/* TWO-COLUMN: Details | Cover Image */}
+        <div className="grid gap-6 lg:grid-cols-[1fr_20rem] xl:grid-cols-[1fr_24rem]">
+          {/* ROAD DETAILS */}
+          <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
+            {/* HEADER: Title + Actions */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="font-display text-3xl font-semibold text-ink">{road.name}</h1>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{road.description || "No road description yet."}</p>
+              </div>
+              {isOwner && (
+                <div className="flex shrink-0 items-center gap-1">
+                  <RoadManageActions
+                    road={{
+                      id: road.id,
+                      name: road.name,
+                      description: road.description,
+                      difficulty: road.difficulty,
+                      scenicRating: road.scenicRating,
+                      hasImage: !!road.galleryItems[0]?.url,
+                      hasRoute: !!road.route,
+                      routeName: road.route?.name ?? null,
+                      routeDescription: road.route?.description ?? null,
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            <Link href="/roads" className="text-sm font-semibold text-sunset hover:underline">Back to roads</Link>
+
+            {/* INFO CARDS */}
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-border bg-canvas p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><RouteIcon className="h-3.5 w-3.5" />Distance</div>
+                <p className="mt-1.5 text-sm font-medium text-ink">{road.distanceMiles ? `${road.distanceMiles} miles` : "TBD"}</p>
+                <p className="text-xs text-muted">Total route length</p>
+              </div>
+              <div className="rounded-lg border border-border bg-canvas p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Signal className="h-3.5 w-3.5" />Difficulty</div>
+                <p className="mt-1.5 text-sm font-medium text-ink">{difficultyLabel(road.difficulty)}</p>
+                <p className="text-xs text-muted">Skill level</p>
+              </div>
+              <StarRating
+                roadId={road.id}
+                initialAverage={averageRating}
+                initialTotal={totalRatings}
+                initialUserRating={userRating}
+                isAuthenticated={!!currentUser}
+              />
+              <div className="rounded-lg border border-border bg-canvas p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Type</div>
+                <p className="mt-1.5 text-sm font-medium text-ink">Featured Road</p>
+                <p className="text-xs text-muted">Community curated</p>
+              </div>
+            </div>
+
+            {/* FOOTER: Shared by */}
+            <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-border pt-5 text-sm text-muted">
+              <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Shared by: <Link href={`/riders/${road.rider.handle}`} className="font-medium text-ink hover:text-sunset">{road.rider.name}</Link></span>
+              <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />@{road.rider.handle}</span>
+            </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-4 text-sm text-muted">
-            <span className="inline-flex items-center gap-2"><RouteIcon className="h-4 w-4 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} miles` : "Distance TBD"}</span>
-            <span className="inline-flex items-center gap-2"><Signal className="h-4 w-4 text-sunset" />{difficultyLabel(road.difficulty)}</span>
-            <span className="inline-flex items-center gap-2"><Star className="h-4 w-4 text-sunset" />{road.scenicRating ? road.scenicRating.toFixed(1) : "N/A"}</span>
-            <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />Shared by {road.rider.name} (@{road.rider.handle})</span>
-          </div>
+          {/* COVER IMAGE */}
+          {road.galleryItems[0]?.url ? (
+            <div className="relative overflow-hidden rounded-xl border border-border shadow-soft lg:self-stretch">
+              <img
+                src={mediaUrl(road.galleryItems[0].url)}
+                alt={road.galleryItems[0].caption || road.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : null}
         </div>
 
-        {road.galleryItems[0]?.url ? <img src={mediaUrl(road.galleryItems[0].url)} alt={road.galleryItems[0].caption || road.name} className="h-96 w-full rounded-xl object-cover shadow-soft" /> : null}
-
+        {/* FULL-WIDTH ROUTE MAP */}
         {coordinates.length >= 2 ? (
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
-            <h2 className="font-display text-xl font-semibold text-asphalt">Saved Road Route</h2>
+            <div>
+              <h2 className="font-display text-xl font-semibold text-asphalt">Saved Road Route</h2>
+              <p className="mt-1 text-sm text-muted">Route geometry attached to this featured road.</p>
+            </div>
             <div className="mt-4">
               <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
             </div>
-          </div>
-        ) : null}
-
-        {isOwner ? (
-          <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-            <h2 className="font-display text-xl font-semibold text-asphalt">Manage Road</h2>
-            <form action={updateRoadAction.bind(null, road.id)} className="mt-4 space-y-4">
-              <input name="name" defaultValue={road.name} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink" />
-              <textarea name="description" rows={4} defaultValue={road.description ?? ""} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink" />
-              <div className="grid gap-4 md:grid-cols-2">
-                <select name="difficulty" defaultValue={road.difficulty ?? ""} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink">
-                  <option value="">Not specified</option>
-                  <option value="BEGINNER_FRIENDLY">Beginner Friendly</option>
-                  <option value="INTERMEDIATE">Intermediate</option>
-                  <option value="SCENIC">Scenic</option>
-                </select>
-                <input name="scenicRating" type="number" step="0.1" min={0} max={5} defaultValue={road.scenicRating ?? undefined} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink" />
-              </div>
-              <input name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-asphalt file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
-              <label className="flex items-center gap-2 text-xs text-muted"><input name="removeCoverImage" type="checkbox" /> Remove current road image</label>
-              <input name="routeName" defaultValue={road.route?.name ?? ""} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink" placeholder="Route name" />
-              <textarea name="routeDescription" rows={3} defaultValue={road.route?.description ?? ""} className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink" placeholder="Route description" />
-              <RoutePlannerField
-                title="Featured Road Route Planner"
-                helperText="Launch full-screen planner to replace or attach the saved road route."
-                savedSummaryLabel="Saved road route"
-                modalEyebrow="Featured Road Builder"
-                modalTitle="Featured Road Route Planner"
-                hiddenGeometryName="routeGeometryJson"
-                hiddenWaypointsName="routeWaypointsJson"
-                hiddenDistanceName="routeDistanceMiles"
-              />
-              <div className="flex flex-wrap gap-4 text-xs text-muted">
-                <label className="flex items-center gap-2"><input name="removeRoute" type="checkbox" /> Remove saved route</label>
-              </div>
-              <div className="flex gap-2">
-                <button className="rounded-md bg-asphalt px-4 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-white">Save Road</button>
-                <button formAction={deleteRoadAction.bind(null, road.id)} className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-red-700">Delete Road</button>
-              </div>
-            </form>
           </div>
         ) : null}
       </div>

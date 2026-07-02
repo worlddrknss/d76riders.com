@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { Maximize2, X } from "lucide-react";
 
 import { RoutePlannerEmbedded } from "@/components/routes/route-planner-loader";
@@ -105,8 +106,8 @@ export function RoutePlannerField({
       <input type="hidden" name={hiddenWaypointsName} value={waypointsJson} />
       <input type="hidden" name={hiddenDistanceName} value={routeDistanceMiles} />
 
-      <div className={`fixed inset-0 z-100 bg-asphalt/80 backdrop-blur-sm transition ${plannerOpen ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-        <div className="absolute inset-2 overflow-hidden rounded-2xl border border-white/10 bg-canvas shadow-lift sm:inset-4 lg:inset-6">
+      {plannerOpen && createPortal(
+        <div className="fixed inset-0 z-[9999] flex flex-col bg-canvas">
           <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 sm:px-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">{modalEyebrow}</p>
@@ -135,11 +136,12 @@ export function RoutePlannerField({
               </button>
             </div>
           </div>
-          <div className="h-[calc(100%-4.25rem)] w-full">
+          <div className="flex-1 w-full">
             <RoutePlannerEmbedded onRouteDataChange={setDraftPlannerData} />
           </div>
-        </div>
-      </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

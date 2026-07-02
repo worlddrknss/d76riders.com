@@ -21,6 +21,7 @@ model Rider {
   events         RideEvent[]
   routes         Route[]
   roads          Road[]
+  roadRatings    RoadRating[]
   journalEntries JournalEntry[]
   comments       Comment[]
   likes          Like[]

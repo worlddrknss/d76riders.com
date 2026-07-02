@@ -26,8 +26,6 @@ export default async function AdminNewsPage() {
           <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.12em] text-slate-400">
             <tr>
               <th className="px-4 py-3 text-left">Title</th>
-              <th className="px-4 py-3 text-left">Category</th>
-              <th className="px-4 py-3 text-left">Tags</th>
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Featured</th>
               <th className="px-4 py-3 text-left">Published</th>
@@ -37,7 +35,7 @@ export default async function AdminNewsPage() {
           <tbody className="divide-y divide-white/10">
             {posts.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">No news posts yet.</td>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">No news posts yet.</td>
               </tr>
             ) : (
               posts.map((post) => (
@@ -46,24 +44,6 @@ export default async function AdminNewsPage() {
                     <div>
                       <p className="font-semibold text-white">{post.title}</p>
                       <p className="text-xs text-slate-400">/{post.slug}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full border border-sunset/30 bg-sunset/10 px-2 py-0.5 text-xs font-semibold text-orange-200">
-                      {post.category}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {post.tags.length === 0 ? (
-                        <span className="text-xs text-slate-500">—</span>
-                      ) : (
-                        post.tags.map((tag) => (
-                          <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.65rem] text-slate-300">
-                            {tag}
-                          </span>
-                        ))
-                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3">{post.status}</td>

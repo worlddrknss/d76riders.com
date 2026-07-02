@@ -12,6 +12,7 @@ export const siteImages = {
   pageHeroes: {
     about: u("photo-1517524008697-84bbe3c3fd98", 2000),
     events: "images/hero/events.jpg",
+    roads: u("photo-1469854523086-cc02fe5d8800", 2000),
     members: u("photo-1568772585407-9361f9bf3a87", 2000),
     gallery: u("photo-1485965120184-e220f721d03e", 2000),
     join: u("photo-1464822759023-fed622ff2c3b", 2000),
