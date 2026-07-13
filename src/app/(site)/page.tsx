@@ -55,45 +55,63 @@ const exploreFeatures = [
   },
 ];
 
+async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await query();
+  } catch (error) {
+    console.warn("Home query failed:", error);
+    return fallback;
+  }
+}
+
 export default async function Home() {
   const now = new Date();
-  const upcomingEvents = await prisma.rideEvent.findMany({
-    where: { startsAt: { gte: now } },
-    orderBy: { startsAt: "asc" },
-    take: 3,
-    include: {
-      rsvps: {
-        where: { status: "GOING" },
-        include: {
-          rider: { select: { avatarUrl: true, name: true } },
+  const upcomingEvents = await safeQuery(
+    () => prisma.rideEvent.findMany({
+      where: { startsAt: { gte: now } },
+      orderBy: { startsAt: "asc" },
+      take: 3,
+      include: {
+        rsvps: {
+          where: { status: "GOING" },
+          include: {
+            rider: { select: { avatarUrl: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
         },
-        orderBy: { createdAt: "desc" },
       },
-    },
-  });
+    }),
+    [],
+  );
 
   const publishedNews = "newsPost" in prisma
-    ? await prisma.newsPost.findMany({
-        where: { status: NewsPostStatus.PUBLISHED },
-        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-        take: 3,
-      })
+    ? await safeQuery(
+        () => prisma.newsPost.findMany({
+          where: { status: NewsPostStatus.PUBLISHED },
+          orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+          take: 3,
+        }),
+        [],
+      )
     : [];
 
-  const roads = await prisma.road.findMany({
-    include: {
-      galleryItems: { orderBy: { createdAt: "asc" }, take: 1 },
-    },
-    orderBy: [{ scenicRating: "desc" }, { createdAt: "desc" }],
-    take: 6,
-  });
+  const roads = await safeQuery(
+    () => prisma.road.findMany({
+      include: {
+        galleryItems: { orderBy: { createdAt: "asc" }, take: 1 },
+      },
+      orderBy: [{ scenicRating: "desc" }, { createdAt: "desc" }],
+      take: 6,
+    }),
+    [],
+  );
 
   const [userCount, bikeCount, eventCount, roadCount, activities] = await Promise.all([
-    prisma.user.count(),
-    prisma.bike.count(),
-    prisma.rideEvent.count(),
-    prisma.road.count(),
-    prisma.activity.findMany({ orderBy: { createdAt: "desc" }, take: 4 }),
+    safeQuery(() => prisma.user.count(), 0),
+    safeQuery(() => prisma.bike.count(), 0),
+    safeQuery(() => prisma.rideEvent.count(), 0),
+    safeQuery(() => prisma.road.count(), 0),
+    safeQuery(() => prisma.activity.findMany({ orderBy: { createdAt: "desc" }, take: 4 }), []),
   ]);
 
   const statValues = [
