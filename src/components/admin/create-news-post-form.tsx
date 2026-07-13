@@ -11,6 +11,8 @@ const initialCreateNewsPostFormState: CreateNewsPostFormState = {
 
 type CreateNewsPostFormProps = {
   action: (_previousState: CreateNewsPostFormState, formData: FormData) => Promise<CreateNewsPostFormState>;
+  existingCategories?: string[];
+  existingTags?: string[];
   initialValues?: {
     title?: string;
     category?: string;
@@ -30,6 +32,8 @@ type CreateNewsPostFormProps = {
 
 export function CreateNewsPostForm({
   action,
+  existingCategories,
+  existingTags,
   initialValues,
   heading,
   description,
@@ -62,13 +66,42 @@ export function CreateNewsPostForm({
           <div className="grid gap-4 md:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Category</span>
-              <input name="category" defaultValue={initialValues?.category ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Community" required />
+              <input
+                name="category"
+                defaultValue={initialValues?.category ?? ""}
+                list={existingCategories?.length ? "news-categories" : undefined}
+                className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none"
+                placeholder="Community"
+                required
+              />
             </label>
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Tags</span>
-              <input name="tags" defaultValue={initialValues?.tags ?? ""} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none" placeholder="Safety, Touring, Community" />
+              <input
+                name="tags"
+                defaultValue={initialValues?.tags ?? ""}
+                list={existingTags?.length ? "news-tags" : undefined}
+                className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none"
+                placeholder="Safety, Touring, Community"
+              />
             </label>
           </div>
+
+          {existingCategories?.length ? (
+            <datalist id="news-categories">
+              {existingCategories.map((category) => (
+                <option key={category} value={category} />
+              ))}
+            </datalist>
+          ) : null}
+
+          {existingTags?.length ? (
+            <datalist id="news-tags">
+              {existingTags.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+          ) : null}
 
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Excerpt</span>
