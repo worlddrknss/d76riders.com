@@ -64,7 +64,7 @@ function SectionFields({ section, data }: { section: SectionType; data: ProfileS
         </div>
         <div>
           <label className="text-xs font-semibold uppercase tracking-wide text-muted">Avatar URL</label>
-          <input name="avatarUrl" type="url" defaultValue={data.avatarUrl} placeholder="https://..." className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+          <input name="avatarUrl" type="text" defaultValue={data.avatarUrl} placeholder="https://... or /api/media/..." className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
