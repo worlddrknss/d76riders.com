@@ -4,18 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 export default async function AdminNewsNewPage() {
   const [categories, tags] = await Promise.all([
-    prisma.newsPost.findMany({ select: { category: true }, distinct: ["category"], orderBy: { category: "asc" } }),
-    prisma.newsPost.findMany({ select: { tags: true } }),
+    prisma.newsCategory.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
+    prisma.newsTag.findMany({ select: { name: true }, orderBy: { usageCount: "desc" }, take: 50 }),
   ]);
-
-  const uniqueCategories = categories.map((c) => c.category);
-  const uniqueTags = [...new Set(tags.flatMap((t) => t.tags))].sort();
 
   return (
     <CreateNewsPostForm
       action={createNewsPostAction}
-      existingCategories={uniqueCategories}
-      existingTags={uniqueTags}
+      existingCategories={categories.map((c) => c.name)}
+      existingTags={tags.map((t) => t.name)}
       heading="Create News Post"
       description="Publish a new public news article to the District 76 site."
       submitLabel="Publish News Post"

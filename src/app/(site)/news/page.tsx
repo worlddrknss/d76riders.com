@@ -6,6 +6,7 @@ import { newsArticles } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "News & Updates",
@@ -19,23 +20,29 @@ export const metadata: Metadata = {
 };
 
 export default async function NewsPage() {
+  const currentUser = await getCurrentUser();
+
   const dbPosts = "newsPost" in prisma
     ? await prisma.newsPost.findMany({
         where: { status: NewsPostStatus.PUBLISHED },
         orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
         take: 24,
+        include: {
+          newsCategory: { select: { name: true } },
+          postTags: { include: { tag: { select: { name: true } } } },
+        },
       })
     : [];
 
-  // Derive categories and tags from published posts
-  const newsCategories = [...new Set(dbPosts.map((p) => p.category))].sort();
-  const popularTags = [...new Set(dbPosts.flatMap((p) => p.tags))].sort();
+  // Derive categories and tags from models
+  const newsCategories = await prisma.newsCategory.findMany({ orderBy: { name: "asc" }, select: { name: true } });
+  const popularTags = await prisma.newsTag.findMany({ orderBy: { usageCount: "desc" }, take: 20, select: { name: true } });
 
   const articles = dbPosts.length > 0
     ? dbPosts.map((post) => ({
         id: post.slug,
         title: post.title,
-        category: post.category,
+        category: post.newsCategory?.name || post.category,
         date: post.publishedAt.toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
@@ -69,7 +76,15 @@ export default async function NewsPage() {
       <section className="w-full bg-canvas">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
           {/* ARTICLE GRID */}
-          <div className="grid gap-8 sm:grid-cols-2">
+          <div>
+            {currentUser ? (
+              <div className="mb-6 flex items-center justify-end">
+                <Link href="/news/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#cf5a26]">
+                  Submit Article
+                </Link>
+              </div>
+            ) : null}
+            <div className="grid gap-8 sm:grid-cols-2">
             {articles.map((article, i) => (
               <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <Link href={`/news/${article.id}`} className="block">
@@ -97,6 +112,7 @@ export default async function NewsPage() {
               </article>
             ))}
           </div>
+          </div>
 
           {/* SIDEBAR */}
           <aside className="space-y-8">
@@ -104,9 +120,9 @@ export default async function NewsPage() {
               <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
               <ul className="mt-4 space-y-2">
                 {newsCategories.map((cat) => (
-                  <li key={cat} className="flex items-center gap-2 text-sm text-muted">
+                  <li key={cat.name} className="flex items-center gap-2 text-sm text-muted">
                     <span className="h-2 w-2 bg-sunset" />
-                    {cat}
+                    {cat.name}
                   </li>
                 ))}
               </ul>
@@ -138,8 +154,8 @@ export default async function NewsPage() {
               <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {popularTags.map((tag) => (
-                  <span key={tag} className="rounded-md border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
-                    {tag}
+                  <span key={tag.name} className="rounded-md border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                    {tag.name}
                   </span>
                 ))}
               </div>

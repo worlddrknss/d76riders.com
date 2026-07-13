@@ -6,6 +6,7 @@ import { NewsPostStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { isS3Configured, uploadFile } from "@/lib/s3";
@@ -116,27 +117,47 @@ export async function createNewsPostAction(
       return { error: "Storage is not configured for image uploads yet." };
     }
 
-    const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `news/${slug}-${crypto.randomUUID()}.${ext}`;
-    coverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+    const raw = Buffer.from(await coverImage.arrayBuffer());
+    const optimized = await optimizeImage(raw);
+    const key = `news/${slug}-${crypto.randomUUID()}.${optimized.ext}`;
+    coverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }
+
+  // Auto-create tags
+  const tagIds: string[] = [];
+  for (const tagName of tags) {
+    const tagSlug = toSlug(tagName);
+    if (!tagSlug) continue;
+    const tag = await prisma.newsTag.upsert({
+      where: { slug: tagSlug },
+      create: { name: tagName, slug: tagSlug, usageCount: 1 },
+      update: { usageCount: { increment: 1 } },
+    });
+    tagIds.push(tag.id);
+  }
+
+  // Resolve category
+  const categoryRecord = category
+    ? await prisma.newsCategory.findFirst({ where: { OR: [{ name: category }, { slug: toSlug(category) }] } })
+    : null;
 
   await prisma.newsPost.create({
     data: {
       slug,
       authorUserId: currentUser?.id,
       title,
+      categoryId: categoryRecord?.id ?? null,
       category,
       excerpt,
       contentHtml,
       authorName: currentUser?.name || currentUser?.handle || "District 76",
       coverImageUrl,
-      tags,
       status,
       publishedAt,
       seoTitle: seoTitle || null,
       seoDescription: seoDescription || null,
       featured,
+      postTags: tagIds.length > 0 ? { create: tagIds.map((tagId) => ({ tagId })) } : undefined,
     },
   });
 

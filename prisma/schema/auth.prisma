@@ -22,6 +22,7 @@ model User {
   rider           Rider?
   roles           UserRole[]
   newsPosts       NewsPost[]
+  reviewedPosts   NewsPost[] @relation("newsReviewer")
   resolvedReports Report[]
 
   createdAt DateTime @default(now())

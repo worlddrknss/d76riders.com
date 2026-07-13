@@ -65,7 +65,13 @@ export default async function NewsArticlePage({
   const { id } = await params;
   const currentUser = await getCurrentUser();
   const dbPost = "newsPost" in prisma
-    ? await safeQuery(() => prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED } }), null)
+    ? await safeQuery(() => prisma.newsPost.findFirst({
+        where: { slug: id, status: NewsPostStatus.PUBLISHED },
+        include: {
+          newsCategory: { select: { name: true } },
+          postTags: { include: { tag: { select: { name: true } } } },
+        },
+      }), null)
     : null;
   const mockArticle = newsArticles.find((a) => a.id === id);
 
@@ -73,7 +79,7 @@ export default async function NewsArticlePage({
     ? {
         id: dbPost.slug,
         title: dbPost.title,
-        category: dbPost.category,
+        category: dbPost.newsCategory?.name || dbPost.category,
         date: dbPost.publishedAt.toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
@@ -83,7 +89,7 @@ export default async function NewsArticlePage({
         excerpt: dbPost.excerpt,
         body: [dbPost.contentHtml],
         pullQuote: undefined,
-        tags: dbPost.tags,
+        tags: dbPost.postTags.map((pt) => pt.tag.name),
         coverImageUrl: dbPost.coverImageUrl,
         isHtml: true,
       }

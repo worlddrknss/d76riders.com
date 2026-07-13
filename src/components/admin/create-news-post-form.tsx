@@ -19,7 +19,7 @@ type CreateNewsPostFormProps = {
     tags?: string;
     excerpt?: string;
     contentHtml?: string;
-    status?: "DRAFT" | "PUBLISHED";
+    status?: "DRAFT" | "PUBLISHED" | "PENDING_REVIEW" | "REJECTED";
     publishedAt?: string;
     seoTitle?: string;
     seoDescription?: string;
@@ -114,6 +114,7 @@ export function CreateNewsPostForm({
               <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 focus:border-sunset/70 focus:outline-none">
                 <option value="DRAFT">Draft</option>
                 <option value="PUBLISHED">Published</option>
+                <option value="PENDING_REVIEW">Pending Review</option>
               </select>
             </label>
             <label className="grid gap-2">

@@ -46,7 +46,16 @@ export default async function AdminNewsPage() {
                       <p className="text-xs text-slate-400">/{post.slug}</p>
                     </div>
                   </td>
-                  <td className="px-4 py-3">{post.status}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      post.status === "PUBLISHED" ? "bg-emerald-500/15 text-emerald-300"
+                        : post.status === "PENDING_REVIEW" ? "bg-amber-500/15 text-amber-300"
+                        : post.status === "REJECTED" ? "bg-red-500/15 text-red-300"
+                        : "bg-white/10 text-slate-300"
+                    }`}>
+                      {post.status === "PENDING_REVIEW" ? "Pending" : post.status}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">{post.featured ? "Yes" : "No"}</td>
                   <td className="px-4 py-3">{post.publishedAt.toLocaleString()}</td>
                   <td className="px-4 py-3">

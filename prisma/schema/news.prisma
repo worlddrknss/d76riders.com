@@ -1,33 +1,76 @@
-// News domain — admin-authored articles published to the public news section.
+// News domain — community-authored articles with moderation workflow.
 
 enum NewsPostStatus {
   DRAFT
+  PENDING_REVIEW
   PUBLISHED
+  REJECTED
+}
+
+model NewsCategory {
+  id          String @id @default(cuid())
+  name        String @unique
+  slug        String @unique
+  description String?
+
+  posts NewsPost[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NewsTag {
+  id         String @id @default(cuid())
+  name       String @unique
+  slug       String @unique
+  usageCount Int    @default(0)
+
+  posts NewsPostTag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NewsPostTag {
+  postId String
+  tagId  String
+
+  post NewsPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  NewsTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@index([tagId])
 }
 
 model NewsPost {
-  id             String         @id @default(cuid())
-  slug           String         @unique
-  authorUserId   String?
-  title          String
-  category       String
-  excerpt        String
-  contentHtml    String
-  authorName     String
-  coverImageUrl  String?
-  tags           String[]
-  status         NewsPostStatus @default(PUBLISHED)
-  seoTitle       String?
-  seoDescription String?
-  featured       Boolean        @default(false)
-  publishedAt    DateTime       @default(now())
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  authorUserId     String?
+  title            String
+  categoryId       String?
+  category         String         @default("")
+  excerpt          String
+  contentHtml      String
+  authorName       String
+  coverImageUrl    String?
+  status           NewsPostStatus @default(PENDING_REVIEW)
+  seoTitle         String?
+  seoDescription   String?
+  featured         Boolean        @default(false)
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  rejectionReason  String?
+  publishedAt      DateTime       @default(now())
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
-  authorUser User? @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  authorUser   User?         @relation(fields: [authorUserId], references: [id], onDelete: Cascade)
+  reviewedBy   User?         @relation("newsReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  newsCategory NewsCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  postTags     NewsPostTag[]
 
   @@index([publishedAt])
-  @@index([category])
+  @@index([categoryId])
   @@index([status])
   @@index([featured])
   @@index([authorUserId])

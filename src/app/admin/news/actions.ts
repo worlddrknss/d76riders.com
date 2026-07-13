@@ -6,6 +6,7 @@ import { NewsPostStatus } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFileByUrl, isS3Configured, uploadFile } from "@/lib/s3";
@@ -16,6 +17,14 @@ export type UpdateNewsPostFormState = {
 
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
+}
+
+function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .slice(0, 80);
 }
 
 function toOptionalDate(value: string): Date | null {
@@ -98,29 +107,52 @@ export async function updateNewsPostAction(
       return { error: "Storage is not configured for image uploads yet." };
     }
 
-    const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `news/${post.slug}-${crypto.randomUUID()}.${ext}`;
-    nextCoverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+    const raw = Buffer.from(await coverImage.arrayBuffer());
+    const optimized = await optimizeImage(raw);
+    const key = `news/${post.slug}-${crypto.randomUUID()}.${optimized.ext}`;
+    nextCoverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }
 
   if (removeCoverImage && !(coverImage instanceof File && coverImage.size > 0)) {
     nextCoverImageUrl = null;
   }
 
+  // Auto-create/upsert tags
+  const tagIds: string[] = [];
+  for (const tagName of tags) {
+    const tagSlug = toSlug(tagName);
+    if (!tagSlug) continue;
+    const tag = await prisma.newsTag.upsert({
+      where: { slug: tagSlug },
+      create: { name: tagName, slug: tagSlug, usageCount: 1 },
+      update: { usageCount: { increment: 1 } },
+    });
+    tagIds.push(tag.id);
+  }
+
+  // Resolve category
+  const categoryRecord = category
+    ? await prisma.newsCategory.findFirst({ where: { OR: [{ name: category }, { slug: toSlug(category) }] } })
+    : null;
+
+  // Remove old tag links and re-create
+  await prisma.newsPostTag.deleteMany({ where: { postId: post.id } });
+
   await prisma.newsPost.update({
     where: { id: post.id },
     data: {
       title,
+      categoryId: categoryRecord?.id ?? null,
       category,
       excerpt,
       contentHtml,
-      tags,
       status,
       publishedAt,
       seoTitle: seoTitle || null,
       seoDescription: seoDescription || null,
       featured,
       coverImageUrl: nextCoverImageUrl,
+      postTags: tagIds.length > 0 ? { create: tagIds.map((tagId) => ({ tagId })) } : undefined,
     },
   });
 
