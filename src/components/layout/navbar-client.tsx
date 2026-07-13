@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserCog, UserRound, Bike, CalendarPlus2, LogOut, Shield } from "lucide-react";
+import { Menu, X, ChevronDown, UserCog, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
@@ -11,6 +11,7 @@ import { type CurrentUser } from "@/lib/session";
 
 type NavbarClientProps = {
   currentUser: CurrentUser | null;
+  notificationCount: number;
 };
 
 function initialsFromName(name: string | null, email: string): string {
@@ -28,7 +29,7 @@ function initialsFromName(name: string | null, email: string): string {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
-export function NavbarClient({ currentUser }: NavbarClientProps) {
+export function NavbarClient({ currentUser, notificationCount }: NavbarClientProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,6 +80,20 @@ export function NavbarClient({ currentUser }: NavbarClientProps) {
         <div className="relative flex items-center gap-3">
           {currentUser ? (
             <>
+              <Link
+                href="/notifications"
+                className="relative hidden rounded-md border border-white/20 p-2 text-slate-200 transition hover:bg-white/10 hover:text-white lg:inline-flex"
+                aria-label="Open notifications"
+                title="Notifications"
+              >
+                <Bell className="h-4 w-4" />
+                {notificationCount > 0 ? (
+                  <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-sunset px-1 text-[0.6rem] font-bold leading-4 text-white">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </span>
+                ) : null}
+              </Link>
+
               <button
                 type="button"
                 className="hidden items-center gap-2 rounded-md bg-white/5 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 lg:inline-flex"
@@ -207,6 +222,13 @@ export function NavbarClient({ currentUser }: NavbarClientProps) {
                     onClick={() => setIsOpen(false)}
                   >
                     Garage
+                  </Link>
+                  <Link
+                    href="/notifications"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Notifications
                   </Link>
                   <Link
                     href="/events/new"

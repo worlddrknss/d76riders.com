@@ -6,12 +6,12 @@ const u = (id: string, w = 1200) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
 
 export const siteImages = {
-  hero: "images/hero/home.jpg",
+  hero: "/images/hero/home.jpg",
   aboutTown: u("photo-1444723121867-7a241cacace9", 1400),
   ctaRoad: u("photo-1469854523086-cc02fe5d8800", 2000),
   pageHeroes: {
     about: u("photo-1517524008697-84bbe3c3fd98", 2000),
-    events: "images/hero/events.jpg",
+    events: "/images/hero/events.jpg",
     roads: u("photo-1469854523086-cc02fe5d8800", 2000),
     members: u("photo-1568772585407-9361f9bf3a87", 2000),
     gallery: u("photo-1485965120184-e220f721d03e", 2000),

@@ -13,12 +13,16 @@ model GalleryItem {
   bikeId         String?
   journalEntryId String?
   roadId         String?
+  buildModificationId String?
+  serviceRecordId String?
 
   rider        Rider?        @relation(fields: [riderId], references: [id], onDelete: Cascade)
   event        RideEvent?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   bike         Bike?         @relation(fields: [bikeId], references: [id], onDelete: Cascade)
   journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
   road         Road?         @relation(fields: [roadId], references: [id], onDelete: Cascade)
+  buildModification BuildModification? @relation(fields: [buildModificationId], references: [id], onDelete: Cascade)
+  serviceRecord ServiceRecord? @relation(fields: [serviceRecordId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -27,4 +31,6 @@ model GalleryItem {
   @@index([bikeId])
   @@index([journalEntryId])
   @@index([roadId])
+  @@index([buildModificationId])
+  @@index([serviceRecordId])
 }

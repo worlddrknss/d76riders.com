@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clearUserSession, getCurrentUser } from "@/lib/session";
@@ -18,8 +19,6 @@ export type AccountFormState = {
 export type DeleteAccountFormState = {
   error: string | null;
 };
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
@@ -69,6 +68,7 @@ export async function updateAccountProfileAction(
   const avatarFile = formData.get("avatarFile");
   const coverFile = formData.get("coverFile");
   const bio = normalizeText(formData.get("bio"));
+  const yearStartedRidingInput = normalizeText(formData.get("yearStartedRiding"));
   const newPassword = normalizeText(formData.get("newPassword"));
 
   if (!username || !isValidUsername(username)) {
@@ -85,6 +85,16 @@ export async function updateAccountProfileAction(
 
   if (newPassword && newPassword.length < 8) {
     return { error: "New password must be at least 8 characters.", success: null };
+  }
+
+  const currentYear = new Date().getFullYear();
+  let yearsRiding: number | null = null;
+  if (yearStartedRidingInput) {
+    const yearStartedRiding = Number.parseInt(yearStartedRidingInput, 10);
+    if (!Number.isFinite(yearStartedRiding) || yearStartedRiding < 1900 || yearStartedRiding > currentYear) {
+      return { error: `Year started riding must be between 1900 and ${currentYear}.`, success: null };
+    }
+    yearsRiding = Math.max(0, currentYear - yearStartedRiding);
   }
 
   const resolvedDisplayName = displayName || username;
@@ -114,9 +124,15 @@ export async function updateAccountProfileAction(
       return { error: "Storage is not configured for avatar uploads yet.", success: null };
     }
 
-    const ext = avatarFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `avatars/${userId}/${crypto.randomUUID()}.${ext}`;
-    nextAvatarUrl = await uploadFile(key, Buffer.from(await avatarFile.arrayBuffer()), avatarFile.type);
+    let secureUpload: { buffer: Buffer; ext: string; contentType: string };
+    try {
+      secureUpload = await validateAndScanImageUpload(avatarFile, "account-avatar-update");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate avatar image.", success: null };
+    }
+
+    const key = `avatars/${userId}/${crypto.randomUUID()}.${secureUpload.ext}`;
+    nextAvatarUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
   }
 
   let nextCoverUrl: string | null | undefined = undefined; // undefined = no change
@@ -130,9 +146,15 @@ export async function updateAccountProfileAction(
       return { error: "Storage is not configured for cover uploads yet.", success: null };
     }
 
-    const ext = coverFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `covers/${userId}/${crypto.randomUUID()}.${ext}`;
-    nextCoverUrl = await uploadFile(key, Buffer.from(await coverFile.arrayBuffer()), coverFile.type);
+    let secureUpload: { buffer: Buffer; ext: string; contentType: string };
+    try {
+      secureUpload = await validateAndScanImageUpload(coverFile, "account-cover-update");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate cover image.", success: null };
+    }
+
+    const key = `covers/${userId}/${crypto.randomUUID()}.${secureUpload.ext}`;
+    nextCoverUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
   }
 
   try {
@@ -154,6 +176,7 @@ export async function updateAccountProfileAction(
           avatarUrl: nextAvatarUrl,
           coverUrl: nextCoverUrl !== undefined ? nextCoverUrl : undefined,
           bio: bio || null,
+          yearsRiding,
         },
       });
     });

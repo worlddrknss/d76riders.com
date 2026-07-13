@@ -6,7 +6,10 @@ import { RideDifficulty } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
+import { distanceMilesFromGeometry } from "@/lib/routing";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
@@ -64,8 +67,6 @@ function parseJsonValue<T>(value: string): T | null {
   }
 }
 
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-
 export async function createRoadAction(_previousState: RoadFormState, formData: FormData): Promise<RoadFormState> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
@@ -96,6 +97,10 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
   const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
   const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
   const ksuLng = routeKsuWaypoint?.lng ?? routeStartWaypoint?.lng ?? null;
+  const derivedRouteDistanceMiles = routeGeometry?.coordinates.length
+    ? distanceMilesFromGeometry(routeGeometry.coordinates)
+    : null;
+  const resolvedDistanceMiles = derivedRouteDistanceMiles ?? routeDistanceMiles;
 
   let coverImageUrl: string | null = null;
   if (coverImage instanceof File && coverImage.size > 0) {
@@ -105,9 +110,16 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
     if (!isS3Configured()) {
       return { error: "Storage is not configured for image uploads yet.", success: null };
     }
-    const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `roads/${rider.id}/${slug}-${crypto.randomUUID()}.${ext}`;
-    coverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+    let secureUpload: { buffer: Buffer };
+    try {
+      secureUpload = await validateAndScanImageUpload(coverImage, "roads-cover-create");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate road image upload.", success: null };
+    }
+
+    const optimized = await optimizeImage(secureUpload.buffer);
+    const key = `roads/${rider.id}/${slug}-${crypto.randomUUID()}.${optimized.ext}`;
+    coverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }
 
   await prisma.$transaction(async (tx) => {
@@ -118,7 +130,7 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
           riderId: rider.id,
           name: routeName || `${name} Route`,
           description: routeDescription || null,
-          distanceMiles: routeDistanceMiles,
+          distanceMiles: resolvedDistanceMiles,
           geometry: routeGeometry,
           ksuLat,
           ksuLng,
@@ -145,7 +157,7 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
         routeId,
         name,
         slug,
-        distanceMiles: routeDistanceMiles ? Math.round(routeDistanceMiles) : null,
+        distanceMiles: resolvedDistanceMiles ? Math.round(resolvedDistanceMiles) : null,
         difficulty,
         scenicRating,
         description: description || null,
@@ -228,14 +240,23 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
   const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
   const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
   const ksuLng = routeKsuWaypoint?.lng ?? routeStartWaypoint?.lng ?? null;
+  const derivedRouteDistanceMiles = routeGeometry?.coordinates.length
+    ? distanceMilesFromGeometry(routeGeometry.coordinates)
+    : null;
+  const resolvedDistanceMiles = derivedRouteDistanceMiles ?? routeDistanceMiles;
   const previousImageUrls = road.galleryItems.map((item) => item.url);
   let nextCoverImageUrl: string | null = road.galleryItems[0]?.url ?? null;
 
   if (coverImage instanceof File && coverImage.size > 0) {
     if (allowedImageTypes.has(coverImage.type) && isS3Configured()) {
-      const ext = coverImage.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const key = `roads/${road.rider.id}/${road.slug}-${crypto.randomUUID()}.${ext}`;
-      nextCoverImageUrl = await uploadFile(key, Buffer.from(await coverImage.arrayBuffer()), coverImage.type);
+      try {
+        const secureUpload = await validateAndScanImageUpload(coverImage, "roads-cover-update");
+        const optimized = await optimizeImage(secureUpload.buffer);
+        const key = `roads/${road.rider.id}/${road.slug}-${crypto.randomUUID()}.${optimized.ext}`;
+        nextCoverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
+      } catch {
+        nextCoverImageUrl = road.galleryItems[0]?.url ?? null;
+      }
     }
   }
 
@@ -259,7 +280,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
           data: {
             name: routeName || `${name} Route`,
             description: routeDescription || null,
-            distanceMiles: routeDistanceMiles,
+            distanceMiles: resolvedDistanceMiles,
             geometry: routeGeometry,
             ksuLat,
             ksuLng,
@@ -282,7 +303,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
             riderId: road.rider.id,
             name: routeName || `${name} Route`,
             description: routeDescription || null,
-            distanceMiles: routeDistanceMiles,
+            distanceMiles: resolvedDistanceMiles,
             geometry: routeGeometry,
             ksuLat,
             ksuLng,
@@ -311,7 +332,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
         description: description || null,
         difficulty,
         scenicRating,
-        distanceMiles: routeDistanceMiles ? Math.round(routeDistanceMiles) : road.distanceMiles,
+        distanceMiles: resolvedDistanceMiles ? Math.round(resolvedDistanceMiles) : road.distanceMiles,
         routeId,
       },
     });

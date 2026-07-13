@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { createJournalEntrySchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
@@ -17,8 +18,6 @@ export type JournalFormState = {
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
 }
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function createJournalEntryAction(
   _previousState: JournalFormState,
@@ -65,9 +64,15 @@ export async function createJournalEntryAction(
       return { error: "Storage is not configured for image uploads yet.", success: null };
     }
 
-    const ext = ridePhoto.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `journal/${rider.id}/${crypto.randomUUID()}.${ext}`;
-    photoUrl = await uploadFile(key, Buffer.from(await ridePhoto.arrayBuffer()), ridePhoto.type);
+    let secureUpload: { buffer: Buffer; ext: string; contentType: string };
+    try {
+      secureUpload = await validateAndScanImageUpload(ridePhoto, "profile-journal-photo-create");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate ride photo upload.", success: null };
+    }
+
+    const key = `journal/${rider.id}/${crypto.randomUUID()}.${secureUpload.ext}`;
+    photoUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
   }
 
   await prisma.journalEntry.create({
@@ -105,7 +110,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   });
 
   if (!entry) {
-    redirect("/profile");
+    redirect("/garage/mine");
   }
 
   const title = normalizeText(formData.get("title"));
@@ -114,7 +119,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   const removePhoto = formData.get("removePhoto") === "on";
 
   if (!body) {
-    redirect("/profile");
+    redirect("/garage/mine");
   }
 
   const previousPhotoUrls = entry.galleryItems.map((item) => item.url);
@@ -122,9 +127,13 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
 
   if (ridePhoto instanceof File && ridePhoto.size > 0) {
     if (allowedImageTypes.has(ridePhoto.type) && isS3Configured()) {
-      const ext = ridePhoto.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const key = `journal/${entry.author.id}/${crypto.randomUUID()}.${ext}`;
-      nextPhotoUrl = await uploadFile(key, Buffer.from(await ridePhoto.arrayBuffer()), ridePhoto.type);
+      try {
+        const secureUpload = await validateAndScanImageUpload(ridePhoto, "profile-journal-photo-update");
+        const key = `journal/${entry.author.id}/${crypto.randomUUID()}.${secureUpload.ext}`;
+        nextPhotoUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
+      } catch {
+        nextPhotoUrl = null;
+      }
     }
   }
 
@@ -155,7 +164,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
     await deleteFilesByUrls(previousPhotoUrls);
   }
 
-  redirect("/profile");
+  redirect("/garage/mine");
 }
 
 export async function deleteJournalEntryAction(entryId: string): Promise<void> {
@@ -173,12 +182,12 @@ export async function deleteJournalEntryAction(entryId: string): Promise<void> {
   });
 
   if (!entry) {
-    redirect("/profile");
+    redirect("/garage/mine");
   }
 
   const urls = entry.galleryItems.map((item) => item.url);
   await prisma.journalEntry.delete({ where: { id: entry.id } });
   await deleteFilesByUrls(urls);
 
-  redirect("/profile");
+  redirect("/garage/mine");
 }

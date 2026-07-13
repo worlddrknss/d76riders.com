@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 export default async function RidersPage() {
   const riders = await prisma.rider.findMany({
     select: {
+      id: true,
       handle: true,
       name: true,
       avatarUrl: true,
@@ -33,6 +34,31 @@ export default async function RidersPage() {
     },
     orderBy: { joinedAt: "asc" },
   });
+
+  const riderIds = riders.map((rider) => rider.id);
+  const [hostedEvents, rsvpEvents] = await Promise.all([
+    prisma.rideEvent.findMany({
+      where: { hostId: { in: riderIds } },
+      select: { hostId: true, id: true },
+    }),
+    prisma.rsvp.findMany({
+      where: { riderId: { in: riderIds }, status: "GOING" },
+      select: { riderId: true, eventId: true },
+    }),
+  ]);
+
+  const eventSetsByRider = new Map<string, Set<string>>();
+  for (const riderId of riderIds) {
+    eventSetsByRider.set(riderId, new Set<string>());
+  }
+
+  for (const event of hostedEvents) {
+    eventSetsByRider.get(event.hostId)?.add(event.id);
+  }
+
+  for (const rsvp of rsvpEvents) {
+    eventSetsByRider.get(rsvp.riderId)?.add(rsvp.eventId);
+  }
 
   return (
     <div>
@@ -50,6 +76,7 @@ export default async function RidersPage() {
             const avatar = mediaUrl(rider.avatarUrl);
             const cover = mediaUrl(rider.coverUrl) || siteImages.hero;
             const bikeLabel = rider.bikes[0] ? `${rider.bikes[0].make} ${rider.bikes[0].model ?? ""}`.trim() : "No bike listed";
+            const ridesCount = eventSetsByRider.get(rider.id)?.size ?? 0;
             return (
               <article key={rider.handle} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div className="relative h-28 bg-asphalt">
@@ -73,6 +100,7 @@ export default async function RidersPage() {
                   <h2 className="font-display text-lg font-bold tracking-tight text-asphalt">{rider.name}</h2>
                   <p className="text-sm text-muted">{bikeLabel}</p>
                   <div className="mt-4 space-y-2 text-sm text-muted">
+                    <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />{ridesCount} rides</p>
                     {rider.yearsRiding != null && (
                       <p className="flex items-center gap-2"><Bike className="h-4 w-4 text-sunset" />{rider.yearsRiding} years riding</p>
                     )}

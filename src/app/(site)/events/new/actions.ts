@@ -6,7 +6,10 @@ import { RideDifficulty } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
+import { distanceMilesFromGeometry } from "@/lib/routing";
 import { getCurrentUser } from "@/lib/session";
 import { isS3Configured, uploadFile } from "@/lib/s3";
 
@@ -42,8 +45,6 @@ type PlannerWaypointInput = {
   kind: "START" | "KSU" | "FUEL" | "FOOD" | "REST" | "STOP" | "END";
   label?: string;
 };
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function parseJsonValue<T>(value: string): T | null {
   if (!value) {
@@ -182,6 +183,10 @@ export async function createEventAction(
   const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
   const routeKsuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
   const routeKsuLng = routeKsuWaypoint?.lng ?? routeStartWaypoint?.lng ?? null;
+  const derivedRouteDistanceMiles = routeGeometry?.coordinates.length
+    ? distanceMilesFromGeometry(routeGeometry.coordinates)
+    : null;
+  const resolvedRouteDistanceMiles = derivedRouteDistanceMiles ?? routeDistanceMiles;
 
   const hasPlannerRoute = Boolean(routeGeometry && routeGeometry.coordinates.length >= 2);
   const hasRouteData = hasPlannerRoute || Boolean(routeName);
@@ -207,9 +212,16 @@ export async function createEventAction(
       return { error: "Storage is not configured for image uploads yet." };
     }
 
-    const ext = eventPhoto.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const key = `events/${rider.id}/${slug}-${crypto.randomUUID()}.${ext}`;
-    eventPhotoUrl = await uploadFile(key, Buffer.from(await eventPhoto.arrayBuffer()), eventPhoto.type);
+    let secureUpload: { buffer: Buffer };
+    try {
+      secureUpload = await validateAndScanImageUpload(eventPhoto, "events-photo-create");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate event photo upload." };
+    }
+
+    const optimized = await optimizeImage(secureUpload.buffer);
+    const key = `events/${rider.id}/${slug}-${crypto.randomUUID()}.${optimized.ext}`;
+    eventPhotoUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }
 
   await prisma.$transaction(async (tx) => {
@@ -223,7 +235,7 @@ export async function createEventAction(
           riderId: rider.id,
           name: resolvedRouteName,
           description: routeDescription || null,
-          distanceMiles: routeDistanceMiles,
+          distanceMiles: resolvedRouteDistanceMiles,
           geometry: routeGeometry ?? undefined,
           ksuLat: routeKsuLat,
           ksuLng: routeKsuLng,
@@ -255,7 +267,7 @@ export async function createEventAction(
         ksuAt,
         ksuLocation: ksuLocation || null,
         meetLocation: meetLocation || null,
-        distanceMiles,
+        distanceMiles: resolvedRouteDistanceMiles ? Math.round(resolvedRouteDistanceMiles) : distanceMiles,
         difficulty,
         routeId,
         galleryItems: eventPhotoUrl

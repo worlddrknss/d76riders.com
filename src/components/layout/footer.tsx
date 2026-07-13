@@ -71,9 +71,21 @@ export function Footer() {
           </div>
         </div>
       </div>
-      <p className="border-t border-white/10 py-5 text-center text-xs text-slate-500">
-        © 2026 District 76. All rights reserved.
-      </p>
+      <div className="border-t border-white/10 py-5 text-center text-xs text-slate-500">
+        <p>© 2026 District 76. All rights reserved.</p>
+        <p className="mt-2">
+          This site is also community developed. To contribute, visit{" "}
+          <a
+            href="https://github.com/worlddrknss/d76riders.com"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold text-slate-300 hover:text-white"
+          >
+            GitHub
+          </a>
+          .
+        </p>
+      </div>
     </footer>
   );
 }

@@ -15,6 +15,7 @@ export const navItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "History" },
   { href: "/events", label: "Events" },
+  { href: "/discover", label: "Discover" },
   { href: "/roads", label: "Roads" },
   { href: "/riders", label: "Riders" },
   { href: "/news", label: "News" },

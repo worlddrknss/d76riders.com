@@ -1,0 +1,25 @@
+model RiderFollow {
+  followerId  String
+  followingId String
+
+  follower  Rider @relation("RiderFollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following Rider @relation("RiderFollowFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+}
+
+model EventFollow {
+  riderId String
+  eventId String
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([riderId, eventId])
+  @@index([eventId])
+}

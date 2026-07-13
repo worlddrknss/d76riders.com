@@ -6,6 +6,7 @@ import { Bike, BookText, CalendarDays, MapPin, Route } from "lucide-react";
 import { CreateJournalDialog } from "@/components/profile/create-journal-dialog";
 import { JournalList } from "@/components/profile/journal-list";
 import { ReportJournalButton } from "@/components/profile/report-journal-button";
+import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
@@ -45,6 +46,7 @@ export default async function RiderProfilePage({
   const rider = await prisma.rider.findUnique({
     where: { handle: id },
     select: {
+      id: true,
       userId: true,
       handle: true,
       name: true,
@@ -53,7 +55,6 @@ export default async function RiderProfilePage({
       avatarUrl: true,
       coverUrl: true,
       yearsRiding: true,
-      ridesCompleted: true,
       favoriteRoad: true,
       joinedAt: true,
       bikes: {
@@ -85,6 +86,43 @@ export default async function RiderProfilePage({
           startsAt: true,
         },
       },
+      followers: {
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        select: {
+          follower: {
+            select: {
+              handle: true,
+              name: true,
+            },
+          },
+        },
+      },
+      following: {
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        select: {
+          following: {
+            select: {
+              handle: true,
+              name: true,
+            },
+          },
+        },
+      },
+      followedEvents: {
+        take: 6,
+        orderBy: { createdAt: "desc" },
+        select: {
+          event: {
+            select: {
+              slug: true,
+              title: true,
+              startsAt: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -92,9 +130,42 @@ export default async function RiderProfilePage({
     notFound();
   }
 
+  const [hostedEvents, rsvpEvents] = await Promise.all([
+    prisma.rideEvent.findMany({
+      where: { hostId: rider.id },
+      select: { id: true },
+    }),
+    prisma.rsvp.findMany({
+      where: { riderId: rider.id, status: "GOING" },
+      select: { eventId: true },
+    }),
+  ]);
+
+  const participatedEventIds = new Set<string>();
+  for (const event of hostedEvents) {
+    participatedEventIds.add(event.id);
+  }
+  for (const rsvp of rsvpEvents) {
+    participatedEventIds.add(rsvp.eventId);
+  }
+  const ridesFromEvents = participatedEventIds.size;
+
   const isOwner = currentUser?.id === rider.userId;
   const avatar = mediaUrl(rider.avatarUrl);
   const cover = mediaUrl(rider.coverUrl);
+  const viewer = currentUser
+    ? await prisma.rider.findUnique({
+        where: { userId: currentUser.id },
+        select: {
+          id: true,
+          following: {
+            where: { following: { handle: rider.handle } },
+            select: { followingId: true },
+          },
+        },
+      })
+    : null;
+  const isFollowing = Boolean(viewer?.following.length);
 
   return (
     <section className="page-shell">
@@ -130,7 +201,7 @@ export default async function RiderProfilePage({
                   <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
                 </div>
                 <div className="rounded-lg bg-canvas p-3 text-center">
-                  <p className="font-display text-xl font-bold text-asphalt">{rider.ridesCompleted}</p>
+                  <p className="font-display text-xl font-bold text-asphalt">{ridesFromEvents}</p>
                   <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
                 </div>
                 <div className="rounded-lg bg-canvas p-3 text-center">
@@ -138,6 +209,14 @@ export default async function RiderProfilePage({
                   <p className="text-[0.6rem] uppercase tracking-widest text-muted">Years</p>
                 </div>
               </div>
+
+              {!isOwner && currentUser ? (
+                <form action={toggleRiderFollowAction.bind(null, rider.handle)} className="mt-4">
+                  <button type="submit" className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt">
+                    {isFollowing ? "Following" : "Follow Rider"}
+                  </button>
+                </form>
+              ) : null}
 
               {isOwner && (
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -174,7 +253,7 @@ export default async function RiderProfilePage({
                   <div className="flex items-start gap-3">
                     <Bike className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
                     <div>
-                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Rides</dt>
+                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Bikes</dt>
                       <dd className="text-sm font-medium text-asphalt">
                         {rider.bikes.map((b) => b.name || `${b.make} ${b.model ?? ""}`.trim()).join(", ")}
                       </dd>
@@ -208,6 +287,43 @@ export default async function RiderProfilePage({
                   ))}
                 </ul>
               )}
+            </div>
+
+            <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">People</h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
+                  <div className="mt-2 space-y-1.5">
+                    {rider.followers.length > 0 ? rider.followers.map((entry) => (
+                      <Link key={entry.follower.handle} href={`/riders/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
+                        {entry.follower.name}
+                      </Link>
+                    )) : <p className="text-xs text-muted">No followers yet.</p>}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
+                  <div className="mt-2 space-y-1.5">
+                    {rider.following.length > 0 ? rider.following.map((entry) => (
+                      <Link key={entry.following.handle} href={`/riders/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
+                        {entry.following.name}
+                      </Link>
+                    )) : <p className="text-xs text-muted">Not following anyone yet.</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
+                <div className="mt-2 space-y-1.5">
+                  {rider.followedEvents.length > 0 ? rider.followedEvents.map((entry) => (
+                    <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
+                      {entry.event.title}
+                    </Link>
+                  )) : <p className="text-xs text-muted">No followed events yet.</p>}
+                </div>
+              </div>
             </div>
           </aside>
 

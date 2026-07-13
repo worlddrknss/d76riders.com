@@ -31,6 +31,19 @@ npm run db:seed
 npm run db:studio
 ```
 
+## Malware Scan Environment
+
+Set these environment variables when running with upload malware scanning enabled:
+
+```bash
+MALWARE_SCAN_MODE=off
+CLAMAV_HOST=127.0.0.1
+CLAMAV_PORT=3310
+```
+
+- Use `MALWARE_SCAN_MODE=clamav` in environments where ClamAV is reachable.
+- Keep `MALWARE_SCAN_MODE=off` for local dev unless you are running a ClamAV service.
+
 ## Docker
 
 Build the app image:

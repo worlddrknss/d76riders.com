@@ -18,6 +18,14 @@ model Rider {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bikes          Bike[]
+  buildModifications BuildModification[]
+  serviceRecords ServiceRecord[]
+  buildCollections BuildCollection[]
+  buildCollectionItems BuildCollectionItem[]
+  buildFavorites BuildFavorite[]
+  following RiderFollow[] @relation("RiderFollowFollower")
+  followers RiderFollow[] @relation("RiderFollowFollowing")
+  followedEvents EventFollow[]
   events         RideEvent[]
   routes         Route[]
   roads          Road[]

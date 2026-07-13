@@ -29,6 +29,7 @@ const adminNavSections: NavSection[] = [
     items: [
       { href: "/admin", label: "Overview", icon: LayoutDashboard },
       { href: "/admin/reports", label: "Reports", icon: Flag },
+      { href: "/admin/security", label: "Security", icon: Shield },
     ],
   },
   {

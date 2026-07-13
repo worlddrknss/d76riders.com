@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
@@ -30,8 +32,6 @@ function toOptionalInt(value: string): number | null {
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) ? parsed : null;
 }
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function updateEventAction(eventId: string, formData: FormData): Promise<void> {
   const currentUser = await getCurrentUser();
@@ -75,9 +75,14 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
 
   if (eventPhoto instanceof File && eventPhoto.size > 0) {
     if (allowedImageTypes.has(eventPhoto.type) && isS3Configured()) {
-      const ext = eventPhoto.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const key = `events/${event.host.id}/${event.slug}-${crypto.randomUUID()}.${ext}`;
-      nextPhotoUrl = await uploadFile(key, Buffer.from(await eventPhoto.arrayBuffer()), eventPhoto.type);
+      try {
+        const secureUpload = await validateAndScanImageUpload(eventPhoto, "events-photo-update");
+        const optimized = await optimizeImage(secureUpload.buffer);
+        const key = `events/${event.host.id}/${event.slug}-${crypto.randomUUID()}.${optimized.ext}`;
+        nextPhotoUrl = await uploadFile(key, optimized.data, optimized.contentType);
+      } catch {
+        nextPhotoUrl = null;
+      }
     }
   }
 

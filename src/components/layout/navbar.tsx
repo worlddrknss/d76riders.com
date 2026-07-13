@@ -1,5 +1,6 @@
 import { NavbarClient } from "@/components/layout/navbar-client";
 import { mediaUrl } from "@/lib/media-url";
+import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export async function Navbar() {
@@ -7,5 +8,14 @@ export async function Navbar() {
   const user = currentUser
     ? { ...currentUser, avatarUrl: mediaUrl(currentUser.avatarUrl) || null }
     : null;
-  return <NavbarClient currentUser={user} />;
+
+  let notificationCount = 0;
+  if (currentUser?.id) {
+    const rider = await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } });
+    if (rider) {
+      notificationCount = await prisma.activity.count({ where: { riderId: rider.id } });
+    }
+  }
+
+  return <NavbarClient currentUser={user} notificationCount={notificationCount} />;
 }

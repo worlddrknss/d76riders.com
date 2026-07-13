@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
 import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFileByUrl, isS3Configured, uploadFile } from "@/lib/s3";
@@ -35,8 +36,6 @@ function toOptionalDate(value: string): Date | null {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 async function requireAdminUserId(): Promise<string> {
   const currentUser = await getCurrentUser();
@@ -107,8 +106,14 @@ export async function updateNewsPostAction(
       return { error: "Storage is not configured for image uploads yet." };
     }
 
-    const raw = Buffer.from(await coverImage.arrayBuffer());
-    const optimized = await optimizeImage(raw);
+    let secureUpload: { buffer: Buffer };
+    try {
+      secureUpload = await validateAndScanImageUpload(coverImage, "admin-news-cover-update");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate cover image upload." };
+    }
+
+    const optimized = await optimizeImage(secureUpload.buffer);
     const key = `news/${post.slug}-${crypto.randomUUID()}.${optimized.ext}`;
     nextCoverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }

@@ -1,0 +1,33 @@
+// Security domain — malware scan audit log for uploaded files.
+
+enum MalwareScanResult {
+  CLEAN
+  INFECTED
+  ERROR
+  SKIPPED
+}
+
+enum MalwareActionTaken {
+  ALLOWED
+  BLOCKED
+  DELETED
+  DELETE_FAILED
+}
+
+model MalwareScanAudit {
+  id            BigInt             @id @default(autoincrement())
+  createdAt     DateTime           @default(now()) @map("created_at")
+  source        String
+  objectKey     String?            @map("object_key")
+  objectUrl     String?            @map("object_url")
+  contentType   String?            @map("content_type")
+  fileSizeBytes BigInt?            @map("file_size_bytes")
+  scanResult    MalwareScanResult  @map("scan_result")
+  actionTaken   MalwareActionTaken @map("action_taken")
+  deleted       Boolean            @default(false)
+  details       String?
+
+  @@index([createdAt(sort: Desc)], map: "malware_scan_audits_created_at_idx")
+  @@index([scanResult], map: "malware_scan_audits_scan_result_idx")
+  @@map("malware_scan_audits")
+}

@@ -15,11 +15,124 @@ model Bike {
 
   rider  Rider         @relation(fields: [riderId], references: [id], onDelete: Cascade)
   photos GalleryItem[]
+  modifications BuildModification[]
+  serviceRecords ServiceRecord[]
+  collectionItems BuildCollectionItem[]
+  favorites BuildFavorite[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([riderId])
+}
+
+model BuildModification {
+  id          String @id @default(cuid())
+  riderId     String
+  bikeId      String
+  title       String
+  category    ModificationCategory @default(OTHER)
+  cost        Float?
+  mileage     Int?
+  installedAt DateTime @default(now())
+  notes       String?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  bike  Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  photos GalleryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId])
+  @@index([bikeId])
+  @@index([installedAt])
+}
+
+model ServiceRecord {
+  id          String @id @default(cuid())
+  riderId     String
+  bikeId      String
+  title       String
+  serviceType ServiceType @default(MAINTENANCE)
+  cost        Float?
+  mileage     Int?
+  servicedAt  DateTime @default(now())
+  notes       String?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  bike  Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  photos GalleryItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId])
+  @@index([bikeId])
+  @@index([servicedAt])
+}
+
+model BuildCollection {
+  id          String @id @default(cuid())
+  riderId     String
+  name        String
+  description String?
+  isPublic    Boolean @default(false)
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  items BuildCollectionItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId])
+}
+
+model BuildCollectionItem {
+  collectionId String
+  bikeId       String
+  addedByRiderId String
+
+  collection BuildCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  bike       Bike            @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+  addedByRider Rider         @relation(fields: [addedByRiderId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now())
+
+  @@id([collectionId, bikeId])
+  @@index([bikeId])
+  @@index([addedByRiderId])
+}
+
+model BuildFavorite {
+  riderId String
+  bikeId  String
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  bike  Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([riderId, bikeId])
+  @@index([bikeId])
+}
+
+enum ModificationCategory {
+  EXTERIOR
+  SUSPENSION
+  PERFORMANCE
+  WHEELS
+  INTERIOR
+  ELECTRICAL
+  OTHER
+}
+
+enum ServiceType {
+  MAINTENANCE
+  REPAIR
+  INSPECTION
+  UPGRADE
+  OTHER
 }
 
 enum BikeType {

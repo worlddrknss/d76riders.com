@@ -13,8 +13,13 @@ export default async function AccountPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { bio: true },
+    select: { bio: true, yearsRiding: true },
   });
+
+  const currentYear = new Date().getFullYear();
+  const yearStartedRiding = rider?.yearsRiding != null
+    ? Math.max(1900, currentYear - rider.yearsRiding)
+    : null;
 
   return (
     <section className="page-shell">
@@ -32,6 +37,7 @@ export default async function AccountPage() {
               username={currentUser.handle ?? ""}
               avatarUrl={currentUser.avatarUrl ?? currentUser.image ?? ""}
               bio={rider?.bio ?? ""}
+              yearStartedRiding={yearStartedRiding}
             />
           </div>
         </div>

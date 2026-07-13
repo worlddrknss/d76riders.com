@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
 import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { isS3Configured, uploadFile } from "@/lib/s3";
@@ -55,8 +56,6 @@ async function buildUniqueNewsSlug(baseTitle: string): Promise<string> {
     suffix += 1;
   }
 }
-
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function createNewsPostAction(
   _previousState: CreateNewsPostFormState,
@@ -117,8 +116,14 @@ export async function createNewsPostAction(
       return { error: "Storage is not configured for image uploads yet." };
     }
 
-    const raw = Buffer.from(await coverImage.arrayBuffer());
-    const optimized = await optimizeImage(raw);
+    let secureUpload: { buffer: Buffer };
+    try {
+      secureUpload = await validateAndScanImageUpload(coverImage, "admin-content-news-cover-create");
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Unable to validate cover image upload." };
+    }
+
+    const optimized = await optimizeImage(secureUpload.buffer);
     const key = `news/${slug}-${crypto.randomUUID()}.${optimized.ext}`;
     coverImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }

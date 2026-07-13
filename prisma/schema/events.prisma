@@ -18,6 +18,7 @@ model RideEvent {
   host         Rider         @relation(fields: [hostId], references: [id], onDelete: Cascade)
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
   rsvps        Rsvp[]
+  followers    EventFollow[]
   comments     Comment[]
   galleryItems GalleryItem[]
 

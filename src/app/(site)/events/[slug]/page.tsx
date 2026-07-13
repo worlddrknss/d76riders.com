@@ -7,6 +7,7 @@ import { EventManageActions } from "@/components/events/event-manage-actions";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
+import { toggleEventFollowAction } from "@/app/(site)/garage/mine/actions";
 import { RouteMap } from "@/components/routes/route-map";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
@@ -111,6 +112,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         where: { status: "GOING" },
         select: { riderId: true },
       },
+      followers: {
+        select: { riderId: true },
+      },
     },
   });
 
@@ -146,6 +150,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   }
 
   const attendeeCount = event.rsvps.length;
+  const trackedCount = event.followers.length;
+  const viewerRider = currentUser
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
+    : null;
+  const isTracking = viewerRider ? event.followers.some((item) => item.riderId === viewerRider.id) : false;
 
   return (
     <section className="page-shell">
@@ -226,13 +235,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               <div className="flex flex-wrap items-center gap-6 text-sm text-muted">
                 <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Host: <Link href={`/riders/${event.host.handle}`} className="font-medium text-ink hover:text-sunset">{event.host.name}</Link></span>
                 <span className="inline-flex items-center gap-2"><RouteIcon className="h-4 w-4 text-sunset" />Distance: <span className="font-medium text-ink">{event.distanceMiles ? `${event.distanceMiles} mi` : "TBD"}</span></span>
+                <span className="inline-flex items-center gap-2">Tracking: <span className="font-medium text-ink">{trackedCount}</span></span>
               </div>
-              <EventRsvpButton
-                eventId={event.id}
-                currentRsvp={currentRsvp}
-                attendeeCount={attendeeCount}
-                isLoggedIn={!!currentUser}
-              />
+              <div className="flex flex-wrap items-center gap-3">
+                {currentUser ? (
+                  <form action={toggleEventFollowAction.bind(null, event.id)}>
+                    <button type="submit" className="rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt hover:border-asphalt">
+                      {isTracking ? "Tracking" : "Track Event"}
+                    </button>
+                  </form>
+                ) : null}
+                <EventRsvpButton
+                  eventId={event.id}
+                  currentRsvp={currentRsvp}
+                  attendeeCount={attendeeCount}
+                  isLoggedIn={!!currentUser}
+                />
+              </div>
             </div>
           </div>
 

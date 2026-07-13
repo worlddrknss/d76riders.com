@@ -85,6 +85,34 @@ export function formatDuration(seconds: number): string {
   return `${hours}h ${minutes}m`;
 }
 
+function haversineMiles(a: [number, number], b: [number, number]): number {
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const earthRadiusMiles = 3958.8;
+  const lat1 = toRadians(a[1]);
+  const lat2 = toRadians(b[1]);
+  const dLat = lat2 - lat1;
+  const dLng = toRadians(b[0] - a[0]);
+
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+
+  return 2 * earthRadiusMiles * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+export function distanceMilesFromGeometry(coordinates: [number, number][]): number | null {
+  if (coordinates.length < 2) {
+    return null;
+  }
+
+  let distance = 0;
+  for (let index = 1; index < coordinates.length; index += 1) {
+    distance += haversineMiles(coordinates[index - 1], coordinates[index]);
+  }
+
+  return Number.isFinite(distance) && distance > 0 ? distance : null;
+}
+
 type Point2D = { x: number; y: number };
 
 function toProjectedMeters(coordinates: [number, number][]): Point2D[] {
