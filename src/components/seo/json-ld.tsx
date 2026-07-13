@@ -19,7 +19,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: "District 76 Riders",
     url: siteUrl,
-    logo: `${siteUrl}/images/hero/home.jpg`,
+    logo: `${siteUrl}/images/hero/home.webp`,
     description:
       "Motorcycle riding community based in Clarksville, Tennessee. Group rides, scenic roads, and rider connections.",
     address: {

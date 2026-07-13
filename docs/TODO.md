@@ -15,4 +15,4 @@ Implementation guide: [docs/IMPLEMENTATION_GUIDE.md](docs/IMPLEMENTATION_GUIDE.m
 - [x] Add photo gallery and upload management for builds
 - [x] Add map search and nearby builder discovery
 - [x] Add notifications and recent activity alerts
-  
+- [x] Like Garage, create a gear page. This page to show helmets, gloves, jackets, pants, camera gear and accessories

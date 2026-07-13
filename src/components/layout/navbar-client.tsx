@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserCog, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell } from "lucide-react";
+import { Menu, X, ChevronDown, UserCog, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
@@ -48,6 +48,11 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
     return initialsFromName(currentUser.name, currentUser.email);
   }, [currentUser]);
 
+  const headerNavItems = useMemo(
+    () => (currentUser ? [...navItems, { href: "/gear", label: "Gear" }] : navItems),
+    [currentUser],
+  );
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-asphalt text-white">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -61,7 +66,7 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
         </Link>
 
         <nav className="hidden items-center gap-5 lg:flex" aria-label="Main navigation">
-          {navItems.map((item) => (
+          {headerNavItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -131,6 +136,10 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
                       <Bike className="h-4 w-4 text-slate-300" />
                       <span>Garage</span>
                     </Link>
+                    <Link href="/gear" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                      <Wrench className="h-4 w-4 text-slate-300" />
+                      <span>Gear</span>
+                    </Link>
                     <Link href="/events/new" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <CalendarPlus2 className="h-4 w-4 text-slate-300" />
                       <span>Create Event</span>
@@ -187,7 +196,7 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
         <div className="border-t border-white/10 bg-asphalt lg:hidden">
           <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
             <nav className="grid gap-1" aria-label="Mobile navigation">
-              {navItems.map((item) => (
+              {headerNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -222,6 +231,13 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
                     onClick={() => setIsOpen(false)}
                   >
                     Garage
+                  </Link>
+                  <Link
+                    href="/gear"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Gear
                   </Link>
                   <Link
                     href="/notifications"

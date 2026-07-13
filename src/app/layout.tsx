@@ -51,14 +51,14 @@ export const metadata: Metadata = {
     title: "District 76 Riders — Motorcycle Community in Clarksville, TN",
     description:
       "Join group rides, discover scenic roads, and connect with motorcycle riders in Clarksville, Tennessee and beyond.",
-    images: [{ url: "/images/hero/home.jpg", width: 1200, height: 630, alt: "District 76 Riders" }],
+    images: [{ url: "/images/hero/home.webp", width: 1200, height: 630, alt: "District 76 Riders" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "District 76 Riders",
     description:
       "Motorcycle riding community in Clarksville, Tennessee. Group rides, scenic roads, and rider connections.",
-    images: ["/images/hero/home.jpg"],
+    images: ["/images/hero/home.webp"],
   },
   robots: {
     index: true,
