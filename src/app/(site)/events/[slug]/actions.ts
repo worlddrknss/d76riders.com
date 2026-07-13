@@ -124,7 +124,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
     await deleteFilesByUrls(previousPhotoUrls);
   }
 
-  redirect(`/events/${event.slug}`);
+  revalidatePath(`/events/${event.slug}`);
 }
 
 export async function deleteEventAction(eventId: string): Promise<void> {
@@ -159,7 +159,7 @@ export async function deleteEventAction(eventId: string): Promise<void> {
   });
 
   await deleteFilesByUrls(urls);
-  redirect("/events");
+  revalidatePath("/events");
 }
 
 export async function rsvpAction(eventId: string, status: "GOING" | "CANCEL"): Promise<void> {
