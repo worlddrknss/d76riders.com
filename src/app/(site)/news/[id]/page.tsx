@@ -9,10 +9,21 @@ import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
+async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await query();
+  } catch {
+    return fallback;
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const dbPost = "newsPost" in prisma
-    ? await prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED }, select: { title: true, excerpt: true, coverImageUrl: true } })
+    ? await safeQuery(
+        () => prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED }, select: { title: true, excerpt: true, coverImageUrl: true } }),
+        null,
+      )
     : null;
   const staticArticle = newsArticles.find((a) => a.id === id);
   const title = dbPost?.title || staticArticle?.title || "Article Not Found";
@@ -33,10 +44,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export async function generateStaticParams() {
   const posts = "newsPost" in prisma
-    ? await prisma.newsPost.findMany({
-        where: { status: NewsPostStatus.PUBLISHED },
-        select: { slug: true },
-      })
+    ? await safeQuery(
+        () =>
+          prisma.newsPost.findMany({
+            where: { status: NewsPostStatus.PUBLISHED },
+            select: { slug: true },
+          }),
+        [],
+      )
     : [];
 
   return [...newsArticles.map((article) => ({ id: article.id })), ...posts.map((post) => ({ id: post.slug }))];
@@ -50,7 +65,7 @@ export default async function NewsArticlePage({
   const { id } = await params;
   const currentUser = await getCurrentUser();
   const dbPost = "newsPost" in prisma
-    ? await prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED } })
+    ? await safeQuery(() => prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED } }), null)
     : null;
   const mockArticle = newsArticles.find((a) => a.id === id);
 
@@ -87,11 +102,15 @@ export default async function NewsArticlePage({
   const articleIndex = Math.max(newsArticles.findIndex((a) => a.id === article.id), 0);
   const heroPhoto = article.coverImageUrl || siteImages.galleryPage[articleIndex % siteImages.galleryPage.length];
   const recentDbPosts = "newsPost" in prisma
-    ? await prisma.newsPost.findMany({
-        where: { slug: { not: id }, status: NewsPostStatus.PUBLISHED },
-        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-        take: 3,
-      })
+    ? await safeQuery(
+        () =>
+          prisma.newsPost.findMany({
+            where: { slug: { not: id }, status: NewsPostStatus.PUBLISHED },
+            orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+            take: 3,
+          }),
+        [],
+      )
     : [];
   const recent = recentDbPosts.length > 0
     ? recentDbPosts.map((post) => ({

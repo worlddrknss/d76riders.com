@@ -4,6 +4,14 @@ import { prisma } from "@/lib/prisma";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
 
+async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await query();
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -17,10 +25,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Dynamic: Events
-  const events = await prisma.rideEvent.findMany({
-    select: { slug: true, updatedAt: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const events = await safeQuery(
+    () =>
+      prisma.rideEvent.findMany({
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+      }),
+    [],
+  );
 
   const eventPages: MetadataRoute.Sitemap = events.map((event) => ({
     url: `${siteUrl}/events/${event.slug}`,
@@ -30,10 +42,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Dynamic: Roads
-  const roads = await prisma.road.findMany({
-    select: { slug: true, updatedAt: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const roads = await safeQuery(
+    () =>
+      prisma.road.findMany({
+        select: { slug: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+      }),
+    [],
+  );
 
   const roadPages: MetadataRoute.Sitemap = roads.map((road) => ({
     url: `${siteUrl}/roads/${road.slug}`,
@@ -43,10 +59,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   // Dynamic: Riders
-  const riders = await prisma.rider.findMany({
-    select: { handle: true, updatedAt: true },
-    orderBy: { updatedAt: "desc" },
-  });
+  const riders = await safeQuery(
+    () =>
+      prisma.rider.findMany({
+        select: { handle: true, updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+      }),
+    [],
+  );
 
   const riderPages: MetadataRoute.Sitemap = riders.map((rider) => ({
     url: `${siteUrl}/riders/${rider.handle}`,
