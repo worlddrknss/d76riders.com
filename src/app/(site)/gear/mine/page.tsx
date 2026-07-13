@@ -1,19 +1,12 @@
 import { redirect } from "next/navigation";
 
 import { createGearItemAction, updateGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
-import { GearCategoryCard } from "@/components/gear/gear-category-card";
+import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
-type GearSection = {
-  key: "HELMET" | "GLOVES" | "JACKET" | "PANTS" | "BOOTS" | "CAMERA_GEAR" | "ACCESSORY";
-  label: string;
-  description: string;
-  iconKey: string;
-};
-
-const gearSections: GearSection[] = [
+const gearSections = [
   { key: "HELMET", label: "Helmets", description: "Daily, touring, and backup lids.", iconKey: "HardHat" },
   { key: "GLOVES", label: "Gloves", description: "Summer, winter, and rain setups.", iconKey: "Package" },
   { key: "JACKET", label: "Jackets", description: "Mesh, textile, and cold-weather layers.", iconKey: "Shirt" },
@@ -55,32 +48,17 @@ export default async function GearPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Gear Locker</p>
             <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Your Riding Gear</h1>
-            <p className="mt-1 text-sm text-muted">
-              {totalItems} {totalItems === 1 ? "item" : "items"} across {gearSections.length} categories. Tap <strong>+</strong> to add.
-            </p>
+            <p className="mt-1 text-sm text-muted">{totalItems} {totalItems === 1 ? "item" : "items"} across {gearSections.length} categories.</p>
           </div>
         </div>
 
-        {/* Category grid with add modals */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {gearSections.map((section) => {
-            const items = rider.gearItems.filter((item) => item.category === section.key);
-
-            return (
-              <GearCategoryCard
-                key={section.key}
-                categoryKey={section.key}
-                label={section.label}
-                description={section.description}
-                iconKey={section.iconKey}
-                items={items}
-                createAction={createGearItemAction}
-                updateAction={updateGearItemAction}
-                deleteAction={deleteGearItemAction}
-              />
-            );
-          })}
-        </div>
+        <GearTabbedView
+          sections={gearSections}
+          items={rider.gearItems}
+          createAction={createGearItemAction}
+          updateAction={updateGearItemAction}
+          deleteAction={deleteGearItemAction}
+        />
       </div>
     </section>
   );
