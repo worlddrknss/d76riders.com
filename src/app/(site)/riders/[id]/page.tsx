@@ -7,6 +7,7 @@ import { CreateJournalDialog } from "@/components/profile/create-journal-dialog"
 import { JournalInteractions } from "@/components/profile/journal-interactions";
 import { ProfileSectionEdit } from "@/components/profile/profile-section-edit";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
+import { Linkify } from "@/components/ui/linkify";
 import { JournalList } from "@/components/profile/journal-list";
 import { ReportJournalButton } from "@/components/profile/report-journal-button";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
@@ -509,7 +510,7 @@ export default async function RiderProfilePage({
                           {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </p>
                         {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
-                        <p className="mt-2 leading-relaxed text-muted">{entry.body}</p>
+                        <p className="mt-2 leading-relaxed text-muted"><Linkify text={entry.body} /></p>
                       </div>
                       <JournalInteractions
                         entryId={entry.id}

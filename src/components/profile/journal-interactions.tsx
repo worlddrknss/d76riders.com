@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 
 import { toggleJournalLikeAction, addJournalCommentAction } from "@/app/(site)/riders/journal-actions";
+import { Linkify } from "@/components/ui/linkify";
 
 type CommentData = {
   id: string;
@@ -106,7 +107,7 @@ export function JournalInteractions({
               {comments.map((comment) => (
                 <div key={comment.id} className="text-sm">
                   <span className="font-semibold text-ink">{comment.authorName}</span>{" "}
-                  <span className="text-muted">{comment.body}</span>
+                  <span className="text-muted"><Linkify text={comment.body} /></span>
                 </div>
               ))}
             </div>

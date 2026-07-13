@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/riders/actions";
 import { JournalInteractions } from "@/components/profile/journal-interactions";
+import { Linkify } from "@/components/ui/linkify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -108,7 +109,7 @@ export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
           {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
         </p>
         {entry.title && <h3 className="mt-1 font-display text-base font-semibold text-ink">{entry.title}</h3>}
-        <p className="mt-1.5 line-clamp-3 text-sm text-muted">{entry.body}</p>
+        <p className="mt-1.5 line-clamp-3 text-sm text-muted"><Linkify text={entry.body} /></p>
       </div>
 
       {/* Edit Dialog */}
