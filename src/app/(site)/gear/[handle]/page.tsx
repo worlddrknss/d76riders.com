@@ -49,7 +49,7 @@ export default async function PublicGearPage({ params }: { params: Promise<{ han
       name: true,
       handle: true,
       gearItems: {
-        orderBy: [{ category: "asc" }, { createdAt: "desc" }],
+        orderBy: [{ category: "asc" }, { purchaseDate: "desc" }, { createdAt: "desc" }],
         select: {
           id: true,
           category: true,

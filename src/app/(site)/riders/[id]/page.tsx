@@ -234,9 +234,9 @@ export default async function RiderProfilePage({
                 </div>
               )}
               {avatar ? (
-                <img src={avatar} alt={rider.name} className="mx-auto h-20 w-20 rounded-full border-2 border-sunset/30 object-cover" />
+                <img src={avatar} alt={rider.name} className="mx-auto h-32 w-32 rounded-full border-2 border-sunset/30 object-cover" />
               ) : (
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sunset/10 font-display text-2xl font-bold text-sunset">
+                <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-sunset/10 font-display text-4xl font-bold text-sunset">
                   {rider.name.charAt(0)}
                 </div>
               )}

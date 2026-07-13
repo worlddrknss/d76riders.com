@@ -35,7 +35,7 @@ export default async function GearPage() {
       id: true,
       handle: true,
       gearItems: {
-        orderBy: [{ category: "asc" }, { createdAt: "desc" }],
+        orderBy: [{ category: "asc" }, { purchaseDate: "desc" }, { createdAt: "desc" }],
       },
     },
   });
