@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { createGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
+import { createGearItemAction, updateGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
 import { GearCategoryCard } from "@/components/gear/gear-category-card";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
 import { prisma } from "@/lib/prisma";
@@ -75,6 +75,7 @@ export default async function GearPage() {
                 iconKey={section.iconKey}
                 items={items}
                 createAction={createGearItemAction}
+                updateAction={updateGearItemAction}
                 deleteAction={deleteGearItemAction}
               />
             );

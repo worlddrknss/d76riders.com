@@ -77,6 +77,56 @@ export async function createGearItemAction(formData: FormData): Promise<void> {
   revalidatePath("/gear/mine");
 }
 
+export async function updateGearItemAction(itemId: string, formData: FormData): Promise<void> {
+  const rider = await requireCurrentRider();
+
+  const item = await prisma.gearItem.findFirst({ where: { id: itemId, riderId: rider.id }, select: { id: true } });
+  if (!item) return;
+
+  const name = normalizeText(formData.get("name"));
+  const brand = normalizeText(formData.get("brand"));
+  const model = normalizeText(formData.get("model"));
+  const size = normalizeText(formData.get("size"));
+  const color = normalizeText(formData.get("color"));
+  const condition = normalizeText(formData.get("condition"));
+  const purchaseDateInput = normalizeText(formData.get("purchaseDate"));
+  const purchaseUrlInput = normalizeText(formData.get("purchaseUrl"));
+  const notes = normalizeText(formData.get("notes"));
+
+  if (!name) return;
+
+  const purchaseDate = purchaseDateInput ? new Date(purchaseDateInput) : null;
+
+  let validatedUrl: string | null = null;
+  if (purchaseUrlInput) {
+    try {
+      const url = new URL(purchaseUrlInput);
+      if (url.protocol === "https:" || url.protocol === "http:") {
+        validatedUrl = url.toString();
+      }
+    } catch {
+      // Ignore invalid URLs
+    }
+  }
+
+  await prisma.gearItem.update({
+    where: { id: item.id },
+    data: {
+      name,
+      brand: brand || null,
+      model: model || null,
+      size: size || null,
+      color: color || null,
+      condition: condition || null,
+      purchaseDate: purchaseDate && !Number.isNaN(purchaseDate.getTime()) ? purchaseDate : null,
+      purchaseUrl: validatedUrl,
+      notes: notes || null,
+    },
+  });
+
+  revalidatePath("/gear/mine");
+}
+
 export async function deleteGearItemAction(itemId: string): Promise<void> {
   const rider = await requireCurrentRider();
 
