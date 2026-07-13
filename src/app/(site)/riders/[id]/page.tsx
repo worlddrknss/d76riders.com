@@ -216,7 +216,7 @@ export default async function RiderProfilePage({
 
   return (
     <section className="page-shell">
-      <div className="content-wrap !max-w-[90rem]">
+      <div className="content-wrap">
         {isOwner && <RiderSubNav handle={rider.handle} />}
 
         {cover && (
@@ -224,7 +224,7 @@ export default async function RiderProfilePage({
             <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
           </div>
         )}
-        <div className="grid gap-6 lg:grid-cols-[1fr_2fr_1fr]">
+        <div className="grid gap-8 lg:grid-cols-[20rem_1fr]">
           {/* SIDEBAR */}
           <aside className="space-y-5">
             <div className="group rounded-xl border border-border bg-surface p-6 shadow-soft">
@@ -324,91 +324,6 @@ export default async function RiderProfilePage({
               </div>
             </div>
 
-          </aside>
-
-          {/* COLUMN 2 — Ride Journal */}
-          <div>
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
-                <BookText className="h-5 w-5 text-sunset" />
-                Ride Journal
-              </h2>
-              {isOwner && <CreateJournalDialog />}
-            </div>
-
-            <div className="mt-6 space-y-5">
-              {rider.journalEntries.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
-                  <BookText className="mx-auto h-8 w-8 text-muted/50" />
-                  <p className="mt-3 text-sm text-muted">
-                    {isOwner
-                      ? "No ride journal entries yet. Click the + button above to share your first ride story."
-                      : `${rider.name} hasn\u0027t shared any ride journal entries yet.`}
-                  </p>
-                </div>
-              ) : isOwner ? (
-                <JournalList entries={rider.journalEntries.map((entry) => ({
-                  ...entry,
-                  likeCount: entry._count.likes,
-                  commentCount: entry._count.comments,
-                  isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,
-                  comments: entry.comments.map((c) => ({
-                    id: c.id,
-                    body: c.body,
-                    authorName: c.author.name,
-                    authorHandle: c.author.handle,
-                    createdAt: c.createdAt.toISOString(),
-                  })),
-                  profileUrl: `/riders/${rider.handle}`,
-                }))} />
-              ) : (
-                rider.journalEntries.map((entry) => {
-                  const entryImage = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
-                  const isLiked = viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false;
-                  const entryComments = entry.comments.map((c) => ({
-                    id: c.id,
-                    body: c.body,
-                    authorName: c.author.name,
-                    authorHandle: c.author.handle,
-                    createdAt: c.createdAt.toISOString(),
-                  }));
-                  return (
-                    <article key={entry.id} className="relative overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                      {currentUser && (
-                        <div className="absolute right-3 top-3 z-10">
-                          <ReportJournalButton entryId={entry.id} />
-                        </div>
-                      )}
-                      {entryImage && (
-                        <div className="aspect-video w-full overflow-hidden">
-                          <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
-                        </div>
-                      )}
-                      <div className="p-5">
-                        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
-                          {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </p>
-                        {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
-                        <p className="mt-2 leading-relaxed text-muted">{entry.body}</p>
-                      </div>
-                      <JournalInteractions
-                        entryId={entry.id}
-                        likeCount={entry._count.likes}
-                        commentCount={entry._count.comments}
-                        isLiked={isLiked}
-                        isAuthenticated={Boolean(currentUser)}
-                        comments={entryComments}
-                        entryUrl={`/riders/${rider.handle}`}
-                      />
-                    </article>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* COLUMN 3 — Activity sidebar */}
-          <aside className="space-y-5">
             {/* Social Links */}
             {(rider.youtubeUrl || rider.tiktokUrl || rider.instagramUrl || rider.twitterUrl || isOwner) && (
               <div className="group rounded-xl border border-border bg-surface p-5 shadow-soft">
@@ -530,6 +445,87 @@ export default async function RiderProfilePage({
               </div>
             </div>
           </aside>
+
+          {/* MAIN — Ride Journal */}
+          <div>
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
+                <BookText className="h-5 w-5 text-sunset" />
+                Ride Journal
+              </h2>
+              {isOwner && <CreateJournalDialog />}
+            </div>
+
+            <div className="mt-6 space-y-5">
+              {rider.journalEntries.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+                  <BookText className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm text-muted">
+                    {isOwner
+                      ? "No ride journal entries yet. Click the + button above to share your first ride story."
+                      : `${rider.name} hasn\u0027t shared any ride journal entries yet.`}
+                  </p>
+                </div>
+              ) : isOwner ? (
+                <JournalList entries={rider.journalEntries.map((entry) => ({
+                  ...entry,
+                  likeCount: entry._count.likes,
+                  commentCount: entry._count.comments,
+                  isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,
+                  comments: entry.comments.map((c) => ({
+                    id: c.id,
+                    body: c.body,
+                    authorName: c.author.name,
+                    authorHandle: c.author.handle,
+                    createdAt: c.createdAt.toISOString(),
+                  })),
+                  profileUrl: `/riders/${rider.handle}`,
+                }))} />
+              ) : (
+                rider.journalEntries.map((entry) => {
+                  const entryImage = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
+                  const isLiked = viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false;
+                  const entryComments = entry.comments.map((c) => ({
+                    id: c.id,
+                    body: c.body,
+                    authorName: c.author.name,
+                    authorHandle: c.author.handle,
+                    createdAt: c.createdAt.toISOString(),
+                  }));
+                  return (
+                    <article key={entry.id} className="relative overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                      {currentUser && (
+                        <div className="absolute right-3 top-3 z-10">
+                          <ReportJournalButton entryId={entry.id} />
+                        </div>
+                      )}
+                      {entryImage && (
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
+                        </div>
+                      )}
+                      <div className="p-5">
+                        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
+                          {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                        {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
+                        <p className="mt-2 leading-relaxed text-muted">{entry.body}</p>
+                      </div>
+                      <JournalInteractions
+                        entryId={entry.id}
+                        likeCount={entry._count.likes}
+                        commentCount={entry._count.comments}
+                        isLiked={isLiked}
+                        isAuthenticated={Boolean(currentUser)}
+                        comments={entryComments}
+                        entryUrl={`/riders/${rider.handle}`}
+                      />
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>
