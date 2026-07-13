@@ -18,6 +18,17 @@ export function mediaUrl(rawUrl: string | null | undefined): string {
 
   try {
     const parsed = new URL(rawUrl);
+    const publicOrigin = process.env.S3_PUBLIC_ENDPOINT ? new URL(process.env.S3_PUBLIC_ENDPOINT).origin : null;
+    const privateOrigin = process.env.S3_ENDPOINT ? new URL(process.env.S3_ENDPOINT).origin : null;
+
+    // Keep third-party media URLs (e.g. Unsplash) as-is.
+    if (
+      (publicOrigin && parsed.origin !== publicOrigin) &&
+      (privateOrigin && parsed.origin !== privateOrigin)
+    ) {
+      return rawUrl;
+    }
+
     const stripped = parsed.pathname.replace(/^\//, "");
     // URL format: /<bucket>/<key>
     if (stripped.startsWith(`${bucket}/`)) {
@@ -25,13 +36,9 @@ export function mediaUrl(rawUrl: string | null | undefined): string {
       return `/api/media/${key}`;
     }
 
-    // If URL path is already the object key, proxy it directly.
-    if (stripped.length > 0 && !stripped.includes("//")) {
-      return `/api/media/${stripped}`;
-    }
-
     return rawUrl;
   } catch {
-    return rawUrl;
+    const stripped = rawUrl.replace(/^\/+/, "");
+    return stripped ? `/api/media/${stripped}` : rawUrl;
   }
 }
