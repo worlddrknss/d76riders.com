@@ -110,6 +110,14 @@ export default async function NewsArticlePage({
     }),
     coverImageUrl: post.coverImageUrl,
   }));
+
+  const [dbCategories, dbTags] = await Promise.all([
+    prisma.newsCategory.findMany({ orderBy: { name: "asc" }, select: { name: true } }),
+    prisma.newsTag.findMany({ orderBy: { usageCount: "desc" }, take: 20, select: { name: true } }),
+  ]);
+  const newsCategories = dbCategories.map((c) => c.name);
+  const popularTags = dbTags.map((t) => t.name);
+
   const isAdmin = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
   return (
