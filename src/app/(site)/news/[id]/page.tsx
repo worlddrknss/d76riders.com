@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { deleteNewsPostAction } from "@/app/(site)/news/[id]/actions";
-import { newsArticles, newsCategories, popularTags } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -19,15 +18,12 @@ async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const dbPost = "newsPost" in prisma
-    ? await safeQuery(
-        () => prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED }, select: { title: true, excerpt: true, coverImageUrl: true } }),
-        null,
-      )
-    : null;
-  const staticArticle = newsArticles.find((a) => a.id === id);
-  const title = dbPost?.title || staticArticle?.title || "Article Not Found";
-  const description = dbPost?.excerpt || staticArticle?.excerpt || "";
+  const dbPost = await safeQuery(
+    () => prisma.newsPost.findFirst({ where: { slug: id, status: NewsPostStatus.PUBLISHED }, select: { title: true, excerpt: true, coverImageUrl: true } }),
+    null,
+  );
+  const title = dbPost?.title || "Article Not Found";
+  const description = dbPost?.excerpt || "";
 
   return {
     title,
@@ -43,18 +39,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 }
 
 export async function generateStaticParams() {
-  const posts = "newsPost" in prisma
-    ? await safeQuery(
-        () =>
-          prisma.newsPost.findMany({
-            where: { status: NewsPostStatus.PUBLISHED },
-            select: { slug: true },
-          }),
-        [],
-      )
-    : [];
+  const posts = await safeQuery(
+    () => prisma.newsPost.findMany({
+      where: { status: NewsPostStatus.PUBLISHED },
+      select: { slug: true },
+    }),
+    [],
+  );
 
-  return [...newsArticles.map((article) => ({ id: article.id })), ...posts.map((post) => ({ id: post.slug }))];
+  return posts.map((post) => ({ id: post.slug }));
 }
 
 export default async function NewsArticlePage({
@@ -64,16 +57,13 @@ export default async function NewsArticlePage({
 }) {
   const { id } = await params;
   const currentUser = await getCurrentUser();
-  const dbPost = "newsPost" in prisma
-    ? await safeQuery(() => prisma.newsPost.findFirst({
+  const dbPost = await safeQuery(() => prisma.newsPost.findFirst({
         where: { slug: id, status: NewsPostStatus.PUBLISHED },
         include: {
           newsCategory: { select: { name: true } },
           postTags: { include: { tag: { select: { name: true } } } },
         },
-      }), null)
-    : null;
-  const mockArticle = newsArticles.find((a) => a.id === id);
+      }), null);
 
   const article = dbPost
     ? {
@@ -93,48 +83,33 @@ export default async function NewsArticlePage({
         coverImageUrl: dbPost.coverImageUrl,
         isHtml: true,
       }
-    : mockArticle
-      ? {
-          ...mockArticle,
-          coverImageUrl: null,
-          isHtml: false,
-        }
-      : null;
+    : null;
 
   if (!article) {
     notFound();
   }
 
-  const articleIndex = Math.max(newsArticles.findIndex((a) => a.id === article.id), 0);
+  const articleIndex = 0;
   const heroPhoto = article.coverImageUrl || siteImages.galleryPage[articleIndex % siteImages.galleryPage.length];
-  const recentDbPosts = "newsPost" in prisma
-    ? await safeQuery(
-        () =>
-          prisma.newsPost.findMany({
-            where: { slug: { not: id }, status: NewsPostStatus.PUBLISHED },
-            orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
-            take: 3,
-          }),
-        [],
-      )
-    : [];
-  const recent = recentDbPosts.length > 0
-    ? recentDbPosts.map((post) => ({
-        id: post.slug,
-        title: post.title,
-        date: post.publishedAt.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        }),
-        coverImageUrl: post.coverImageUrl,
-      }))
-    : newsArticles.filter((a) => a.id !== article.id).slice(0, 3).map((post) => ({
-        id: post.id,
-        title: post.title,
-        date: post.date,
-        coverImageUrl: null,
-      }));
+  const recentDbPosts = await safeQuery(
+    () =>
+      prisma.newsPost.findMany({
+        where: { slug: { not: id }, status: NewsPostStatus.PUBLISHED },
+        orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+        take: 3,
+      }),
+    [],
+  );
+  const recent = recentDbPosts.map((post) => ({
+    id: post.slug,
+    title: post.title,
+    date: post.publishedAt.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    coverImageUrl: post.coverImageUrl,
+  }));
   const isAdmin = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
   return (

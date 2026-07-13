@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
-import { newsArticles } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
@@ -38,29 +37,19 @@ export default async function NewsPage() {
   const newsCategories = await prisma.newsCategory.findMany({ orderBy: { name: "asc" }, select: { name: true } });
   const popularTags = await prisma.newsTag.findMany({ orderBy: { usageCount: "desc" }, take: 20, select: { name: true } });
 
-  const articles = dbPosts.length > 0
-    ? dbPosts.map((post) => ({
-        id: post.slug,
-        title: post.title,
-        category: post.newsCategory?.name || post.category,
-        date: post.publishedAt.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        }),
-        author: post.authorName,
-        excerpt: post.excerpt,
-        coverImageUrl: post.coverImageUrl,
-      }))
-    : newsArticles.map((article) => ({
-        id: article.id,
-        title: article.title,
-        category: article.category,
-        date: article.date,
-        author: article.author,
-        excerpt: article.excerpt,
-        coverImageUrl: null,
-      }));
+  const articles = dbPosts.map((post) => ({
+    id: post.slug,
+    title: post.title,
+    category: post.newsCategory?.name || post.category,
+    date: post.publishedAt.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }),
+    author: post.authorName,
+    excerpt: post.excerpt,
+    coverImageUrl: post.coverImageUrl,
+  }));
 
   const recent = articles.slice(0, 3);
 

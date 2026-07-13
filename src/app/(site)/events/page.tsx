@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CalendarDays, Clock, MapPin, Route, Signal, Ticket, Users } from "lucide-react";
 import Link from "next/link";
 import { siteImages } from "@/data/images";
+import { mediaUrl } from "@/lib/media-url";
 import { PageHero } from "@/components/layout/page-hero";
 import { prisma } from "@/lib/prisma";
 
@@ -55,6 +56,7 @@ export default async function EventsPage() {
     take: 7,
     include: {
       _count: { select: { rsvps: true } },
+      galleryItems: { take: 1, select: { url: true } },
     },
   });
 
@@ -106,6 +108,7 @@ export default async function EventsPage() {
               const meetupAt = event.startsAt;
               const meetupTime = formatEventTime(meetupAt);
               const ksuTime = event.ksuAt ? formatEventTime(event.ksuAt) : deriveKsuTime(meetupAt);
+              const coverImage = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : siteImages.rides[i % siteImages.rides.length];
               return (
                 <article
                   key={event.id}
@@ -114,7 +117,7 @@ export default async function EventsPage() {
                   {/* PHOTO + DATE BADGE */}
                   <div
                     className="relative h-48 bg-cover bg-center lg:h-full"
-                    style={{ backgroundImage: `url(${siteImages.rides[i % siteImages.rides.length]})` }}
+                    style={{ backgroundImage: `url(${coverImage})` }}
                   >
                     <div className="absolute inset-0 bg-linear-to-t from-asphalt/50 to-transparent" />
                     <div className="absolute bottom-3 left-3 flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">

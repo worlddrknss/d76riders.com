@@ -248,6 +248,16 @@ export async function updateBikeAction(bikeId: string, formData: FormData): Prom
   redirect("/garage/mine");
 }
 
+export async function setPrimaryBikeAction(bikeId: string): Promise<void> {
+  const rider = await requireCurrentRider();
+
+  const bike = await prisma.bike.findFirst({ where: { id: bikeId, riderId: rider.id }, select: { id: true } });
+  if (!bike) return;
+
+  await prisma.rider.update({ where: { id: rider.id }, data: { primaryBikeId: bike.id } });
+  revalidatePath("/garage/mine");
+}
+
 export async function deleteBikeAction(bikeId: string): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);

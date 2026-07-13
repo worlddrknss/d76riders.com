@@ -1,6 +1,6 @@
 "use client";
 
-const URL_REGEX = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_+.~#?&/=]*/gi;
+const URL_REGEX = /https?:\/\/[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b[-a-zA-Z0-9()@:%_+.~#?&/=]*/gi;
 
 type LinkifyProps = {
   text: string;
@@ -17,8 +17,7 @@ export function Linkify({ text, className }: LinkifyProps) {
       parts.push(text.slice(lastIndex, matchStart));
     }
     const raw = match[0];
-    const url = raw.startsWith("http") ? raw : `https://${raw}`;
-    parts.push({ url, display: raw });
+    parts.push({ url: raw, display: raw });
     lastIndex = matchStart + raw.length;
   }
 

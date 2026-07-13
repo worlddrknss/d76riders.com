@@ -27,9 +27,9 @@ export default async function RidersPage() {
       coverUrl: true,
       location: true,
       yearsRiding: true,
+      primaryBikeId: true,
       bikes: {
-        select: { make: true, model: true },
-        take: 1,
+        select: { id: true, make: true, model: true, name: true },
       },
     },
     orderBy: { joinedAt: "asc" },
@@ -75,7 +75,12 @@ export default async function RidersPage() {
           {riders.map((rider) => {
             const avatar = mediaUrl(rider.avatarUrl);
             const cover = mediaUrl(rider.coverUrl) || siteImages.hero;
-            const bikeLabel = rider.bikes[0] ? `${rider.bikes[0].make} ${rider.bikes[0].model ?? ""}`.trim() : "No bike listed";
+            const bikeLabel = (() => {
+              const primary = rider.primaryBikeId ? rider.bikes.find((b) => b.id === rider.primaryBikeId) : null;
+              const displayBike = primary || rider.bikes[0];
+              if (!displayBike) return "No bike listed";
+              return displayBike.name || `${displayBike.make} ${displayBike.model ?? ""}`.trim();
+            })();
             const ridesCount = eventSetsByRider.get(rider.id)?.size ?? 0;
             return (
               <article key={rider.handle} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">

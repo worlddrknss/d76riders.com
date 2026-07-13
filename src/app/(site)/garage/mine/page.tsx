@@ -24,6 +24,7 @@ export default async function MyGaragePage() {
     select: {
       name: true,
       handle: true,
+      primaryBikeId: true,
       bikes: {
         orderBy: { createdAt: "desc" },
         select: {
@@ -133,7 +134,7 @@ export default async function MyGaragePage() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             {rider.bikes.map((bike) => (
-              <BikeCard key={bike.id} bike={bike} />
+              <BikeCard key={bike.id} bike={bike} isPrimary={bike.id === rider.primaryBikeId} />
             ))}
           </div>
         )}

@@ -12,6 +12,7 @@ model Rider {
   coverUrl       String?
   yearsRiding    Int?
   favoriteRoad   String?
+  primaryBikeId  String?
   ridesCompleted Int      @default(0)
   joinedAt       DateTime @default(now())
 

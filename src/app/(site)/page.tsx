@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import {
   communityFeed,
-  newsArticles,
 } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
@@ -379,23 +378,9 @@ export default async function Home() {
             </Link>
           </div>
           <div className="mt-6 grid gap-6 md:grid-cols-3">
-            {(publishedNews.length > 0
-              ? publishedNews.map((article) => ({
-                  id: article.slug,
-                  title: article.title,
-                  category: article.category,
-                  excerpt: article.excerpt,
-                  coverImageUrl: article.coverImageUrl,
-                }))
-              : newsArticles.slice(0, 3).map((article) => ({
-                  id: article.id,
-                  title: article.title,
-                  category: article.category,
-                  excerpt: article.excerpt,
-                  coverImageUrl: null,
-                }))).map((article, i) => (
-              <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                <Link href={`/news/${article.id}`} className="block">
+            {publishedNews.map((article, i) => (
+              <article key={article.slug} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                <Link href={`/news/${article.slug}`} className="block">
                   <div
                     className="relative h-44 bg-cover bg-center"
                     style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
@@ -406,13 +391,13 @@ export default async function Home() {
                   </div>
                 </Link>
                 <div className="p-5">
-                  <Link href={`/news/${article.id}`}>
+                  <Link href={`/news/${article.slug}`}>
                     <h3 className="font-display text-base font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
                       {article.title}
                     </h3>
                   </Link>
                   <p className="mt-2 text-sm text-muted">{article.excerpt}</p>
-                  <Link href={`/news/${article.id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                  <Link href={`/news/${article.slug}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
                     Read More <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>

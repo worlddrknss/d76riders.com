@@ -15,6 +15,7 @@ import {
   updateBikeAction,
   updateModificationAction,
   updateServiceRecordAction,
+  setPrimaryBikeAction,
 } from "@/app/(site)/garage/mine/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +79,7 @@ const bikeTypes = [
   { value: "OTHER", label: "Other" },
 ];
 
-export function BikeCard({ bike }: { bike: BikeData }) {
+export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimary?: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -220,7 +221,12 @@ export function BikeCard({ bike }: { bike: BikeData }) {
       </div>
 
       <div className="bg-asphalt px-5 py-4">
-        <h3 className="font-display text-lg font-bold uppercase tracking-tight text-white">{bike.name}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-display text-lg font-bold uppercase tracking-tight text-white">{bike.name}</h3>
+          {isPrimary && (
+            <span className="rounded-full bg-sunset/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-sunset">Current</span>
+          )}
+        </div>
         <p className="text-xs font-semibold uppercase tracking-widest text-sunset">Powered by {bike.make}</p>
       </div>
 
@@ -281,10 +287,17 @@ export function BikeCard({ bike }: { bike: BikeData }) {
         </div>
       </div>
 
-      <div className="border-t border-border px-5 py-3">
+      <div className="flex items-center justify-between border-t border-border px-5 py-3">
         <Link href={`/garage/mine/${bike.id}`} className="text-xs font-semibold uppercase tracking-wide text-sunset hover:underline">
-          Manage Build Timeline and Service
+          Build Timeline
         </Link>
+        {!isPrimary && (
+          <form action={setPrimaryBikeAction.bind(null, bike.id)}>
+            <button type="submit" className="text-xs font-semibold text-muted transition hover:text-sunset">
+              Set as Current Ride
+            </button>
+          </form>
+        )}
       </div>
 
       <Dialog open={manageOpen} onOpenChange={setManageOpen}>
