@@ -303,18 +303,22 @@ export function BikeCard({ bike }: { bike: BikeData }) {
                 <div className="grid gap-2 sm:grid-cols-2">
                   <select name="category" className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
                     <option value="OTHER">Category</option>
+                    <option value="EXHAUST">Exhaust</option>
                     <option value="PERFORMANCE">Performance</option>
+                    <option value="ENGINE">Engine</option>
                     <option value="SUSPENSION">Suspension</option>
                     <option value="EXTERIOR">Exterior</option>
-                    <option value="WHEELS">Wheels</option>
-                    <option value="INTERIOR">Interior</option>
+                    <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
+                    <option value="LIGHTING">Lighting</option>
                     <option value="ELECTRICAL">Electrical</option>
+                    <option value="PROTECTION">Protection &amp; Crash</option>
+                    <option value="ERGONOMICS">Ergonomics</option>
                   </select>
                   <Input name="cost" type="number" step="0.01" min="0" placeholder="Cost" />
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input name="mileage" type="number" min="0" placeholder="Mileage" />
-                  <Input name="installedAt" type="datetime-local" />
+                  <Input name="installedAt" type="date" />
                 </div>
                 <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
                 <Button type="submit" size="sm" variant="accent" disabled={managePending}>{managePending ? "Saving…" : "Add Mod"}</Button>
@@ -352,7 +356,7 @@ export function BikeCard({ bike }: { bike: BikeData }) {
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input name="mileage" type="number" min="0" placeholder="Mileage" />
-                  <Input name="servicedAt" type="datetime-local" />
+                  <Input name="servicedAt" type="date" />
                 </div>
                 <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
                 <Button type="submit" size="sm" variant="accent" disabled={managePending}>{managePending ? "Saving…" : "Add Service"}</Button>

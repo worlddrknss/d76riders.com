@@ -129,18 +129,22 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
               <div className="grid gap-3 sm:grid-cols-2">
                 <select name="category" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm">
                   <option value="OTHER">Category</option>
+                  <option value="EXHAUST">Exhaust</option>
                   <option value="PERFORMANCE">Performance</option>
+                  <option value="ENGINE">Engine</option>
                   <option value="SUSPENSION">Suspension</option>
                   <option value="EXTERIOR">Exterior</option>
-                  <option value="WHEELS">Wheels</option>
-                  <option value="INTERIOR">Interior</option>
+                  <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
+                  <option value="LIGHTING">Lighting</option>
                   <option value="ELECTRICAL">Electrical</option>
+                  <option value="PROTECTION">Protection &amp; Crash</option>
+                  <option value="ERGONOMICS">Ergonomics</option>
                 </select>
                 <input name="cost" type="number" step="0.01" min="0" placeholder="Cost" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input name="mileage" type="number" min="0" placeholder="Mileage" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-                <input name="installedAt" type="datetime-local" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+                <input name="installedAt" type="date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               </div>
               <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Modification</button>
@@ -184,7 +188,7 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <input name="mileage" type="number" min="0" placeholder="Mileage" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-                <input name="servicedAt" type="datetime-local" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+                <input name="servicedAt" type="date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               </div>
               <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Service</button>
