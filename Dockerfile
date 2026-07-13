@@ -11,7 +11,9 @@ RUN npm ci
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL=postgresql://postgres:postgres@localhost:5432/d76riders?schema=public
+ARG NEXT_PUBLIC_MAPTILER_KEY=obC42hwWFOQLwRc1MEPO
 ENV DATABASE_URL=$DATABASE_URL
+ENV NEXT_PUBLIC_MAPTILER_KEY=$NEXT_PUBLIC_MAPTILER_KEY
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate

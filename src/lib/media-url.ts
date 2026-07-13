@@ -4,7 +4,6 @@
  */
 
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
-const publicEndpoint = process.env.S3_PUBLIC_ENDPOINT ?? process.env.S3_ENDPOINT ?? "";
 
 export function mediaUrl(rawUrl: string | null | undefined): string {
   if (!rawUrl) return "";
@@ -12,20 +11,23 @@ export function mediaUrl(rawUrl: string | null | undefined): string {
   // Already proxied
   if (rawUrl.startsWith("/api/media/")) return rawUrl;
 
+  // Some imported rows contain a plain "bucket/key" or just "key".
+  if (rawUrl.startsWith(`${bucket}/`)) {
+    return `/api/media/${rawUrl.slice(bucket.length + 1)}`;
+  }
+
   try {
     const parsed = new URL(rawUrl);
-    const origin = publicEndpoint ? new URL(publicEndpoint).origin : null;
-
-    // Only rewrite URLs that belong to our configured S3 endpoint
-    if (origin && parsed.origin !== origin) {
-      return rawUrl;
-    }
-
     const stripped = parsed.pathname.replace(/^\//, "");
     // URL format: /<bucket>/<key>
     if (stripped.startsWith(`${bucket}/`)) {
       const key = stripped.slice(bucket.length + 1);
       return `/api/media/${key}`;
+    }
+
+    // If URL path is already the object key, proxy it directly.
+    if (stripped.length > 0 && !stripped.includes("//")) {
+      return `/api/media/${stripped}`;
     }
 
     return rawUrl;
