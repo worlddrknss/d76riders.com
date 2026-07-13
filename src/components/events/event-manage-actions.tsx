@@ -47,6 +47,15 @@ export function EventManageActions({ event }: { event: EventData }) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
+  // Convert ISO string to local datetime-local value (YYYY-MM-DDTHH:mm)
+  function toLocalDateTimeValue(iso: string | null): string {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
   function handleEdit(formData: FormData) {
     startEditTransition(async () => {
       await updateEventAction(event.id, formData);
@@ -119,11 +128,11 @@ export function EventManageActions({ event }: { event: EventData }) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Starts At</label>
-                <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={event.startsAt.slice(0, 16)} className="mt-1" required />
+                <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={toLocalDateTimeValue(event.startsAt)} className="mt-1" required />
               </div>
               <div>
                 <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU At</label>
-                <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt?.slice(0, 16) ?? ""} className="mt-1" />
+                <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={toLocalDateTimeValue(event.ksuAt)} className="mt-1" />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

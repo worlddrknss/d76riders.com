@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
+import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
@@ -186,6 +187,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <ShareEvent title={event.title} slug={event.slug} />
+                <EventQrCode eventUrl={`/events/${event.slug}`} eventTitle={event.title} />
                 {isOwner && (
                   <EventManageActions
                     event={{
