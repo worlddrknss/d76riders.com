@@ -340,6 +340,44 @@ export async function deleteModificationAction(modificationId: string): Promise<
   revalidatePath(`/garage/mine/${modification.bikeId}`);
 }
 
+export async function updateModificationAction(modificationId: string, formData: FormData): Promise<void> {
+  const rider = await requireCurrentRider();
+
+  const modification = await prisma.buildModification.findFirst({ where: { id: modificationId, riderId: rider.id }, select: { id: true, bikeId: true } });
+  if (!modification) return;
+
+  const title = normalizeText(formData.get("title"));
+  const categoryInput = normalizeText(formData.get("category"));
+  const costInput = normalizeText(formData.get("cost"));
+  const mileageInput = normalizeText(formData.get("mileage"));
+  const installedAtInput = normalizeText(formData.get("installedAt"));
+  const notes = normalizeText(formData.get("notes"));
+
+  if (!title) return;
+
+  const category = categoryInput && allowedModificationCategories.has(categoryInput)
+    ? (categoryInput as ModificationCategory)
+    : "OTHER";
+  const cost = costInput ? Number.parseFloat(costInput) : null;
+  const mileage = toOptionalInt(mileageInput);
+  const installedAt = installedAtInput ? new Date(installedAtInput) : undefined;
+
+  await prisma.buildModification.update({
+    where: { id: modification.id },
+    data: {
+      title,
+      category,
+      cost: Number.isFinite(cost ?? NaN) ? cost : null,
+      mileage,
+      installedAt: installedAt && !Number.isNaN(installedAt.getTime()) ? installedAt : undefined,
+      notes: notes || null,
+    },
+  });
+
+  revalidatePath("/garage/mine");
+  revalidatePath(`/garage/mine/${modification.bikeId}`);
+}
+
 export async function createServiceRecordAction(formData: FormData): Promise<void> {
   const rider = await requireCurrentRider();
 
@@ -402,6 +440,44 @@ export async function deleteServiceRecordAction(serviceRecordId: string): Promis
   const photoUrls = record.photos.map((photo) => photo.url);
   await prisma.serviceRecord.delete({ where: { id: record.id } });
   await deleteFilesByUrls(photoUrls);
+
+  revalidatePath("/garage/mine");
+  revalidatePath(`/garage/mine/${record.bikeId}`);
+}
+
+export async function updateServiceRecordAction(serviceRecordId: string, formData: FormData): Promise<void> {
+  const rider = await requireCurrentRider();
+
+  const record = await prisma.serviceRecord.findFirst({ where: { id: serviceRecordId, riderId: rider.id }, select: { id: true, bikeId: true } });
+  if (!record) return;
+
+  const title = normalizeText(formData.get("title"));
+  const serviceTypeInput = normalizeText(formData.get("serviceType"));
+  const costInput = normalizeText(formData.get("cost"));
+  const mileageInput = normalizeText(formData.get("mileage"));
+  const servicedAtInput = normalizeText(formData.get("servicedAt"));
+  const notes = normalizeText(formData.get("notes"));
+
+  if (!title) return;
+
+  const serviceType = serviceTypeInput && allowedServiceTypes.has(serviceTypeInput)
+    ? (serviceTypeInput as ServiceType)
+    : "MAINTENANCE";
+  const cost = costInput ? Number.parseFloat(costInput) : null;
+  const mileage = toOptionalInt(mileageInput);
+  const servicedAt = servicedAtInput ? new Date(servicedAtInput) : undefined;
+
+  await prisma.serviceRecord.update({
+    where: { id: record.id },
+    data: {
+      title,
+      serviceType,
+      cost: Number.isFinite(cost ?? NaN) ? cost : null,
+      mileage,
+      servicedAt: servicedAt && !Number.isNaN(servicedAt.getTime()) ? servicedAt : undefined,
+      notes: notes || null,
+    },
+  });
 
   revalidatePath("/garage/mine");
   revalidatePath(`/garage/mine/${record.bikeId}`);

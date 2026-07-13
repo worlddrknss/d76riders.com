@@ -13,6 +13,8 @@ import {
   deleteModificationAction,
   deleteServiceRecordAction,
   updateBikeAction,
+  updateModificationAction,
+  updateServiceRecordAction,
 } from "@/app/(site)/garage/mine/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +83,8 @@ export function BikeCard({ bike }: { bike: BikeData }) {
   const [manageOpen, setManageOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [manageTab, setManageTab] = useState<"mods" | "services">("mods");
+  const [editingModId, setEditingModId] = useState<string | null>(null);
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [deletePending, startDeleteTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
   const [managePending, startManageTransition] = useTransition();
@@ -153,6 +157,22 @@ export function BikeCard({ bike }: { bike: BikeData }) {
   function handleDeleteService(serviceId: string) {
     startManageTransition(async () => {
       await deleteServiceRecordAction(serviceId);
+      router.refresh();
+    });
+  }
+
+  function handleUpdateModification(modId: string, formData: FormData) {
+    startManageTransition(async () => {
+      await updateModificationAction(modId, formData);
+      setEditingModId(null);
+      router.refresh();
+    });
+  }
+
+  function handleUpdateService(serviceId: string, formData: FormData) {
+    startManageTransition(async () => {
+      await updateServiceRecordAction(serviceId, formData);
+      setEditingServiceId(null);
       router.refresh();
     });
   }
@@ -327,13 +347,47 @@ export function BikeCard({ bike }: { bike: BikeData }) {
               <div className="space-y-2">
                 {bike.modifications.length > 0 ? bike.modifications.map((item) => (
                   <div key={item.id} className="rounded-lg border border-border bg-surface px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-ink">{item.title}</p>
-                        <p className="text-xs text-muted">{item.category.replaceAll("_", " ")} · {new Date(item.installedAt).toLocaleDateString("en-US")}</p>
+                    {editingModId === item.id ? (
+                      <form action={(fd) => handleUpdateModification(item.id, fd)} className="space-y-2">
+                        <Input name="title" defaultValue={item.title} required placeholder="Title" />
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <select name="category" defaultValue={item.category} className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
+                            <option value="EXHAUST">Exhaust</option>
+                            <option value="PERFORMANCE">Performance</option>
+                            <option value="ENGINE">Engine</option>
+                            <option value="SUSPENSION">Suspension</option>
+                            <option value="EXTERIOR">Exterior</option>
+                            <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
+                            <option value="LIGHTING">Lighting</option>
+                            <option value="ELECTRICAL">Electrical</option>
+                            <option value="PROTECTION">Protection &amp; Crash</option>
+                            <option value="ERGONOMICS">Ergonomics</option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                          <Input name="cost" type="number" step="0.01" defaultValue={item.cost ?? ""} placeholder="Cost" />
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <Input name="mileage" type="number" defaultValue={item.mileage ?? ""} placeholder="Mileage" />
+                          <Input name="installedAt" type="date" defaultValue={new Date(item.installedAt).toISOString().slice(0, 10)} />
+                        </div>
+                        <textarea name="notes" rows={2} defaultValue={item.notes ?? ""} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
+                        <div className="flex gap-2">
+                          <Button type="submit" size="sm" variant="accent" disabled={managePending}>Save</Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => setEditingModId(null)}>Cancel</Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-ink">{item.title}</p>
+                          <p className="text-xs text-muted">{item.category.replaceAll("_", " ")} · {new Date(item.installedAt).toLocaleDateString("en-US")}{item.cost ? ` · $${item.cost}` : ""}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingModId(item.id)}><Pencil className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-600" onClick={() => handleDeleteModification(item.id)} disabled={managePending}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDeleteModification(item.id)} disabled={managePending}>Delete</Button>
-                    </div>
+                    )}
                   </div>
                 )) : <p className="text-xs text-muted">No modifications yet.</p>}
               </div>
@@ -365,13 +419,41 @@ export function BikeCard({ bike }: { bike: BikeData }) {
               <div className="space-y-2">
                 {bike.serviceRecords.length > 0 ? bike.serviceRecords.map((item) => (
                   <div key={item.id} className="rounded-lg border border-border bg-surface px-3 py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-ink">{item.title}</p>
-                        <p className="text-xs text-muted">{item.serviceType.replaceAll("_", " ")} · {new Date(item.servicedAt).toLocaleDateString("en-US")}</p>
+                    {editingServiceId === item.id ? (
+                      <form action={(fd) => handleUpdateService(item.id, fd)} className="space-y-2">
+                        <Input name="title" defaultValue={item.title} required placeholder="Service title" />
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <select name="serviceType" defaultValue={item.serviceType} className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
+                            <option value="MAINTENANCE">Maintenance</option>
+                            <option value="REPAIR">Repair</option>
+                            <option value="INSPECTION">Inspection</option>
+                            <option value="UPGRADE">Upgrade</option>
+                            <option value="OTHER">Other</option>
+                          </select>
+                          <Input name="cost" type="number" step="0.01" defaultValue={item.cost ?? ""} placeholder="Cost" />
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <Input name="mileage" type="number" defaultValue={item.mileage ?? ""} placeholder="Mileage" />
+                          <Input name="servicedAt" type="date" defaultValue={new Date(item.servicedAt).toISOString().slice(0, 10)} />
+                        </div>
+                        <textarea name="notes" rows={2} defaultValue={item.notes ?? ""} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
+                        <div className="flex gap-2">
+                          <Button type="submit" size="sm" variant="accent" disabled={managePending}>Save</Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => setEditingServiceId(null)}>Cancel</Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-ink">{item.title}</p>
+                          <p className="text-xs text-muted">{item.serviceType.replaceAll("_", " ")} · {new Date(item.servicedAt).toLocaleDateString("en-US")}{item.cost ? ` · $${item.cost}` : ""}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingServiceId(item.id)}><Pencil className="h-3.5 w-3.5" /></Button>
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-600" onClick={() => handleDeleteService(item.id)} disabled={managePending}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
                       </div>
-                      <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleDeleteService(item.id)} disabled={managePending}>Delete</Button>
-                    </div>
+                    )}
                   </div>
                 )) : <p className="text-xs text-muted">No service records yet.</p>}
               </div>

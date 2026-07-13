@@ -54,6 +54,13 @@ function difficultyLabel(value: string | null): string {
   }
 }
 
+// Format a Date as YYYY-MM-DDTHH:mm string preserving the raw stored values
+// (dates are stored naive/UTC-as-local in the DB)
+function toLocalISOString(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
+}
+
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", {
     weekday: "short",
@@ -195,8 +202,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       id: event.id,
                       title: event.title,
                       description: event.description,
-                      startsAt: event.startsAt.toISOString(),
-                      ksuAt: event.ksuAt ? event.ksuAt.toISOString() : null,
+                      startsAt: toLocalISOString(event.startsAt),
+                      ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
                       meetLocation: event.meetLocation,
                       ksuLocation: event.ksuLocation,
                       distanceMiles: event.distanceMiles,
