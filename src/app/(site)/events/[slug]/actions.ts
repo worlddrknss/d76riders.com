@@ -148,6 +148,10 @@ export async function deleteEventAction(eventId: string): Promise<void> {
   const urls = event.galleryItems.map((item) => item.url);
 
   await prisma.$transaction(async (tx) => {
+    // Delete related records that may not cascade automatically
+    await tx.rsvp.deleteMany({ where: { eventId: event.id } });
+    await tx.eventFollow.deleteMany({ where: { eventId: event.id } });
+    await tx.galleryItem.deleteMany({ where: { eventId: event.id } });
     await tx.rideEvent.delete({ where: { id: event.id } });
     if (event.routeId) {
       await tx.route.delete({ where: { id: event.routeId } });

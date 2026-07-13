@@ -117,6 +117,39 @@ model BuildFavorite {
   @@index([bikeId])
 }
 
+model GearItem {
+  id           String       @id @default(cuid())
+  riderId      String
+  category     GearCategory
+  name         String
+  brand        String?
+  model        String?
+  size         String?
+  color        String?
+  condition    String?
+  purchaseDate DateTime?
+  purchaseUrl  String?
+  notes        String?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId, category])
+  @@index([purchaseDate])
+}
+
+enum GearCategory {
+  HELMET
+  GLOVES
+  JACKET
+  PANTS
+  BOOTS
+  CAMERA_GEAR
+  ACCESSORY
+}
+
 enum ModificationCategory {
   EXTERIOR
   SUSPENSION

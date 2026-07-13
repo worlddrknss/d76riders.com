@@ -68,8 +68,27 @@ export async function updateAccountProfileAction(
   const avatarFile = formData.get("avatarFile");
   const coverFile = formData.get("coverFile");
   const bio = normalizeText(formData.get("bio"));
+  const location = normalizeText(formData.get("location"));
+  const favoriteRoad = normalizeText(formData.get("favoriteRoad"));
   const yearStartedRidingInput = normalizeText(formData.get("yearStartedRiding"));
   const newPassword = normalizeText(formData.get("newPassword"));
+  const youtubeUrl = normalizeText(formData.get("youtubeUrl"));
+  const tiktokUrl = normalizeText(formData.get("tiktokUrl"));
+  const instagramUrl = normalizeText(formData.get("instagramUrl"));
+  const twitterUrl = normalizeText(formData.get("twitterUrl"));
+
+  // Build full URLs from handles/usernames
+  function toSocialUrl(input: string, baseUrl: string): string | null {
+    if (!input) return null;
+    if (input.startsWith("http://") || input.startsWith("https://")) return input;
+    const handle = input.replace(/^@/, "");
+    return `${baseUrl}${handle}`;
+  }
+
+  const resolvedYoutubeUrl = toSocialUrl(youtubeUrl, "https://youtube.com/@");
+  const resolvedTiktokUrl = toSocialUrl(tiktokUrl, "https://tiktok.com/@");
+  const resolvedInstagramUrl = toSocialUrl(instagramUrl, "https://instagram.com/");
+  const resolvedTwitterUrl = toSocialUrl(twitterUrl, "https://x.com/");
 
   if (!username || !isValidUsername(username)) {
     return {
@@ -176,7 +195,13 @@ export async function updateAccountProfileAction(
           avatarUrl: nextAvatarUrl,
           coverUrl: nextCoverUrl !== undefined ? nextCoverUrl : undefined,
           bio: bio || null,
+          location: location || null,
+          favoriteRoad: favoriteRoad || null,
           yearsRiding,
+          youtubeUrl: resolvedYoutubeUrl,
+          tiktokUrl: resolvedTiktokUrl,
+          instagramUrl: resolvedInstagramUrl,
+          twitterUrl: resolvedTwitterUrl,
         },
       });
     });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
 import { updateEventAction, deleteEventAction } from "@/app/(site)/events/[slug]/actions";
@@ -44,17 +45,20 @@ export function EventManageActions({ event }: { event: EventData }) {
   const [editPending, startEditTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
 
   function handleEdit(formData: FormData) {
     startEditTransition(async () => {
       await updateEventAction(event.id, formData);
       setEditOpen(false);
+      router.refresh();
     });
   }
 
   function handleDelete() {
     startDeleteTransition(async () => {
       await deleteEventAction(event.id);
+      router.push("/events");
     });
   }
 

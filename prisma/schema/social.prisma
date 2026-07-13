@@ -23,3 +23,24 @@ model EventFollow {
   @@id([riderId, eventId])
   @@index([eventId])
 }
+
+model RiderVideo {
+  id       String        @id @default(cuid())
+  riderId  String
+  platform VideoPlatform
+  url      String
+  title    String?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([riderId, platform])
+}
+
+enum VideoPlatform {
+  YOUTUBE
+  TIKTOK
+  OTHER
+}

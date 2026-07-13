@@ -9,6 +9,11 @@ type Entry = {
   body: string;
   createdAt: Date;
   galleryItems: { url: string; caption: string | null }[];
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  comments: { id: string; body: string; authorName: string; authorHandle: string; createdAt: string }[];
+  profileUrl: string;
 };
 
 export function JournalList({ entries }: { entries: Entry[] }) {

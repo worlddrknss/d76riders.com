@@ -15,6 +15,12 @@ model Rider {
   ridesCompleted Int      @default(0)
   joinedAt       DateTime @default(now())
 
+  // Social links
+  youtubeUrl     String?
+  tiktokUrl      String?
+  instagramUrl   String?
+  twitterUrl     String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bikes          Bike[]
@@ -23,6 +29,8 @@ model Rider {
   buildCollections BuildCollection[]
   buildCollectionItems BuildCollectionItem[]
   buildFavorites BuildFavorite[]
+  gearItems GearItem[]
+  videos RiderVideo[]
   following RiderFollow[] @relation("RiderFollowFollower")
   followers RiderFollow[] @relation("RiderFollowFollowing")
   followedEvents EventFollow[]

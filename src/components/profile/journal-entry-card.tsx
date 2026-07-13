@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/riders/actions";
+import { JournalInteractions } from "@/components/profile/journal-interactions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,6 +34,11 @@ type JournalEntry = {
   body: string;
   createdAt: Date;
   galleryItems: { url: string; caption: string | null }[];
+  likeCount: number;
+  commentCount: number;
+  isLiked: boolean;
+  comments: { id: string; body: string; authorName: string; authorHandle: string; createdAt: string }[];
+  profileUrl: string;
 };
 
 export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
@@ -139,6 +145,16 @@ export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
           </form>
         </DialogContent>
       </Dialog>
+
+      <JournalInteractions
+        entryId={entry.id}
+        likeCount={entry.likeCount}
+        commentCount={entry.commentCount}
+        isLiked={entry.isLiked}
+        isAuthenticated={true}
+        comments={entry.comments}
+        entryUrl={entry.profileUrl}
+      />
     </motion.article>
   );
 }

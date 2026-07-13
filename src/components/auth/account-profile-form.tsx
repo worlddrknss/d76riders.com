@@ -15,7 +15,13 @@ type AccountProfileFormProps = {
   username: string;
   avatarUrl: string;
   bio: string;
+  location: string;
+  favoriteRoad: string;
   yearStartedRiding: number | null;
+  youtubeUrl: string;
+  tiktokUrl: string;
+  instagramUrl: string;
+  twitterUrl: string;
 };
 
 const initialAccountFormState: AccountFormState = {
@@ -27,7 +33,7 @@ const initialDeleteAccountFormState: DeleteAccountFormState = {
   error: null,
 };
 
-export function AccountProfileForm({ displayName, username, avatarUrl, bio, yearStartedRiding }: AccountProfileFormProps) {
+export function AccountProfileForm({ displayName, username, avatarUrl, bio, location, favoriteRoad, yearStartedRiding, youtubeUrl, tiktokUrl, instagramUrl, twitterUrl }: AccountProfileFormProps) {
   const [state, formAction] = useActionState<AccountFormState, FormData>(
     updateAccountProfileAction,
     initialAccountFormState,
@@ -125,6 +131,35 @@ export function AccountProfileForm({ displayName, username, avatarUrl, bio, year
           />
         </div>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="location" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+              Location
+            </label>
+            <input
+              id="location"
+              name="location"
+              type="text"
+              defaultValue={location}
+              placeholder="City, State"
+              className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="favoriteRoad" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+              Favorite Road
+            </label>
+            <input
+              id="favoriteRoad"
+              name="favoriteRoad"
+              type="text"
+              defaultValue={favoriteRoad}
+              placeholder="e.g. Natchez Trace Parkway"
+              className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+            />
+          </div>
+        </div>
+
         <div className="space-y-1.5">
           <label htmlFor="yearStartedRiding" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
             Year Started Riding
@@ -154,6 +189,29 @@ export function AccountProfileForm({ displayName, username, avatarUrl, bio, year
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
             placeholder="Leave blank to keep current password"
           />
+        </div>
+
+        <div className="border-t border-border pt-5">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Social Links</h3>
+          <p className="mt-1 text-xs text-muted">Optional — shown on your public profile.</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="youtubeUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">YouTube</label>
+              <input id="youtubeUrl" name="youtubeUrl" type="text" defaultValue={youtubeUrl} placeholder="@YourChannel" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="tiktokUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">TikTok</label>
+              <input id="tiktokUrl" name="tiktokUrl" type="text" defaultValue={tiktokUrl} placeholder="@YourHandle" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="instagramUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Instagram</label>
+              <input id="instagramUrl" name="instagramUrl" type="text" defaultValue={instagramUrl} placeholder="yourhandle" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="twitterUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">X / Twitter</label>
+              <input id="twitterUrl" name="twitterUrl" type="text" defaultValue={twitterUrl} placeholder="yourhandle" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" />
+            </div>
+          </div>
         </div>
 
         {state.error ? (
