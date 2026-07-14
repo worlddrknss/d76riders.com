@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,14 +22,20 @@ const initial: JournalFormState = { error: null, success: null };
 export function CreateJournalDialog() {
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const router = useRouter();
   const [state, action, pending] = useActionState(async (_prev: JournalFormState, formData: FormData) => {
-    const result = await createJournalEntryAction(_prev, formData);
-    if (result.success) {
-      setOpen(false);
-      formRef.current?.reset();
-    }
-    return result;
+    return createJournalEntryAction(_prev, formData);
   }, initial);
+
+  useEffect(() => {
+    if (!state.success) {
+      return;
+    }
+
+    setOpen(false);
+    formRef.current?.reset();
+    router.refresh();
+  }, [router, state.success]);
 
   return (
     <>

@@ -48,7 +48,7 @@ export async function createJournalEntryAction(
 
   const rider = await prisma.rider.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, handle: true },
   });
 
   if (!rider) {
@@ -91,6 +91,9 @@ export async function createJournalEntryAction(
         : undefined,
     },
   });
+
+  revalidatePath("/riders", "layout");
+  revalidatePath(`/riders/${rider.handle}`);
 
   return { error: null, success: "Ride history entry published." };
 }
