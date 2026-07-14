@@ -119,7 +119,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       },
       rsvps: {
         where: { status: "GOING" },
-        select: { riderId: true },
+        select: {
+          riderId: true,
+          rider: {
+            select: {
+              handle: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+        },
       },
       followers: {
         select: { riderId: true },
@@ -296,6 +305,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           </div>
         ) : null}
+
+        {/* REGISTERED RIDERS */}
+        {event.rsvps.length > 0 && (
+          <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
+            <h2 className="font-display text-xl font-semibold text-asphalt">
+              Registered Riders
+              <span className="ml-2 text-sm font-normal text-muted">({event.rsvps.length})</span>
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {event.rsvps.map((rsvp) => (
+                <Link
+                  key={rsvp.riderId}
+                  href={`/riders/${rsvp.rider.handle}`}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-canvas p-3 transition hover:border-sunset/30 hover:shadow-sm"
+                >
+                  {rsvp.rider.avatarUrl ? (
+                    <img src={mediaUrl(rsvp.rider.avatarUrl)} alt={rsvp.rider.name} className="h-10 w-10 rounded-full border border-border object-cover" />
+                  ) : (
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sunset/10 text-sm font-bold text-sunset">
+                      {rsvp.rider.name.charAt(0)}
+                    </span>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-ink">{rsvp.rider.name}</p>
+                    <p className="text-xs text-muted">@{rsvp.rider.handle}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
