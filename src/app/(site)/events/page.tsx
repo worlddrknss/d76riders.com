@@ -4,6 +4,7 @@ import Link from "next/link";
 import { siteImages } from "@/data/images";
 import { mediaUrl } from "@/lib/media-url";
 import { PageHero } from "@/components/layout/page-hero";
+import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -97,7 +98,7 @@ export default async function EventsPage() {
             </div>
           </div>
 
-          <div className="mt-6 space-y-5">
+          <StaggerList className="mt-6 space-y-5">
             {upcomingEvents.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-surface p-8 text-center text-sm text-muted shadow-soft">
                 No upcoming events yet. Create the first community event.
@@ -110,8 +111,8 @@ export default async function EventsPage() {
               const ksuTime = event.ksuAt ? formatEventTime(event.ksuAt) : deriveKsuTime(meetupAt);
               const coverImage = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : siteImages.rides[i % siteImages.rides.length];
               return (
+                <StaggerItem key={event.id}>
                 <article
-                  key={event.id}
                   className="grid gap-0 overflow-hidden rounded-xl border border-border bg-surface shadow-soft lg:grid-cols-[18rem_1fr_16rem]"
                 >
                   {/* PHOTO + DATE BADGE */}
@@ -153,9 +154,10 @@ export default async function EventsPage() {
                     </Link>
                   </div>
                 </article>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerList>
         </div>
       </section>
 

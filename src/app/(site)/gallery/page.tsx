@@ -3,6 +3,7 @@ import Link from "next/link";
 import { galleryItems } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export const metadata: Metadata = {
   title: "Gallery — Ride Photos & Community Moments",
@@ -28,10 +29,10 @@ export default function GalleryPage() {
       {/* PHOTO MOSAIC */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {galleryItems.map((item, index) => (
+              <StaggerItem key={item}>
               <figure
-                key={item}
                 className={`group relative overflow-hidden rounded-xl border border-border shadow-soft ${index % 5 === 0 ? "sm:col-span-2" : ""}`}
               >
                 <div
@@ -42,8 +43,9 @@ export default function GalleryPage() {
                   {item}
                 </figcaption>
               </figure>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 

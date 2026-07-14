@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bike, BookText, CalendarDays, Camera, HardHat, MapPin, Route, Shield, Video } from "lucide-react";
 
-import { CreateJournalDialog } from "@/components/profile/create-journal-dialog";
+import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalInteractions } from "@/components/profile/journal-interactions";
 import { ProfileSectionEdit } from "@/components/profile/profile-section-edit";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
 import { Linkify } from "@/components/ui/linkify";
+import { VideoEmbed } from "@/components/ui/video-embed";
 import { JournalList } from "@/components/profile/journal-list";
 import { ReportJournalButton } from "@/components/profile/report-journal-button";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
@@ -75,6 +76,7 @@ export default async function RiderProfilePage({
           id: true,
           title: true,
           body: true,
+          videoUrl: true,
           createdAt: true,
           galleryItems: {
             orderBy: { createdAt: "asc" },
@@ -448,13 +450,14 @@ export default async function RiderProfilePage({
 
           {/* MAIN — Ride Journal */}
           <div>
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
-                <BookText className="h-5 w-5 text-sunset" />
-                Ride Journal
-              </h2>
-              {isOwner && <CreateJournalDialog />}
-            </div>
+            {isOwner && (
+              <div>
+                <JournalComposerBar
+                  avatarUrl={avatar}
+                  firstName={rider.name.split(" ")[0]}
+                />
+              </div>
+            )}
 
             <div className="mt-6 space-y-5">
               {rider.journalEntries.length === 0 ? (
@@ -499,11 +502,13 @@ export default async function RiderProfilePage({
                           <ReportJournalButton entryId={entry.id} />
                         </div>
                       )}
-                      {entryImage && (
-                        <div className="aspect-video w-full overflow-hidden">
+                      {entryImage ? (
+                        <div className="aspect-square w-full overflow-hidden">
                           <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
                         </div>
-                      )}
+                      ) : entry.videoUrl ? (
+                        <VideoEmbed url={entry.videoUrl} />
+                      ) : null}
                       <div className="p-5">
                         <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
                           {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}

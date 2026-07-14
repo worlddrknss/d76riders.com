@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { ImagePlus, Link2, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/riders/actions";
 import { JournalInteractions } from "@/components/profile/journal-interactions";
+import { VideoEmbed } from "@/components/ui/video-embed";
 import { Linkify } from "@/components/ui/linkify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ type JournalEntry = {
   id: string;
   title: string | null;
   body: string;
+  videoUrl: string | null;
   createdAt: Date;
   galleryItems: { url: string; caption: string | null }[];
   likeCount: number;
@@ -46,6 +48,7 @@ export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
   const [editOpen, setEditOpen] = useState(false);
   const [deletePending, startDeleteTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
+  const [editMediaType, setEditMediaType] = useState<"photo" | "video">(entry.videoUrl ? "video" : "photo");
   const formRef = useRef<HTMLFormElement>(null);
   const imageUrl = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
 
@@ -96,12 +99,14 @@ export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
         </AlertDialog>
       </div>
 
-      {/* Image */}
-      {imageUrl && (
-        <div className="aspect-video w-full overflow-hidden">
+      {/* Media — photo or video embed */}
+      {imageUrl ? (
+        <div className="aspect-square w-full overflow-hidden">
           <img src={imageUrl} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
         </div>
-      )}
+      ) : entry.videoUrl ? (
+        <VideoEmbed url={entry.videoUrl} />
+      ) : null}
 
       {/* Content */}
       <div className="p-4">
@@ -128,14 +133,51 @@ export function JournalEntryCard({ entry }: { entry: JournalEntry }) {
               <Textarea id={`edit-body-${entry.id}`} name="body" rows={4} defaultValue={entry.body} className="mt-1" required />
             </div>
             <div>
-              <label htmlFor={`edit-photo-${entry.id}`} className="text-xs font-semibold uppercase tracking-wide text-muted">Replace Photo</label>
-              <Input id={`edit-photo-${entry.id}`} name="ridePhoto" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Media</p>
+              <div className="mt-1.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditMediaType("photo")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    editMediaType === "photo" ? "bg-sunset text-white" : "bg-canvas text-muted hover:text-ink"
+                  }`}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" /> Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditMediaType("video")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    editMediaType === "video" ? "bg-sunset text-white" : "bg-canvas text-muted hover:text-ink"
+                  }`}
+                >
+                  <Link2 className="h-3.5 w-3.5" /> Video Link
+                </button>
+              </div>
             </div>
-            {imageUrl && (
-              <label className="flex items-center gap-2 text-xs text-muted">
-                <input name="removePhoto" type="checkbox" className="rounded" />
-                Remove current photo
-              </label>
+            {editMediaType === "photo" ? (
+              <>
+                <div>
+                  <Input id={`edit-photo-${entry.id}`} name="ridePhoto" type="file" accept="image/png,image/jpeg,image/webp" />
+                </div>
+                {imageUrl && (
+                  <label className="flex items-center gap-2 text-xs text-muted">
+                    <input name="removePhoto" type="checkbox" className="rounded" />
+                    Remove current photo
+                  </label>
+                )}
+              </>
+            ) : (
+              <div>
+                <Input
+                  id={`edit-video-${entry.id}`}
+                  name="videoUrl"
+                  type="url"
+                  defaultValue={entry.videoUrl ?? ""}
+                  placeholder="Paste YouTube, TikTok, Vimeo, or Instagram link"
+                />
+                <p className="mt-1 text-[0.65rem] text-muted">Supports YouTube, TikTok, Vimeo, Instagram, and Facebook</p>
+              </div>
             )}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>

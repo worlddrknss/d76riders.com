@@ -6,6 +6,7 @@ import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
 import { CreateRoadDialog } from "@/components/roads/create-road-dialog";
 import { RoadFilters } from "@/components/roads/road-filters";
 import { PageHero } from "@/components/layout/page-hero";
+import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -79,9 +80,10 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
               <p className="text-sm text-muted">No roads found matching your filters.</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <StaggerList className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {roads.map((road) => (
-                <Link key={road.id} href={`/roads/${road.slug}`} className="group overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
+                <StaggerItem key={road.id}>
+                <Link href={`/roads/${road.slug}`} className="group overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
                   {road.galleryItems[0]?.url ? <Image src={mediaUrl(road.galleryItems[0].url)} alt={road.galleryItems[0].caption || road.name} width={400} height={176} className="h-44 w-full object-cover transition group-hover:scale-[1.02]" /> : null}
                   <div className="p-5">
                     <p className="font-display text-lg font-semibold text-asphalt group-hover:text-sunset">{road.name}</p>
@@ -94,8 +96,9 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
                     <p className="mt-3 text-xs text-muted inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />Shared by {road.rider.name} (@{road.rider.handle})</p>
                   </div>
                 </Link>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerList>
           )}
         </div>
       </section>

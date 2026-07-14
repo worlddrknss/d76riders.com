@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { ImagePlus, Link2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/riders/actions";
@@ -19,10 +19,15 @@ import {
 
 const initial: JournalFormState = { error: null, success: null };
 
-export function CreateJournalDialog() {
-  const [open, setOpen] = useState(false);
+interface CreateJournalDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function CreateJournalDialog({ open, onOpenChange }: CreateJournalDialogProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+  const [mediaType, setMediaType] = useState<"photo" | "video">("photo");
   const [state, action, pending] = useActionState(async (_prev: JournalFormState, formData: FormData) => {
     return createJournalEntryAction(_prev, formData);
   }, initial);
@@ -32,19 +37,14 @@ export function CreateJournalDialog() {
       return;
     }
 
-    setOpen(false);
+    onOpenChange(false);
     formRef.current?.reset();
+    setMediaType("photo");
     router.refresh();
-  }, [router, state.success]);
+  }, [router, state.success, onOpenChange]);
 
   return (
-    <>
-      <Button variant="accent" size="sm" onClick={() => setOpen(true)} className="gap-1.5">
-        <Plus className="h-4 w-4" />
-        New Entry
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>New Ride Journal Entry</DialogTitle>
@@ -60,10 +60,51 @@ export function CreateJournalDialog() {
               <label htmlFor="create-body" className="text-xs font-semibold uppercase tracking-wide text-muted">Story</label>
               <Textarea id="create-body" name="body" rows={4} placeholder="How did the ride go?" className="mt-1" required />
             </div>
+
+            {/* Media type toggle */}
             <div>
-              <label htmlFor="create-photo" className="text-xs font-semibold uppercase tracking-wide text-muted">Photo</label>
-              <Input id="create-photo" name="ridePhoto" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">Media (optional)</p>
+              <div className="mt-1.5 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMediaType("photo")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    mediaType === "photo"
+                      ? "bg-sunset text-white"
+                      : "bg-canvas text-muted hover:text-ink"
+                  }`}
+                >
+                  <ImagePlus className="h-3.5 w-3.5" /> Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMediaType("video")}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                    mediaType === "video"
+                      ? "bg-sunset text-white"
+                      : "bg-canvas text-muted hover:text-ink"
+                  }`}
+                >
+                  <Link2 className="h-3.5 w-3.5" /> Video Link
+                </button>
+              </div>
             </div>
+
+            {mediaType === "photo" ? (
+              <div>
+                <Input id="create-photo" name="ridePhoto" type="file" accept="image/png,image/jpeg,image/webp" />
+              </div>
+            ) : (
+              <div>
+                <Input
+                  id="create-video"
+                  name="videoUrl"
+                  type="url"
+                  placeholder="Paste YouTube, TikTok, Vimeo, or Instagram link"
+                />
+                <p className="mt-1 text-[0.65rem] text-muted">Supports YouTube, TikTok, Vimeo, Instagram, and Facebook</p>
+              </div>
+            )}
 
             <AnimatePresence>
               {state.error && (
@@ -79,7 +120,7 @@ export function CreateJournalDialog() {
             </AnimatePresence>
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
+              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit" variant="accent" size="sm" disabled={pending}>
                 {pending ? "Publishing…" : "Publish"}
               </Button>
@@ -87,6 +128,5 @@ export function CreateJournalDialog() {
           </form>
         </DialogContent>
       </Dialog>
-    </>
   );
 }

@@ -5,6 +5,7 @@ model JournalEntry {
   authorId String
   title    String?
   body     String
+  videoUrl String?
 
   author       Rider         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]

@@ -40,6 +40,7 @@ export async function createJournalEntryAction(
   const title = normalizeText(formData.get("title"));
   const body = normalizeText(formData.get("body"));
   const ridePhoto = formData.get("ridePhoto");
+  const videoUrl = normalizeText(formData.get("videoUrl")) || null;
 
   const parsed = createJournalEntrySchema.safeParse({ title: title || "Untitled", body });
   if (!parsed.success) {
@@ -56,7 +57,7 @@ export async function createJournalEntryAction(
   }
 
   let photoUrl: string | null = null;
-  if (ridePhoto instanceof File && ridePhoto.size > 0) {
+  if (!videoUrl && ridePhoto instanceof File && ridePhoto.size > 0) {
     if (!allowedImageTypes.has(ridePhoto.type)) {
       return { error: "Ride photo must be a JPG, PNG, or WebP image.", success: null };
     }
@@ -81,6 +82,7 @@ export async function createJournalEntryAction(
       authorId: rider.id,
       title: title || null,
       body,
+      videoUrl,
       galleryItems: photoUrl
         ? {
             create: {
@@ -121,6 +123,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   const body = normalizeText(formData.get("body"));
   const ridePhoto = formData.get("ridePhoto");
   const removePhoto = formData.get("removePhoto") === "on";
+  const videoUrl = normalizeText(formData.get("videoUrl")) || null;
 
   if (!body) {
     return;
@@ -147,6 +150,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
       data: {
         title: title || null,
         body,
+        videoUrl,
       },
     });
 

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export const metadata: Metadata = {
   title: "Riders — Meet the Community",
@@ -71,7 +72,7 @@ export default async function RidersPage() {
 
       {/* RIDER GRID */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
+        <StaggerList className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
           {riders.map((rider) => {
             const avatar = mediaUrl(rider.avatarUrl);
             const cover = mediaUrl(rider.coverUrl) || siteImages.hero;
@@ -83,7 +84,8 @@ export default async function RidersPage() {
             })();
             const ridesCount = eventSetsByRider.get(rider.id)?.size ?? 0;
             return (
-              <article key={rider.handle} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <StaggerItem key={rider.handle}>
+                <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div className="relative h-28 bg-asphalt">
                   <div
                     className="h-full w-full bg-cover bg-center opacity-60"
@@ -121,9 +123,10 @@ export default async function RidersPage() {
                   </Link>
                 </div>
               </article>
+              </StaggerItem>
             );
           })}
-        </div>
+        </StaggerList>
       </section>
 
       {/* TRUST STRIP */}

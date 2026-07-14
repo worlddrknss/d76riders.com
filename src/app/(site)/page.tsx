@@ -18,6 +18,7 @@ import {
 } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
@@ -125,6 +126,7 @@ export default async function Home() {
       {/* HERO */}
       <PageHero
         image={siteImages.hero}
+        video="/images/hero/video.mp4"
         variant="home"
         title="DISTRICT 76"
         description="Born in Clarksville, Tennessee. Built for riders who enjoy great roads, great people, and unforgettable rides."
@@ -150,7 +152,7 @@ export default async function Home() {
       {/* ABOUT */}
       <section className="w-full bg-canvas">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
-          <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">About District 76</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               A Community Built for Riders
@@ -161,59 +163,63 @@ export default async function Home() {
             <Link href="/about" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               Read Our History <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-          <div
-            className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
-            style={{ backgroundImage: `url(${siteImages.aboutTown})` }}
-            role="img"
-            aria-label="Aerial view of Clarksville, Tennessee"
-          />
+          </FadeUp>
+          <FadeUp delay={0.15}>
+            <div
+              className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
+              style={{ backgroundImage: `url(${siteImages.aboutTown})` }}
+              role="img"
+              aria-label="Aerial view of Clarksville, Tennessee"
+            />
+          </FadeUp>
         </div>
       </section>
 
       {/* EXPLORE FEATURES */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="text-center">
+          <FadeUp className="text-center">
             <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-asphalt sm:text-3xl">
               Explore <span className="text-sunset">District 76</span>
             </h2>
             <p className="mt-2 text-sm text-muted">Your gateway to the core of our riding community.</p>
-          </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          </FadeUp>
+          <StaggerList className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {exploreFeatures.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Link
-                  key={feature.title}
-                  href={feature.href}
-                  className="group rounded-xl border border-border bg-surface p-6 shadow-soft transition hover:border-sunset"
-                >
-                  <Icon className="h-8 w-8 text-sunset" />
-                  <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-tight text-asphalt">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-muted">{feature.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset">
-                    Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </Link>
+                <StaggerItem key={feature.title}>
+                  <Link
+                    href={feature.href}
+                    className="group block rounded-xl border border-border bg-surface p-6 shadow-soft transition hover:border-sunset"
+                  >
+                    <Icon className="h-8 w-8 text-sunset" />
+                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-tight text-asphalt">{feature.title}</h3>
+                    <p className="mt-2 text-sm text-muted">{feature.description}</p>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset">
+                      Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </Link>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
       {/* UPCOMING RIDES */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <FadeUp className="flex items-center justify-between">
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
             <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               View All Rides <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
+          </FadeUp>
+          <StaggerList className="mt-6 grid gap-6 md:grid-cols-3">
             {(upcomingEvents.length > 0 ? upcomingEvents : []).map((ride, i) => (
-              <article key={ride.title} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <StaggerItem key={ride.title}>
+                <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div
                   className="relative h-44 bg-cover bg-center"
                   style={{ backgroundImage: `url(${siteImages.rides[i]})` }}
@@ -263,45 +269,48 @@ export default async function Home() {
                   </div>
                 </div>
               </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
       {/* FEATURED ROADS */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <FadeUp className="flex items-center justify-between">
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Featured Roads</h2>
             <Link href="/roads" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               Explore All Roads <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+          </FadeUp>
+          <StaggerList className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
             {roads.map((road, i) => (
-              <article
-                key={road.name}
-                className="relative h-32 overflow-hidden rounded-lg bg-cover bg-center"
-                style={{ backgroundImage: `url(${mediaUrl(road.galleryItems[0]?.url) || siteImages.roads[i % siteImages.roads.length]})` }}
-              >
-                <div className="absolute inset-0 bg-linear-to-t from-asphalt/90 via-asphalt/30 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-                  <h3 className="text-sm font-bold leading-tight">{road.name}</h3>
-                  <div className="mt-1 flex items-center justify-between text-[0.65rem] text-slate-200">
-                    <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} mi` : "TBD"}</span>
-                    <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-sunset text-sunset" />{road.scenicRating ? road.scenicRating.toFixed(1) : "N/A"}</span>
+              <StaggerItem key={road.name}>
+                <article
+                  className="relative h-32 overflow-hidden rounded-lg bg-cover bg-center"
+                  style={{ backgroundImage: `url(${mediaUrl(road.galleryItems[0]?.url) || siteImages.roads[i % siteImages.roads.length]})` }}
+                >
+                  <div className="absolute inset-0 bg-linear-to-t from-asphalt/90 via-asphalt/30 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+                    <h3 className="text-sm font-bold leading-tight">{road.name}</h3>
+                    <div className="mt-1 flex items-center justify-between text-[0.65rem] text-slate-200">
+                      <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} mi` : "TBD"}</span>
+                      <span className="inline-flex items-center gap-1"><Star className="h-3 w-3 fill-sunset text-sunset" />{road.scenicRating ? road.scenicRating.toFixed(1) : "N/A"}</span>
+                    </div>
                   </div>
-                </div>
-              </article>
+                </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
       {/* STATS */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-6 rounded-2xl border border-border bg-surface p-6 shadow-soft md:grid-cols-4">
+          <ScaleIn>
+            <div className="grid grid-cols-2 gap-6 rounded-2xl border border-border bg-surface p-6 shadow-soft md:grid-cols-4">
             {statValues.map((stat, i) => {
               const Icon = statIcons[i] ?? Users;
               return (
@@ -316,13 +325,14 @@ export default async function Home() {
               );
             })}
           </div>
+          </ScaleIn>
         </div>
       </section>
 
       {/* ACTIVITY + GALLERY */}
       <section className="w-full bg-canvas">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div>
+          <FadeUp>
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
             <div className="mt-5 space-y-4">
               {(activities.length > 0 ? activities.map((item) => ({ id: item.id, summary: item.summary, when: item.createdAt.toLocaleDateString() })) : communityFeed).map((item) => (
@@ -340,8 +350,8 @@ export default async function Home() {
             <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               View All Activity <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-          <div>
+          </FadeUp>
+          <FadeUp delay={0.15}>
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">From Our Community</h2>
             <div className="mt-5 grid grid-cols-3 gap-3">
               <div
@@ -359,14 +369,14 @@ export default async function Home() {
             <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               View Full Gallery <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </FadeUp>
         </div>
       </section>
 
       {/* THE HAPPENINGS */}
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between">
+          <FadeUp className="flex items-end justify-between">
             <div>
               <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
                 The <span className="text-sunset">Happenings</span>
@@ -376,10 +386,11 @@ export default async function Home() {
             <Link href="/news" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               All News <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
-          <div className="mt-6 grid gap-6 md:grid-cols-3">
+          </FadeUp>
+          <StaggerList className="mt-6 grid gap-6 md:grid-cols-3">
             {publishedNews.map((article, i) => (
-              <article key={article.slug} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <StaggerItem key={article.slug}>
+                <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <Link href={`/news/${article.slug}`} className="block">
                   <div
                     className="relative h-44 bg-cover bg-center"
@@ -402,8 +413,9 @@ export default async function Home() {
                   </Link>
                 </div>
               </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
@@ -416,20 +428,20 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-asphalt/85" aria-hidden="true" />
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-6 px-4 py-14 sm:px-6 lg:flex-row lg:items-center lg:px-8">
-          <div className="text-white">
+          <FadeUp className="text-white">
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Ready to Ride With Us?</h2>
             <p className="mt-2 max-w-lg text-slate-200">
               Join District 76 and connect with riders, discover new roads, and be part of something more.
             </p>
-          </div>
-          <div className="flex items-center gap-4">
+          </FadeUp>
+          <FadeUp delay={0.1} className="flex items-center gap-4">
             <Link href="/join" className="rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white hover:bg-[#cf5a26]">
               Join the Community
             </Link>
             <Link href="/about" className="inline-flex items-center gap-1 text-sm font-semibold text-white hover:text-sunset">
               Learn More <ArrowRight className="h-4 w-4" />
             </Link>
-          </div>
+          </FadeUp>
         </div>
       </section>
     </div>

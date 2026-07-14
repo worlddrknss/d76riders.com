@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import { Flag, ShieldCheck, Users } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { faqs, guidelines, missionValues } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
 
 export const metadata: Metadata = {
   title: "Our History — Clarksville Motorcycle Community Since Day One",
@@ -25,138 +27,235 @@ export default function AboutPage() {
         description="The story of how a historic river town, a strong military community, and a love of motorcycles came together to build something that lasts."
       />
 
-      {/* CHAPTER 1: CLARKSVILLE HISTORY */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter One</p>
-            <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-asphalt sm:text-3xl">
-              Rooted in Clarksville
-            </h2>
-            <p className="mt-4 text-muted">
-              Clarksville was founded in 1785 where the Cumberland and Red Rivers meet, and it grew up as a place people passed through, traded in, and eventually called home. It has always been a town shaped by movement.
-            </p>
-            <p className="mt-3 text-muted">
-              The river bluffs, country backroads, and ridgelines that once carried wagons and rail lines are the same roads we ride today. When you ride through Montgomery County, you are riding through a lot of history.
-            </p>
-          </div>
-          <div
-            className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
-            style={{ backgroundImage: `url(${siteImages.history.clarksville})` }}
-            role="img"
-            aria-label="Historic Clarksville, Tennessee along the river"
-          />
-        </div>
-      </section>
+      {/* TIMELINE */}
+      <section className="relative w-full bg-canvas">
+        {/* Vertical timeline line */}
+        <div className="absolute inset-y-0 left-1/2 hidden w-px -translate-x-1/2 bg-linear-to-b from-transparent via-sunset/30 to-transparent lg:block" aria-hidden="true" />
 
-      {/* CHAPTER 2: MILITARY TOWN */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+        {/* ── CHAPTER 1 ── */}
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="absolute left-1/2 top-24 hidden h-4 w-4 -translate-x-1/2 rounded-full border-4 border-canvas bg-sunset lg:block" aria-hidden="true" />
+
+          <FadeUp>
+            <div className="text-center">
+              <span className="font-display text-[8rem] font-bold leading-none tracking-tighter text-asphalt/5 sm:text-[12rem]">1785</span>
+            </div>
+            <div className="-mt-16 sm:-mt-24">
+              <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter One</p>
+              <h2 className="mt-2 text-center font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+                Rooted in Clarksville
+              </h2>
+            </div>
+          </FadeUp>
+
+          <div className="mt-12 grid items-center gap-12 lg:grid-cols-5">
+            <FadeUp className="lg:col-span-2">
+              <p className="text-lg leading-relaxed text-muted">
+                Founded where the Cumberland and Red Rivers meet, Clarksville grew up as a place people passed through, traded in, and eventually called home.
+              </p>
+              <blockquote className="mt-6 border-l-4 border-sunset pl-5 font-display text-xl font-semibold italic leading-snug text-asphalt">
+                &ldquo;It has always been a town shaped by movement.&rdquo;
+              </blockquote>
+              <p className="mt-6 leading-relaxed text-muted">
+                The river bluffs, country backroads, and ridgelines that once carried wagons and rail lines are the same roads we ride today. When you ride through Montgomery County, you are riding through a lot of history.
+              </p>
+            </FadeUp>
+            <FadeUp delay={0.15} className="lg:col-span-3">
+              <div
+                className="aspect-4/3 w-full rounded-2xl bg-cover bg-center shadow-lift"
+                style={{ backgroundImage: `url(${siteImages.history.clarksville})` }}
+                role="img"
+                aria-label="Historic Clarksville, Tennessee"
+              />
+            </FadeUp>
+          </div>
+        </div>
+
+        {/* ── CHAPTER 2 — FULL BLEED DARK WITH PARALLAX ── */}
+        <div className="relative w-full overflow-hidden">
           <div
-            className="order-last h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80 lg:order-first"
+            className="absolute inset-0 bg-cover bg-fixed bg-center"
             style={{ backgroundImage: `url(${siteImages.history.culture})` }}
-            role="img"
-            aria-label="Riders on a Tennessee road at golden hour"
+            aria-hidden="true"
           />
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter Two</p>
-            <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              A Military Town That Rides
-            </h2>
-            <p className="mt-4 text-slate-300">
-              Clarksville sits right next to Fort Campbell, home of the 101st Airborne Division. That connection runs deep. Soldiers, veterans, and military families have always been a big part of who this town is, and a lot of them ride.
-            </p>
-            <p className="mt-3 text-slate-300">
-              For many of them a motorcycle is more than a hobby. It is the feeling of freedom after a deployment, the quiet of an open road, and the kind of brotherhood and sisterhood that carries straight over from service into the riding community. That spirit is woven into how people ride around here.
-            </p>
+          <div className="absolute inset-0 bg-asphalt/90" aria-hidden="true" />
+
+          <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="absolute left-1/2 top-24 hidden h-4 w-4 -translate-x-1/2 rounded-full border-4 border-asphalt bg-sunset lg:block" aria-hidden="true" />
+
+            <div className="py-24">
+              <FadeUp>
+                <div className="text-center">
+                  <span className="font-display text-[8rem] font-bold leading-none tracking-tighter text-white/5 sm:text-[12rem]">101st</span>
+                </div>
+                <div className="-mt-16 sm:-mt-24">
+                  <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter Two</p>
+                  <h2 className="mt-2 text-center font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    A Military Town That Rides
+                  </h2>
+                </div>
+              </FadeUp>
+
+              <FadeUp className="mx-auto mt-12 max-w-3xl">
+                <p className="text-center text-lg leading-relaxed text-slate-300">
+                  Clarksville sits right next to Fort Campbell, home of the 101st Airborne Division. Soldiers, veterans, and military families have always been a big part of who this town is — and a lot of them ride.
+                </p>
+
+                <div className="my-12 flex items-center gap-6">
+                  <span className="h-px flex-1 bg-white/10" />
+                  <span className="font-display text-sm font-bold uppercase tracking-[0.2em] text-sunset">Freedom</span>
+                  <span className="h-px flex-1 bg-white/10" />
+                </div>
+
+                <blockquote className="text-center font-display text-2xl font-semibold italic leading-snug text-white sm:text-3xl">
+                  &ldquo;For many of them a motorcycle is the feeling of freedom after a deployment, the quiet of an open road, and the kind of brotherhood that carries straight over from service.&rdquo;
+                </blockquote>
+              </FadeUp>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* CHAPTER 3: FOUNDING DISTRICT 76 */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter Three</p>
-            <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-asphalt sm:text-3xl">
-              Building District 76
-            </h2>
-            <p className="mt-4 text-muted">
-              For a long time all of that passion lived in scattered group rides and parking lot meetups. The riders were here and the culture was here, but there was no real place to bring everyone together. So a few local riders made a simple decision. Instead of waiting for that community to show up, they built it.
-            </p>
-            <p className="mt-3 text-muted">
-              District 76 started with a handful of people who wanted good routes, clear expectations, and a welcoming space for every kind of rider. No stereotypes and no gatekeeping. It grew from those first weekend rides into a reliable network of riders who show up for each other on the road and off it. This is the community that Clarksville was always building toward.
-            </p>
+        {/* ── CHAPTER 3 ── */}
+        <div className="relative mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="absolute left-1/2 top-24 hidden h-4 w-4 -translate-x-1/2 rounded-full border-4 border-canvas bg-sunset lg:block" aria-hidden="true" />
+
+          <FadeUp>
+            <div className="text-center">
+              <span className="font-display text-[8rem] font-bold leading-none tracking-tighter text-asphalt/5 sm:text-[12rem]">D76</span>
+            </div>
+            <div className="-mt-16 sm:-mt-24">
+              <p className="text-center text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Chapter Three</p>
+              <h2 className="mt-2 text-center font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+                Building District 76
+              </h2>
+            </div>
+          </FadeUp>
+
+          <div className="mt-12 grid items-center gap-12 lg:grid-cols-5">
+            <FadeUp delay={0.15} className="order-last lg:order-first lg:col-span-3">
+              <div
+                className="aspect-4/3 w-full rounded-2xl bg-cover bg-center shadow-lift"
+                style={{ backgroundImage: `url(${siteImages.history.founding})` }}
+                role="img"
+                aria-label="District 76 riders together"
+              />
+            </FadeUp>
+            <FadeUp className="lg:col-span-2">
+              <p className="text-lg leading-relaxed text-muted">
+                For a long time all of that passion lived in scattered group rides and parking lot meetups. The riders were here and the culture was here, but there was no real place to bring everyone together.
+              </p>
+              <p className="mt-4 leading-relaxed text-muted">
+                So a few local riders made a simple decision: instead of waiting for that community to show up, they built it.
+              </p>
+              <blockquote className="mt-6 border-l-4 border-sunset pl-5 font-display text-xl font-semibold italic leading-snug text-asphalt">
+                &ldquo;No stereotypes. No gatekeeping. Just good routes and good people.&rdquo;
+              </blockquote>
+              <p className="mt-6 leading-relaxed text-muted">
+                It grew from those first weekend rides into a reliable network of riders who show up for each other — on the road and off it.
+              </p>
+            </FadeUp>
           </div>
-          <div
-            className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
-            style={{ backgroundImage: `url(${siteImages.history.founding})` }}
-            role="img"
-            aria-label="District 76 riders together"
-          />
         </div>
       </section>
 
       {/* VALUES */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <article className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-            <h2 className="font-display text-2xl font-bold tracking-tight text-asphalt">What We Stand For</h2>
-            <ul className="mt-4 grid gap-3 text-muted sm:grid-cols-2">
-              {missionValues.map((value) => (
-                <li key={value} className="flex items-start gap-2">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-forest" />
-                  {value}
-                </li>
-              ))}
-            </ul>
-          </article>
+        <div className="mx-auto w-full max-w-5xl px-4 pb-24 sm:px-6 lg:px-8">
+          <FadeUp className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Our Principles</p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+              What We Stand For
+            </h2>
+          </FadeUp>
+          <StaggerList className="mt-12 grid gap-4 grid-cols-2 lg:grid-cols-4">
+            {missionValues.map((value) => (
+              <StaggerItem key={value}>
+                <div className="group flex h-full items-start gap-3 rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sunset/10">
+                    <ShieldCheck className="h-4 w-4 text-sunset" />
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted">{value}</p>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerList>
         </div>
       </section>
 
-      {/* GUIDELINES */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Community Guidelines</h2>
-            <p className="text-sm text-muted">Simple standards that keep rides safe and welcoming.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+      {/* GUIDELINES — DARK */}
+      <section className="w-full bg-asphalt text-white">
+        <div className="mx-auto w-full max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
+          <FadeUp className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Ride Culture</p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              Community Guidelines
+            </h2>
+            <p className="mt-3 text-sm text-slate-400">Simple standards that keep rides safe and welcoming.</p>
+          </FadeUp>
+          <StaggerList className="mt-12 columns-1 gap-4 space-y-4 sm:columns-2">
             {guidelines.map((item) => (
-              <p key={item} className="rounded-xl border border-border bg-surface p-4 text-sm text-muted shadow-soft">
-                {item}
-              </p>
+              <StaggerItem key={item}>
+                <p className="break-inside-avoid rounded-2xl border border-white/10 bg-white/5 p-6 text-sm leading-relaxed text-slate-300 backdrop-blur">
+                  {item}
+                </p>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* FAQ — COLLAPSIBLE */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">FAQ</h2>
-            <p className="text-sm text-muted">Quick answers for new riders.</p>
-          </div>
-          <div className="space-y-3">
+        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
+          <FadeUp className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Got Questions?</p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+              FAQ
+            </h2>
+          </FadeUp>
+          <StaggerList className="mt-12 divide-y divide-border rounded-2xl border border-border bg-surface shadow-soft">
             {faqs.map((faq) => (
-              <article key={faq.question} className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <h3 className="font-semibold text-asphalt">{faq.question}</h3>
-                <p className="mt-2 text-muted">{faq.answer}</p>
-              </article>
+              <StaggerItem key={faq.question}>
+                <details className="group p-6">
+                  <summary className="flex cursor-pointer items-center justify-between font-display text-base font-bold text-asphalt">
+                    {faq.question}
+                    <span className="ml-4 shrink-0 text-lg text-sunset transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 leading-relaxed text-muted">{faq.answer}</p>
+                </details>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
         </div>
       </section>
 
-      {/* TRUST STRIP */}
+      {/* CTA */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid gap-4 rounded-2xl border border-border bg-surface p-6 text-sm text-muted shadow-soft sm:grid-cols-3 sm:p-8">
-            <p className="flex items-center gap-2"><Users className="h-4 w-4 text-sunset" />Open to every rider style</p>
-            <p className="flex items-center gap-2"><Flag className="h-4 w-4 text-sunset" />Focused on Clarksville roads</p>
-            <p className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-sunset" />Built around respect and safety</p>
-          </div>
+        <div className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
+          <ScaleIn>
+            <div className="relative overflow-hidden rounded-3xl">
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${siteImages.history.culture})` }}
+                aria-hidden="true"
+              />
+              <div className="absolute inset-0 bg-linear-to-br from-asphalt/95 via-asphalt/85 to-asphalt/70" aria-hidden="true" />
+              <div className="relative flex flex-col items-center gap-6 px-6 py-20 text-center text-white sm:px-12 sm:py-24">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Join Us</p>
+                <h2 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">Ready to Ride?</h2>
+                <p className="max-w-lg text-lg text-slate-300">
+                  Connect with riders, discover new roads, and be part of something built by the community, for the community.
+                </p>
+                <Link
+                  href="/join"
+                  className="group mt-2 inline-flex items-center gap-2 rounded-full bg-sunset px-10 py-4 text-sm font-semibold text-white shadow-lg transition hover:bg-[#cf5a26]"
+                >
+                  Join District 76
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+          </ScaleIn>
         </div>
       </section>
     </div>

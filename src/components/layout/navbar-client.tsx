@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, Wrench } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Wrench, CheckCheck } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
+import { markAllReadAction } from "@/app/(site)/notifications/actions";
 import { navItems } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
+
+type ActivityItem = {
+  id: string;
+  summary: string;
+  type: string;
+  createdAt: string;
+  readAt: string | null;
+};
 
 type NavbarClientProps = {
   currentUser: CurrentUser | null;
   notificationCount: number;
+  recentActivities: ActivityItem[];
 };
 
 function initialsFromName(name: string | null, email: string): string {
@@ -29,16 +40,57 @@ function initialsFromName(name: string | null, email: string): string {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
-export function NavbarClient({ currentUser, notificationCount }: NavbarClientProps) {
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}
+
+function useScrolled(threshold = 10) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > threshold);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
+export function NavbarClient({ currentUser, notificationCount, recentActivities }: NavbarClientProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const scrolled = useScrolled();
   const isAdministrator = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
   useEffect(() => {
     setIsOpen(false);
     setMenuOpen(false);
+    setNotifOpen(false);
   }, [pathname]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!notifOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [notifOpen]);
 
   const userInitials = useMemo(() => {
     if (!currentUser) {
@@ -49,54 +101,139 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
   }, [currentUser]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-asphalt text-white">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex flex-col leading-none" aria-label="District 76 home">
-          <span className="font-display text-2xl font-bold tracking-tight">
-            DISTRICT <span className="text-sunset">76</span> RIDERS
-          </span>
-          <span className="mt-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.22em] text-slate-400">
-            Clarksville, Tennessee
-          </span>
+    <motion.header
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={`sticky top-0 z-50 text-white transition-all duration-300 ${
+        scrolled
+          ? "border-b border-white/10 bg-asphalt/80 backdrop-blur-xl shadow-lg"
+          : "border-b border-white/10 bg-asphalt"
+      }`}
+    >
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-1.5 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="District 76 home">
+          <img
+            src="/images/logo.png"
+            alt="District 76 Riders"
+            className={`w-auto transition-all duration-300 ${scrolled ? "h-14" : "h-20"}`}
+          />
         </Link>
 
-        <nav className="hidden items-center gap-5 lg:flex" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`text-sm font-medium transition-colors ${
-                pathname === item.href ? "text-white" : "text-slate-300 hover:text-white"
-              }`}
-            >
-              {item.label}
-              {pathname === item.href ? (
-                <span className="mt-1 block h-0.5 w-full rounded-full bg-sunset" />
-              ) : null}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-1 rounded-full bg-white/5 p-1 lg:flex" aria-label="Main navigation">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  isActive ? "text-white" : "text-slate-300 hover:text-white"
+                }`}
+              >
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 rounded-full bg-white/15"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <span className="relative z-10">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="relative flex items-center gap-3">
           {currentUser ? (
             <>
-              <Link
-                href="/notifications"
-                className="relative hidden rounded-md border border-white/20 p-2 text-slate-200 transition hover:bg-white/10 hover:text-white lg:inline-flex"
-                aria-label="Open notifications"
-                title="Notifications"
-              >
-                <Bell className="h-4 w-4" />
-                {notificationCount > 0 ? (
-                  <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-sunset px-1 text-[0.6rem] font-bold leading-4 text-white">
-                    {notificationCount > 99 ? "99+" : notificationCount}
-                  </span>
-                ) : null}
-              </Link>
+              <div ref={notifRef} className="relative hidden lg:block">
+                <button
+                  type="button"
+                  onClick={() => setNotifOpen((v) => !v)}
+                  className="relative rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Open notifications"
+                  aria-expanded={notifOpen}
+                >
+                  <Bell className="h-4 w-4" />
+                  {notificationCount > 0 ? (
+                    <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-sunset px-1 text-[0.6rem] font-bold leading-4 text-white">
+                      {notificationCount > 99 ? "99+" : notificationCount}
+                    </span>
+                  ) : null}
+                </button>
+
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full z-50 mt-2 w-96 overflow-hidden rounded-xl border border-white/10 bg-asphalt shadow-xl"
+                    >
+                      {/* Header */}
+                      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                        <h3 className="text-sm font-bold text-white">Notifications</h3>
+                        {notificationCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await markAllReadAction();
+                              setNotifOpen(false);
+                            }}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 transition hover:text-white"
+                          >
+                            <CheckCheck className="h-3.5 w-3.5" />
+                            Mark all read
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Activity list */}
+                      <div className="max-h-96 overflow-y-auto">
+                        {recentActivities.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-sm text-slate-400">
+                            No notifications yet.
+                          </div>
+                        ) : (
+                          recentActivities.map((item) => (
+                            <div
+                              key={item.id}
+                              className="flex items-start gap-3 border-b border-white/5 px-4 py-3 last:border-0"
+                            >
+                              <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-sm font-semibold text-white">{item.summary}</p>
+                                <p className="mt-0.5 text-[0.65rem] uppercase tracking-wide text-slate-400">{item.type}</p>
+                                <p className="mt-0.5 text-xs text-slate-500">{timeAgo(item.createdAt)}</p>
+                              </div>
+                              {!item.readAt && (
+                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="border-t border-white/10 px-4 py-2.5 text-center">
+                        <Link
+                          href="/notifications"
+                          className="text-xs font-semibold text-slate-400 transition hover:text-white"
+                          onClick={() => setNotifOpen(false)}
+                        >
+                          View all notifications
+                        </Link>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <button
                 type="button"
-                className="hidden items-center gap-2 rounded-md bg-white/5 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10 lg:inline-flex"
+                className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white lg:inline-flex"
                 onClick={() => setMenuOpen((value) => !value)}
                 aria-expanded={menuOpen}
                 aria-label="Open account menu"
@@ -284,6 +421,6 @@ export function NavbarClient({ currentUser, notificationCount }: NavbarClientPro
           </div>
         </div>
       ) : null}
-    </header>
+    </motion.header>
   );
 }

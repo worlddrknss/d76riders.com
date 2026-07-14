@@ -11,7 +11,8 @@ model Activity {
 
   rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
 
   @@index([riderId])
   @@index([createdAt])

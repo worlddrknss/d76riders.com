@@ -7,6 +7,7 @@ type Entry = {
   id: string;
   title: string | null;
   body: string;
+  videoUrl: string | null;
   createdAt: Date;
   galleryItems: { url: string; caption: string | null }[];
   likeCount: number;

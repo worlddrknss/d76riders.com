@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -73,9 +74,10 @@ export default async function NewsPage() {
                 </Link>
               </div>
             ) : null}
-            <div className="grid gap-8 sm:grid-cols-2">
+            <StaggerList className="grid gap-8 sm:grid-cols-2">
             {articles.map((article, i) => (
-              <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <StaggerItem key={article.id}>
+              <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <Link href={`/news/${article.id}`} className="block">
                   <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}>
                     <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
@@ -99,8 +101,9 @@ export default async function NewsPage() {
                   </Link>
                 </div>
               </article>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerList>
           </div>
 
           {/* SIDEBAR */}

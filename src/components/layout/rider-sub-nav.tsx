@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import { Bike, Shield, UserRound, Video } from "lucide-react";
 
 const tabs = [
@@ -29,14 +30,23 @@ export function RiderSubNav({ handle }: RiderSubNavProps) {
           <Link
             key={tab.label}
             href={href}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+            className={`relative inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
               isActive
-                ? "bg-sunset text-white shadow-sm"
+                ? "text-white"
                 : "text-muted hover:bg-canvas hover:text-ink"
             }`}
           >
-            <Icon className="h-3.5 w-3.5" />
-            {tab.label}
+            {isActive && (
+              <motion.span
+                layoutId="rider-tab-pill"
+                className="absolute inset-0 rounded-lg bg-sunset shadow-sm"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+              />
+            )}
+            <span className="relative z-10 inline-flex items-center gap-1.5">
+              <Icon className="h-3.5 w-3.5" />
+              {tab.label}
+            </span>
           </Link>
         );
       })}
