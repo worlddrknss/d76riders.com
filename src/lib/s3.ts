@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
 const endpoint = process.env.S3_ENDPOINT;
@@ -104,4 +104,28 @@ export async function deleteFilesByUrls(urls: Array<string | null | undefined>):
   for (const url of urls) {
     await deleteFileByUrl(url);
   }
+}
+
+export async function listAllKeys(prefix?: string): Promise<string[]> {
+  if (!isS3Configured()) return [];
+  const client = createClient();
+  const keys: string[] = [];
+  let continuationToken: string | undefined;
+
+  do {
+    const response = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+        MaxKeys: 1000,
+      }),
+    );
+    for (const obj of response.Contents ?? []) {
+      if (obj.Key) keys.push(obj.Key);
+    }
+    continuationToken = response.NextContinuationToken;
+  } while (continuationToken);
+
+  return keys;
 }

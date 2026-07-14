@@ -85,6 +85,7 @@ function SectionFields({ section, data }: { section: SectionType; data: ProfileS
       <>
         <input type="hidden" name="displayName" value={data.displayName} />
         <input type="hidden" name="username" value={data.username} />
+        <input type="hidden" name="avatarUrl" value={data.avatarUrl} />
         <input type="hidden" name="bio" value={data.bio} />
         <input type="hidden" name="youtubeUrl" value={data.youtubeHandle} />
         <input type="hidden" name="tiktokUrl" value={data.tiktokHandle} />
@@ -113,6 +114,7 @@ function SectionFields({ section, data }: { section: SectionType; data: ProfileS
     <>
       <input type="hidden" name="displayName" value={data.displayName} />
       <input type="hidden" name="username" value={data.username} />
+      <input type="hidden" name="avatarUrl" value={data.avatarUrl} />
       <input type="hidden" name="bio" value={data.bio} />
       <input type="hidden" name="location" value={data.location} />
       <input type="hidden" name="favoriteRoad" value={data.favoriteRoad} />

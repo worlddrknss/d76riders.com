@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentType, type ReactNode, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ClipboardCheck, Flag, FolderOpen, LayoutDashboard, Menu, PenSquare, Shield, Users, UserCog } from "lucide-react";
+import { ChevronLeft, ChevronRight, ClipboardCheck, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, Shield, Users, UserCog } from "lucide-react";
 
 import { type CurrentUser } from "@/lib/session";
 
@@ -30,6 +30,7 @@ const adminNavSections: NavSection[] = [
       { href: "/admin", label: "Overview", icon: LayoutDashboard },
       { href: "/admin/reports", label: "Reports", icon: Flag },
       { href: "/admin/security", label: "Security", icon: Shield },
+      { href: "/admin/storage", label: "Storage", icon: HardDrive },
     ],
   },
   {
