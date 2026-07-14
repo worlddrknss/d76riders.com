@@ -30,6 +30,7 @@ type EventData = {
   id: string;
   title: string;
   description: string | null;
+  facebookEventUrl: string | null;
   startsAt: string; // ISO string from server
   ksuAt: string | null;
   meetLocation: string | null;
@@ -115,6 +116,17 @@ export function EventManageActions({ event }: { event: EventData }) {
             <div>
               <label htmlFor="edit-event-desc" className="text-xs font-semibold uppercase tracking-wide text-muted">Description</label>
               <Textarea id="edit-event-desc" name="description" rows={3} defaultValue={event.description ?? ""} className="mt-1" />
+            </div>
+            <div>
+              <label htmlFor="edit-event-facebook-url" className="text-xs font-semibold uppercase tracking-wide text-muted">Facebook Event URL</label>
+              <Input
+                id="edit-event-facebook-url"
+                name="facebookEventUrl"
+                type="url"
+                placeholder="https://www.facebook.com/events/..."
+                defaultValue={event.facebookEventUrl ?? ""}
+                className="mt-1"
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>

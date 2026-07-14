@@ -6,6 +6,7 @@ model RideEvent {
   title         String
   slug          String          @unique
   description   String?
+  facebookEventUrl String?
   startsAt      DateTime
   ksuAt         DateTime?
   ksuLocation   String?

@@ -33,6 +33,22 @@ function toOptionalInt(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toOptionalUrl(value: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function updateEventAction(eventId: string, formData: FormData): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
@@ -59,6 +75,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const ksuAt = toOptionalDate(normalizeText(formData.get("ksuAt")));
   const meetLocation = normalizeText(formData.get("meetLocation"));
   const ksuLocation = normalizeText(formData.get("ksuLocation"));
+  const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const distanceMiles = toOptionalInt(normalizeText(formData.get("distanceMiles")));
   const difficultyInput = normalizeText(formData.get("difficulty"));
   const removeRoute = formData.get("removeRoute") === "on";
@@ -66,6 +83,11 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const removePhoto = formData.get("removePhoto") === "on";
 
   if (!title || !startsAt) {
+    redirect(`/events/${event.slug}`);
+  }
+
+  const facebookEventUrl = toOptionalUrl(facebookEventUrlInput);
+  if (facebookEventUrlInput && !facebookEventUrl) {
     redirect(`/events/${event.slug}`);
   }
 
@@ -96,6 +118,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         ksuAt,
         meetLocation: meetLocation || null,
         ksuLocation: ksuLocation || null,
+        facebookEventUrl,
         distanceMiles,
         difficulty,
         routeId: removeRoute ? null : undefined,

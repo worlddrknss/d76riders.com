@@ -211,6 +211,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       id: event.id,
                       title: event.title,
                       description: event.description,
+                      facebookEventUrl: event.facebookEventUrl,
                       startsAt: toLocalISOString(event.startsAt),
                       ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
                       meetLocation: event.meetLocation,
