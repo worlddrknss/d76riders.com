@@ -226,7 +226,7 @@ export default async function RiderProfilePage({
             <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
           </div>
         )}
-        <div className="grid gap-8 lg:grid-cols-[20rem_1fr]">
+        <div className="grid items-start gap-8 lg:grid-cols-[20rem_1fr]">
           {/* SIDEBAR */}
           <aside className="space-y-5">
             <div className="group rounded-xl border border-border bg-surface p-6 shadow-soft">
@@ -252,10 +252,10 @@ export default async function RiderProfilePage({
               <p className="mt-3 text-center text-sm text-muted">{rider.bio || "No bio yet."}</p>
 
               <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
-                <div className="rounded-lg bg-canvas p-3 text-center">
+                <Link href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`} className="rounded-lg bg-canvas p-3 text-center transition hover:ring-2 hover:ring-sunset/40">
                   <p className="font-display text-xl font-bold text-asphalt">{rider.bikes.length}</p>
                   <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
-                </div>
+                </Link>
                 <div className="rounded-lg bg-canvas p-3 text-center">
                   <p className="font-display text-xl font-bold text-asphalt">{ridesFromEvents}</p>
                   <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
