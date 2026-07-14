@@ -80,9 +80,6 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-canvas text-ink">
         <JsonLd data={organizationJsonLd()} />
-        <div className="relative z-[60] border-b border-amber-300/40 bg-amber-200 px-4 py-2 text-center text-xs font-semibold tracking-[0.06em] text-amber-950 sm:text-sm">
-          District 76 Riders is still in Alpha build stages.
-        </div>
         <Navbar />
         {children}
       </body>
