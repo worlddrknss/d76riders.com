@@ -203,7 +203,9 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
                 {sectionItems.map((item) => (
                   <div key={item.id} className="group relative overflow-hidden rounded-lg border border-border bg-canvas transition hover:border-sunset/30 hover:shadow-sm">
                     {item.imageUrl && (
-                      <img src={mediaUrl(item.imageUrl)} alt={item.name} className="h-32 w-full object-cover" />
+                      <div className="flex h-40 items-center justify-center bg-white p-2">
+                        <img src={mediaUrl(item.imageUrl)} alt={item.name} className="max-h-full max-w-full object-contain" />
+                      </div>
                     )}
                     <div className="p-4">
                     <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
