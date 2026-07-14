@@ -129,6 +129,7 @@ model GearItem {
   condition    String?
   purchaseDate DateTime?
   purchaseUrl  String?
+  imageUrl     String?
   notes        String?
 
   rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)

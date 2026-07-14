@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { mediaUrl } from "@/lib/media-url";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   HardHat, Package, Shirt, Camera, Footprints,
@@ -28,6 +29,7 @@ type GearItem = {
   condition: string | null;
   purchaseDate: Date | null;
   purchaseUrl: string | null;
+  imageUrl: string | null;
   notes: string | null;
 };
 
@@ -106,6 +108,16 @@ function GearItemForm({ item, categoryKey, onSubmit, pending }: {
       <div>
         <label className="text-xs font-semibold uppercase tracking-wide text-muted">Purchase Link (optional)</label>
         <input name="purchaseUrl" type="url" defaultValue={item?.purchaseUrl ?? ""} placeholder="https://..." className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+      </div>
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wide text-muted">{item?.imageUrl ? "Replace Photo" : "Photo"}</label>
+        <input name="image" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm file:mr-2 file:rounded file:border-0 file:bg-asphalt file:px-2 file:py-1 file:text-xs file:font-semibold file:text-white" />
+        {item?.imageUrl && (
+          <label className="mt-1 flex items-center gap-2 text-xs text-muted">
+            <input name="removeImage" type="checkbox" className="rounded" />
+            Remove current photo
+          </label>
+        )}
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <Button type="submit" variant="accent" size="sm" disabled={pending}>
@@ -189,17 +201,21 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
             ) : (
               <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
                 {sectionItems.map((item) => (
-                  <div key={item.id} className="group relative rounded-lg border border-border bg-canvas p-4 transition hover:border-sunset/30 hover:shadow-sm">
+                  <div key={item.id} className="group relative overflow-hidden rounded-lg border border-border bg-canvas transition hover:border-sunset/30 hover:shadow-sm">
+                    {item.imageUrl && (
+                      <img src={mediaUrl(item.imageUrl)} alt={item.name} className="h-32 w-full object-cover" />
+                    )}
+                    <div className="p-4">
                     <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
-                      <button type="button" onClick={() => setEditingItem(item)} className="rounded p-1.5 text-muted transition hover:bg-surface hover:text-sunset" title="Edit">
+                      <button type="button" onClick={() => setEditingItem(item)} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-sunset" title="Edit">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button type="button" onClick={() => handleDelete(item.id)} disabled={deletePending} className="rounded p-1.5 text-muted transition hover:bg-red-50 hover:text-red-600" title="Delete">
+                      <button type="button" onClick={() => handleDelete(item.id)} disabled={deletePending} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-red-600" title="Delete">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
-                    <p className="pr-14 text-sm font-semibold text-ink">{item.name}</p>
+                    <p className="text-sm font-semibold text-ink">{item.name}</p>
                     {(item.brand || item.model) ? <p className="text-xs text-muted">{[item.brand, item.model].filter(Boolean).join(" ")}</p> : null}
                     {(item.size || item.color || item.condition) ? (
                       <p className="mt-1 text-xs text-muted">{[item.size && `Size ${item.size}`, item.color, item.condition].filter(Boolean).join(" · ")}</p>
@@ -211,6 +227,7 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
                         <ExternalLink className="h-3 w-3" /> Buy this
                       </a>
                     ) : null}
+                    </div>
                   </div>
                 ))}
               </div>

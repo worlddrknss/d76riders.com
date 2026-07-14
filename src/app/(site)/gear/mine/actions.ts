@@ -1,11 +1,16 @@
 "use server";
 
+import crypto from "node:crypto";
+
 import { GearCategory } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
+import { optimizeImage } from "@/lib/image";
+import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { deleteFileByUrl, isS3Configured, uploadFile } from "@/lib/s3";
 
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
@@ -58,6 +63,21 @@ export async function createGearItemAction(formData: FormData): Promise<void> {
     }
   }
 
+  let imageUrl: string | null = null;
+  const imageFile = formData.get("image");
+  if (imageFile instanceof File && imageFile.size > 0 && isS3Configured()) {
+    if (allowedImageTypes.has(imageFile.type)) {
+      try {
+        const secureUpload = await validateAndScanImageUpload(imageFile, "gear-item-create");
+        const optimized = await optimizeImage(secureUpload.buffer);
+        const key = `gear/${rider.id}/${crypto.randomUUID()}.${optimized.ext}`;
+        imageUrl = await uploadFile(key, optimized.data, optimized.contentType);
+      } catch {
+        // Skip image on error
+      }
+    }
+  }
+
   await prisma.gearItem.create({
     data: {
       riderId: rider.id,
@@ -70,6 +90,7 @@ export async function createGearItemAction(formData: FormData): Promise<void> {
       condition: condition || null,
       purchaseDate: purchaseDate && !Number.isNaN(purchaseDate.getTime()) ? purchaseDate : null,
       purchaseUrl: validatedUrl,
+      imageUrl,
       notes: notes || null,
     },
   });
@@ -80,7 +101,7 @@ export async function createGearItemAction(formData: FormData): Promise<void> {
 export async function updateGearItemAction(itemId: string, formData: FormData): Promise<void> {
   const rider = await requireCurrentRider();
 
-  const item = await prisma.gearItem.findFirst({ where: { id: itemId, riderId: rider.id }, select: { id: true } });
+  const item = await prisma.gearItem.findFirst({ where: { id: itemId, riderId: rider.id }, select: { id: true, imageUrl: true } });
   if (!item) return;
 
   const name = normalizeText(formData.get("name"));
@@ -109,6 +130,27 @@ export async function updateGearItemAction(itemId: string, formData: FormData): 
     }
   }
 
+  let nextImageUrl: string | null | undefined = undefined; // undefined = no change
+  const imageFile = formData.get("image");
+  const removeImage = formData.get("removeImage") === "on";
+
+  if (imageFile instanceof File && imageFile.size > 0 && isS3Configured()) {
+    if (allowedImageTypes.has(imageFile.type)) {
+      try {
+        const secureUpload = await validateAndScanImageUpload(imageFile, "gear-item-update");
+        const optimized = await optimizeImage(secureUpload.buffer);
+        const key = `gear/${rider.id}/${crypto.randomUUID()}.${optimized.ext}`;
+        nextImageUrl = await uploadFile(key, optimized.data, optimized.contentType);
+      } catch {
+        // Skip on error
+      }
+    }
+  } else if (removeImage) {
+    nextImageUrl = null;
+  }
+
+  const previousImageUrl = item.imageUrl;
+
   await prisma.gearItem.update({
     where: { id: item.id },
     data: {
@@ -120,9 +162,14 @@ export async function updateGearItemAction(itemId: string, formData: FormData): 
       condition: condition || null,
       purchaseDate: purchaseDate && !Number.isNaN(purchaseDate.getTime()) ? purchaseDate : null,
       purchaseUrl: validatedUrl,
+      imageUrl: nextImageUrl !== undefined ? nextImageUrl : undefined,
       notes: notes || null,
     },
   });
+
+  if (previousImageUrl && nextImageUrl !== undefined && previousImageUrl !== nextImageUrl) {
+    await deleteFileByUrl(previousImageUrl);
+  }
 
   revalidatePath("/gear/mine");
 }
@@ -130,11 +177,14 @@ export async function updateGearItemAction(itemId: string, formData: FormData): 
 export async function deleteGearItemAction(itemId: string): Promise<void> {
   const rider = await requireCurrentRider();
 
-  const item = await prisma.gearItem.findFirst({ where: { id: itemId, riderId: rider.id }, select: { id: true } });
+  const item = await prisma.gearItem.findFirst({ where: { id: itemId, riderId: rider.id }, select: { id: true, imageUrl: true } });
   if (!item) {
     return;
   }
 
   await prisma.gearItem.delete({ where: { id: item.id } });
+  if (item.imageUrl) {
+    await deleteFileByUrl(item.imageUrl);
+  }
   revalidatePath("/gear/mine");
 }
