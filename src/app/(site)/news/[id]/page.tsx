@@ -38,18 +38,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
-export async function generateStaticParams() {
-  const posts = await safeQuery(
-    () => prisma.newsPost.findMany({
-      where: { status: NewsPostStatus.PUBLISHED },
-      select: { slug: true },
-    }),
-    [],
-  );
-
-  return posts.map((post) => ({ id: post.slug }));
-}
-
 export default async function NewsArticlePage({
   params,
 }: {
