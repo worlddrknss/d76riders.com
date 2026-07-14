@@ -67,7 +67,6 @@ export default async function RiderProfilePage({
       twitterUrl: true,
       bikes: {
         select: { id: true, name: true, make: true, model: true },
-        take: 5,
       },
       journalEntries: {
         orderBy: { createdAt: "desc" },
