@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
@@ -51,8 +51,7 @@ export default async function NewsPage() {
     coverImageUrl: post.coverImageUrl,
   }));
 
-  const featured = articles[0] ?? null;
-  const rest = articles.slice(1);
+  const recent = articles.slice(0, 3);
 
   return (
     <div>
@@ -64,112 +63,93 @@ export default async function NewsPage() {
       />
 
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-
-          {/* Submit button */}
-          {currentUser ? (
-            <div className="mb-8 flex justify-end">
-              <Link href="/news/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cf5a26]">
-                Submit Article
-              </Link>
-            </div>
-          ) : null}
-
-          {articles.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-surface p-16 text-center">
-              <p className="text-lg font-semibold text-ink">No news posts yet</p>
-              <p className="mt-2 text-sm text-muted">Check back soon for ride reports and community updates.</p>
-            </div>
-          ) : (
-            <>
-              {/* Featured article — large hero card */}
-              {featured && (
-                <Link href={`/news/${featured.id}`} className="group mb-10 block overflow-hidden rounded-2xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
-                  <div className="grid lg:grid-cols-[1.4fr_1fr]">
-                    <div
-                      className="h-64 bg-cover bg-center lg:h-full lg:min-h-[20rem]"
-                      style={{ backgroundImage: `url(${featured.coverImageUrl || siteImages.galleryPage[0]})` }}
-                    />
-                    <div className="flex flex-col justify-center p-8 lg:p-10">
-                      <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">{featured.category}</span>
-                      <h2 className="mt-2 font-display text-2xl font-bold text-ink transition group-hover:text-sunset lg:text-3xl">
-                        {featured.title}
-                      </h2>
-                      <p className="mt-3 text-sm leading-relaxed text-muted">{featured.excerpt}</p>
-                      <div className="mt-4 flex items-center gap-3 text-xs text-muted">
-                        <span>{featured.author}</span>
-                        <span>·</span>
-                        <span>{featured.date}</span>
-                      </div>
-                      <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset">
-                        Read Article <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </div>
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
+          {/* ARTICLE GRID */}
+          <div>
+            {currentUser ? (
+              <div className="mb-6 flex items-center justify-end">
+                <Link href="/news/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#cf5a26]">
+                  Submit Article
+                </Link>
+              </div>
+            ) : null}
+            <div className="grid gap-8 sm:grid-cols-2">
+            {articles.map((article, i) => (
+              <article key={article.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                <Link href={`/news/${article.id}`} className="block">
+                  <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}>
+                    <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
+                      {article.category}
+                    </span>
                   </div>
                 </Link>
-              )}
-
-              {/* Article grid */}
-              {rest.length > 0 && (
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                  {rest.map((article, i) => (
-                    <article key={article.id} className="group overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
-                      <Link href={`/news/${article.id}`} className="block">
-                        <div
-                          className="h-44 bg-cover bg-center transition group-hover:scale-[1.02]"
-                          style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[(i + 1) % siteImages.galleryPage.length]})` }}
-                        />
-                      </Link>
-                      <div className="p-5">
-                        <span className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-sunset">{article.category}</span>
-                        <Link href={`/news/${article.id}`}>
-                          <h3 className="mt-1 font-display text-base font-bold text-ink transition group-hover:text-sunset">
-                            {article.title}
-                          </h3>
-                        </Link>
-                        <p className="mt-2 line-clamp-2 text-sm text-muted">{article.excerpt}</p>
-                        <div className="mt-3 flex items-center justify-between text-xs text-muted">
-                          <span>{article.author}</span>
-                          <span>{article.date}</span>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Categories + Tags — horizontal below articles */}
-          {(newsCategories.length > 0 || popularTags.length > 0) && (
-            <div className="mt-12 grid gap-6 sm:grid-cols-2">
-              {newsCategories.length > 0 && (
-                <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-                  <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {newsCategories.map((cat) => (
-                      <span key={cat.name} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted">
-                        <span className="h-1.5 w-1.5 rounded-full bg-sunset" />
-                        {cat.name}
-                      </span>
-                    ))}
+                <div className="p-5">
+                  <Link href={`/news/${article.id}`}>
+                    <h2 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
+                      {article.title}
+                    </h2>
+                  </Link>
+                  <div className="mt-2 flex items-center gap-4 text-xs text-muted">
+                    <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 text-sunset" />{article.date}</span>
+                    <span className="inline-flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5 text-sunset" />No Comments</span>
                   </div>
+                  <p className="mt-3 text-sm text-muted">{article.excerpt}</p>
+                  <Link href={`/news/${article.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                    Read More <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-              )}
-              {popularTags.length > 0 && (
-                <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-                  <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {popularTags.map((tag) => (
-                      <span key={tag.name} className="rounded-lg bg-canvas px-3 py-1.5 text-xs font-semibold text-muted transition hover:bg-sunset/10 hover:text-sunset">
-                        #{tag.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              </article>
+            ))}
+          </div>
+          </div>
+
+          {/* SIDEBAR */}
+          <aside className="space-y-8">
+            <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
+              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
+              <ul className="mt-4 space-y-2">
+                {newsCategories.map((cat) => (
+                  <li key={cat.name} className="flex items-center gap-2 text-sm text-muted">
+                    <span className="h-2 w-2 bg-sunset" />
+                    {cat.name}
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
+
+            <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
+              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Recent Posts</h3>
+              <ul className="mt-4 space-y-4">
+                {recent.map((article, i) => (
+                  <li key={article.id}>
+                    <Link href={`/news/${article.id}`} className="flex items-center gap-3">
+                      <span
+                        className="h-14 w-14 shrink-0 rounded-md bg-cover bg-center"
+                        style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
+                      />
+                      <span>
+                        <span className="block text-sm font-semibold uppercase leading-tight tracking-tight text-asphalt hover:text-sunset">
+                          {article.title}
+                        </span>
+                        <span className="mt-1 block text-xs text-muted">{article.date}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
+              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {popularTags.map((tag) => (
+                  <span key={tag.name} className="rounded-md border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
     </div>
