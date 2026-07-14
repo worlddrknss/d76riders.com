@@ -37,6 +37,11 @@ function isValidAvatarUrl(value: string): boolean {
     return true;
   }
 
+  // Allow relative paths (e.g. /api/media/...)
+  if (value.startsWith("/")) {
+    return true;
+  }
+
   try {
     const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:";
