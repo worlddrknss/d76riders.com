@@ -36,6 +36,5 @@ jobs:
 
       - name: Build
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/d76riders?schema=public
           NEXT_PUBLIC_MAPTILER_KEY: test
         run: npm run build

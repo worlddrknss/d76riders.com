@@ -1,5 +1,7 @@
 import { Footer } from "@/components/layout/footer";
 
+export const dynamic = "force-dynamic";
+
 export default function SiteLayout({
   children,
 }: Readonly<{
