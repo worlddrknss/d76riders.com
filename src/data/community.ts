@@ -11,15 +11,35 @@ import type {
   Road,
 } from "@/types/community";
 
-export const navItems = [
+export type NavItem =
+  | { href: string; label: string }
+  | { label: string; children: { href: string; label: string }[] };
+
+export const navItems: NavItem[] = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "History" },
-  { href: "/events", label: "Events" },
-  { href: "/discover", label: "Discover" },
-  { href: "/roads", label: "Roads" },
-  { href: "/r", label: "Riders" },
-  { href: "/news", label: "News" },
-  { href: "/gallery", label: "Gallery" },
+  {
+    label: "About",
+    children: [
+      { href: "/about", label: "History" },
+      { href: "/safety", label: "Ride Safety" },
+      { href: "/emergency-response", label: "Emergency Response" },
+    ],
+  },
+  {
+    label: "Rides",
+    children: [
+      { href: "/events", label: "Events" },
+      { href: "/roads", label: "Roads" },
+    ],
+  },
+  {
+    label: "Community",
+    children: [
+      { href: "/r", label: "Riders" },
+      { href: "/news", label: "News" },
+      { href: "/gallery", label: "Gallery" },
+    ],
+  },
 ];
 
 export const upcomingRides: Ride[] = [

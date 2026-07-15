@@ -19,7 +19,9 @@ model RideEvent {
 
   host         Rider         @relation(fields: [hostId], references: [id], onDelete: Cascade)
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  organizers   EventOrganizer[]
   rsvps        Rsvp[]
+  checkIns     EventCheckIn[]
   followers    EventFollow[]
   comments     Comment[]
   galleryItems GalleryItem[]
@@ -65,4 +67,47 @@ enum RsvpStatus {
   GOING
   INTERESTED
   NOT_GOING
+}
+
+model EventOrganizer {
+  id      String             @id @default(cuid())
+  eventId String
+  riderId String
+  role    EventOrganizerRole
+
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, riderId])
+  @@index([riderId])
+}
+
+enum EventOrganizerRole {
+  HOST
+  LEAD
+  SWEEP
+  MARSHAL
+}
+
+model EventCheckIn {
+  id         String        @id @default(cuid())
+  eventId    String
+  riderId    String
+  checkInAt  DateTime      @default(now())
+  checkOutAt DateTime?
+  method     CheckInMethod
+
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, riderId])
+  @@index([riderId])
+}
+
+enum CheckInMethod {
+  QR
+  NFC
+  MANUAL
 }

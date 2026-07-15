@@ -6,6 +6,9 @@ import { CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal,
 import { EventManageActions } from "@/components/events/event-manage-actions";
 import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
+import { EventCheckInButton } from "@/components/events/event-check-in-button";
+import { AttendancePanel } from "@/components/events/attendance-panel";
+import { EventOrganizers } from "@/components/events/event-organizers";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
 import { Linkify } from "@/components/ui/linkify";
@@ -133,6 +136,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       followers: {
         select: { riderId: true },
       },
+      organizers: {
+        select: {
+          id: true,
+          role: true,
+          rider: { select: { id: true, userId: true, name: true, handle: true } },
+        },
+        orderBy: { createdAt: "asc" },
+      },
+      checkIns: {
+        select: {
+          riderId: true,
+          checkInAt: true,
+          checkOutAt: true,
+        },
+      },
     },
   });
 
@@ -151,6 +169,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   }));
 
   const isOwner = currentUser?.id === event.host.userId;
+  const isOrganizer = currentUser
+    ? event.organizers.some((o) => o.rider.userId === currentUser.id)
+    : false;
+  const isHost = currentUser
+    ? event.organizers.some((o) => o.rider.userId === currentUser.id && o.role === "HOST")
+    : false;
 
   // Look up current user's rider to check RSVP status
   let currentRsvp: "GOING" | "INTERESTED" | null = null;
@@ -173,6 +197,34 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
     : null;
   const isTracking = viewerRider ? event.followers.some((item) => item.riderId === viewerRider.id) : false;
+
+  // Check-in state
+  const now = new Date();
+  const eventDate = event.startsAt;
+  const isEventDay = eventDate.getUTCFullYear() === now.getUTCFullYear()
+    && eventDate.getUTCMonth() === now.getUTCMonth()
+    && eventDate.getUTCDate() === now.getUTCDate();
+  const isActiveEvent = event.status === "UPCOMING" && isEventDay;
+  const viewerCheckIn = viewerRider
+    ? event.checkIns.find((c) => c.riderId === viewerRider.id)
+    : null;
+  const canCheckIn = isActiveEvent && currentRsvp === "GOING" && currentUser;
+
+  // Build attendee list for organizer attendance panel
+  const attendeesForPanel = isOrganizer
+    ? event.rsvps.map((rsvp) => {
+        const checkIn = event.checkIns.find((c) => c.riderId === rsvp.riderId);
+        return {
+          riderId: rsvp.riderId,
+          name: rsvp.rider.name,
+          handle: rsvp.rider.handle,
+          avatarUrl: rsvp.rider.avatarUrl,
+          checkIn: checkIn
+            ? { checkInAt: checkIn.checkInAt.toISOString(), checkOutAt: checkIn.checkOutAt?.toISOString() ?? null }
+            : null,
+        };
+      })
+    : [];
 
   return (
     <section className="page-shell">
@@ -205,7 +257,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               <div className="flex shrink-0 items-center gap-1">
                 <ShareEvent title={event.title} slug={event.slug} />
                 <EventQrCode eventUrl={`/events/${event.slug}`} eventTitle={event.title} />
-                {isOwner && (
+                {(isOwner || isOrganizer) && (
                   <EventManageActions
                     event={{
                       id: event.id,
@@ -272,6 +324,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   attendeeCount={attendeeCount}
                   isLoggedIn={!!currentUser}
                 />
+                {canCheckIn && (
+                  <EventCheckInButton
+                    eventId={event.id}
+                    isCheckedIn={!!viewerCheckIn}
+                    isCheckedOut={!!viewerCheckIn?.checkOutAt}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -337,6 +396,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               ))}
             </div>
           </div>
+        )}
+
+        {/* RIDE STAFF */}
+        {event.organizers.length > 0 && (
+          <EventOrganizers
+            eventId={event.id}
+            organizers={event.organizers.map((o) => ({
+              id: o.id,
+              role: o.role,
+              rider: { name: o.rider.name, handle: o.rider.handle },
+            }))}
+            isHost={isHost}
+          />
+        )}
+
+        {/* ATTENDANCE PANEL — organizers only */}
+        {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
+          <AttendancePanel
+            eventId={event.id}
+            attendees={attendeesForPanel}
+            eventStatus={event.status}
+          />
         )}
       </div>
     </section>

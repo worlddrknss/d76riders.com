@@ -13,6 +13,12 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
+async function requireOrganizerRider(userId: string) {
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return null;
+  return rider;
+}
+
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
 }
@@ -56,7 +62,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const event = await prisma.rideEvent.findFirst({
     where: {
       id: eventId,
-      host: { userId },
+      organizers: { some: { rider: { userId } } },
     },
     include: {
       galleryItems: true,
@@ -159,7 +165,7 @@ export async function deleteEventAction(eventId: string): Promise<void> {
   const event = await prisma.rideEvent.findFirst({
     where: {
       id: eventId,
-      host: { userId },
+      organizers: { some: { rider: { userId }, role: "HOST" } },
     },
     include: {
       galleryItems: true,
@@ -212,5 +218,144 @@ export async function rsvpAction(eventId: string, status: "GOING" | "CANCEL"): P
     });
   }
 
+  revalidatePath("/events");
+}
+
+// ─── Check-in / Check-out ───────────────────────────────────────────
+
+export async function checkInAction(eventId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const rider = await requireOrganizerRider(userId);
+  if (!rider) return;
+
+  // Must have RSVP'd GOING
+  const rsvp = await prisma.rsvp.findUnique({
+    where: { eventId_riderId: { eventId, riderId: rider.id } },
+    select: { status: true },
+  });
+  if (!rsvp || rsvp.status !== "GOING") return;
+
+  await prisma.eventCheckIn.upsert({
+    where: { eventId_riderId: { eventId, riderId: rider.id } },
+    create: { eventId, riderId: rider.id, method: "QR" },
+    update: {},
+  });
+
+  revalidatePath("/events");
+}
+
+export async function checkOutAction(eventId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const rider = await requireOrganizerRider(userId);
+  if (!rider) return;
+
+  await prisma.eventCheckIn.updateMany({
+    where: { eventId, riderId: rider.id, checkOutAt: null },
+    data: { checkOutAt: new Date() },
+  });
+
+  revalidatePath("/events");
+}
+
+export async function manualCheckInAction(eventId: string, targetRiderId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  // Only organizers can manually check in riders
+  const organizer = await prisma.eventOrganizer.findFirst({
+    where: { eventId, rider: { userId } },
+    select: { id: true },
+  });
+  if (!organizer) return;
+
+  await prisma.eventCheckIn.upsert({
+    where: { eventId_riderId: { eventId, riderId: targetRiderId } },
+    create: { eventId, riderId: targetRiderId, method: "MANUAL" },
+    update: {},
+  });
+
+  revalidatePath("/events");
+}
+
+export async function closeRideAction(eventId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const organizer = await prisma.eventOrganizer.findFirst({
+    where: { eventId, rider: { userId } },
+    select: { id: true },
+  });
+  if (!organizer) return;
+
+  // Mark event as completed
+  await prisma.rideEvent.update({
+    where: { id: eventId },
+    data: { status: "COMPLETED" },
+  });
+
+  // Auto-checkout everyone who hasn't checked out
+  await prisma.eventCheckIn.updateMany({
+    where: { eventId, checkOutAt: null },
+    data: { checkOutAt: new Date() },
+  });
+
+  revalidatePath("/events");
+}
+
+// ─── Organizer Management ───────────────────────────────────────────
+
+export async function addOrganizerAction(
+  eventId: string,
+  targetHandle: string,
+  role: "LEAD" | "SWEEP" | "MARSHAL",
+): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  // Only HOST can add organizers
+  const hostOrg = await prisma.eventOrganizer.findFirst({
+    where: { eventId, rider: { userId }, role: "HOST" },
+    select: { id: true },
+  });
+  if (!hostOrg) return { error: "Only the host can manage organizers." };
+
+  const targetRider = await prisma.rider.findUnique({
+    where: { handle: targetHandle },
+    select: { id: true },
+  });
+  if (!targetRider) return { error: "Rider not found." };
+
+  await prisma.eventOrganizer.upsert({
+    where: { eventId_riderId: { eventId, riderId: targetRider.id } },
+    create: { eventId, riderId: targetRider.id, role },
+    update: { role },
+  });
+
+  revalidatePath("/events");
+  return { error: null };
+}
+
+export async function removeOrganizerAction(eventId: string, organizerId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const hostOrg = await prisma.eventOrganizer.findFirst({
+    where: { eventId, rider: { userId }, role: "HOST" },
+    select: { id: true },
+  });
+  if (!hostOrg) return;
+
+  // Cannot remove the HOST
+  const target = await prisma.eventOrganizer.findUnique({
+    where: { id: organizerId },
+    select: { role: true },
+  });
+  if (!target || target.role === "HOST") return;
+
+  await prisma.eventOrganizer.delete({ where: { id: organizerId } });
   revalidatePath("/events");
 }

@@ -280,7 +280,7 @@ export async function createEventAction(
       routeId = route.id;
     }
 
-    await tx.rideEvent.create({
+    const event = await tx.rideEvent.create({
       data: {
         hostId: rider.id,
         title,
@@ -303,6 +303,14 @@ export async function createEventAction(
               },
             }
           : undefined,
+      },
+    });
+
+    await tx.eventOrganizer.create({
+      data: {
+        eventId: event.id,
+        riderId: rider.id,
+        role: "HOST",
       },
     });
   });

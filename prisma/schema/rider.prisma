@@ -35,6 +35,8 @@ model Rider {
   following RiderFollow[] @relation("RiderFollowFollower")
   followers RiderFollow[] @relation("RiderFollowFollowing")
   followedEvents EventFollow[]
+  organizedEvents EventOrganizer[]
+  eventCheckIns  EventCheckIn[]
   events         RideEvent[]
   routes         Route[]
   roads          Road[]

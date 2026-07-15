@@ -5,13 +5,31 @@ A prioritized list of high-impact features for District 76 Riders.
 ## Priority 1: Ride Safety Stack
 
 - Live check-in and check-out for rides
+  - Context-aware check-in button on event page (same QR code, no second QR)
+  - Visible when event is today, rider has RSVP, and hasn't checked in yet
+  - Check-out button appears after check-in; organizers can also close the ride
+  - EventCheckIn model: riderId, eventId, checkInAt, checkOutAt, method (QR/NFC)
+  - Missing checkout alert: notify organizers if a rider doesn't check out after event ends
 - Emergency contact card per rider
 - NFC helmet tag for emergency ID and ride check-in
+  - NTAG215 rewritable stickers (504 bytes, transparent)
+  - URL written to tag: `d76riders.com/emergency/{token}`
+  - Acknowledgment gate before revealing medical info
+  - Tiered disclosure: name, emergency contacts, blood type, allergies, conditions
+  - Envelope encryption (DEK per rider, KEK in external key store) for medical data at rest
+  - Rider controls: enable/disable card, choose visible fields, regenerate token (rewrite sticker)
+  - Access logging: IP, timestamp, user-agent per tap
+  - Revoke token online; rewrite sticker with new token via NFC Tools app or at meetup
 - Route hazard reporting (debris, police, roadwork, weather)
 - Rider down quick alert flow for organizers
 
 ## Priority 2: Event Operations
 
+- Multiple event organizers with roles
+  - EventOrganizer model: eventId, riderId, role (HOST, LEAD, SWEEP, MARSHAL)
+  - Event creator is automatically HOST
+  - HOST can add/remove other organizers
+  - All organizer roles see live attendance panel and can manage check-ins
 - Waitlist with auto-promote when spots open
 - Role-based ride staffing (lead, sweep, medic, photographer)
 - RSVP cutoff rules and no-show tracking

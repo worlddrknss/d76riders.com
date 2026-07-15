@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
 import { markAllReadAction } from "@/app/(site)/notifications/actions";
-import { navItems } from "@/data/community";
+import { navItems, type NavItem } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
 
 type ActivityItem = {
@@ -63,6 +63,84 @@ function useScrolled(threshold = 10) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [threshold]);
   return scrolled;
+}
+
+function NavDropdown({
+  label,
+  children,
+  isActive,
+  pathname,
+}: {
+  label: string;
+  children: { href: string; label: string }[];
+  isActive: boolean;
+  pathname: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  function handleEnter() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  }
+
+  function handleLeave() {
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }
+
+  return (
+    <div ref={ref} className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`relative flex items-center gap-1 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+          isActive ? "text-white" : "text-slate-300 hover:text-white"
+        }`}
+      >
+        {isActive && (
+          <motion.span
+            layoutId="nav-indicator"
+            className="absolute inset-0 rounded-lg bg-white/10"
+            transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+          />
+        )}
+        <span className="relative z-10">{label}</span>
+        <ChevronDown className={`relative z-10 h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+            transition={{ duration: 0.12 }}
+            className="absolute left-0 top-full z-50 mt-1 min-w-40 overflow-hidden rounded-xl border border-white/10 bg-[#171a1f] p-1.5 shadow-xl"
+          >
+            {children.map((child) => {
+              const active = pathname === child.href || pathname.startsWith(child.href + "/");
+              return (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className={`block rounded-lg px-3 py-2 text-sm font-medium transition ${
+                    active ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {child.label}
+                </Link>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export function NavbarClient({ currentUser, notificationCount, recentActivities }: NavbarClientProps) {
@@ -120,26 +198,39 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 rounded-full bg-white/5 p-1 lg:flex" aria-label="Main navigation">
+        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main navigation">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            if ("href" in item) {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                    isActive ? "text-white" : "text-slate-300 hover:text-white"
+                  }`}
+                >
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-indicator"
+                      className="absolute inset-0 rounded-lg bg-white/10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                    />
+                  )}
+                  <span className="relative z-10">{item.label}</span>
+                </Link>
+              );
+            }
+
+            const isChildActive = item.children.some((child) => pathname === child.href || pathname.startsWith(child.href + "/"));
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive ? "text-white" : "text-slate-300 hover:text-white"
-                }`}
-              >
-                {isActive && (
-                  <motion.span
-                    layoutId="nav-pill"
-                    className="absolute inset-0 rounded-full bg-white/15"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-                  />
-                )}
-                <span className="relative z-10">{item.label}</span>
-              </Link>
+              <NavDropdown
+                key={item.label}
+                label={item.label}
+                children={item.children}
+                isActive={isChildActive}
+                pathname={pathname}
+              />
             );
           })}
         </nav>
@@ -324,18 +415,40 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
         <div className="border-t border-white/10 bg-asphalt lg:hidden">
           <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
             <nav className="grid gap-1" aria-label="Mobile navigation">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                    pathname === item.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                if ("href" in item) {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                        pathname === item.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                }
+
+                return (
+                  <div key={item.label}>
+                    <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-widest text-slate-500">{item.label}</p>
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className={`rounded-lg px-3 py-2 pl-6 text-sm font-medium ${
+                          pathname === child.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
+                        }`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                );
+              })}
 
               {currentUser ? (
                 <>

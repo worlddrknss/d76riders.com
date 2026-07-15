@@ -16,6 +16,7 @@ export const siteImages = {
     members: u("photo-1568772585407-9361f9bf3a87", 2000),
     gallery: u("photo-1485965120184-e220f721d03e", 2000),
     join: u("photo-1464822759023-fed622ff2c3b", 2000),
+    safety: u("photo-1558981403-c5f9899a28bc", 2000),
   },
   history: {
     clarksville: u("photo-1444723121867-7a241cacace9", 1400),

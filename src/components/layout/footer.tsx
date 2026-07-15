@@ -5,6 +5,8 @@ const columns = [
     title: "Community",
     links: [
       { label: "History", href: "/about" },
+      { label: "Rider Safety", href: "/safety" },
+      { label: "Emergency Response", href: "/emergency-response" },
       { label: "Community Guidelines", href: "/about" },
       { label: "FAQ", href: "/about" },
       { label: "Contact", href: "mailto:hello@district76riders.com" },
