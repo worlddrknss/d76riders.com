@@ -183,7 +183,7 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                       {event.title}
                     </h3>
                     <p className="mt-2 line-clamp-2 text-sm text-muted">
-                      {event.description || "No description."}
+                      {event.excerpt || event.description || "No description."}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                       {event.meetLocation ? (

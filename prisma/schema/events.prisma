@@ -5,6 +5,7 @@ model RideEvent {
   hostId        String
   title         String
   slug          String          @unique
+  excerpt       String?         @db.VarChar(255)
   description   String?
   facebookEventUrl String?
   startsAt      DateTime

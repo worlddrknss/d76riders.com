@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -29,6 +29,7 @@ import {
 type EventData = {
   id: string;
   title: string;
+  excerpt: string | null;
   description: string | null;
   facebookEventUrl: string | null;
   startsAt: string; // ISO string from server
@@ -44,6 +45,11 @@ type EventData = {
 export function EventManageActions({ event }: { event: EventData }) {
   const [editOpen, setEditOpen] = useState(false);
   const [editPending, startEditTransition] = useTransition();
+  const [excerptValue, setExcerptValue] = useState(event.excerpt ?? "");
+
+  useEffect(() => {
+    if (editOpen) setExcerptValue(event.excerpt ?? "");
+  }, [editOpen, event.excerpt]);
   const [deletePending, startDeleteTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
@@ -112,6 +118,22 @@ export function EventManageActions({ event }: { event: EventData }) {
             <div>
               <label htmlFor="edit-event-title" className="text-xs font-semibold uppercase tracking-wide text-muted">Title</label>
               <Input id="edit-event-title" name="title" defaultValue={event.title} className="mt-1" required />
+            </div>
+            <div>
+              <label htmlFor="edit-event-excerpt" className="text-xs font-semibold uppercase tracking-wide text-muted">Excerpt</label>
+              <Textarea
+                id="edit-event-excerpt"
+                name="excerpt"
+                rows={2}
+                maxLength={255}
+                value={excerptValue}
+                onChange={(e) => setExcerptValue(e.target.value)}
+                className="mt-1"
+                placeholder="Short summary shown on the events page."
+              />
+              <p className={`mt-1 text-right text-xs ${excerptValue.length > 255 ? "text-red-600" : "text-muted"}`}>
+                {excerptValue.length}/255
+              </p>
             </div>
             <div>
               <label htmlFor="edit-event-desc" className="text-xs font-semibold uppercase tracking-wide text-muted">Description</label>

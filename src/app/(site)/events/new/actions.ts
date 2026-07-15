@@ -117,6 +117,7 @@ export async function createEventAction(
   }
 
   const title = normalizeText(formData.get("title"));
+  const excerpt = normalizeText(formData.get("excerpt"));
   const description = normalizeText(formData.get("description"));
   const startsAtInput = normalizeText(formData.get("startsAt"));
   const meetLocation = normalizeText(formData.get("meetLocation"));
@@ -262,6 +263,7 @@ export async function createEventAction(
         hostId: rider.id,
         title,
         slug,
+        excerpt: excerpt ? excerpt.slice(0, 255) : null,
         description: description || null,
         startsAt,
         ksuAt,

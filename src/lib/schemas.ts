@@ -38,6 +38,7 @@ export const updateRoadSchema = createRoadSchema;
 // ---------- Event ----------
 export const createEventSchema = z.object({
   title: z.string().min(1, "Event title is required").max(200),
+  excerpt: z.string().max(255).optional(),
   description: z.string().max(5000).optional(),
   meetLocation: z.string().max(200).optional(),
   ksuLocation: z.string().max(200).optional(),

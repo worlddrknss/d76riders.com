@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import {
   createEventAction,
@@ -18,6 +18,7 @@ export function CreateEventForm() {
     createEventAction,
     initialCreateEventFormState,
   );
+  const [excerpt, setExcerpt] = useState("");
 
   return (
     <form action={formAction} className="space-y-5">
@@ -34,6 +35,25 @@ export function CreateEventForm() {
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           placeholder="Saturday Sunrise Loop"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="excerpt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+          Excerpt
+        </label>
+        <textarea
+          id="excerpt"
+          name="excerpt"
+          rows={2}
+          maxLength={255}
+          value={excerpt}
+          onChange={(e) => setExcerpt(e.target.value)}
+          className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          placeholder="Short summary shown on the events page."
+        />
+        <p className={`text-right text-xs ${excerpt.length > 255 ? "text-red-600" : "text-muted"}`}>
+          {excerpt.length}/255
+        </p>
       </div>
 
       <div className="space-y-1.5">

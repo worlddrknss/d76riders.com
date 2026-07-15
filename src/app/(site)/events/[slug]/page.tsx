@@ -210,6 +210,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     event={{
                       id: event.id,
                       title: event.title,
+                      excerpt: event.excerpt,
                       description: event.description,
                       facebookEventUrl: event.facebookEventUrl,
                       startsAt: toLocalISOString(event.startsAt),

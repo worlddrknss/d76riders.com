@@ -70,6 +70,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   }
 
   const title = normalizeText(formData.get("title"));
+  const excerpt = normalizeText(formData.get("excerpt"));
   const description = normalizeText(formData.get("description"));
   const startsAt = toOptionalDate(normalizeText(formData.get("startsAt")));
   const ksuAt = toOptionalDate(normalizeText(formData.get("ksuAt")));
@@ -113,6 +114,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
       where: { id: event.id },
       data: {
         title,
+        excerpt: excerpt ? excerpt.slice(0, 255) : null,
         description: description || null,
         startsAt,
         ksuAt,

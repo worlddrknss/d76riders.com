@@ -121,7 +121,7 @@ export default async function EventsPage() {
                   {/* DETAILS */}
                   <div className="p-6">
                     <h3 className="font-display text-2xl font-bold uppercase tracking-tight text-asphalt">{event.title}</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-muted">{event.description || "No event description yet."}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-muted">{event.excerpt || "No event excerpt yet."}</p>
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
                       <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{event.distanceMiles ? `${event.distanceMiles} miles` : "Distance TBD"}</span>
                       <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{event.difficulty ? event.difficulty.replaceAll("_", " ") : "Difficulty TBD"}</span>
