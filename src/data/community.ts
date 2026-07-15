@@ -17,25 +17,20 @@ export type NavItem =
 
 export const navItems: NavItem[] = [
   { href: "/", label: "Home" },
+  { href: "/events", label: "Events" },
+  { href: "/roads", label: "Roads" },
+  { href: "/r", label: "Riders" },
   {
-    label: "About",
+    label: "Preparedness",
     children: [
-      { href: "/about", label: "History" },
       { href: "/safety", label: "Ride Safety" },
       { href: "/emergency-response", label: "Emergency Response" },
     ],
   },
   {
-    label: "Rides",
+    label: "More",
     children: [
-      { href: "/events", label: "Events" },
-      { href: "/roads", label: "Roads" },
-    ],
-  },
-  {
-    label: "Community",
-    children: [
-      { href: "/r", label: "Riders" },
+      { href: "/about", label: "About" },
       { href: "/news", label: "News" },
       { href: "/gallery", label: "Gallery" },
     ],
