@@ -129,7 +129,7 @@ export default async function Home() {
         video="/images/hero/video.mp4"
         variant="home"
         title={<>DISTRICT <span className="text-sunset">76</span></>}
-        description="Riders in Clarksville, Tennessee who show up for good roads, good people, and rides worth remembering."
+        description="Founded in Clarksville, Tennessee and built for riders across the state. All bikes, all skill levels, no politics. Just rides worth showing up for."
         actions={
           <>
             <Link
@@ -158,7 +158,7 @@ export default async function Home() {
               All Bikes. All Riders.
             </h2>
             <p className="mt-4 max-w-lg text-muted">
-              District 76 Riders is open to everyone on two wheels in Middle Tennessee. No patches, no ranks, no brand requirements. Show up, ride, be cool.
+              Founded in Clarksville and open to everyone on two wheels across Tennessee. No patches, no ranks, no brand requirements. Show up, ride, be cool.
             </p>
             <Link href="/about" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               Learn More <ArrowRight className="h-4 w-4" />

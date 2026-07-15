@@ -27,15 +27,15 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "District 76 Riders — Motorcycle Community in Clarksville, TN",
+    default: "District 76 Riders — Founded in Clarksville, Built for Tennessee Riders",
     template: "%s | District 76 Riders",
   },
   description:
-    "District 76 Riders is a motorcycle riding community based in Clarksville, Tennessee. Join group rides, discover scenic roads, connect with riders, and explore the best routes in Middle Tennessee and beyond.",
+    "District 76 Riders is a motorcycle community founded in Clarksville, TN and built for riders across Tennessee. Group rides, scenic roads, and a platform made by riders, for riders.",
   keywords: [
-    "motorcycle club",
-    "Clarksville TN",
     "motorcycle community",
+    "Clarksville TN",
+    "Tennessee motorcycle riders",
     "group rides",
     "Tennessee motorcycle roads",
     "scenic rides",
@@ -48,16 +48,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "District 76 Riders",
-    title: "District 76 Riders — Motorcycle Community in Clarksville, TN",
+    title: "District 76 Riders — Founded in Clarksville, Built for Tennessee Riders",
     description:
-      "Join group rides, discover scenic roads, and connect with motorcycle riders in Clarksville, Tennessee and beyond.",
+      "A motorcycle community founded in Clarksville, TN and built for riders across Tennessee. Group rides, scenic roads, and real connections.",
     images: [{ url: "/images/hero/home.webp", width: 1200, height: 630, alt: "District 76 Riders" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "District 76 Riders",
     description:
-      "Motorcycle riding community in Clarksville, Tennessee. Group rides, scenic roads, and rider connections.",
+      "Founded in Clarksville, TN. Built for motorcycle riders across Tennessee.",
     images: ["/images/hero/home.webp"],
   },
   robots: {

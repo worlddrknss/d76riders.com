@@ -8,11 +8,11 @@ import { StaggerList, StaggerItem } from "@/components/ui/motion";
 export const metadata: Metadata = {
   title: "Gallery — Ride Photos & Community Moments",
   description:
-    "Browse photos from District 76 group rides, meetups, and road adventures in Tennessee and beyond.",
+    "Browse photos from District 76 group rides, meetups, and road adventures across Tennessee.",
   alternates: { canonical: "/gallery" },
   openGraph: {
     title: "Gallery — District 76 Riders",
-    description: "Photos from rides, meetups, and the open road.",
+    description: "Photos from rides, meetups, and the road.",
   },
 };
 

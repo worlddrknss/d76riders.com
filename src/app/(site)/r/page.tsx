@@ -10,11 +10,11 @@ import { StaggerList, StaggerItem } from "@/components/ui/motion";
 export const metadata: Metadata = {
   title: "Riders — Meet the Community",
   description:
-    "Meet the riders of District 76 — motorcycle enthusiasts in Clarksville, Tennessee who share a passion for the open road.",
+    "Meet the riders of District 76. Motorcycle riders across Tennessee who show up for good roads and good people.",
   alternates: { canonical: "/r" },
   openGraph: {
     title: "Our Riders — District 76 Riders",
-    description: "The people behind the handlebars in Clarksville, TN.",
+    description: "The people behind the handlebars.",
   },
 };
 

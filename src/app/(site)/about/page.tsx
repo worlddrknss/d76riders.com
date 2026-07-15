@@ -8,11 +8,11 @@ import { FadeUp, ScaleIn } from "@/components/ui/motion";
 export const metadata: Metadata = {
   title: "About — Community Over Club",
   description:
-    "District 76 Riders exists for people who simply love to ride. No patches, no hierarchy, no drama — just good people, great rides, and a community built around the road ahead.",
+    "District 76 Riders was founded in Clarksville, TN and built for motorcycle riders across Tennessee. No patches, no hierarchy, no drama.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "About — District 76 Riders",
-    description: "Motorcycles bring people together. Everything else is optional.",
+    description: "Founded in Clarksville. Built for Tennessee riders.",
   },
 };
 

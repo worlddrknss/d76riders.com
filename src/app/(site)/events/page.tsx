@@ -10,11 +10,11 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Upcoming Rides & Events",
   description:
-    "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders in Clarksville, Tennessee and surrounding areas.",
+    "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders across Tennessee. All skill levels welcome.",
   alternates: { canonical: "/events" },
   openGraph: {
     title: "Rides & Events — District 76 Riders",
-    description: "Find your next group ride in Middle Tennessee.",
+    description: "Find your next group ride in Tennessee.",
   },
 };
 

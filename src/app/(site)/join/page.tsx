@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Shield, Users } from "lucide-react";
 import { RegisterForm } from "@/components/auth/register-form";
@@ -6,6 +7,17 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { guidelines, joinBenefits } from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+
+export const metadata: Metadata = {
+  title: "Join District 76 Riders",
+  description:
+    "Create your free rider profile. Join group rides, connect with motorcycle riders across Tennessee, and be part of a community built by riders, for riders.",
+  alternates: { canonical: "/join" },
+  openGraph: {
+    title: "Join — District 76 Riders",
+    description: "Create your rider profile and find your next ride.",
+  },
+};
 
 export default function JoinPage() {
   return (

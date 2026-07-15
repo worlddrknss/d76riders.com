@@ -15,11 +15,11 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata: Metadata = {
   title: "Scenic Motorcycle Roads",
   description:
-    "Discover the best motorcycle roads in Tennessee and beyond — community-rated scenic routes, twisties, and cruising roads curated by District 76 Riders.",
+    "Discover the best motorcycle roads in Tennessee. Community-rated scenic routes, twisties, and cruising roads shared by District 76 Riders.",
   alternates: { canonical: "/roads" },
   openGraph: {
     title: "Scenic Roads — District 76 Riders",
-    description: "Community-rated motorcycle roads and scenic routes in Middle Tennessee.",
+    description: "Community-rated motorcycle roads and scenic routes across Tennessee.",
   },
 };
 
