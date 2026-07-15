@@ -200,7 +200,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <h1 className="font-display text-3xl font-semibold text-ink">{event.title}</h1>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{event.description ? <Linkify text={event.description} /> : "No event description yet."}</p>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">{event.description ? <Linkify text={event.description} /> : "No event description yet."}</p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <ShareEvent title={event.title} slug={event.slug} />

@@ -40,15 +40,6 @@ function formatEventTime(date: Date | null): string {
   });
 }
 
-function deriveKsuTime(meetupAt: Date | null): string {
-  if (!meetupAt) {
-    return "TBD";
-  }
-
-  const ksuAt = new Date(meetupAt.getTime() + 15 * 60 * 1000);
-  return formatEventTime(ksuAt);
-}
-
 export default async function EventsPage() {
   const now = new Date();
   const upcomingEvents = await prisma.rideEvent.findMany({
@@ -108,7 +99,7 @@ export default async function EventsPage() {
               const badge = dateBadge(event.startsAt.toISOString());
               const meetupAt = event.startsAt;
               const meetupTime = formatEventTime(meetupAt);
-              const ksuTime = event.ksuAt ? formatEventTime(event.ksuAt) : deriveKsuTime(meetupAt);
+              const ksuTime = event.ksuAt ? formatEventTime(event.ksuAt) : "TBD";
               const coverImage = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : siteImages.rides[i % siteImages.rides.length];
               return (
                 <StaggerItem key={event.id}>
