@@ -80,7 +80,7 @@ export default async function PublicGaragePage({
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Garage</p>
             <h1 className="font-display text-3xl font-semibold text-ink">
-              <Link href={`/riders/${rider.handle}`} className="hover:text-sunset transition-colors">
+              <Link href={`/r/${rider.handle}`} className="hover:text-sunset transition-colors">
                 {rider.name}
               </Link>
               &apos;s Bikes

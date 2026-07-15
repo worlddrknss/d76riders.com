@@ -83,7 +83,7 @@ export default async function AdminReportsPage() {
                     <p className="text-xs text-slate-500">
                       Post by{" "}
                       <Link
-                        href={`/riders/${report.journalEntry?.author.handle}`}
+                        href={`/r/${report.journalEntry?.author.handle}`}
                         className="font-semibold text-slate-300 hover:text-white"
                       >
                         @{report.journalEntry?.author.handle}

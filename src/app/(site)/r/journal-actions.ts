@@ -26,7 +26,7 @@ export async function toggleJournalLikeAction(entryId: string): Promise<void> {
   // Revalidate the profile page where journal entries display
   const entry = await prisma.journalEntry.findUnique({ where: { id: entryId }, select: { author: { select: { handle: true } } } });
   if (entry?.author.handle) {
-    revalidatePath(`/riders/${entry.author.handle}`);
+    revalidatePath(`/r/${entry.author.handle}`);
   }
 }
 
@@ -50,7 +50,7 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
 
   const entry = await prisma.journalEntry.findUnique({ where: { id: entryId }, select: { author: { select: { handle: true } } } });
   if (entry?.author.handle) {
-    revalidatePath(`/riders/${entry.author.handle}`);
+    revalidatePath(`/r/${entry.author.handle}`);
   }
 }
 
@@ -67,6 +67,6 @@ export async function deleteJournalCommentAction(commentId: string): Promise<voi
   await prisma.comment.delete({ where: { id: comment.id } });
 
   if (comment.journalEntry?.author.handle) {
-    revalidatePath(`/riders/${comment.journalEntry.author.handle}`);
+    revalidatePath(`/r/${comment.journalEntry.author.handle}`);
   }
 }

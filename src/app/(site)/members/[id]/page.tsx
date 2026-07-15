@@ -1,2 +1,2 @@
-export { generateMetadata } from "../../riders/[id]/page";
-export { default } from "../../riders/[id]/page";
+export { generateMetadata } from "../../r/[id]/page";
+export { default } from "../../r/[id]/page";

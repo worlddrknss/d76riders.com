@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Bike, Shield, UserRound, Video } from "lucide-react";
 
 const tabs = [
-  { href: (handle: string) => `/riders/${handle}`, label: "Profile", icon: UserRound, match: "/riders/" },
+  { href: (handle: string) => `/r/${handle}`, label: "Profile", icon: UserRound, match: "/r/" },
   { href: () => "/garage/mine", label: "Garage", icon: Bike, match: "/garage/mine" },
   { href: () => "/gear/mine", label: "Gear", icon: Shield, match: "/gear" },
   { href: () => "/videos/mine", label: "Videos", icon: Video, match: "/videos" },

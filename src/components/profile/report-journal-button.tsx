@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Flag } from "lucide-react";
 
-import { reportJournalEntryAction, type ReportFormState } from "@/app/(site)/riders/actions";
+import { reportJournalEntryAction, type ReportFormState } from "@/app/(site)/r/actions";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Link2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/riders/actions";
+import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/r/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

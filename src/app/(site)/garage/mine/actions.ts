@@ -663,7 +663,7 @@ export async function toggleRiderFollowAction(targetHandle: string): Promise<voi
     await logActivity(rider.id, "FOLLOWED_RIDER", `Started following ${target.name}`, target.id);
   }
 
-  revalidatePath(`/riders/${target.handle}`);
+  revalidatePath(`/r/${target.handle}`);
   revalidatePath(`/members/${target.handle}`);
 }
 

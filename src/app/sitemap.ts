@@ -69,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
 
   const riderPages: MetadataRoute.Sitemap = riders.map((rider) => ({
-    url: `${siteUrl}/riders/${rider.handle}`,
+    url: `${siteUrl}/r/${rider.handle}`,
     lastModified: rider.updatedAt,
     changeFrequency: "monthly",
     priority: 0.5,

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Riders — Meet the Community",
   description:
     "Meet the riders of District 76 — motorcycle enthusiasts in Clarksville, Tennessee who share a passion for the open road.",
-  alternates: { canonical: "/riders" },
+  alternates: { canonical: "/r" },
   openGraph: {
     title: "Our Riders — District 76 Riders",
     description: "The people behind the handlebars in Clarksville, TN.",
@@ -116,7 +116,7 @@ export default async function RidersPage() {
                     )}
                   </div>
                   <Link
-                    href={`/riders/${rider.handle}`}
+                    href={`/r/${rider.handle}`}
                     className="mt-5 block w-full rounded-md border border-border px-4 py-2 text-center text-sm font-semibold text-asphalt hover:border-asphalt"
                   >
                     View Profile

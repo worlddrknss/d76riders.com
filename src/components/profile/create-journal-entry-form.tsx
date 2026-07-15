@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 
-import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/riders/actions";
+import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/r/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 
 const initialJournalFormState: JournalFormState = {

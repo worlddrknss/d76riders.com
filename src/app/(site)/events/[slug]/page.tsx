@@ -254,7 +254,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             {/* HOST + DISTANCE + RSVP */}
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
               <div className="flex flex-wrap items-center gap-6 text-sm text-muted">
-                <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Host: <Link href={`/riders/${event.host.handle}`} className="font-medium text-ink hover:text-sunset">{event.host.name}</Link></span>
+                <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Host: <Link href={`/r/${event.host.handle}`} className="font-medium text-ink hover:text-sunset">{event.host.name}</Link></span>
                 <span className="inline-flex items-center gap-2"><RouteIcon className="h-4 w-4 text-sunset" />Distance: <span className="font-medium text-ink">{event.distanceMiles ? `${event.distanceMiles} mi` : "TBD"}</span></span>
                 <span className="inline-flex items-center gap-2">Tracking: <span className="font-medium text-ink">{trackedCount}</span></span>
               </div>
@@ -319,7 +319,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               {event.rsvps.map((rsvp) => (
                 <Link
                   key={rsvp.riderId}
-                  href={`/riders/${rsvp.rider.handle}`}
+                  href={`/r/${rsvp.rider.handle}`}
                   className="flex items-center gap-3 rounded-lg border border-border bg-canvas p-3 transition hover:border-sunset/30 hover:shadow-sm"
                 >
                   {rsvp.rider.avatarUrl ? (

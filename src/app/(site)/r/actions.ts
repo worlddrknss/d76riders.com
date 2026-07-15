@@ -94,8 +94,8 @@ export async function createJournalEntryAction(
     },
   });
 
-  revalidatePath("/riders", "layout");
-  revalidatePath(`/riders/${rider.handle}`);
+  revalidatePath("/r", "layout");
+  revalidatePath(`/r/${rider.handle}`);
 
   return { error: null, success: "Ride history entry published." };
 }
@@ -116,7 +116,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   });
 
   if (!entry) {
-    redirect("/riders");
+    redirect("/r");
   }
 
   const title = normalizeText(formData.get("title"));
@@ -172,7 +172,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
     await deleteFilesByUrls(previousPhotoUrls);
   }
 
-  revalidatePath("/riders", "layout");
+  revalidatePath("/r", "layout");
 }
 
 export async function deleteJournalEntryAction(entryId: string): Promise<void> {
@@ -190,14 +190,14 @@ export async function deleteJournalEntryAction(entryId: string): Promise<void> {
   });
 
   if (!entry) {
-    redirect("/riders");
+    redirect("/r");
   }
 
   const urls = entry.galleryItems.map((item) => item.url);
   await prisma.journalEntry.delete({ where: { id: entry.id } });
   await deleteFilesByUrls(urls);
 
-  revalidatePath("/riders", "layout");
+  revalidatePath("/r", "layout");
 }
 
 export type ReportFormState = {

@@ -78,7 +78,7 @@ export default async function PublicGearPage({ params }: { params: Promise<{ han
       <div className="content-wrap space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <Link href={`/riders/${rider.handle}`} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
+            <Link href={`/r/${rider.handle}`} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
               <ArrowLeft className="h-3.5 w-3.5" />
               {rider.name}&apos;s Profile
             </Link>

@@ -87,7 +87,7 @@ export default async function DiscoverPage() {
             <h2 className="font-display text-lg font-semibold text-asphalt">Nearby Builders</h2>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {riders.length > 0 ? riders.map((rider) => (
-                <a key={rider.handle} href={`/riders/${rider.handle}`} className="rounded-lg border border-border bg-canvas px-3 py-2 hover:border-sunset/60">
+                <a key={rider.handle} href={`/r/${rider.handle}`} className="rounded-lg border border-border bg-canvas px-3 py-2 hover:border-sunset/60">
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-ink"><UserRound className="h-3.5 w-3.5 text-sunset" />{rider.name}</span>
                   <span className="block text-xs text-muted">{rider.location}</span>
                 </a>

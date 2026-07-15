@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title: `${rider.name} (@${rider.handle})`,
     description,
-    alternates: { canonical: `/riders/${rider.handle}` },
+    alternates: { canonical: `/r/${rider.handle}` },
     openGraph: {
       title: `${rider.name} — District 76 Rider`,
       description,
@@ -418,7 +418,7 @@ export default async function RiderProfilePage({
                   <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
                   <div className="mt-2 space-y-1.5">
                     {rider.followers.length > 0 ? rider.followers.map((entry) => (
-                      <Link key={entry.follower.handle} href={`/riders/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
+                      <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
                         {entry.follower.name}
                       </Link>
                     )) : <p className="text-xs text-muted">No followers yet.</p>}
@@ -428,7 +428,7 @@ export default async function RiderProfilePage({
                   <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
                   <div className="mt-2 space-y-1.5">
                     {rider.following.length > 0 ? rider.following.map((entry) => (
-                      <Link key={entry.following.handle} href={`/riders/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
+                      <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
                         {entry.following.name}
                       </Link>
                     )) : <p className="text-xs text-muted">Not following anyone yet.</p>}
@@ -482,7 +482,7 @@ export default async function RiderProfilePage({
                     authorHandle: c.author.handle,
                     createdAt: c.createdAt.toISOString(),
                   })),
-                  profileUrl: `/riders/${rider.handle}`,
+                  profileUrl: `/r/${rider.handle}`,
                 }))} />
               ) : (
                 rider.journalEntries.map((entry) => {
@@ -523,7 +523,7 @@ export default async function RiderProfilePage({
                         isLiked={isLiked}
                         isAuthenticated={Boolean(currentUser)}
                         comments={entryComments}
-                        entryUrl={`/riders/${rider.handle}`}
+                        entryUrl={`/r/${rider.handle}`}
                       />
                     </article>
                   );

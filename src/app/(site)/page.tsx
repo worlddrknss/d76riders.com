@@ -31,7 +31,7 @@ const statIcons = [Users, Bike, Route, MapPin];
 const exploreFeatures = [
   {
     title: "Riders",
-    href: "/riders",
+    href: "/r",
     icon: Users,
     description: "Meet the people behind the engines. Find riders near you and see who shares your roads.",
   },

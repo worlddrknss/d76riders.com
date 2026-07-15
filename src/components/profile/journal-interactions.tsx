@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 
-import { toggleJournalLikeAction, addJournalCommentAction } from "@/app/(site)/riders/journal-actions";
+import { toggleJournalLikeAction, addJournalCommentAction } from "@/app/(site)/r/journal-actions";
 import { Linkify } from "@/components/ui/linkify";
 
 type CommentData = {

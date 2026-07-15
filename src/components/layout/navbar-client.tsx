@@ -256,7 +256,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
               {menuOpen ? (
                 <div className="absolute right-0 top-12 hidden min-w-56 rounded-xl border border-white/10 bg-[#171a1f] p-2 shadow-lift lg:block">
                   <div className="p-1">
-                    <Link href={`/riders/${currentUser.handle}`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                    <Link href={`/r/${currentUser.handle}`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <UserRound className="h-4 w-4 text-slate-300" />
                       <span>{currentUser.name || "Rider"}</span>
                     </Link>
@@ -340,7 +340,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
               {currentUser ? (
                 <>
                   <Link
-                    href={`/riders/${currentUser.handle}`}
+                    href={`/r/${currentUser.handle}`}
                     className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >

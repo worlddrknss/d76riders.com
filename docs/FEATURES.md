@@ -6,6 +6,7 @@ A prioritized list of high-impact features for District 76 Riders.
 
 - Live check-in and check-out for rides
 - Emergency contact card per rider
+- NFC helmet tag for emergency ID and ride check-in
 - Route hazard reporting (debris, police, roadwork, weather)
 - Rider down quick alert flow for organizers
 

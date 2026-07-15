@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { ImagePlus, Link2, Pencil, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/riders/actions";
+import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)/r/actions";
 import { JournalInteractions } from "@/components/profile/journal-interactions";
 import { VideoEmbed } from "@/components/ui/video-embed";
 import { Linkify } from "@/components/ui/linkify";
