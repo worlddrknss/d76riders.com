@@ -12,6 +12,7 @@ import {
   ClipboardList,
   AlertTriangle,
   Users,
+  MapPin,
 } from "lucide-react";
 
 import { PageHero } from "@/components/layout/page-hero";
@@ -94,6 +95,12 @@ const nfcFeatures = [
     description:
       "Deactivate your token instantly from your profile. Since our tags are rewritable NTAG215 chips, just write a new URL when you're ready.",
   },
+  {
+    icon: MapPin,
+    title: "Location for First Responders",
+    description:
+      "When the tag is scanned, the page requests the scanner's GPS location and displays a readable address with coordinates. One tap to call 911 with the location ready to relay.",
+  },
 ];
 
 const emergencyFields = [
@@ -104,7 +111,8 @@ const emergencyFields = [
   "Medical Conditions",
   "Current Medications",
   "Insurance Info (optional)",
-  "Additional Notes",
+  "Your Current Location (GPS + address)",
+  "One-Tap Call 911",
 ];
 
 export default function SafetyPage() {
@@ -112,10 +120,21 @@ export default function SafetyPage() {
     <div>
       <PageHero
         image={siteImages.pageHeroes.safety}
-        eyebrow="Rider Safety"
+        eyebrow="Emergency Response"
         title="Every Ride. Every Rider. Protected."
-        description="Safety isn't a feature we bolt on — it's the foundation we build everything else on top of."
+        description="Safety isn't a feature we bolt on. It's the foundation."
       />
+
+      {/* STATUS BANNER */}
+      <section className="w-full border-b border-sunset/20 bg-sunset/5">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <span className="rounded-full bg-sunset/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sunset">In Development</span>
+            <p className="text-sm text-muted">This feature is currently being built. NFC stickers will be available soon.</p>
+          </div>
+          <p className="text-xs text-muted">Free at events and meetups. Shipping available for remote members.</p>
+        </div>
+      </section>
 
       {/* PILLARS */}
       <section className="w-full bg-canvas">

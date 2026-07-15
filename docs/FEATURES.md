@@ -19,6 +19,8 @@ A prioritized list of high-impact features for District 76 Riders.
   - Envelope encryption (DEK per rider, KEK in external key store) for medical data at rest
   - Rider controls: enable/disable card, choose visible fields, regenerate token (rewrite sticker)
   - Access logging: IP, timestamp, user-agent per tap
+  - Geolocation display: request scanner's GPS, show readable address + coordinates for relaying to 911
+  - One-tap "Call 911" button with location pre-formatted
   - Revoke token online; rewrite sticker with new token via NFC Tools app or at meetup
 - Route hazard reporting (debris, police, roadwork, weather)
 - Rider down quick alert flow for organizers

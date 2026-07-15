@@ -154,7 +154,10 @@ model EmergencyCardAccess {
 - [ ] Create `/emergency/[token]` public route
 - [ ] Acknowledgment gate UI: "I am accessing this for emergency purposes" confirmation before revealing data
 - [ ] Decrypt and display emergency card fields based on visibility toggles
-- [ ] Log access on every view (IP, user-agent, timestamp)
+- [ ] Geolocation: request scanner's position via browser Geolocation API, reverse geocode to street address
+- [ ] Display readable location + GPS coordinates on emergency card page
+- [ ] One-tap "Call 911" button with location context
+- [ ] Log access on every view (IP, user-agent, timestamp, coordinates)
 - [ ] Deactivated state: show "This emergency card has been deactivated" if token is inactive
 - [ ] Token regeneration action in rider profile settings
 - [ ] Add emergency card setup prompt to Safety page

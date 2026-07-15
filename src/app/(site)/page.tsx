@@ -207,9 +207,57 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* EMERGENCY RESPONSE */}
+      <section className="w-full bg-asphalt text-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <FadeUp>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Rider Safety</p>
+              <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+                Your Helmet Speaks When You Can&apos;t
+              </h2>
+              <p className="mt-4 text-lg leading-relaxed text-slate-300">
+                Every District 76 rider gets an NFC emergency ID sticker for their helmet. If you go down, a first responder taps it with their phone and instantly sees your emergency contacts, blood type, allergies, and medical conditions. No app needed.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <Link href="/emergency-response" className="inline-flex items-center gap-2 rounded-md bg-sunset px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cf5a26]">
+                  Learn More <ArrowRight className="h-4 w-4" />
+                </Link>
+                <span className="rounded-full border border-sunset/40 bg-sunset/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sunset">
+                  Coming Soon
+                </span>
+              </div>
+              <p className="mt-4 text-xs text-slate-400">
+                Free pickup at events and meetups. Shipping available for remote members.
+              </p>
+            </FadeUp>
+            <FadeUp delay={0.15}>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                  <p className="font-display text-2xl font-bold text-sunset">NFC</p>
+                  <p className="mt-1 text-sm text-slate-300">NTAG215 rewritable tags</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                  <p className="font-display text-2xl font-bold text-sunset">0</p>
+                  <p className="mt-1 text-sm text-slate-300">App downloads needed</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                  <p className="font-display text-2xl font-bold text-sunset">AES</p>
+                  <p className="mt-1 text-sm text-slate-300">Encrypted medical data</p>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+                  <p className="font-display text-2xl font-bold text-sunset">You</p>
+                  <p className="mt-1 text-sm text-slate-300">Control what&apos;s visible</p>
+                </div>
+              </div>
+            </FadeUp>
+          </div>
+        </div>
+      </section>
+
       {/* UPCOMING RIDES */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <FadeUp className="flex items-center justify-between">
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
             <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
