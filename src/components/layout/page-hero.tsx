@@ -8,7 +8,7 @@ type PageHeroProps = {
   image: string;
   video?: string;
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
   actions?: ReactNode;
   variant?: "home" | "page";
@@ -81,7 +81,7 @@ export function PageHero({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">{eyebrow}</p>
             )}
             <h1
-              className={`mt-3 font-display font-bold leading-[0.95] tracking-tight ${
+              className={`mt-3 font-display font-bold leading-[0.95] tracking-tight drop-shadow-lg ${
                 isHome ? "text-6xl sm:text-7xl lg:text-8xl" : "text-4xl sm:text-6xl"
               }`}
             >

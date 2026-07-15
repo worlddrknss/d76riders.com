@@ -128,8 +128,8 @@ export default async function Home() {
         image={siteImages.hero}
         video="/images/hero/video.mp4"
         variant="home"
-        title="DISTRICT 76"
-        description="Born in Clarksville, Tennessee. Built for riders who enjoy great roads, great people, and unforgettable rides."
+        title={<>DISTRICT <span className="text-sunset">76</span></>}
+        description="Riders in Clarksville, Tennessee who show up for good roads, good people, and rides worth remembering."
         actions={
           <>
             <Link
@@ -155,13 +155,13 @@ export default async function Home() {
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">About District 76</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
-              A Community Built for Riders
+              All Bikes. All Riders.
             </h2>
             <p className="mt-4 max-w-lg text-muted">
-              District 76 is a motorcycle community for riders in Clarksville and throughout Middle Tennessee. We ride, explore, and support our local community while building friendships that last a lifetime.
+              District 76 Riders is open to everyone on two wheels in Middle Tennessee. No patches, no ranks, no brand requirements. Show up, ride, be cool.
             </p>
             <Link href="/about" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
-              Read Our History <ArrowRight className="h-4 w-4" />
+              Learn More <ArrowRight className="h-4 w-4" />
             </Link>
           </FadeUp>
           <FadeUp delay={0.15}>
