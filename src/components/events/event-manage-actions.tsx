@@ -110,86 +110,93 @@ export function EventManageActions({ event }: { event: EventData }) {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
           </DialogHeader>
-          <form ref={formRef} action={handleEdit} className="mt-4 space-y-4">
-            <div>
-              <label htmlFor="edit-event-title" className="text-xs font-semibold uppercase tracking-wide text-muted">Title</label>
-              <Input id="edit-event-title" name="title" defaultValue={event.title} className="mt-1" required />
-            </div>
-            <div>
-              <label htmlFor="edit-event-excerpt" className="text-xs font-semibold uppercase tracking-wide text-muted">Excerpt</label>
-              <Textarea
-                id="edit-event-excerpt"
-                name="excerpt"
-                rows={2}
-                maxLength={255}
-                value={excerptValue}
-                onChange={(e) => setExcerptValue(e.target.value)}
-                className="mt-1"
-                placeholder="Short summary shown on the events page."
-              />
-              <p className={`mt-1 text-right text-xs ${excerptValue.length > 255 ? "text-red-600" : "text-muted"}`}>
-                {excerptValue.length}/255
-              </p>
-            </div>
-            <div>
-              <label htmlFor="edit-event-desc" className="text-xs font-semibold uppercase tracking-wide text-muted">Description</label>
-              <Textarea id="edit-event-desc" name="description" rows={3} defaultValue={event.description ?? ""} className="mt-1" />
-            </div>
-            <div>
-              <label htmlFor="edit-event-facebook-url" className="text-xs font-semibold uppercase tracking-wide text-muted">Facebook Event URL</label>
-              <Input
-                id="edit-event-facebook-url"
-                name="facebookEventUrl"
-                type="url"
-                placeholder="https://www.facebook.com/events/..."
-                defaultValue={event.facebookEventUrl ?? ""}
-                className="mt-1"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
+          <form ref={formRef} action={handleEdit} className="mt-4 grid gap-4 sm:grid-cols-2">
+            {/* Left column */}
+            <div className="space-y-4">
               <div>
-                <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Starts At</label>
-                <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={event.startsAt} className="mt-1" required />
+                <label htmlFor="edit-event-title" className="text-xs font-semibold uppercase tracking-wide text-muted">Title</label>
+                <Input id="edit-event-title" name="title" defaultValue={event.title} className="mt-1" required />
               </div>
               <div>
-                <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU At</label>
-                <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt ?? ""} className="mt-1" />
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="edit-event-meet" className="text-xs font-semibold uppercase tracking-wide text-muted">Meet Location</label>
-                <Input id="edit-event-meet" name="meetLocation" defaultValue={event.meetLocation ?? ""} className="mt-1" />
-              </div>
-              <div>
-                <label htmlFor="edit-event-ksu-loc" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU Location</label>
-                <Input id="edit-event-ksu-loc" name="ksuLocation" defaultValue={event.ksuLocation ?? ""} className="mt-1" />
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="edit-event-dist" className="text-xs font-semibold uppercase tracking-wide text-muted">Distance (miles)</label>
-                <Input id="edit-event-dist" name="distanceMiles" type="number" defaultValue={event.distanceMiles ?? ""} className="mt-1" />
+                <label htmlFor="edit-event-excerpt" className="text-xs font-semibold uppercase tracking-wide text-muted">Excerpt</label>
+                <Textarea
+                  id="edit-event-excerpt"
+                  name="excerpt"
+                  rows={2}
+                  maxLength={255}
+                  value={excerptValue}
+                  onChange={(e) => setExcerptValue(e.target.value)}
+                  className="mt-1"
+                  placeholder="Short summary shown on the events page."
+                />
+                <p className={`mt-1 text-right text-xs ${excerptValue.length > 255 ? "text-red-600" : "text-muted"}`}>
+                  {excerptValue.length}/255
+                </p>
               </div>
               <div>
-                <label htmlFor="edit-event-diff" className="text-xs font-semibold uppercase tracking-wide text-muted">Difficulty</label>
-                <select id="edit-event-diff" name="difficulty" defaultValue={event.difficulty ?? ""} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink">
-                  <option value="">Not specified</option>
-                  <option value="BEGINNER_FRIENDLY">Beginner Friendly</option>
-                  <option value="INTERMEDIATE">Intermediate</option>
-                  <option value="SCENIC">Scenic</option>
-                </select>
+                <label htmlFor="edit-event-desc" className="text-xs font-semibold uppercase tracking-wide text-muted">Description</label>
+                <Textarea id="edit-event-desc" name="description" rows={3} defaultValue={event.description ?? ""} className="mt-1" />
+              </div>
+              <div>
+                <label htmlFor="edit-event-facebook-url" className="text-xs font-semibold uppercase tracking-wide text-muted">Facebook Event URL</label>
+                <Input
+                  id="edit-event-facebook-url"
+                  name="facebookEventUrl"
+                  type="url"
+                  placeholder="https://www.facebook.com/events/..."
+                  defaultValue={event.facebookEventUrl ?? ""}
+                  className="mt-1"
+                />
               </div>
             </div>
-            <div>
-              <label htmlFor="edit-event-photo" className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</label>
-              <Input id="edit-event-photo" name="eventPhoto" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+
+            {/* Right column */}
+            <div className="space-y-4">
+              <div className="grid gap-4 grid-cols-2">
+                <div>
+                  <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Starts At</label>
+                  <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={event.startsAt} className="mt-1" required />
+                </div>
+                <div>
+                  <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU At</label>
+                  <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt ?? ""} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid gap-4 grid-cols-2">
+                <div>
+                  <label htmlFor="edit-event-meet" className="text-xs font-semibold uppercase tracking-wide text-muted">Meet Location</label>
+                  <Input id="edit-event-meet" name="meetLocation" defaultValue={event.meetLocation ?? ""} className="mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="edit-event-ksu-loc" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU Location</label>
+                  <Input id="edit-event-ksu-loc" name="ksuLocation" defaultValue={event.ksuLocation ?? ""} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid gap-4 grid-cols-2">
+                <div>
+                  <label htmlFor="edit-event-dist" className="text-xs font-semibold uppercase tracking-wide text-muted">Distance (miles)</label>
+                  <Input id="edit-event-dist" name="distanceMiles" type="number" defaultValue={event.distanceMiles ?? ""} className="mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="edit-event-diff" className="text-xs font-semibold uppercase tracking-wide text-muted">Difficulty</label>
+                  <select id="edit-event-diff" name="difficulty" defaultValue={event.difficulty ?? ""} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink">
+                    <option value="">Not specified</option>
+                    <option value="BEGINNER_FRIENDLY">Beginner Friendly</option>
+                    <option value="INTERMEDIATE">Intermediate</option>
+                    <option value="SCENIC">Scenic</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label htmlFor="edit-event-photo" className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</label>
+                <Input id="edit-event-photo" name="eventPhoto" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+              </div>
             </div>
-            <div className="flex flex-wrap gap-4 text-xs text-muted">
+            <div className="col-span-full flex flex-wrap gap-4 text-xs text-muted">
               {event.hasPhoto && (
                 <label className="flex items-center gap-2">
                   <input name="removePhoto" type="checkbox" className="rounded" />
@@ -203,7 +210,7 @@ export function EventManageActions({ event }: { event: EventData }) {
                 </label>
               )}
             </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="col-span-full flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)}>Cancel</Button>
               <Button type="submit" variant="accent" size="sm" disabled={editPending}>
                 {editPending ? "Saving…" : "Save Event"}

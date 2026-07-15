@@ -39,6 +39,22 @@ function toOptionalFloat(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toOptionalUrl(value: string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 type PlannerWaypointInput = {
   lng: number;
   lat: number;
@@ -119,6 +135,7 @@ export async function createEventAction(
   const title = normalizeText(formData.get("title"));
   const excerpt = normalizeText(formData.get("excerpt"));
   const description = normalizeText(formData.get("description"));
+  const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const startsAtInput = normalizeText(formData.get("startsAt"));
   const meetLocation = normalizeText(formData.get("meetLocation"));
   const ksuAtInput = normalizeText(formData.get("ksuAt"));
@@ -151,6 +168,11 @@ export async function createEventAction(
   const distanceMiles = toOptionalInt(distanceMilesInput);
   if (distanceMilesInput && distanceMiles === null) {
     return { error: "Distance must be a whole number of miles." };
+  }
+
+  const facebookEventUrl = facebookEventUrlInput ? toOptionalUrl(facebookEventUrlInput) : null;
+  if (facebookEventUrlInput && !facebookEventUrl) {
+    return { error: "Facebook Event URL must be a valid URL." };
   }
 
   const allowedDifficulties = new Set<string>(Object.values(RideDifficulty));
@@ -265,6 +287,7 @@ export async function createEventAction(
         slug,
         excerpt: excerpt ? excerpt.slice(0, 255) : null,
         description: description || null,
+        facebookEventUrl,
         startsAt,
         ksuAt,
         ksuLocation: ksuLocation || null,

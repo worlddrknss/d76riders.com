@@ -70,6 +70,19 @@ export function CreateEventForm() {
       </div>
 
       <div className="space-y-1.5">
+        <label htmlFor="facebookEventUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+          Facebook Event URL
+        </label>
+        <input
+          id="facebookEventUrl"
+          name="facebookEventUrl"
+          type="url"
+          className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          placeholder="https://www.facebook.com/events/..."
+        />
+      </div>
+
+      <div className="space-y-1.5">
         <label htmlFor="eventPhoto" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
           Event Photo
         </label>
