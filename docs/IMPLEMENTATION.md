@@ -416,7 +416,8 @@ page to model the standings UI on.
 - [x] Optional crew-scoped challenges via `crewId` (Phase 11 already has crews and membership)
 - [x] Award a badge on completion — reuse `RiderBadge` rather than inventing a second trophy case
 - [x] Activity: `CHALLENGE_JOINED`, `CHALLENGE_COMPLETED`
-- [x] Admin CRUD under `/admin/community`, audited like the rest of Phase 13
+- [x] Members create challenges from `/challenges` (`+ Set a Challenge`), matching the roads/events dialog pattern; the setter is recorded on `Challenge.createdByRiderId`, entered automatically, and can retire their own
+- [x] `/admin/community` is **moderation**, not authoring: edit, deactivate, or delete anything riders create, all audited
 
 **Schema sketch:**
 
@@ -466,5 +467,13 @@ enum ChallengeMetric {
 
 - Progress is recomputed from check-ins, never incremented, for the same reason trust is: an incremented
   counter drifts from the data and can't be audited.
+- **Members create, admins moderate.** Crews and challenges are a community thing, so any rider can start one
+  — guardrailed (3 open per rider, ≤1 year window, crew challenges only for crews you're in) to keep an open
+  door from producing a wall of junk. `/admin/community` exists to keep what they create in line with the
+  guidelines.
+- **Deactivate beats delete.** `active = false` hides a crew or challenge while leaving members' membership,
+  entries, and progress intact; delete is reserved for what should never have existed. A challenge's metric,
+  goal, and window are deliberately *not* editable — riders joined under those terms and are scored against
+  them, so moving the goalposts would rewrite what they signed up for.
 - `completedAt` latches. Finishing a challenge is a fact about a moment, and shouldn't be revoked if the
   rules or the data change later.

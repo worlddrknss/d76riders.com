@@ -4,7 +4,7 @@ import { ChallengeMetric, CrewRole, SponsorTier } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { logAudit } from "@/lib/audit";
+import { diffFields, logAudit } from "@/lib/audit";
 import { requireUserRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -262,6 +262,97 @@ export async function linkSponsorToEventAction(formData: FormData): Promise<void
 
   revalidatePath("/admin/community");
   revalidatePath(`/events/${event.slug}`);
+}
+
+// ---------- Moderation edits ----------
+//
+// Members create crews and challenges; this console exists to keep what they
+// create in line with the community guidelines. Editing matters as much as
+// deleting: a crew with an off-colour description should be corrected, not
+// obliterated along with its members' history.
+//
+// `active` is the moderation lever of choice — deactivating hides something
+// while leaving members' membership and progress intact. Delete is for the
+// cases where the thing shouldn't have existed at all.
+
+export async function updateCrewAction(crewId: string, formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const existing = await prisma.crew.findUnique({ where: { id: crewId } });
+  if (!existing) {
+    redirect("/admin/community");
+  }
+
+  const next = {
+    name: text(formData.get("name")) || existing.name,
+    description: text(formData.get("description")) || existing.description,
+    open: formData.get("open") === "on",
+    active: formData.get("active") === "on",
+  };
+
+  const { before, after } = diffFields(existing, next);
+
+  await prisma.crew.update({ where: { id: crewId }, data: next });
+
+  if (Object.keys(after).length > 0) {
+    await logAudit({
+      actorUserId: userId,
+      action: before.active !== undefined && !next.active ? "crew.deactivate" : "crew.update",
+      entityType: "Crew",
+      entityId: crewId,
+      summary: !next.active
+        ? `Deactivated crew "${next.name}" — hidden, members kept`
+        : `Updated crew "${next.name}"`,
+      before,
+      after,
+    });
+  }
+
+  revalidatePath("/admin/community");
+  revalidatePath("/crews");
+  revalidatePath(`/crews/${existing.slug}`);
+  redirect("/admin/community");
+}
+
+export async function updateChallengeAction(challengeId: string, formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const existing = await prisma.challenge.findUnique({ where: { id: challengeId } });
+  if (!existing) {
+    redirect("/admin/community");
+  }
+
+  // Name, description, and active are editable; metric, goal, and window are not.
+  // Riders joined under those terms and have progress scored against them —
+  // moving the goalposts mid-challenge would rewrite what they signed up for.
+  const next = {
+    name: text(formData.get("name")) || existing.name,
+    description: text(formData.get("description")) || existing.description,
+    active: formData.get("active") === "on",
+  };
+
+  const { before, after } = diffFields(existing, next);
+
+  await prisma.challenge.update({ where: { id: challengeId }, data: next });
+
+  if (Object.keys(after).length > 0) {
+    await logAudit({
+      actorUserId: userId,
+      action: before.active !== undefined && !next.active ? "challenge.deactivate" : "challenge.update",
+      entityType: "Challenge",
+      entityId: challengeId,
+      summary: !next.active
+        ? `Deactivated challenge "${next.name}" — hidden, entries kept`
+        : `Updated challenge "${next.name}"`,
+      before,
+      after,
+    });
+  }
+
+  revalidatePath("/admin/community");
+  revalidatePath("/challenges");
+  revalidatePath(`/challenges/${existing.slug}`);
+  redirect("/admin/community");
 }
 
 // ---------- Challenges ----------

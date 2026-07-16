@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Trophy } from "lucide-react";
 
+import { CreateChallengeDialog } from "@/components/challenges/create-challenge-dialog";
 import { PageHero } from "@/components/layout/page-hero";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { siteImages } from "@/data/images";
@@ -27,6 +28,17 @@ export default async function ChallengesPage() {
   const rider = currentUser?.id
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
     : null;
+
+  // Only crews this rider is in can be the scope of a challenge they set.
+  const myCrews = rider
+    ? (
+        await prisma.crewMember.findMany({
+          where: { riderId: rider.id, crew: { active: true } },
+          select: { crew: { select: { id: true, name: true } } },
+          orderBy: { crew: { name: "asc" } },
+        })
+      ).map((row) => row.crew)
+    : [];
 
   const challenges = await prisma.challenge.findMany({
     where: { active: true },
@@ -60,6 +72,7 @@ export default async function ChallengesPage() {
         eyebrow="Progression"
         title="Challenges"
         description="Pick one, ride it out, earn the badge. Only rides inside the challenge window count — that's the point of the deadline."
+        actions={rider ? <CreateChallengeDialog crews={myCrews} /> : undefined}
       />
 
       <section className="page-shell">

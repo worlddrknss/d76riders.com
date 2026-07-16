@@ -2,10 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Users } from "lucide-react";
 
+import { CreateCrewDialog } from "@/components/crews/create-crew-dialog";
 import { PageHero } from "@/components/layout/page-hero";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Crews",
@@ -22,6 +24,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CrewsPage() {
   const now = new Date();
+  const currentUser = await getCurrentUser();
 
   const crews = await prisma.crew.findMany({
     where: { active: true },
@@ -50,6 +53,7 @@ export default async function CrewsPage() {
         eyebrow="Community"
         title="Find Your Crew"
         description="District 76 is one community with a lot of different riders in it. Crews are where you find the ones who ride like you do. Join as many as you want, or none at all."
+        actions={currentUser ? <CreateCrewDialog /> : undefined}
       />
 
       <section className="page-shell">

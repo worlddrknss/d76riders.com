@@ -65,6 +65,7 @@ model Rider {
   verifiedSkills RiderSkill[] @relation("SkillVerifier")
   referralCode   ReferralCode?
   challenges     ChallengeEntry[]
+  challengesSet  Challenge[]  @relation("ChallengeCreator")
   quests         RiderQuest[]
   crews          CrewMember[]
 

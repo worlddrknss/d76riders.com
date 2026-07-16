@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 
 import { ChallengeJoinButton } from "@/components/challenges/challenge-join-button";
+import { RetireChallengeButton } from "@/components/challenges/retire-challenge-button";
 import { PageHero } from "@/components/layout/page-hero";
 import { siteImages } from "@/data/images";
 import { challengeStatus, daysLeft, formatProgress, METRIC_LABEL } from "@/lib/challenges";
@@ -42,6 +43,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
     include: {
       crew: { select: { name: true, slug: true } },
       badge: { select: { name: true } },
+      createdBy: { select: { handle: true, name: true } },
       entries: {
         // Furthest along first; ties broken by who committed earliest.
         orderBy: [{ progress: "desc" }, { joinedAt: "asc" }],
@@ -85,7 +87,12 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
               ← All challenges
             </Link>
             {rider ? (
-              <ChallengeJoinButton slug={challenge.slug} joined={Boolean(mine)} ended={status === "ENDED"} />
+              <div className="flex items-center gap-3">
+                {challenge.createdByRiderId === rider.id ? (
+                  <RetireChallengeButton slug={challenge.slug} />
+                ) : null}
+                <ChallengeJoinButton slug={challenge.slug} joined={Boolean(mine)} ended={status === "ENDED"} />
+              </div>
             ) : (
               <Link href={`/login?next=/challenges/${challenge.slug}`} className="text-xs font-semibold text-sunset">
                 Log in to join
@@ -134,6 +141,15 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
               )}
             </div>
           </div>
+
+          {challenge.createdBy ? (
+            <p className="text-xs text-muted">
+              Set by{" "}
+              <Link href={`/r/${challenge.createdBy.handle}`} className="font-semibold text-ink hover:text-sunset">
+                {challenge.createdBy.name}
+              </Link>
+            </p>
+          ) : null}
 
           {challenge.badge ? (
             <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted shadow-soft">

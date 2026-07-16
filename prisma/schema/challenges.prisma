@@ -19,10 +19,14 @@ model Challenge {
   // Awarded to everyone who finishes, if set.
   badgeId     String?
   active      Boolean         @default(true)
+  // Who set it. Null for challenges created from the admin console; set when a
+  // member creates one, so it can be attributed and they can retire their own.
+  createdByRiderId String?
 
-  crew    Crew?            @relation(fields: [crewId], references: [id], onDelete: SetNull)
-  badge   Badge?           @relation(fields: [badgeId], references: [id], onDelete: SetNull)
-  entries ChallengeEntry[]
+  crew      Crew?            @relation(fields: [crewId], references: [id], onDelete: SetNull)
+  badge     Badge?           @relation(fields: [badgeId], references: [id], onDelete: SetNull)
+  createdBy Rider?           @relation("ChallengeCreator", fields: [createdByRiderId], references: [id], onDelete: SetNull)
+  entries   ChallengeEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

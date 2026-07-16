@@ -65,7 +65,11 @@ export default async function AdminCommunityPage(props: {
     }),
     prisma.challenge.findMany({
       orderBy: { endsAt: "desc" },
-      include: { crew: { select: { name: true } }, _count: { select: { entries: true } } },
+      include: {
+        crew: { select: { name: true } },
+        createdBy: { select: { handle: true } },
+        _count: { select: { entries: true } },
+      },
     }),
     prisma.badge.findMany({
       where: { active: true },
@@ -80,7 +84,9 @@ export default async function AdminCommunityPage(props: {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Growth</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-white">Community</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
-          Crews, challenges, local business sponsors, featured rides, and referral performance.
+          Riders create crews and challenges. This is where you keep them in line with the community
+          guidelines — edit what needs correcting, deactivate what doesn&apos;t belong, and delete only what
+          should never have existed.
         </p>
       </section>
 
@@ -181,7 +187,15 @@ export default async function AdminCommunityPage(props: {
                   {crew._count.events === 1 ? "" : "s"}
                 </p>
               </div>
-              <CommunityDeleteButton kind="crew" id={crew.id} name={crew.name} />
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href={`/admin/community/crews/${crew.id}/edit`}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-white/25 hover:text-white"
+                >
+                  Edit
+                </Link>
+                <CommunityDeleteButton kind="crew" id={crew.id} name={crew.name} />
+              </div>
             </article>
           ))}
         </div>
@@ -339,9 +353,19 @@ export default async function AdminCommunityPage(props: {
                     {" · "}
                     {challenge._count.entries} rider{challenge._count.entries === 1 ? "" : "s"} in
                     {challenge.crew ? ` · ${challenge.crew.name} crew` : ""}
+                    {challenge.createdBy ? ` · set by @${challenge.createdBy.handle}` : " · set here"}
+                    {!challenge.active ? " · deactivated" : ""}
                   </p>
                 </div>
-                <CommunityDeleteButton kind="challenge" id={challenge.id} name={challenge.name} />
+                <div className="flex shrink-0 items-center gap-2">
+                  <Link
+                    href={`/admin/community/challenges/${challenge.id}/edit`}
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-white/25 hover:text-white"
+                  >
+                    Edit
+                  </Link>
+                  <CommunityDeleteButton kind="challenge" id={challenge.id} name={challenge.name} />
+                </div>
               </article>
             ))
           )}
