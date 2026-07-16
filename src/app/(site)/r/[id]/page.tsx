@@ -398,163 +398,168 @@ export default async function RiderProfilePage({
   );
 
   const overviewContent = (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <div className="space-y-5">
-        {isOwner ? <OnboardingQuests quests={quests} /> : null}
-        {reputationPanel}
-        {featuredBike && (
-          <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-            <div className="relative h-44 w-full bg-linear-to-br from-asphalt to-sunset/40">
-              {featuredBikePhoto ? (
-                <img src={featuredBikePhoto} alt={featuredBike.name} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-white/70">
-                  <Bike className="h-12 w-12" />
-                </div>
-              )}
-              {featuredBike.id === rider.primaryBikeId && (
-                <span className="absolute left-3 top-3 rounded-full bg-sunset px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-soft">
-                  Current Ride
-                </span>
-              )}
-            </div>
-            <div className="p-4">
-              <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-sunset">Featured Bike</p>
-              <h3 className="mt-0.5 font-display text-base font-semibold text-ink">
-                {featuredBike.name || `${featuredBike.make} ${featuredBike.model ?? ""}`.trim()}
-              </h3>
-              <p className="text-xs text-muted">
-                {[featuredBike.year, featuredBike.make, featuredBike.model].filter(Boolean).join(" · ")}
-              </p>
-            </div>
-          </div>
-        )}
+    <div className="space-y-5">
+      {/* Full width above the columns: the checklist is temporary, so it gets a
+          strip rather than a slot that displaces the profile itself. */}
+      {isOwner ? <OnboardingQuests quests={quests} /> : null}
 
-        <div className={cardClass}>
-          <h2 className={headingClass}>Details</h2>
-          <dl className="mt-3 space-y-3">
-            {rider.favoriteRoad && (
-              <div className="flex items-start gap-3">
-                <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                <div>
-                  <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
-                  <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
-                </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="space-y-5">
+          {reputationPanel}
+          {featuredBike && (
+            <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <div className="relative h-44 w-full bg-linear-to-br from-asphalt to-sunset/40">
+                {featuredBikePhoto ? (
+                  <img src={featuredBikePhoto} alt={featuredBike.name} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-white/70">
+                    <Bike className="h-12 w-12" />
+                  </div>
+                )}
+                {featuredBike.id === rider.primaryBikeId && (
+                  <span className="absolute left-3 top-3 rounded-full bg-sunset px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-soft">
+                    Current Ride
+                  </span>
+                )}
               </div>
-            )}
-            <div className="flex items-start gap-3">
-              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-              <div>
-                <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
-                <dd className="text-sm font-medium text-asphalt">{memberSince}</dd>
+              <div className="p-4">
+                <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-sunset">Featured Bike</p>
+                <h3 className="mt-0.5 font-display text-base font-semibold text-ink">
+                  {featuredBike.name || `${featuredBike.make} ${featuredBike.model ?? ""}`.trim()}
+                </h3>
+                <p className="text-xs text-muted">
+                  {[featuredBike.year, featuredBike.make, featuredBike.model].filter(Boolean).join(" · ")}
+                </p>
               </div>
             </div>
-          </dl>
+          )}
+
+          <div className={cardClass}>
+            <h2 className={headingClass}>Details</h2>
+            <dl className="mt-3 space-y-3">
+              {rider.favoriteRoad && (
+                <div className="flex items-start gap-3">
+                  <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                  <div>
+                    <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
+                    <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-start gap-3">
+                <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                <div>
+                  <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
+                  <dd className="text-sm font-medium text-asphalt">{memberSince}</dd>
+                </div>
+              </div>
+            </dl>
+          </div>
+
+          {(hasSocials || isOwner) && (
+            <div className={cardClass}>
+              <h2 className={headingClass}>Socials</h2>
+              {hasSocials ? (
+                <div className="mt-3 space-y-2">
+                  {rider.youtubeUrl && (
+                    <a href={rider.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                      <Video className="h-4 w-4 text-red-600" /> YouTube
+                    </a>
+                  )}
+                  {rider.tiktokUrl && (
+                    <a href={rider.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                      <Video className="h-4 w-4 text-ink" /> TikTok
+                    </a>
+                  )}
+                  {rider.instagramUrl && (
+                    <a href={rider.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                      <Camera className="h-4 w-4 text-pink-500" /> Instagram
+                    </a>
+                  )}
+                  {rider.twitterUrl && (
+                    <a href={rider.twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                      <BookText className="h-4 w-4 text-sky-500" /> X / Twitter
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-muted">No social links yet. Add them from Edit Profile.</p>
+              )}
+            </div>
+          )}
         </div>
 
-        {(hasSocials || isOwner) && (
+        <div className="space-y-5">
           <div className={cardClass}>
-            <h2 className={headingClass}>Socials</h2>
-            {hasSocials ? (
-              <div className="mt-3 space-y-2">
-                {rider.youtubeUrl && (
-                  <a href={rider.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                    <Video className="h-4 w-4 text-red-600" /> YouTube
-                  </a>
+            <div className="flex items-center justify-between">
+              <h2 className={headingClass}><CalendarDays className="h-3.5 w-3.5 text-sunset" />Events</h2>
+              {isOwner && <Link href="/events/new" className="text-xs font-semibold text-sunset hover:underline">+ New</Link>}
+            </div>
+            {rider.events.length === 0 ? (
+              <p className="mt-3 text-xs text-muted">No events yet.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {rider.events.map((event) => (
+                  <li key={event.id}>
+                    <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
+                      <span className="font-medium text-ink">{event.title}</span>
+                      <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className={cardClass}>
+            <h2 className={headingClass}><Users className="h-3.5 w-3.5 text-sunset" />People</h2>
+            {hasPeople ? (
+              <div className="mt-3 space-y-3">
+                {rider.followers.length > 0 && (
+                  <div>
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
+                    <div className="mt-2 space-y-1.5">
+                      {rider.followers.map((entry) => (
+                        <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
+                          {entry.follower.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {rider.tiktokUrl && (
-                  <a href={rider.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                    <Video className="h-4 w-4 text-ink" /> TikTok
-                  </a>
+                {rider.following.length > 0 && (
+                  <div>
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
+                    <div className="mt-2 space-y-1.5">
+                      {rider.following.map((entry) => (
+                        <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
+                          {entry.following.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {rider.instagramUrl && (
-                  <a href={rider.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                    <Camera className="h-4 w-4 text-pink-500" /> Instagram
-                  </a>
-                )}
-                {rider.twitterUrl && (
-                  <a href={rider.twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                    <BookText className="h-4 w-4 text-sky-500" /> X / Twitter
-                  </a>
+                {rider.followedEvents.length > 0 && (
+                  <div>
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
+                    <div className="mt-2 space-y-1.5">
+                      {rider.followedEvents.map((entry) => (
+                        <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
+                          {entry.event.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
-              <p className="mt-3 text-xs text-muted">No social links yet. Add them from Edit Profile.</p>
+              <p className="mt-3 text-xs text-muted">
+                {isOwner
+                  ? "Follow riders and track events to build your network."
+                  : `${rider.name} hasn't connected with anyone yet.`}
+              </p>
             )}
           </div>
-        )}
-      </div>
-
-      <div className="space-y-5">
-        <div className={cardClass}>
-          <div className="flex items-center justify-between">
-            <h2 className={headingClass}><CalendarDays className="h-3.5 w-3.5 text-sunset" />Events</h2>
-            {isOwner && <Link href="/events/new" className="text-xs font-semibold text-sunset hover:underline">+ New</Link>}
-          </div>
-          {rider.events.length === 0 ? (
-            <p className="mt-3 text-xs text-muted">No events yet.</p>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {rider.events.map((event) => (
-                <li key={event.id}>
-                  <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
-                    <span className="font-medium text-ink">{event.title}</span>
-                    <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className={cardClass}>
-          <h2 className={headingClass}><Users className="h-3.5 w-3.5 text-sunset" />People</h2>
-          {hasPeople ? (
-            <div className="mt-3 space-y-3">
-              {rider.followers.length > 0 && (
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.followers.map((entry) => (
-                      <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.follower.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {rider.following.length > 0 && (
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.following.map((entry) => (
-                      <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.following.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {rider.followedEvents.length > 0 && (
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.followedEvents.map((entry) => (
-                      <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.event.title}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="mt-3 text-xs text-muted">
-              {isOwner
-                ? "Follow riders and track events to build your network."
-                : `${rider.name} hasn't connected with anyone yet.`}
-            </p>
-          )}
         </div>
       </div>
     </div>

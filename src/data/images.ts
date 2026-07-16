@@ -17,6 +17,14 @@ export const siteImages = {
     gallery: u("photo-1485965120184-e220f721d03e", 2000),
     join: u("photo-1464822759023-fed622ff2c3b", 2000),
     safety: u("photo-1558981403-c5f9899a28bc", 2000),
+    // Reuse the established, on-brand hero photography rather than introducing
+    // unrelated stock. Swap for real District 76 shots when they're available.
+    crews: u("photo-1568772585407-9361f9bf3a87", 2000), // riders together — as /r
+    leaderboard: "/images/hero/events.webp", // the rides trust is earned on
+    skills: u("photo-1558981403-c5f9899a28bc", 2000), // as /safety
+    sponsors: u("photo-1444723121867-7a241cacace9", 2000), // Clarksville — where the businesses are
+    policies: u("photo-1450101499163-c8848c66ca85", 2000),
+    invite: u("photo-1464822759023-fed622ff2c3b", 2000), // as /join
   },
   history: {
     clarksville: u("photo-1444723121867-7a241cacace9", 1400),

@@ -24,6 +24,21 @@ async function hasCompleteProfile(riderId: string): Promise<boolean> {
   return Boolean(rider?.bio?.trim() && rider.location?.trim() && rider.avatarUrl);
 }
 
+/**
+ * Whether a quest can be completed at all right now.
+ *
+ * "Accept the guidelines" depends on an admin having published a required
+ * policy. With none published there is nothing to accept, so the step can never
+ * be ticked — showing it would be a dead end pointing at an empty page. Hide it
+ * instead, and let it appear once there is a policy behind it.
+ */
+async function isApplicable(criteria: QuestCriteria): Promise<boolean> {
+  if (criteria !== "ACCEPT_POLICIES") return true;
+
+  const required = await prisma.policy.count({ where: { active: true, required: true } });
+  return required > 0;
+}
+
 async function isSatisfied(criteria: QuestCriteria, riderId: string): Promise<boolean> {
   switch (criteria) {
     case "COMPLETE_PROFILE":
@@ -77,6 +92,12 @@ export async function evaluateQuests(riderId: string): Promise<QuestProgress[]> 
   for (const quest of quests) {
     const alreadyDone = completedById.get(quest.id);
     let completedAt = alreadyDone ?? null;
+
+    // A quest already completed stays listed even if it later stops applying;
+    // only un-earned, un-completable steps are hidden.
+    if (!alreadyDone && !(await isApplicable(quest.criteria))) {
+      continue;
+    }
 
     if (!alreadyDone && (await isSatisfied(quest.criteria, riderId))) {
       completedAt = new Date();

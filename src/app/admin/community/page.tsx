@@ -188,7 +188,7 @@ export default async function AdminCommunityPage(props: {
           <select name="tier" defaultValue="SUPPORTER" className={inputClass}>
             <option value="PARTNER">Partner</option>
             <option value="SUPPORTER">Supporter</option>
-            <option value="FRIEND">Friend of the Club</option>
+            <option value="FRIEND">Friend of the Community</option>
           </select>
           <button type="submit" className={submitClass}>
             Add Partner

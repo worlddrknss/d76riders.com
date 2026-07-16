@@ -95,7 +95,7 @@ export default async function Home() {
       )
     : [];
 
-  // Featured rides are the club's public shop window — hand-picked in
+  // Featured rides are the community's public shop window — hand-picked in
   // /admin/community and shown above the regular upcoming list.
   const featuredEvents = await safeQuery(
     () =>

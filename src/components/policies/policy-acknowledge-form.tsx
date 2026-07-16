@@ -30,18 +30,18 @@ export function PolicyAcknowledgeForm({
   if (accepted) {
     const when = acknowledgedAt ? new Date(acknowledgedAt).toLocaleString("en-US") : "just now";
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-green-500/40 bg-green-500/10 p-4">
-        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
+      <div className="flex items-start gap-3 rounded-xl border border-forest/40 bg-forest/10 p-4">
+        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
         <div>
-          <p className="text-sm font-semibold text-green-800">You accepted v{version} of {title}.</p>
-          <p className="mt-0.5 text-xs text-green-700">Recorded {when}.</p>
+          <p className="text-sm font-semibold text-forest">You accepted v{version} of {title}.</p>
+          <p className="mt-0.5 text-xs text-forest">Recorded {when}.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-border bg-canvas p-4">
+    <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
       <label className="flex items-start gap-3 text-sm text-ink">
         <input
           type="checkbox"

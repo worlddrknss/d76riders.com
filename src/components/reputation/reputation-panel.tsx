@@ -30,22 +30,16 @@ const SKILL_LABEL: Record<SkillLevel, string> = {
 const pct = (value: number) => `${Math.round(value * 100)}%`;
 
 export function ReputationPanel({ trust, badges, skills }: ReputationPanelProps) {
-  // A rider with no ride history has nothing meaningful to show yet.
-  if (!trust || trust.eventsAttended === 0) {
-    if (badges.length === 0 && skills.length === 0) {
-      return (
-        <section className="rounded-xl border border-border bg-canvas p-5">
-          <h2 className="font-display text-lg font-semibold text-ink">Progression</h2>
-          <p className="mt-2 text-sm text-muted">
-            No rides yet. Trust and badges start building after the first group ride check-in.
-          </p>
-        </section>
-      );
-    }
-  }
+  // Nothing earned yet — render nothing rather than a card whose only content is
+  // "you have nothing". The onboarding checklist already tells a new rider what
+  // to do; an empty Progression box just pushes real profile content down.
+  const hasAnything =
+    (trust !== null && trust.eventsAttended > 0) || badges.length > 0 || skills.length > 0;
+
+  if (!hasAnything) return null;
 
   return (
-    <section className="rounded-xl border border-border bg-canvas p-5">
+    <section className="rounded-xl border border-border bg-surface p-5 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-lg font-semibold text-ink">Progression</h2>
         <Link href="/leaderboard" className="text-xs font-semibold text-sunset hover:underline">
@@ -123,7 +117,7 @@ export function ReputationPanel({ trust, badges, skills }: ReputationPanelProps)
                 <span className="flex items-center gap-2">
                   <span className="text-muted">{SKILL_LABEL[skill.level]}</span>
                   {skill.verified ? (
-                    <span className="rounded-full border border-green-500/40 bg-green-500/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase text-green-700">
+                    <span className="rounded-full border border-forest/40 bg-forest/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase text-forest">
                       Verified
                     </span>
                   ) : (

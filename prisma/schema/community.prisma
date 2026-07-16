@@ -78,7 +78,7 @@ model RiderQuest {
   @@index([riderId])
 }
 
-// A sub-group within the club (sportbike, touring, beginner, women riders).
+// A sub-group within the community (sportbike, touring, beginner, women riders).
 model Crew {
   id          String  @id @default(cuid())
   slug        String  @unique
@@ -120,7 +120,7 @@ enum CrewRole {
   MEMBER
 }
 
-// A local business partner. Sponsors are club-wide and can additionally be
+// A local business partner. Sponsors are community-wide and can additionally be
 // attached to specific events.
 model Sponsor {
   id          String      @id @default(cuid())

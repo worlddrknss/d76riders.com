@@ -12,7 +12,35 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-type Db = Pick<PrismaClient, "badge" | "skillTrack" | "quest" | "crew">;
+type Db = Pick<PrismaClient, "badge" | "skillTrack" | "quest" | "crew" | "policy">;
+
+// The community's four standing rules, as already shown on /join (src/data/community.ts),
+// turned into the policy members actually accept. Kept in the community's own words
+// rather than invented copy — it is editable at /admin/policies, and bumping the
+// version there re-prompts everyone.
+//
+// Only created if absent: once an admin edits the text, re-running the seed must
+// not overwrite what they wrote.
+const COMMUNITY_GUIDELINES = {
+  slug: "community-guidelines",
+  title: "Community Guidelines",
+  summary: "How we ride together. Expected of every member, on the road and online.",
+  type: "COMMUNITY_GUIDELINES" as const,
+  version: "1",
+  required: true,
+  active: true,
+  bodyHtml: [
+    "<p>District 76 is a local rider community. These are the standards we hold each other to, on the road and online.</p>",
+    "<h2>Ride your own ride</h2>",
+    "<p>Respect pace groups. Never ride beyond your ability to keep up with someone else — the group waits at the next stop, every time. If a pace does not suit you, move to a group that does.</p>",
+    "<h2>Treat every member with respect</h2>",
+    "<p>In person and online. Disagree without abuse. Harassment of any kind ends your place in this community.</p>",
+    "<h2>Follow event briefings and safety instructions</h2>",
+    "<p>Ride leads and sweeps are there to keep the group together and safe. Turn up for the briefing, follow the hand signals, and check in and out so we know who is on the road with us.</p>",
+    "<h2>Support local businesses and keep routes clean</h2>",
+    "<p>The shops, cafes, and fuel stops on our routes host us. Leave them better than we found them, and leave nothing behind.</p>",
+  ].join(""),
+};
 
 const BADGES = [
   {
@@ -227,9 +255,27 @@ export async function seedCatalog(prisma: Db) {
     await prisma.crew.upsert({ where: { slug: crew.slug }, create: crew, update: crew });
   }
 
+  // Unlike the definitions above, policy text is meant to be edited by admins —
+  // so create it only when missing rather than upserting over their wording.
+  const existingPolicy = await prisma.policy.findUnique({
+    where: { slug: COMMUNITY_GUIDELINES.slug },
+    select: { id: true },
+  });
+
+  if (existingPolicy) {
+    console.log("Community Guidelines already present — left untouched.");
+  } else {
+    await prisma.policy.create({ data: COMMUNITY_GUIDELINES });
+    console.log("Created the Community Guidelines policy.");
+  }
+
   console.log(
     `Catalog seeded: ${BADGES.length} badges, ${SKILL_TRACKS.length} skill tracks, ` +
       `${QUESTS.length} quests, ${CREWS.length} crews.`,
+  );
+  console.log(
+    "Note: no SAFETY_WAIVER is seeded — write and publish it at /admin/policies. " +
+      "Until then the Safety First badge and its trust credit stay unearnable by design.",
   );
 }
 

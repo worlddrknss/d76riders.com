@@ -118,7 +118,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
               <li key={event.id}>
                 <Link
                   href={`/events/${event.slug}`}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-canvas p-4 transition hover:border-ink/30"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft transition hover:border-sunset/40"
                 >
                   <span className="font-semibold text-ink">{event.title}</span>
                   <span className="shrink-0 text-xs text-muted">
@@ -142,7 +142,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
             <li key={member.id}>
               <Link
                 href={`/r/${member.rider.handle}`}
-                className="flex items-center gap-3 rounded-xl border border-border bg-canvas p-3 transition hover:border-ink/30"
+                className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
               >
                 {member.rider.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element

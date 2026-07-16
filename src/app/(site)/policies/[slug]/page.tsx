@@ -2,7 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { PageHero } from "@/components/layout/page-hero";
 import { PolicyAcknowledgeForm } from "@/components/policies/policy-acknowledge-form";
+import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { getCurrentUser } from "@/lib/session";
@@ -52,55 +54,72 @@ export default async function PolicyDetailPage(props: { params: Promise<{ slug: 
     : null;
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-      <Link href="/policies" className="text-xs font-semibold text-muted hover:text-ink">
-        ← All policies
-      </Link>
-
-      <header className="mt-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs font-semibold text-muted">
-            {policy.type.replaceAll("_", " ")}
-          </span>
-          <span className="rounded-full border border-border px-2.5 py-0.5 font-mono text-xs text-muted">
-            v{policy.version}
-          </span>
-          {policy.required ? (
-            <span className="rounded-full border border-sunset/40 bg-sunset/10 px-2.5 py-0.5 text-xs font-semibold text-sunset">
-              Required
-            </span>
-          ) : null}
-        </div>
-        <h1 className="mt-2 font-display text-4xl font-bold text-ink">{policy.title}</h1>
-        <p className="mt-1 text-xs text-muted">
-          Published {policy.publishedAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-        </p>
-      </header>
-
-      <article
-        className="prose prose-slate mt-8 max-w-none text-ink"
-        dangerouslySetInnerHTML={{ __html: sanitizeRichText(policy.bodyHtml) }}
+    <div>
+      <PageHero
+        image={siteImages.pageHeroes.policies}
+        eyebrow={policy.type.replaceAll("_", " ")}
+        title={policy.title}
+        description={policy.summary ?? undefined}
       />
 
-      <div className="mt-10 border-t border-border pt-6">
-        {!currentUser ? (
-          <p className="text-sm text-muted">
-            <Link href={`/login?next=/policies/${policy.slug}`} className="font-semibold text-sunset">
-              Log in
-            </Link>{" "}
-            to record your acceptance.
-          </p>
-        ) : !rider ? (
-          <p className="text-sm text-muted">Create a rider profile to accept this policy.</p>
-        ) : (
-          <PolicyAcknowledgeForm
-            slug={policy.slug}
-            title={policy.title}
-            version={policy.version}
-            acknowledgedAt={acknowledgment?.createdAt.toISOString() ?? null}
-          />
-        )}
-      </div>
+      <section className="page-shell">
+        <div className="content-wrap">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Link href="/policies" className="text-xs font-semibold text-muted hover:text-ink">
+                ← All policies
+              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-border px-2.5 py-0.5 font-mono text-[0.65rem] text-muted">
+                  v{policy.version}
+                </span>
+                {policy.required ? (
+                  <span className="rounded-full border border-sunset/40 bg-sunset/10 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-sunset">
+                    Required
+                  </span>
+                ) : null}
+                <span className="text-[0.65rem] text-muted">
+                  Published{" "}
+                  {policy.publishedAt.toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+            </div>
+
+            <article className="mt-6 rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
+              <div
+                className="prose prose-neutral"
+                dangerouslySetInnerHTML={{ __html: sanitizeRichText(policy.bodyHtml) }}
+              />
+            </article>
+
+            <div className="mt-6">
+              {!currentUser ? (
+                <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted shadow-soft">
+                  <Link href={`/login?next=/policies/${policy.slug}`} className="font-semibold text-sunset">
+                    Log in
+                  </Link>{" "}
+                  to record your acceptance.
+                </p>
+              ) : !rider ? (
+                <p className="rounded-xl border border-border bg-surface p-4 text-sm text-muted shadow-soft">
+                  Create a rider profile to accept this policy.
+                </p>
+              ) : (
+                <PolicyAcknowledgeForm
+                  slug={policy.slug}
+                  title={policy.title}
+                  version={policy.version}
+                  acknowledgedAt={acknowledgment?.createdAt.toISOString() ?? null}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

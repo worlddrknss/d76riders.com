@@ -2,6 +2,36 @@
 
 Organized from quickest to implement, based on existing infrastructure and dependencies.
 
+## Status
+
+| Phase | Title | Status |
+| --- | --- | --- |
+| 1 | Event Organizer Roles | ✅ Done |
+| 2 | Live Check-In / Check-Out | ✅ Done |
+| 3 | Emergency Contact Card | ✅ Done |
+| 4 | NFC Emergency ID Page | ✅ Done |
+| 5 | Route Hazard Reporting | ⬜ Not started |
+| 6 | Rider Down Quick Alert | ✅ Done |
+| 7 | Waitlist and RSVP Enhancements | ✅ Done |
+| 8 | Batch Messaging to RSVP Riders | ⬜ Not started |
+| 9 | Route Intelligence | ⬜ Not started |
+| 10 | Rider Reputation and Progression | ✅ Done |
+| 11 | Community Growth | ✅ Done |
+| 12 | Media and Storytelling | ⬜ Not started |
+| 13 | Admin and Moderation Enhancements | ✅ Done |
+| 14 | Platform Reliability and Insights | ⬜ Not started |
+
+Remaining: **5, 8, 9, 12, 14**.
+
+### Follow-ups from the 10/11/13 work
+
+- **Write and publish the safety waiver** at `/admin/policies` (type `SAFETY_WAIVER`). It is deliberately not
+  seeded — it carries legal weight and needs real wording, not generated text. Until one exists, the Safety
+  First badge and its 15 trust points are unearnable, which is correct rather than broken.
+- **Badge tier colours** (bronze/silver/gold/platinum) intentionally sit outside the two-colour brand palette,
+  since medal semantics need four distinct hues.
+- Terminology: District 76 is a **community**, never a "club", "MC", or "RC" — see `/about`.
+
 ---
 
 ## Phase 1: Event Organizer Roles ✅
@@ -316,7 +346,7 @@ model EmergencyCardAccess {
 - [x] Incident logging: `AdminIncident` + `AdminIncidentNote` models with private notes, linked to events/riders/`RideIncident` (`/admin/incidents`)
 - [x] Content triage queue: `Report` is now polymorphic (journal, comment, event, photo, rider, news) with a `ReportPriority` SLA tier — urgent 4h, normal 24h, low 72h — surfaced at `/admin/triage` with overdue badges (`src/lib/triage.ts`)
 - [x] Audit trail: `AuditLog` model recording all admin actions (who, what, when, before/after) via `src/lib/audit.ts`, viewable at `/admin/audit`; wired into triage, incidents, roles, news moderation, storage, and policies
-- [x] Policy acknowledgment: `Policy` + `PolicyAcknowledgment` models, admin CRUD at `/admin/policies`, member flow at `/policies/[slug]`; acknowledgments are per-version, so a version bump re-prompts everyone
+- [x] Policy acknowledgment: `Policy` + `PolicyAcknowledgment` models, admin CRUD at `/admin/policies`, member flow at `/policies/[slug]`; acknowledgments are per-version, so a version bump re-prompts everyone. A starter **Community Guidelines** policy is seeded from the community's own four rules (`npm run db:seed:catalog`); the **safety waiver is not** — write it at `/admin/policies`
 
 **Notes:**
 

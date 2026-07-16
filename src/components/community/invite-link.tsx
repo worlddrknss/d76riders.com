@@ -33,7 +33,7 @@ export function InviteLink({ url, code }: { url: string; code: string }) {
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-border bg-canvas p-4">
+    <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
       <label htmlFor="invite-url" className="text-xs font-semibold uppercase tracking-wide text-muted">
         Your invite link
       </label>

@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 const LEVEL_STYLES: Record<TrustLevel, string> = {
   NEW: "border-border bg-white/5 text-muted",
   ESTABLISHED: "border-sky-400/40 bg-sky-400/10 text-sky-700",
-  TRUSTED: "border-green-500/40 bg-green-500/10 text-green-700",
+  TRUSTED: "border-forest/40 bg-forest/10 text-forest",
   VETERAN: "border-sunset/50 bg-sunset/10 text-sunset",
 };
 
