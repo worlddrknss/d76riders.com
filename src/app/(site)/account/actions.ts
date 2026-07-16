@@ -69,7 +69,8 @@ export async function updateAccountProfileAction(
 
   const displayName = normalizeText(formData.get("displayName"));
   const username = normalizeUsername(formData.get("username"));
-  const avatarUrl = normalizeText(formData.get("avatarUrl"));
+  const avatarUrlRaw = formData.get("avatarUrl"); // null when the field isn't submitted
+  const avatarUrl = normalizeText(avatarUrlRaw);
   const avatarFile = formData.get("avatarFile");
   const coverFile = formData.get("coverFile");
   const bio = normalizeText(formData.get("bio")).slice(0, 1000);
@@ -103,10 +104,6 @@ export async function updateAccountProfileAction(
     };
   }
 
-  if (!isValidAvatarUrl(avatarUrl)) {
-    return { error: "Avatar URL must be a valid http/https URL.", success: null };
-  }
-
   if (newPassword && newPassword.length < 8) {
     return { error: "New password must be at least 8 characters.", success: null };
   }
@@ -137,7 +134,13 @@ export async function updateAccountProfileAction(
     },
   });
 
-  let nextAvatarUrl = avatarUrl || null;
+  // Partial avatar update — only change the stored URL when it actually changed.
+  //   • new file uploaded        → new S3 URL
+  //   • field not submitted      → leave unchanged (undefined)
+  //   • field present but empty  → clear the avatar (null)
+  //   • unchanged proxied path   → leave unchanged (undefined)
+  //   • a genuinely new URL      → validate + use it
+  let nextAvatarUrl: string | null | undefined;
 
   if (avatarFile instanceof File && avatarFile.size > 0) {
     if (!allowedImageTypes.has(avatarFile.type)) {
@@ -157,6 +160,16 @@ export async function updateAccountProfileAction(
 
     const key = `avatars/${userId}/${crypto.randomUUID()}.${secureUpload.ext}`;
     nextAvatarUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
+  } else if (avatarUrlRaw === null) {
+    nextAvatarUrl = undefined; // field absent — don't touch it
+  } else if (avatarUrl === "") {
+    nextAvatarUrl = null; // explicitly cleared
+  } else if (avatarUrl.startsWith("/api/media/")) {
+    nextAvatarUrl = undefined; // unchanged proxied display path
+  } else if (isValidAvatarUrl(avatarUrl)) {
+    nextAvatarUrl = avatarUrl; // new external URL
+  } else {
+    return { error: "Avatar URL must be a valid http/https URL.", success: null };
   }
 
   let nextCoverUrl: string | null | undefined = undefined; // undefined = no change
