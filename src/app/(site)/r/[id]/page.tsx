@@ -5,7 +5,10 @@ import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footpri
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
+import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
+
 import { CoverPhoto } from "@/components/profile/cover-photo";
+import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { InviteLink } from "@/components/community/invite-link";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
@@ -354,13 +357,15 @@ export default async function RiderProfilePage({
   }, 0);
 
   const memberSince = rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  // Lucide dropped brand icons in v1, so these are the nearest neutral stand-ins.
+  // Brand marks come from Simple Icons — lucide deliberately has no brand icons.
+  // `color` is each brand's official hex, applied on hover so the row stays calm
+  // until you reach for it.
   const socialAccounts = [
-    { label: "YouTube", href: rider.youtubeUrl, icon: Video },
-    { label: "TikTok", href: rider.tiktokUrl, icon: Video },
-    { label: "Instagram", href: rider.instagramUrl, icon: Camera },
-    { label: "X / Twitter", href: rider.twitterUrl, icon: BookText },
-  ].filter((social): social is { label: string; href: string; icon: typeof Video } =>
+    { label: "Instagram", href: rider.instagramUrl, icon: SiInstagram, color: SiInstagramHex },
+    { label: "YouTube", href: rider.youtubeUrl, icon: SiYoutube, color: SiYoutubeHex },
+    { label: "TikTok", href: rider.tiktokUrl, icon: SiTiktok, color: SiTiktokHex },
+    { label: "X", href: rider.twitterUrl, icon: SiX, color: SiXHex },
+  ].filter((social): social is { label: string; href: string; icon: typeof SiX; color: string } =>
     Boolean(social.href),
   );
 
@@ -981,19 +986,9 @@ export default async function RiderProfilePage({
               {/* Socials as icons in the header rather than a sidebar card —
                   they're a handful of links, not a section. */}
               {socialAccounts.length > 0 ? (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   {socialAccounts.map((social) => (
-                    <a
-                      key={social.label}
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={social.label}
-                      aria-label={`${rider.name} on ${social.label}`}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted transition hover:border-sunset/50 hover:text-sunset"
-                    >
-                      <social.icon className="h-3.5 w-3.5" />
-                    </a>
+                    <SocialIconLink key={social.label} {...social} riderName={rider.name} />
                   ))}
                 </span>
               ) : null}

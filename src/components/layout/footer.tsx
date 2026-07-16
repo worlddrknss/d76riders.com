@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { socialLinks } from "@/data/community";
 
@@ -72,8 +72,8 @@ export function Footer() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 hover:text-white"
                     >
+                      <SiFacebook className="h-3.5 w-3.5" />
                       {link.label}
-                      <ExternalLink className="h-3 w-3 opacity-60" />
                     </a>
                   ) : (
                     <Link href={link.href} className="hover:text-white">
