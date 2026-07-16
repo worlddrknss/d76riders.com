@@ -42,6 +42,55 @@ const COMMUNITY_GUIDELINES = {
   ].join(""),
 };
 
+// UNREVIEWED DRAFT — seeded `active: false` on purpose. Do not flip it to active
+// until someone who practices law in Tennessee has read it.
+//
+// This is a starting point to react to, not a waiver. It was drafted to have the
+// right shape and cover the right ground, but shape is not enforceability: what a
+// release can actually disclaim, and the language it must use to do so, is
+// state-specific and not something this file can get right by construction.
+//
+// Inactive is genuinely inert — /policies filters on active, the detail page
+// 404s, and acceptPolicy refuses (src/app/(site)/policies/actions.ts). So it
+// collects zero acknowledgments and creates zero legal record until activated.
+// Activating it is the moment it starts binding real people, which is why that
+// step is deliberately a human's.
+//
+// Once reviewed, edit the wording at /admin/policies and set it active there.
+// If the reviewed text differs materially, bump `version` so anyone who somehow
+// accepted the draft is re-prompted rather than left on the old wording.
+const SAFETY_WAIVER = {
+  slug: "safety-waiver",
+  title: "Safety Waiver & Assumption of Risk",
+  summary: "Riding is dangerous. What you take on, and what District 76 does not.",
+  type: "SAFETY_WAIVER" as const,
+  version: "1",
+  required: true,
+  // See the note above before changing this.
+  active: false,
+  bodyHtml: [
+    "<p>Read this in full before you accept it. It describes risk you are choosing to take on, and it limits what you can later claim against this community and the people in it.</p>",
+    "<h2>Motorcycling is inherently dangerous</h2>",
+    "<p>Riding a motorcycle on public roads carries a real risk of serious injury, permanent disability, and death — to you, to your passenger, and to others. That risk does not go away because you ride in a group, because the route is familiar, or because someone experienced is leading. Riding in a group adds its own risks: closer spacing, other riders' mistakes, and pressure to keep up. You accept these risks knowingly and voluntarily.</p>",
+    "<h2>You are responsible for yourself and your motorcycle</h2>",
+    "<p>Before every ride, you are responsible for holding a valid motorcycle license and current insurance; for your motorcycle being roadworthy, including tires and brakes; for your own protective gear; and for being fit to ride — rested, sober, and free of anything that impairs you. Alcohol and impairing drugs before or during a ride are never acceptable. You are responsible for obeying all traffic laws. Nothing about a group ride overrides that, and no instruction from anyone in the group requires you to break the law or ride beyond your ability.</p>",
+    "<h2>Ride your own ride</h2>",
+    "<p>You decide your own speed, spacing, and whether to ride at all. If a pace, a road, or the weather is beyond what you are comfortable with, slow down, drop back, or stop. The group waits at the next stop. No one in District 76 has authority to tell you to ride faster or closer than you judge safe, and choosing not to ride costs you nothing here.</p>",
+    "<h2>What District 76 is, and is not</h2>",
+    "<p>District 76 is an informal community of riders, not a business, tour operator, riding school, or professional organizer. Rides are organized by volunteer members for the community's own enjoyment. A ride lead is a volunteer who knows the route — not a guide, instructor, or safety officer, and not someone who has inspected your bike or assessed your ability. Routes, pace guidance, and road notes shared here are informal opinion offered in good faith, not professional advice, and conditions change. No one is supervising you, and no one is responsible for your safety but you.</p>",
+    "<h2>Release of claims</h2>",
+    "<p>To the fullest extent permitted by Tennessee law, you release District 76, its members, organizers, ride leads, and volunteers from liability for injury, death, or property damage arising from your participation in a District 76 ride or event, including harm arising in part from their ordinary negligence. This release does not extend to gross negligence, recklessness, or intentional or unlawful acts, and it does not waive any right that cannot be waived by law.</p>",
+    "<h2>Medical care and your own coverage</h2>",
+    "<p>In an emergency, members may summon medical care for you, and you accept the cost of any care you receive. You are responsible for your own health and motorcycle insurance. District 76 carries no coverage for you.</p>",
+    "<h2>What you are agreeing to</h2>",
+    "<p>By accepting, you confirm that you have read and understood this waiver, that you are at least 18, that you are accepting it freely, and that you understand you are giving up legal rights. Your acceptance is recorded with the date, your IP address, and your browser. If this waiver is later updated, you will be asked to read and accept the new version.</p>",
+  ].join(""),
+};
+
+// Policy text is authored, so each is created only when missing — never upserted
+// over an admin's edits. Order here is the order they are created in.
+const POLICIES = [COMMUNITY_GUIDELINES, SAFETY_WAIVER];
+
 const BADGES = [
   {
     slug: "first-group-ride",
@@ -256,17 +305,20 @@ export async function seedCatalog(prisma: Db) {
   }
 
   // Unlike the definitions above, policy text is meant to be edited by admins —
-  // so create it only when missing rather than upserting over their wording.
-  const existingPolicy = await prisma.policy.findUnique({
-    where: { slug: COMMUNITY_GUIDELINES.slug },
-    select: { id: true },
-  });
+  // so create each only when missing rather than upserting over their wording.
+  // This also means the seed can never reactivate a policy an admin deactivated.
+  for (const policy of POLICIES) {
+    const existing = await prisma.policy.findUnique({
+      where: { slug: policy.slug },
+      select: { id: true },
+    });
 
-  if (existingPolicy) {
-    console.log("Community Guidelines already present — left untouched.");
-  } else {
-    await prisma.policy.create({ data: COMMUNITY_GUIDELINES });
-    console.log("Created the Community Guidelines policy.");
+    if (existing) {
+      console.log(`Policy "${policy.title}" already present — left untouched.`);
+    } else {
+      await prisma.policy.create({ data: policy });
+      console.log(`Created policy "${policy.title}"${policy.active ? "" : " (inactive)"}.`);
+    }
   }
 
   console.log(
@@ -274,8 +326,10 @@ export async function seedCatalog(prisma: Db) {
       `${QUESTS.length} quests, ${CREWS.length} crews.`,
   );
   console.log(
-    "Note: no SAFETY_WAIVER is seeded — write and publish it at /admin/policies. " +
-      "Until then the Safety First badge and its trust credit stay unearnable by design.",
+    "Note: the safety waiver is seeded as an UNREVIEWED DRAFT and is inactive — it is " +
+      "invisible on /policies and cannot be accepted until someone activates it at " +
+      "/admin/policies. Have a Tennessee lawyer read it first. Until it is active, the " +
+      "Safety First badge and its trust credit stay unearnable by design.",
   );
 }
 

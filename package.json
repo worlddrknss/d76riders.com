@@ -12,7 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "db:seed:catalog": "tsx prisma/seed-catalog.ts"
+    "db:seed:catalog": "tsx --env-file-if-exists=.env prisma/seed-catalog.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1077.0",
