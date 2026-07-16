@@ -95,6 +95,41 @@ export default async function Home() {
       )
     : [];
 
+  // Featured rides are the club's public shop window — hand-picked in
+  // /admin/community and shown above the regular upcoming list.
+  const featuredEvents = await safeQuery(
+    () =>
+      prisma.rideEvent.findMany({
+        where: { featured: true, startsAt: { gte: now }, status: "UPCOMING" },
+        orderBy: { startsAt: "asc" },
+        take: 3,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          startsAt: true,
+          meetLocation: true,
+          distanceMiles: true,
+          crew: { select: { name: true, slug: true } },
+          galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
+          _count: { select: { rsvps: true } },
+        },
+      }),
+    [],
+  );
+
+  const sponsors = await safeQuery(
+    () =>
+      prisma.sponsor.findMany({
+        where: { active: true },
+        orderBy: [{ tier: "asc" }, { name: "asc" }],
+        take: 6,
+        select: { id: true, name: true, logoUrl: true, websiteUrl: true },
+      }),
+    [],
+  );
+
   const roads = await safeQuery(
     () => prisma.road.findMany({
       include: {
@@ -251,6 +286,75 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* FEATURED RIDES — public highlights, curated in /admin/community */}
+      {featuredEvents.length > 0 ? (
+        <section className="w-full bg-canvas">
+          <div className="mx-auto w-full max-w-7xl px-4 pt-16 sm:px-6 lg:px-8">
+            <FadeUp className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+                Featured Rides
+              </h2>
+              <Link
+                href="/events"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]"
+              >
+                View All Rides <ArrowRight className="h-4 w-4" />
+              </Link>
+            </FadeUp>
+
+            <StaggerList className="mt-6 grid gap-6 md:grid-cols-3">
+              {featuredEvents.map((event) => (
+                <StaggerItem key={event.id}>
+                  <Link
+                    href={`/events/${event.slug}`}
+                    className="group block overflow-hidden rounded-2xl border border-sunset/30 bg-surface shadow-soft transition hover:border-sunset"
+                  >
+                    <div className="relative h-40 w-full bg-linear-to-br from-asphalt to-sunset/40">
+                      {event.galleryItems[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={mediaUrl(event.galleryItems[0].url) ?? ""}
+                          alt=""
+                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      ) : null}
+                      <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-sunset px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-soft">
+                        <Star className="h-3 w-3 fill-current" />
+                        Featured
+                      </span>
+                    </div>
+
+                    <div className="p-4">
+                      <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-sunset">
+                        {event.startsAt.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {event.crew ? ` · ${event.crew.name}` : ""}
+                      </p>
+                      <h3 className="mt-1 font-display text-base font-semibold text-ink">{event.title}</h3>
+                      {event.excerpt ? (
+                        <p className="mt-1 line-clamp-2 text-sm text-muted">{event.excerpt}</p>
+                      ) : null}
+                      <p className="mt-2 text-xs text-muted">
+                        {[
+                          event.meetLocation,
+                          event.distanceMiles ? `${event.distanceMiles} mi` : null,
+                          `${event._count.rsvps} going`,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+          </div>
+        </section>
+      ) : null}
 
       {/* UPCOMING RIDES */}
       <section className="w-full bg-canvas">
@@ -463,6 +567,61 @@ export default async function Home() {
           </StaggerList>
         </div>
       </section>
+
+      {/* PARTNERS */}
+      {sponsors.length > 0 ? (
+        <section className="w-full border-t border-border bg-canvas">
+          <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <FadeUp className="flex items-center justify-between">
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+                Local Partners
+              </h2>
+              <Link
+                href="/sponsors"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]"
+              >
+                All Partners <ArrowRight className="h-4 w-4" />
+              </Link>
+            </FadeUp>
+
+            <StaggerList className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              {sponsors.map((sponsor) => {
+                const logo = (
+                  <div className="flex h-20 items-center justify-center rounded-xl border border-border bg-surface p-3 transition hover:border-ink/30">
+                    {sponsor.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={sponsor.logoUrl}
+                        alt={sponsor.name}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-center text-xs font-semibold text-muted">{sponsor.name}</span>
+                    )}
+                  </div>
+                );
+
+                return (
+                  <StaggerItem key={sponsor.id}>
+                    {sponsor.websiteUrl ? (
+                      <a
+                        href={sponsor.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        title={sponsor.name}
+                      >
+                        {logo}
+                      </a>
+                    ) : (
+                      logo
+                    )}
+                  </StaggerItem>
+                );
+              })}
+            </StaggerList>
+          </div>
+        </section>
+      ) : null}
 
       {/* CTA */}
       <section className="relative w-full overflow-hidden">

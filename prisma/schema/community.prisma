@@ -1,0 +1,165 @@
+// Community growth domain — referrals, onboarding quests, crews, and sponsors.
+
+// A rider's permanent invite code. One per rider, minted on first use of the
+// invite screen rather than for everyone up front.
+model ReferralCode {
+  id      String @id @default(cuid())
+  riderId String @unique
+  code    String @unique
+  // Lifetime counters are derived from `referrals`; kept here only as a cheap
+  // read for the invite page.
+  clicks  Int    @default(0)
+
+  rider     Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  referrals Referral[]
+
+  createdAt DateTime @default(now())
+
+  @@index([code])
+}
+
+// One row per converted signup. `referredUserId` is unique — a user can only
+// ever be referred once, which is what makes conversion counts trustworthy.
+model Referral {
+  id             String @id @default(cuid())
+  codeId         String
+  referredUserId String @unique
+
+  code         ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+  referredUser User         @relation(fields: [referredUserId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([codeId])
+}
+
+// An onboarding step. Completion is evaluated from real data (see
+// src/lib/quests.ts) rather than trusting a stored flag.
+model Quest {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String
+  icon        String        @default("circle-check")
+  href        String
+  criteria    QuestCriteria
+  sortOrder   Int           @default(0)
+  active      Boolean       @default(true)
+
+  riderQuests RiderQuest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum QuestCriteria {
+  COMPLETE_PROFILE
+  ADD_BIKE
+  RSVP_EVENT
+  ATTEND_EVENT
+  POST_JOURNAL
+  ACCEPT_POLICIES
+  ADD_EMERGENCY_CARD
+  FOLLOW_RIDER
+}
+
+// Records that a rider finished a quest, so the completion timestamp survives
+// even if the underlying data later changes (a sold bike, a deleted post).
+model RiderQuest {
+  id          String   @id @default(cuid())
+  riderId     String
+  questId     String
+  completedAt DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  quest Quest @relation(fields: [questId], references: [id], onDelete: Cascade)
+
+  @@unique([riderId, questId])
+  @@index([riderId])
+}
+
+// A sub-group within the club (sportbike, touring, beginner, women riders).
+model Crew {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  avatarUrl   String?
+  coverUrl    String?
+  // Open crews are joinable by any member; closed crews are lead-managed.
+  open        Boolean @default(true)
+  active      Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  members CrewMember[]
+  events  RideEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+}
+
+model CrewMember {
+  id      String   @id @default(cuid())
+  crewId  String
+  riderId String
+  role    CrewRole @default(MEMBER)
+
+  crew  Crew  @relation(fields: [crewId], references: [id], onDelete: Cascade)
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([crewId, riderId])
+  @@index([riderId])
+}
+
+enum CrewRole {
+  LEAD
+  MEMBER
+}
+
+// A local business partner. Sponsors are club-wide and can additionally be
+// attached to specific events.
+model Sponsor {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String?
+  logoUrl     String?
+  websiteUrl  String?
+  tier        SponsorTier @default(SUPPORTER)
+  active      Boolean     @default(true)
+  // Optional owning account, so a SPONSOR-role user can be tied to their business.
+  userId      String?
+
+  user   User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  events EventSponsor[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([userId])
+}
+
+enum SponsorTier {
+  PARTNER
+  SUPPORTER
+  FRIEND
+}
+
+model EventSponsor {
+  id        String @id @default(cuid())
+  eventId   String
+  sponsorId String
+
+  event   RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sponsor Sponsor   @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, sponsorId])
+  @@index([sponsorId])
+}

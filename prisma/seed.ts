@@ -224,8 +224,124 @@ async function main() {
   }
 
   await seedReputationCatalog();
+  await seedCommunityCatalog();
 
   console.log("Seed complete.");
+}
+
+// Quest and crew definitions — like badges, these are reference data the
+// onboarding checklist and crew pages read.
+async function seedCommunityCatalog() {
+  const quests = [
+    {
+      slug: "complete-profile",
+      name: "Complete your profile",
+      description: "Add a photo, where you ride out of, and a short bio.",
+      icon: "user-round",
+      href: "/profile",
+      criteria: "COMPLETE_PROFILE" as const,
+      sortOrder: 1,
+    },
+    {
+      slug: "add-bike",
+      name: "Add your bike",
+      description: "Put your machine in the garage.",
+      icon: "bike",
+      href: "/garage/mine",
+      criteria: "ADD_BIKE" as const,
+      sortOrder: 2,
+    },
+    {
+      slug: "accept-policies",
+      name: "Accept the guidelines",
+      description: "Read and accept the community guidelines and safety waiver.",
+      icon: "file-check-2",
+      href: "/policies",
+      criteria: "ACCEPT_POLICIES" as const,
+      sortOrder: 3,
+    },
+    {
+      slug: "rsvp-event",
+      name: "RSVP to a ride",
+      description: "Find a ride that suits you and say you're coming.",
+      icon: "calendar-check",
+      href: "/events",
+      criteria: "RSVP_EVENT" as const,
+      sortOrder: 4,
+    },
+    {
+      slug: "emergency-card",
+      name: "Set up your emergency card",
+      description: "So we can help if the worst happens on a ride.",
+      icon: "heart-pulse",
+      href: "/profile",
+      criteria: "ADD_EMERGENCY_CARD" as const,
+      sortOrder: 5,
+    },
+    {
+      slug: "follow-rider",
+      name: "Follow a rider",
+      description: "Start building your feed.",
+      icon: "user-plus",
+      href: "/r",
+      criteria: "FOLLOW_RIDER" as const,
+      sortOrder: 6,
+    },
+    {
+      slug: "attend-event",
+      name: "Ride with us",
+      description: "Check in to your first group ride.",
+      icon: "circle-check",
+      href: "/events",
+      criteria: "ATTEND_EVENT" as const,
+      sortOrder: 7,
+    },
+  ];
+
+  for (const quest of quests) {
+    await prisma.quest.upsert({
+      where: { slug: quest.slug },
+      create: quest,
+      update: quest,
+    });
+  }
+
+  const crews = [
+    {
+      slug: "sportbike",
+      name: "Sportbike",
+      description: "Twisties, track days, and anything with clip-ons.",
+      sortOrder: 1,
+    },
+    {
+      slug: "touring",
+      name: "Touring",
+      description: "Long hauls, saddlebags, and all-day comfort.",
+      sortOrder: 2,
+    },
+    {
+      slug: "beginner",
+      name: "Beginner",
+      description: "New riders welcome. Relaxed pace, no ego, plenty of stops.",
+      sortOrder: 3,
+    },
+    {
+      slug: "women-riders",
+      name: "Women Riders",
+      description: "Women who ride, riding together.",
+      sortOrder: 4,
+    },
+  ];
+
+  for (const crew of crews) {
+    await prisma.crew.upsert({
+      where: { slug: crew.slug },
+      create: crew,
+      update: crew,
+    });
+  }
+
+  console.log(`Seeded ${quests.length} quests and ${crews.length} crews.`);
 }
 
 // Badge and skill definitions are reference data the reputation engine reads —

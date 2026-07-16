@@ -6,8 +6,10 @@ import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footpri
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
+import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
+import { evaluateQuests } from "@/lib/quests";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
@@ -379,6 +381,9 @@ export default async function RiderProfilePage({
     rider.followers.length > 0 || rider.following.length > 0 || rider.followedEvents.length > 0;
 
   // ─── Overview tab ───────────────────────────────────────────────
+  // Onboarding is the owner's own checklist — never shown to visitors.
+  const quests = isOwner ? await evaluateQuests(rider.id) : [];
+
   const reputationPanel = (
     <ReputationPanel
       trust={rider.trust}
@@ -395,6 +400,7 @@ export default async function RiderProfilePage({
   const overviewContent = (
     <div className="grid gap-5 lg:grid-cols-2">
       <div className="space-y-5">
+        {isOwner ? <OnboardingQuests quests={quests} /> : null}
         {reputationPanel}
         {featuredBike && (
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">

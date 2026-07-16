@@ -25,22 +25,59 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const event = await prisma.rideEvent.findUnique({
     where: { slug },
-    select: { title: true, description: true, meetLocation: true, startsAt: true },
+    select: {
+      title: true,
+      excerpt: true,
+      description: true,
+      meetLocation: true,
+      startsAt: true,
+      status: true,
+      distanceMiles: true,
+      galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
+    },
   });
   if (!event) return { title: "Event Not Found" };
 
-  const description = event.description
-    ? event.description.slice(0, 160)
-    : `Join this ride event${event.meetLocation ? ` departing from ${event.meetLocation}` : ""} organized by District 76 Riders.`;
+  const when = event.startsAt.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  // Prefer the hand-written excerpt; fall back to the description, then to a
+  // generated line that still carries the date, distance, and start point.
+  const description = (
+    event.excerpt?.trim() ||
+    event.description?.trim() ||
+    [
+      `Group motorcycle ride on ${when} with District 76 Riders`,
+      event.meetLocation ? `departing from ${event.meetLocation}` : null,
+      event.distanceMiles ? `${event.distanceMiles} miles` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ")
+  ).slice(0, 160);
+
+  const image = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : undefined;
 
   return {
-    title: event.title,
+    title: `${event.title} — ${when}`,
     description,
     alternates: { canonical: `/events/${slug}` },
+    // Cancelled rides shouldn't keep collecting search traffic.
+    robots: event.status === "CANCELLED" ? { index: false, follow: true } : undefined,
     openGraph: {
       title: event.title,
       description,
       type: "article",
+      url: `/events/${slug}`,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: event.title,
+      description,
+      images: image ? [image] : undefined,
     },
   };
 }
@@ -108,6 +145,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           userId: true,
           name: true,
           handle: true,
+        },
+      },
+      crew: { select: { name: true, slug: true } },
+      sponsors: {
+        select: {
+          id: true,
+          sponsor: { select: { name: true, logoUrl: true, websiteUrl: true, tier: true } },
         },
       },
       route: {
@@ -271,6 +315,54 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         { name: "Events", href: "/events" },
         { name: event.title, href: `/events/${event.slug}` },
       ])} />
+
+      {event.crew || event.sponsors.length > 0 ? (
+        <div className="content-wrap">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft">
+            {event.crew ? (
+              <Link
+                href={`/crews/${event.crew.slug}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-sunset/40 bg-sunset/10 px-3 py-1 text-xs font-semibold text-sunset hover:bg-sunset/20"
+              >
+                {event.crew.name} crew
+              </Link>
+            ) : null}
+
+            {event.sponsors.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Supported by
+                </span>
+                {event.sponsors.map(({ id, sponsor }) =>
+                  sponsor.websiteUrl ? (
+                    <a
+                      key={id}
+                      href={sponsor.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-ink hover:text-sunset"
+                    >
+                      {sponsor.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={sponsor.logoUrl} alt="" className="h-6 w-auto object-contain" />
+                      ) : null}
+                      {sponsor.name}
+                    </a>
+                  ) : (
+                    <span key={id} className="inline-flex items-center gap-2 text-sm font-semibold text-ink">
+                      {sponsor.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={sponsor.logoUrl} alt="" className="h-6 w-auto object-contain" />
+                      ) : null}
+                      {sponsor.name}
+                    </span>
+                  ),
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       <div className="content-wrap space-y-6">
         {/* BREADCRUMB */}
 

@@ -58,6 +58,9 @@ model Rider {
   badges         RiderBadge[]
   skills         RiderSkill[]
   verifiedSkills RiderSkill[] @relation("SkillVerifier")
+  referralCode   ReferralCode?
+  quests         RiderQuest[]
+  crews          CrewMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

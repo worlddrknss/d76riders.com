@@ -19,7 +19,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function JoinPage() {
+export default async function JoinPage(props: {
+  searchParams: Promise<{ ref?: string; from?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const referralCode = searchParams.ref?.trim().toUpperCase().slice(0, 16);
+  const invitedBy = searchParams.from?.trim().slice(0, 40);
+
   return (
     <div>
       <PageHero
@@ -76,8 +82,14 @@ export default function JoinPage() {
                     Preview upcoming rides
                   </Link>
                 </div>
+                {invitedBy ? (
+                  <p className="mt-4 rounded-lg border border-sunset/40 bg-sunset/10 px-3 py-2 text-sm text-sunset">
+                    <span className="font-semibold">@{invitedBy}</span> invited you to ride with District 76.
+                  </p>
+                ) : null}
+
                 <div className="mt-6">
-                  <RegisterForm />
+                  <RegisterForm referralCode={referralCode} />
                 </div>
               </div>
             </aside>

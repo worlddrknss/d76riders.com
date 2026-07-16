@@ -270,17 +270,23 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 11: Community Growth
+## Phase 11: Community Growth ✅
 
 **Effort:** Large — multiple independent features.
 
 **Work:**
 
-- [ ] Referral invites: unique invite links per rider, track conversions
-- [ ] Onboarding quests: guided steps for new members (complete profile, RSVP first event, add bike)
-- [ ] Crew pages: sub-group model (sportbike, touring, beginner, women riders) with members and events
-- [ ] Local business partnerships: sponsor model with logo, link, and event association
-- [ ] Public event highlights: featured events on homepage and SEO-optimized event pages
+- [x] Referral invites: `ReferralCode` + `Referral`. Each rider gets a code at `/invite`; `/i/<CODE>` records the open, sets a 30-day cookie, and lands on `/join` with the inviter named. Attribution happens at signup, and `Referral.referredUserId` is unique so a rider is only ever credited once. Top referrers surface in `/admin/community`
+- [x] Onboarding quests: `Quest` + `RiderQuest` — complete profile, add bike, accept guidelines, RSVP, emergency card, follow a rider, attend a ride. Shown as a checklist on the owner's own profile Overview and hidden once finished
+- [x] Crew pages: `Crew` + `CrewMember` (sportbike, touring, beginner, women riders) at `/crews` and `/crews/[slug]`, with members, upcoming/past rides, and join/leave. Events carry an optional `crewId`
+- [x] Local business partnerships: `Sponsor` + `EventSponsor` with logo, link, and tier — public at `/sponsors`, a strip on the homepage, and per-ride credit on the event page
+- [x] Public event highlights: `RideEvent.featured` toggled from `/admin/community`, rendered as a Featured Rides section on the homepage; event pages gained excerpt-driven descriptions, OG/Twitter images, and `noindex` on cancelled rides (Event JSON-LD already existed)
+
+**Notes:**
+
+- Quest completion is latched: once a step is done it stays done, even if the underlying data changes later (a bike sold, a journal entry deleted). Onboarding is something you finished, not a state to maintain.
+- Referral attribution never blocks a signup — an unknown, self-referring, or already-used code is ignored rather than failing registration.
+- Sponsor links are rendered `rel="noopener noreferrer nofollow"` and only `http(s)` URLs are stored, since these are outbound third-party links.
 
 ---
 

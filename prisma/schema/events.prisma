@@ -24,9 +24,14 @@ model RideEvent {
   routeId       String?         @unique
   maxCapacity   Int?
   rsvpDeadline  DateTime?
+  // Surfaced on the homepage as a public highlight.
+  featured      Boolean         @default(false)
+  crewId        String?
 
   host         Rider         @relation(fields: [hostId], references: [id], onDelete: Cascade)
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
+  crew         Crew?         @relation(fields: [crewId], references: [id], onDelete: SetNull)
+  sponsors     EventSponsor[]
   organizers   EventOrganizer[]
   rsvps        Rsvp[]
   checkIns     EventCheckIn[]
@@ -42,6 +47,8 @@ model RideEvent {
 
   @@index([hostId])
   @@index([startsAt])
+  @@index([featured])
+  @@index([crewId])
 }
 
 model Rsvp {

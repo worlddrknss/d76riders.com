@@ -1,10 +1,12 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
+import { recordReferral } from "@/lib/referrals";
 import { clearUserSession, createUserSession } from "@/lib/session";
 
 export type AuthFormState = {
@@ -82,6 +84,19 @@ export async function registerAction(
       },
       select: { id: true },
     });
+
+    // Attribute the signup to an invite, if one brought them here. Never let a
+    // referral problem fail a registration that already succeeded.
+    const cookieStore = await cookies();
+    const referralCode = formData.get("ref")?.toString() || cookieStore.get("d76_ref")?.value;
+    if (referralCode) {
+      try {
+        await recordReferral(referralCode, user.id);
+      } catch (referralError) {
+        console.error("[referral] failed to attribute signup", referralError);
+      }
+      cookieStore.delete("d76_ref");
+    }
 
     await createUserSession(user.id);
   } catch (error) {

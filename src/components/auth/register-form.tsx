@@ -10,11 +10,15 @@ const initialAuthFormState: AuthFormState = {
   error: null,
 };
 
-export function RegisterForm() {
+export function RegisterForm({ referralCode }: { referralCode?: string }) {
   const [state, formAction] = useActionState<AuthFormState, FormData>(registerAction, initialAuthFormState);
 
   return (
     <form action={formAction} className="space-y-5">
+      {/* Carries an invite through signup. The /i/<code> cookie is the primary
+          path; this covers a code that arrived only in the URL. */}
+      {referralCode ? <input type="hidden" name="ref" value={referralCode} /> : null}
+
       <div className="space-y-1.5">
         <label htmlFor="name" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
           Display Name
