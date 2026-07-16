@@ -5,6 +5,7 @@ import { siteImages } from "@/data/images";
 import { mediaUrl } from "@/lib/media-url";
 import { PageHero } from "@/components/layout/page-hero";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
+import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -42,18 +43,26 @@ function formatEventTime(date: Date | null): string {
 
 export default async function EventsPage() {
   const now = new Date();
+
+  // A cancelled or draft ride isn't an upcoming ride. Without this, moderation
+  // cancelling an event (which is what the triage queue's takedown does) left it
+  // still advertising itself here and still taking RSVPs.
+  const publiclyVisible = { startsAt: { gte: now }, status: { in: PUBLIC_EVENT_STATUSES } };
+
   const upcomingEvents = await prisma.rideEvent.findMany({
-    where: { startsAt: { gte: now } },
+    where: publiclyVisible,
     orderBy: { startsAt: "asc" },
     take: 7,
     include: {
-      _count: { select: { rsvps: true } },
+      // GOING only — counting every RSVP row meant riders who answered NOT_GOING
+      // inflated the "N riders" on the card.
+      _count: { select: { rsvps: { where: { status: "GOING" } } } },
       galleryItems: { take: 1, select: { url: true } },
     },
   });
 
   const totalUpcoming = await prisma.rideEvent.count({
-    where: { startsAt: { gte: now } },
+    where: publiclyVisible,
   });
 
   return (

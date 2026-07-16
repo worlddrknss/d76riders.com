@@ -1,6 +1,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
 import Link from "next/link";
 
+import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
 import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 12;
@@ -30,7 +31,10 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
   const now = new Date();
 
   // Build where clause
-  const where: Record<string, unknown> = {};
+  const where: Record<string, unknown> = {
+    // Cancelled and draft rides never appear in the listing — see PUBLIC_EVENT_STATUSES.
+    status: { in: PUBLIC_EVENT_STATUSES },
+  };
 
   if (query) {
     where.OR = [
@@ -57,7 +61,8 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: {
-        _count: { select: { rsvps: true } },
+        // GOING only — every RSVP row would count riders who said NOT_GOING.
+        _count: { select: { rsvps: { where: { status: "GOING" } } } },
       },
     }),
     prisma.rideEvent.count({ where }),
