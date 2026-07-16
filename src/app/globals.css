@@ -40,6 +40,16 @@
   box-sizing: border-box;
 }
 
+/* The display face (Anton) ships one weight, and headings all the way through
+   the site ask for font-bold. Left alone, browsers synthesize the missing weight
+   by smearing the glyphs — grim on a face this heavy already. Turning synthesis
+   off makes those requests resolve to the real 400.
+   Body text is unaffected: Manrope loads 400–700, so every weight it's asked for
+   genuinely exists and nothing needs synthesizing. */
+html {
+  font-synthesis-weight: none;
+}
+
 body {
   margin: 0;
   min-height: 100vh;

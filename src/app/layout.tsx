@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Manrope } from "next/font/google";
+import { Anton, Manrope } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { JsonLd, organizationJsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
 
-const displayFont = Geist({
+// Anton for headings and Manrope for body — the same pair 93rdavenue uses, and a
+// condensed poster face suits the ride flyers better than Geist did.
+//
+// Anton is published in a single weight. Headings across the site ask for
+// font-bold anyway, so globals.css turns off synthetic bolding rather than
+// stripping the weight from 200-odd call sites: the browser would otherwise
+// smear an already-heavy face into a fake bold.
+const displayFont = Anton({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "400",
 });
 
 const bodyFont = Manrope({
