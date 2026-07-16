@@ -192,7 +192,13 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                     </p>
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
                       {event.meetLocation ? (
-                        <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3 text-sunset" />{event.meetLocation}</span>
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3 shrink-0 text-sunset" />
+                          {/* Inline rather than a second line: this is a compact
+                              wrap row. The venue name alone is ambiguous for a
+                              chain — "QuikTrip" could be any of them. */}
+                          {event.meetAddress ? `${event.meetLocation} · ${event.meetAddress}` : event.meetLocation}
+                        </span>
                       ) : null}
                       {event.distanceMiles ? (
                         <span className="inline-flex items-center gap-1"><Route className="h-3 w-3 text-sunset" />{event.distanceMiles} mi</span>

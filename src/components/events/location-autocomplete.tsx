@@ -19,8 +19,14 @@ type LocationAutocompleteProps = {
   };
 };
 
-const inputClass =
-  "mt-1 w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none";
+const fieldClass =
+  "w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-ink shadow-soft focus:border-sunset/50 focus:outline-none";
+
+const inputClass = `mt-1 ${fieldClass} text-sm`;
+
+// The address sits directly under the venue name, so it carries no top margin of
+// its own and leaves room for the pin.
+const addressInputClass = `${fieldClass} pl-8 text-xs`;
 
 // Address/place autocomplete backed by MapTiler geocoding. Captures a human
 // place name, its street address, and coordinates. Degrades to a plain text
@@ -124,14 +130,28 @@ export function LocationAutocomplete({
         )}
       </div>
 
-      {address && (
-        <p className="flex items-center gap-1 text-xs text-muted">
-          <MapPin className="h-3 w-3 shrink-0 text-sunset" />
-          {address}
-        </p>
-      )}
+      {/* Editable rather than a read-only echo of the geocoder. Plenty of places
+          have no street address in the map data — the Rossview Road QuikTrip
+          comes back as just "Clarksville, Tennessee 37043" — and riders have to
+          navigate to this, so the organiser needs to be able to write the real
+          address in. Prefilled on pick, kept on edit. */}
+      <div className="relative">
+        <label htmlFor={`${fieldPrefix}-address`} className="sr-only">
+          {label} address
+        </label>
+        <MapPin className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-sunset" />
+        <input
+          id={`${fieldPrefix}-address`}
+          name={`${fieldPrefix}Address`}
+          type="text"
+          value={address}
+          autoComplete="off"
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Street address"
+          className={addressInputClass}
+        />
+      </div>
 
-      <input type="hidden" name={`${fieldPrefix}Address`} value={address} />
       <input type="hidden" name={`${fieldPrefix}Lat`} value={lat ?? ""} />
       <input type="hidden" name={`${fieldPrefix}Lng`} value={lng ?? ""} />
 

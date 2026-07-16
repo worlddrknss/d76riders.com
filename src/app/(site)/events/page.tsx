@@ -140,7 +140,17 @@ export default async function EventsPage() {
 
                   {/* META + RSVP */}
                   <div className="flex flex-col justify-center gap-3 border-t border-border p-6 lg:border-l lg:border-t-0">
-                    <p className="flex items-center gap-2 text-sm text-muted"><MapPin className="h-4 w-4 text-sunset" />{event.meetLocation || event.ksuLocation || "Location TBD"}</p>
+                    {/* The address matters as much as the venue name: "QuikTrip"
+                        alone doesn't tell a rider which QuikTrip. */}
+                    <div className="flex items-start gap-2 text-sm text-muted">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                      <span className="min-w-0">
+                        <span className="block">{event.meetLocation || event.ksuLocation || "Location TBD"}</span>
+                        {event.meetAddress ? (
+                          <span className="block text-xs">{event.meetAddress}</span>
+                        ) : null}
+                      </span>
+                    </div>
                     <p className="flex items-center gap-2 text-sm text-muted"><Clock className="h-4 w-4 text-sunset" />Meetup: {meetupTime}</p>
                     <p className="flex items-center gap-2 text-sm text-muted"><Ticket className="h-4 w-4 text-sunset" />KSU: {ksuTime}</p>
                     {event._count.rsvps > 0 ? (
