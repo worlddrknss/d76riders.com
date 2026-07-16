@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, MapPin } from "lucide-react";
+import { History, Loader2, MapPin } from "lucide-react";
 
 import { useRiderProximity } from "@/components/location/rider-proximity";
+import type { MeetupSpot } from "@/lib/events";
 import { geocodeAddress, type GeocodeResult } from "@/lib/routing";
 
 type LocationAutocompleteProps = {
@@ -17,6 +18,8 @@ type LocationAutocompleteProps = {
     lat?: number | null;
     lng?: number | null;
   };
+  /** Places riders have met at before, offered as one-click fills. */
+  recentSpots?: MeetupSpot[];
 };
 
 const fieldClass =
@@ -37,6 +40,7 @@ export function LocationAutocomplete({
   placeholder,
   required,
   defaultValue,
+  recentSpots = [],
 }: LocationAutocompleteProps) {
   const near = useRiderProximity();
   const [name, setName] = useState(defaultValue?.name ?? "");
@@ -97,6 +101,19 @@ export function LocationAutocomplete({
     setOpen(false);
   }
 
+  // Reusing a past spot is not a search: the coordinates were already resolved
+  // when someone picked this place the first time, so this costs no request and
+  // lands on exactly the same point — including any address typed by hand.
+  function fillFromSpot(spot: MeetupSpot) {
+    skipNext.current = true;
+    setName(spot.name);
+    setAddress(spot.address ?? "");
+    setLat(spot.lat);
+    setLng(spot.lng);
+    setResults([]);
+    setOpen(false);
+  }
+
   function handleChange(value: string) {
     setName(value);
     // Free-typed text no longer corresponds to a geocoded point.
@@ -127,6 +144,28 @@ export function LocationAutocomplete({
           <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted" />
         )}
       </div>
+
+      {/* Only while the field is empty: once a place is chosen these would be
+          noise, and they'd sit under the dropdown anyway. */}
+      {recentSpots.length > 0 && name.trim() === "" ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted">
+            Recent
+          </span>
+          {recentSpots.map((spot) => (
+            <button
+              key={`${spot.name}-${spot.lat}-${spot.lng}`}
+              type="button"
+              onClick={() => fillFromSpot(spot)}
+              title={spot.address ?? spot.name}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-canvas px-2.5 py-1 text-xs text-muted transition hover:border-sunset/50 hover:text-asphalt"
+            >
+              <History className="h-3 w-3 shrink-0 text-sunset" />
+              <span className="max-w-48 truncate">{spot.name}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* Editable rather than a read-only echo of the geocoder: a venue can still
           come back without a street, and riders have to navigate to this. Prefilled

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CreateEventForm } from "@/components/events/create-event-form";
+import { recentMeetupSpots } from "@/lib/events";
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
 import { getCurrentUser } from "@/lib/session";
 
@@ -22,6 +23,10 @@ export default async function CreateEventPage() {
     redirect("/events");
   }
 
+  // Read after the auth gate: nothing here is public, and an unauthorised
+  // visitor shouldn't cost a query.
+  const recentSpots = await recentMeetupSpots();
+
   return (
     <section className="page-shell">
       <div className="content-wrap">
@@ -39,7 +44,7 @@ export default async function CreateEventPage() {
             </Link>
           </div>
 
-          <CreateEventForm />
+          <CreateEventForm recentSpots={recentSpots} />
         </div>
       </div>
     </section>

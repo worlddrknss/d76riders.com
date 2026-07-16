@@ -2,6 +2,8 @@
 
 import { useActionState, useState } from "react";
 
+import type { MeetupSpot } from "@/lib/events";
+
 import {
   createEventAction,
   type CreateEventFormState,
@@ -14,7 +16,11 @@ const initialCreateEventFormState: CreateEventFormState = {
   error: null,
 };
 
-export function CreateEventForm() {
+export function CreateEventForm({
+  recentSpots,
+}: {
+  recentSpots?: { meet: MeetupSpot[]; ksu: MeetupSpot[] };
+}) {
   const [state, formAction] = useActionState<CreateEventFormState, FormData>(
     createEventAction,
     initialCreateEventFormState,
@@ -128,11 +134,13 @@ export function CreateEventForm() {
           fieldPrefix="meet"
           label="Meetup Location"
           placeholder="Search a place or address…"
+          recentSpots={recentSpots?.meet}
         />
         <LocationAutocomplete
           fieldPrefix="ksu"
           label="KSU Location"
           placeholder="Search a place or address…"
+          recentSpots={recentSpots?.ksu}
         />
       </div>
 
