@@ -34,6 +34,8 @@ model RideEvent {
   comments     Comment[]
   galleryItems GalleryItem[]
   incidents    RideIncident[]
+  reports      Report[]
+  adminIncidents AdminIncident[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -137,6 +139,7 @@ model RideIncident {
   event      RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
   rider      Rider     @relation("IncidentSubject", fields: [riderId], references: [id], onDelete: Cascade)
   reportedBy Rider     @relation("IncidentReporter", fields: [reportedById], references: [id], onDelete: Cascade)
+  adminIncidents AdminIncident[]
 
   createdAt DateTime @default(now())
 

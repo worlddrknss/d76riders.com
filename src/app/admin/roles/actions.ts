@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { logAudit } from "@/lib/audit";
 import { requireUserRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -25,8 +26,19 @@ export async function grantRoleAction(formData: FormData): Promise<{ error?: str
 
   if (existing) return { error: "User already has this role" };
 
-  await prisma.userRole.create({
+  const created = await prisma.userRole.create({
     data: { userId, role: role as never },
+  });
+
+  const target = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+
+  await logAudit({
+    actorUserId: currentUser.id,
+    action: "role.grant",
+    entityType: "UserRole",
+    entityId: created.id,
+    summary: `Granted ${role} to ${target?.email ?? userId}`,
+    after: { userId, role },
   });
 
   revalidatePath("/admin/roles");
@@ -51,6 +63,20 @@ export async function revokeRoleAction(formData: FormData): Promise<{ error?: st
   }
 
   await prisma.userRole.delete({ where: { id: userRoleId } });
+
+  const target = await prisma.user.findUnique({
+    where: { id: roleRecord.userId },
+    select: { email: true },
+  });
+
+  await logAudit({
+    actorUserId: currentUser.id,
+    action: "role.revoke",
+    entityType: "UserRole",
+    entityId: userRoleId,
+    summary: `Revoked ${roleRecord.role} from ${target?.email ?? roleRecord.userId}`,
+    before: { userId: roleRecord.userId, role: roleRecord.role },
+  });
 
   revalidatePath("/admin/roles");
   revalidatePath("/admin/users");

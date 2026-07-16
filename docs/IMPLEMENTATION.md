@@ -194,7 +194,7 @@ model EmergencyCardAccess {
 - [x] Notify all organizers immediately (in-app activity + future push/SMS)
 - [x] Incident record: `RideIncident` model with event, rider, location, notes, timestamp
 - [x] Post-ride incident log visible to organizers for follow-up (resolve action + incident list)
-- [ ] Admin audit trail for incident records (deferred — belongs with Phase 13 AuditLog)
+- [x] Admin audit trail for incident records (delivered in Phase 13: `AdminIncident.rideIncidentId` links a Rider Down alert to a private case file, and all actions on it are recorded in `AuditLog`)
 
 ---
 
@@ -293,7 +293,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 13: Admin and Moderation Enhancements
+## Phase 13: Admin and Moderation Enhancements ✅
 
 **Effort:** Medium-large — extends existing admin infrastructure.
 
@@ -301,10 +301,15 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Incident logging: `AdminIncident` model with private notes, linked to events/riders
-- [ ] Content triage queue: unified queue for reports across all content types with SLA labels (urgent, normal, low)
-- [ ] Audit trail: `AuditLog` model recording all admin actions (who, what, when, before/after)
-- [ ] Policy acknowledgment: track member acceptance of community guidelines, safety waivers
+- [x] Incident logging: `AdminIncident` + `AdminIncidentNote` models with private notes, linked to events/riders/`RideIncident` (`/admin/incidents`)
+- [x] Content triage queue: `Report` is now polymorphic (journal, comment, event, photo, rider, news) with a `ReportPriority` SLA tier — urgent 4h, normal 24h, low 72h — surfaced at `/admin/triage` with overdue badges (`src/lib/triage.ts`)
+- [x] Audit trail: `AuditLog` model recording all admin actions (who, what, when, before/after) via `src/lib/audit.ts`, viewable at `/admin/audit`; wired into triage, incidents, roles, news moderation, storage, and policies
+- [x] Policy acknowledgment: `Policy` + `PolicyAcknowledgment` models, admin CRUD at `/admin/policies`, member flow at `/policies/[slug]`; acknowledgments are per-version, so a version bump re-prompts everyone
+
+**Notes:**
+
+- `/admin/reports` now redirects to `/admin/triage`, which supersedes the journal-only queue.
+- Takedown semantics vary by type: journal/comment/photo are deleted, events are cancelled, news posts are unpublished, and rider reports have no automatic action — they escalate to an incident instead.
 
 ---
 

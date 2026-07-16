@@ -30,6 +30,7 @@ model Comment {
   author       Rider         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
   event        RideEvent?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reports      Report[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -53,25 +54,70 @@ model Like {
 }
 
 // Reports — flagged content for moderator review.
+//
+// Polymorphic: `subjectType` names which of the nullable subject FKs below is
+// set. Exactly one is populated per report. This is what lets /admin/triage
+// present a single queue across every content type.
 model Report {
-  id             String       @id @default(cuid())
-  reporterId     String
-  journalEntryId String
-  reason         ReportReason
-  details        String?
-  status         ReportStatus @default(PENDING)
+  id          String            @id @default(cuid())
+  reporterId  String
+  subjectType ReportSubjectType @default(JOURNAL_ENTRY)
+  // Drives the triage SLA window (see reportSlaDueAt in src/lib/triage.ts).
+  priority    ReportPriority    @default(NORMAL)
+  reason      ReportReason
+  details     String?
+  status      ReportStatus      @default(PENDING)
+
   resolvedById   String?
   resolvedAt     DateTime?
+  resolutionNote String?
 
-  reporter     Rider        @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
-  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
-  resolvedBy   User?        @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
+  // Subject FKs — exactly one is set, matching `subjectType`.
+  journalEntryId String?
+  commentId      String?
+  eventId        String?
+  galleryItemId  String?
+  subjectRiderId String?
+  newsPostId     String?
+
+  reporter     Rider         @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  comment      Comment?      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  event        RideEvent?    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  galleryItem  GalleryItem?  @relation(fields: [galleryItemId], references: [id], onDelete: Cascade)
+  subjectRider Rider?        @relation("ReportsAgainst", fields: [subjectRiderId], references: [id], onDelete: Cascade)
+  newsPost     NewsPost?     @relation(fields: [newsPostId], references: [id], onDelete: Cascade)
+  resolvedBy   User?         @relation(fields: [resolvedById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([journalEntryId])
+  @@index([commentId])
+  @@index([eventId])
+  @@index([galleryItemId])
+  @@index([subjectRiderId])
+  @@index([newsPostId])
   @@index([status])
+  @@index([subjectType])
+  @@index([status, priority, createdAt])
+}
+
+enum ReportSubjectType {
+  JOURNAL_ENTRY
+  COMMENT
+  EVENT
+  GALLERY_ITEM
+  RIDER
+  NEWS_POST
+}
+
+// SLA tier. Set automatically from the report reason at submit time, and
+// adjustable by moderators during triage.
+enum ReportPriority {
+  URGENT
+  NORMAL
+  LOW
 }
 
 enum ReportReason {

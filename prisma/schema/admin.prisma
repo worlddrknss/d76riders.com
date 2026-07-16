@@ -1,0 +1,148 @@
+// Admin domain — moderation incidents, the admin audit trail, and the policy
+// acknowledgment ledger. Everything here is staff-facing except Policy itself,
+// which is published to members at /policies/[slug].
+
+// Private, staff-only incident record. Distinct from RideIncident (events.prisma),
+// which is the rider-facing "Rider Down" alert raised during a ride. An
+// AdminIncident is the follow-up case file: private notes, severity, assignment.
+model AdminIncident {
+  id       String              @id @default(cuid())
+  title    String
+  summary  String?
+  severity IncidentSeverity    @default(NORMAL)
+  status   AdminIncidentStatus @default(OPEN)
+
+  // Optional links to the subjects of the incident.
+  eventId        String?
+  riderId        String?
+  rideIncidentId String?
+
+  openedByUserId String
+  closedByUserId String?
+  closedAt       DateTime?
+  resolution     String?
+
+  event        RideEvent?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  rider        Rider?              @relation("AdminIncidentSubject", fields: [riderId], references: [id], onDelete: SetNull)
+  rideIncident RideIncident?       @relation(fields: [rideIncidentId], references: [id], onDelete: SetNull)
+  openedBy     User                @relation("AdminIncidentOpener", fields: [openedByUserId], references: [id], onDelete: Cascade)
+  closedBy     User?               @relation("AdminIncidentCloser", fields: [closedByUserId], references: [id], onDelete: SetNull)
+  notes        AdminIncidentNote[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([severity])
+  @@index([eventId])
+  @@index([riderId])
+  @@index([createdAt(sort: Desc)])
+}
+
+// Append-only private note on an incident. Never surfaced to members.
+model AdminIncidentNote {
+  id         String @id @default(cuid())
+  incidentId String
+  authorId   String
+  body       String
+
+  incident AdminIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([incidentId])
+}
+
+enum IncidentSeverity {
+  CRITICAL
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum AdminIncidentStatus {
+  OPEN
+  INVESTIGATING
+  MONITORING
+  RESOLVED
+  CLOSED
+}
+
+// Append-only audit trail of privileged actions: who did what, when, and the
+// before/after snapshot. Rows are never updated or deleted by application code.
+model AuditLog {
+  id          String @id @default(cuid())
+  actorUserId String?
+  // Dotted action key, e.g. "report.dismiss", "role.grant", "incident.close".
+  action      String
+  // Model name the action targeted, e.g. "Report", "UserRole", "NewsPost".
+  entityType  String
+  entityId    String?
+  // Human-readable one-liner for the log list.
+  summary     String
+  // Field-level snapshots. Null for pure creates (before) or deletes (after).
+  before      Json?
+  after       Json?
+  ip          String?
+  userAgent   String?
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
+// A versioned policy document members must accept (guidelines, safety waiver).
+// Bumping `version` re-prompts every member, since acknowledgments are per-version.
+model Policy {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  summary     String?
+  bodyHtml    String
+  type        PolicyType
+  version     String     @default("1")
+  required    Boolean    @default(true)
+  active      Boolean    @default(true)
+  publishedAt DateTime   @default(now())
+
+  acknowledgments PolicyAcknowledgment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
+  @@index([type])
+}
+
+// One row per rider per policy version. The unique constraint is what makes a
+// version bump re-prompt: the old row no longer satisfies the current version.
+model PolicyAcknowledgment {
+  id        String  @id @default(cuid())
+  policyId  String
+  riderId   String
+  version   String
+  ip        String?
+  userAgent String?
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  rider  Rider  @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([policyId, riderId, version])
+  @@index([riderId])
+  @@index([policyId])
+}
+
+enum PolicyType {
+  COMMUNITY_GUIDELINES
+  SAFETY_WAIVER
+  TERMS
+  PRIVACY
+}

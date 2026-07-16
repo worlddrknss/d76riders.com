@@ -23,6 +23,7 @@ model GalleryItem {
   road         Road?         @relation(fields: [roadId], references: [id], onDelete: Cascade)
   buildModification BuildModification? @relation(fields: [buildModificationId], references: [id], onDelete: Cascade)
   serviceRecord ServiceRecord? @relation(fields: [serviceRecordId], references: [id], onDelete: Cascade)
+  reports      Report[]
 
   createdAt DateTime @default(now())
 

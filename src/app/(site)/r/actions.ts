@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { reportContentAction, type ReportFormState } from "@/app/(site)/report/actions";
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -212,61 +213,14 @@ export async function deleteJournalEntryAction(entryId: string): Promise<void> {
   revalidatePath("/r", "layout");
 }
 
-export type ReportFormState = {
-  error: string | null;
-  success: string | null;
-};
+export type { ReportFormState } from "@/app/(site)/report/actions";
 
+// Kept as the journal-specific entry point for existing callers; the reporting
+// logic itself is shared across every content type in the triage queue.
 export async function reportJournalEntryAction(
   entryId: string,
   reason: string,
   details: string,
 ): Promise<ReportFormState> {
-  const currentUser = await getCurrentUser();
-
-  if (!currentUser?.id) {
-    return { error: "Please log in to report content.", success: null };
-  }
-
-  const rider = await prisma.rider.findUnique({
-    where: { userId: currentUser.id },
-    select: { id: true },
-  });
-
-  if (!rider) {
-    return { error: "No rider profile found.", success: null };
-  }
-
-  const validReasons = ["SPAM", "HARASSMENT", "INAPPROPRIATE", "MISINFORMATION", "OTHER"];
-  if (!validReasons.includes(reason)) {
-    return { error: "Please select a valid reason.", success: null };
-  }
-
-  const entry = await prisma.journalEntry.findUnique({
-    where: { id: entryId },
-    select: { id: true },
-  });
-
-  if (!entry) {
-    return { error: "Journal entry not found.", success: null };
-  }
-
-  const existing = await prisma.report.findFirst({
-    where: { reporterId: rider.id, journalEntryId: entryId, status: "PENDING" },
-  });
-
-  if (existing) {
-    return { error: "You've already reported this entry.", success: null };
-  }
-
-  await prisma.report.create({
-    data: {
-      reporterId: rider.id,
-      journalEntryId: entryId,
-      reason: reason as "SPAM" | "HARASSMENT" | "INAPPROPRIATE" | "MISINFORMATION" | "OTHER",
-      details: details.trim() || null,
-    },
-  });
-
-  return { error: null, success: "Report submitted. A moderator will review it." };
+  return reportContentAction("JOURNAL_ENTRY", entryId, reason, details);
 }

@@ -51,6 +51,9 @@ model Rider {
   galleryItems   GalleryItem[]
   activities     Activity[]
   reports        Report[]     @relation("ReportsSubmitted")
+  reportsAgainst Report[]     @relation("ReportsAgainst")
+  adminIncidents AdminIncident[] @relation("AdminIncidentSubject")
+  policyAcknowledgments PolicyAcknowledgment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

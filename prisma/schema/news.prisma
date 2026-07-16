@@ -68,6 +68,7 @@ model NewsPost {
   reviewedBy   User?         @relation("newsReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
   newsCategory NewsCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   postTags     NewsPostTag[]
+  reports      Report[]
 
   @@index([publishedAt])
   @@index([categoryId])

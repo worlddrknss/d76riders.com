@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { logAudit } from "@/lib/audit";
 import { requireUserRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { deleteFile, listAllKeys, urlToKey } from "@/lib/s3";
@@ -9,12 +10,13 @@ import { getCurrentUser } from "@/lib/session";
 
 // Server actions are directly-callable POST endpoints, so authorization must be
 // enforced inside the action — the admin layout gate does not protect them.
-async function requireAdmin(): Promise<void> {
+async function requireAdmin(): Promise<string> {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
     throw new Error("Not authenticated");
   }
   await requireUserRole(currentUser.id, "ADMINISTRATOR");
+  return currentUser.id;
 }
 
 export type OrphanScanResult = {
@@ -67,7 +69,7 @@ export async function scanOrphanedImagesAction(): Promise<OrphanScanResult> {
 }
 
 export async function deleteOrphanedImagesAction(keys: string[]): Promise<number> {
-  await requireAdmin();
+  const actorUserId = await requireAdmin();
 
   if (!Array.isArray(keys)) return 0;
 
@@ -85,6 +87,18 @@ export async function deleteOrphanedImagesAction(keys: string[]): Promise<number
     await deleteFile(key);
     deleted++;
   }
+
+  if (deleted > 0) {
+    await logAudit({
+      actorUserId,
+      action: "storage.delete_orphans",
+      entityType: "Storage",
+      summary: `Deleted ${deleted} orphaned file${deleted === 1 ? "" : "s"} from object storage`,
+      // The key list is the only record of what went — worth keeping verbatim.
+      before: { keys: toDelete },
+    });
+  }
+
   revalidatePath("/admin/storage");
   return deleted;
 }
