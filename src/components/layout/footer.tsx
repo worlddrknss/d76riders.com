@@ -1,6 +1,16 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
-const columns = [
+import { socialLinks } from "@/data/community";
+
+type FooterLink = {
+  label: string;
+  href: string;
+  /** Renders an <a> with target/rel instead of a client-routed <Link>. */
+  external?: boolean;
+};
+
+const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "Community",
     links: [
@@ -24,6 +34,7 @@ const columns = [
   {
     title: "Connect",
     links: [
+      { label: "Facebook Group", href: socialLinks.facebookGroup, external: true },
       { label: "Gallery", href: "/gallery" },
       { label: "Featured Roads", href: "/roads" },
       { label: "Join the Community", href: "/join" },
@@ -54,9 +65,21 @@ export function Footer() {
             <ul className="mt-3 space-y-2 text-sm text-slate-400">
               {col.links.map((link) => (
                 <li key={link.label}>
-                  <Link href={link.href} className="hover:text-white">
-                    {link.label}
-                  </Link>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 hover:text-white"
+                    >
+                      {link.label}
+                      <ExternalLink className="h-3 w-3 opacity-60" />
+                    </a>
+                  ) : (
+                    <Link href={link.href} className="hover:text-white">
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

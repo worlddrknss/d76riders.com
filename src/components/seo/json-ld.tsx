@@ -1,3 +1,5 @@
+import { socialLinks } from "@/data/community";
+
 type JsonLdProps = {
   data: Record<string, unknown>;
 };
@@ -28,7 +30,7 @@ export function organizationJsonLd() {
       addressRegion: "TN",
       addressCountry: "US",
     },
-    sameAs: [],
+    sameAs: [socialLinks.facebookGroup],
   };
 }
 

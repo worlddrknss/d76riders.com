@@ -15,6 +15,12 @@ export type NavItem =
   | { href: string; label: string }
   | { label: string; children: { href: string; label: string }[] };
 
+// Official District 76 presences off-site. Also fed to the Organization
+// schema's `sameAs` so search engines tie them to this domain.
+export const socialLinks = {
+  facebookGroup: "https://www.facebook.com/groups/d76riders",
+} as const;
+
 export const navItems: NavItem[] = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
