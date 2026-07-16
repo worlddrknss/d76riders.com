@@ -67,7 +67,7 @@ export default async function AdminCommunityPage(props: {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Growth</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-white">Community</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
-          Crews, local business partners, featured rides, and referral performance.
+          Crews, local business sponsors, featured rides, and referral performance.
         </p>
       </section>
 
@@ -180,7 +180,7 @@ export default async function AdminCommunityPage(props: {
           action={createSponsorAction}
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
-          <h2 className="font-display text-lg font-semibold text-white">New partner</h2>
+          <h2 className="font-display text-lg font-semibold text-white">New sponsor</h2>
           <input name="name" required placeholder="Business name" className={inputClass} />
           <input name="description" placeholder="What they do" className={inputClass} />
           <input name="websiteUrl" type="url" placeholder="https://example.com" className={inputClass} />
@@ -191,7 +191,7 @@ export default async function AdminCommunityPage(props: {
             <option value="FRIEND">Friend of the Community</option>
           </select>
           <button type="submit" className={submitClass}>
-            Add Partner
+            Add Sponsor
           </button>
         </form>
 
@@ -200,7 +200,7 @@ export default async function AdminCommunityPage(props: {
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
           <h2 className="font-display text-lg font-semibold text-white">Sponsor a ride</h2>
-          <p className="text-xs text-slate-400">Attach a partner to a specific event.</p>
+          <p className="text-xs text-slate-400">Attach a sponsor to a specific event.</p>
           <select name="sponsorId" required className={inputClass}>
             {sponsors.map((sponsor) => (
               <option key={sponsor.id} value={sponsor.id}>

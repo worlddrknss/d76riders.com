@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Policy } from "@prisma/client";
 
+import { PolicyBodyEditor } from "@/components/admin/policy-body-editor";
+
 type PolicyFormProps = {
   action: (formData: FormData) => Promise<void>;
   policy?: Policy;
@@ -112,23 +114,7 @@ export function PolicyForm({ action, policy, submitLabel }: PolicyFormProps) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="bodyHtml" className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-          Body (HTML)
-        </label>
-        <textarea
-          id="bodyHtml"
-          name="bodyHtml"
-          rows={16}
-          required
-          defaultValue={policy?.bodyHtml}
-          placeholder="<h2>Ride with respect</h2><p>…</p>"
-          className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 font-mono text-xs text-white placeholder:text-slate-500"
-        />
-        <p className="mt-1 text-xs text-slate-500">
-          Sanitized on save — scripts, iframes, and inline styles are stripped.
-        </p>
-      </div>
+      <PolicyBodyEditor defaultValue={policy?.bodyHtml} />
 
       <div className="flex justify-end gap-2">
         <Link

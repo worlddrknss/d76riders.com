@@ -8,12 +8,12 @@ import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Partners",
+  title: "Sponsors",
   description:
     "Local businesses that support the District 76 Riders community — shops, gear, and food stops around Clarksville, Tennessee.",
   alternates: { canonical: "/sponsors" },
   openGraph: {
-    title: "Partners — District 76 Riders",
+    title: "Sponsors — District 76 Riders",
     description: "The local businesses that support this community.",
   },
 };
@@ -47,7 +47,7 @@ export default async function SponsorsPage() {
       <PageHero
         image={siteImages.pageHeroes.sponsors}
         eyebrow="Community"
-        title="Local Partners"
+        title="Local Sponsors"
         description="Local businesses that support this community — the shops, stops, and people who look after riders around Clarksville. Worth your business."
       />
 
@@ -56,7 +56,7 @@ export default async function SponsorsPage() {
           {sponsors.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <Store className="mx-auto h-8 w-8 text-muted/50" />
-              <p className="mt-3 text-sm text-muted">No partners listed yet.</p>
+              <p className="mt-3 text-sm text-muted">No sponsors listed yet.</p>
             </div>
           ) : (
             <StaggerList className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

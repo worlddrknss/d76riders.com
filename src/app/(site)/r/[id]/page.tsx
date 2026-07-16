@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, MapPin, Package, Receipt, Route, Shirt, Trash2, Users, Video, Wrench } from "lucide-react";
+import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
+import { InviteLink } from "@/components/community/invite-link";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
+import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { evaluateQuests } from "@/lib/quests";
+import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
@@ -384,6 +387,29 @@ export default async function RiderProfilePage({
   // Onboarding is the owner's own checklist — never shown to visitors.
   const quests = isOwner ? await evaluateQuests(rider.id) : [];
 
+  // Skill tracks live on the profile rather than a standalone page: they describe
+  // this rider, so they belong with everything else that does.
+  const skillTracks = await prisma.skillTrack.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      icon: true,
+      riderSkills: { where: { riderId: rider.id } },
+    },
+  });
+
+  // Minted on first view of the owner's own Invite tab.
+  const referral = isOwner
+    ? await (async () => {
+        await getOrCreateReferralCode(rider.id);
+        return referralStats(rider.id);
+      })()
+    : null;
+
   const reputationPanel = (
     <ReputationPanel
       trust={rider.trust}
@@ -740,12 +766,117 @@ export default async function RiderProfilePage({
     </div>
   );
 
+  // ─── Skills tab ─────────────────────────────────────────────────
+  const skillsContent = (
+    <div className="max-w-3xl space-y-3">
+      <p className="text-sm text-muted">
+        {isOwner
+          ? "Set your own level as you learn. A ride organizer can verify it — mentor level is theirs to award."
+          : `Where ${rider.name} is on the skills that make group riding safe.`}
+      </p>
+
+      {skillTracks.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
+          <p className="text-sm text-muted">No skill tracks are set up yet.</p>
+        </div>
+      ) : (
+        skillTracks.map((track) => {
+          const mine = track.riderSkills[0];
+          return (
+            <SkillTrackCard
+              key={track.id}
+              slug={track.slug}
+              name={track.name}
+              description={track.description}
+              icon={track.icon}
+              level={mine?.level ?? null}
+              verified={Boolean(mine?.verifiedAt)}
+              editable={isOwner}
+            />
+          );
+        })
+      )}
+    </div>
+  );
+
+  // ─── Invite tab (owner only) ────────────────────────────────────
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
+  const inviteContent = referral ? (
+    <div className="max-w-2xl space-y-5">
+      <p className="text-sm text-muted">Share your link. Anyone who joins through it is credited to you.</p>
+
+      <InviteLink url={`${siteUrl}/i/${referral.code}`} code={referral.code ?? ""} />
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
+          <p className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</p>
+          <p className="mt-1 font-display text-3xl font-bold text-ink">{referral.clicks}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
+          <p className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</p>
+          <p className="mt-1 font-display text-3xl font-bold text-sunset">{referral.conversions}</p>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
+        {referral.referrals.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-soft">
+            <UserPlus className="mx-auto h-7 w-7 text-muted/50" />
+            <p className="mt-2 text-sm text-muted">No one has joined through your link yet.</p>
+          </div>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {referral.referrals.map((entry) => {
+              const referred = entry.referredUser.rider;
+              if (!referred) return null;
+              return (
+                <li key={referred.handle}>
+                  <Link
+                    href={`/r/${referred.handle}`}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
+                  >
+                    {referred.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaUrl(referred.avatarUrl)}
+                        alt=""
+                        className="h-8 w-8 rounded-full border border-border object-cover"
+                      />
+                    ) : (
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-canvas text-[0.6rem] font-bold text-muted">
+                        {referred.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-ink">{referred.name}</span>
+                      <span className="block truncate text-xs text-muted">@{referred.handle}</span>
+                    </span>
+                    <span className="shrink-0 text-xs text-muted">
+                      {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  ) : null;
+
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewContent },
     { id: "rides", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
     { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
+    {
+      id: "skills",
+      label: "Skills",
+      count: rider.skills.length || null,
+      content: skillsContent,
+    },
   ];
   if (isOwner) {
     tabs.push({
@@ -756,6 +887,13 @@ export default async function RiderProfilePage({
           <EmergencyCardManager card={emergencyCard} configured={emergencyConfigured} />
         </div>
       ),
+    });
+    // Referral link and conversions are personal — owner only.
+    tabs.push({
+      id: "invite",
+      label: "Invite",
+      count: referral?.conversions || null,
+      content: inviteContent,
     });
   }
 

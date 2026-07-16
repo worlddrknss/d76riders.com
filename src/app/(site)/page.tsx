@@ -568,19 +568,19 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* PARTNERS */}
+      {/* SPONSORS */}
       {sponsors.length > 0 ? (
         <section className="w-full border-t border-border bg-canvas">
           <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <FadeUp className="flex items-center justify-between">
               <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
-                Local Partners
+                Sponsors
               </h2>
               <Link
                 href="/sponsors"
                 className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]"
               >
-                All Partners <ArrowRight className="h-4 w-4" />
+                All Sponsors <ArrowRight className="h-4 w-4" />
               </Link>
             </FadeUp>
 

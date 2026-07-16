@@ -1,5 +1,9 @@
 "use server";
 
+// Skill actions. There is deliberately no page.tsx here — skill tracks are shown
+// and edited on the rider profile (/r/[id], "Skills" tab), since they describe a
+// rider rather than being a destination of their own.
+
 import { SkillLevel } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -40,7 +44,6 @@ export async function setMySkillAction(skillSlug: string, level: string): Promis
   // rider isn't left showing a level they no longer claim.
   if (level === "") {
     await prisma.riderSkill.deleteMany({ where: { riderId: rider.id, skillId: skill.id } });
-    revalidatePath("/skills");
     revalidatePath(`/r/${currentUser.handle ?? ""}`);
     return { error: null, success: `Stopped tracking ${skill.name}.` };
   }
@@ -57,7 +60,6 @@ export async function setMySkillAction(skillSlug: string, level: string): Promis
     update: { level: level as SkillLevel, verifiedByRiderId: null, verifiedAt: null },
   });
 
-  revalidatePath("/skills");
   revalidatePath(`/r/${currentUser.handle ?? ""}`);
 
   return { error: null, success: `Updated ${skill.name}.` };
@@ -131,7 +133,6 @@ export async function verifyRiderSkillAction(
   await syncRiderProgression(target.id);
 
   revalidatePath(`/r/${target.handle}`);
-  revalidatePath("/skills");
 
   return { error: null, success: `Verified @${target.handle} at ${level.toLowerCase()} level.` };
 }
