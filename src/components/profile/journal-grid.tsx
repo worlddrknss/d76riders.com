@@ -46,11 +46,16 @@ type JournalGridProps = {
   entries: JournalGridEntry[];
   isOwner: boolean;
   isAuthenticated: boolean;
+  /**
+   * "feed" renders one full-width post per row, for the profile's main column.
+   * "grid" keeps the original two-up masonry for wide, standalone listings.
+   */
+  layout?: "feed" | "grid";
 };
 
-export function JournalGrid({ entries, isOwner, isAuthenticated }: JournalGridProps) {
+export function JournalGrid({ entries, isOwner, isAuthenticated, layout = "grid" }: JournalGridProps) {
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    <div className={layout === "feed" ? "space-y-5" : "grid gap-5 md:grid-cols-2"}>
       {entries.map((entry) => (
         <JournalCard key={entry.id} entry={entry} isOwner={isOwner} isAuthenticated={isAuthenticated} />
       ))}

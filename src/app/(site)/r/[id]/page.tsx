@@ -11,6 +11,7 @@ import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
+import { TrustBadge } from "@/components/reputation/trust-badge";
 import { evaluateQuests } from "@/lib/quests";
 import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
@@ -423,13 +424,42 @@ export default async function RiderProfilePage({
     />
   );
 
+  // ─── Journal feed (rendered as the Overview main column) ────────
+  const ridesContent = (
+    <div>
+      {isOwner && (
+        <JournalComposerBar avatarUrl={avatar} firstName={rider.name.split(" ")[0]} />
+      )}
+      <div className={isOwner ? "mt-6" : ""}>
+        {journalForGrid.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+            <BookText className="mx-auto h-8 w-8 text-muted/50" />
+            <p className="mt-3 text-sm text-muted">
+              {isOwner
+                ? "No ride journal entries yet. Use the box above to share your first ride story."
+                : `${rider.name} hasn't shared any ride journal entries yet.`}
+            </p>
+          </div>
+        ) : (
+          <JournalGrid
+            entries={journalForGrid}
+            isOwner={isOwner}
+            isAuthenticated={Boolean(currentUser)}
+            layout="feed"
+          />
+        )}
+      </div>
+    </div>
+  );
+
   const overviewContent = (
     <div className="space-y-5">
       {/* Full width above the columns: the checklist is temporary, so it gets a
           strip rather than a slot that displaces the profile itself. */}
       {isOwner ? <OnboardingQuests quests={quests} /> : null}
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      {/* Sidebar of who-this-rider-is, with their journal as the main column. */}
+      <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
         <div className="space-y-5">
           {reputationPanel}
           {featuredBike && (
@@ -513,9 +543,7 @@ export default async function RiderProfilePage({
               )}
             </div>
           )}
-        </div>
 
-        <div className="space-y-5">
           <div className={cardClass}>
             <div className="flex items-center justify-between">
               <h2 className={headingClass}><CalendarDays className="h-3.5 w-3.5 text-sunset" />Events</h2>
@@ -587,6 +615,9 @@ export default async function RiderProfilePage({
             )}
           </div>
         </div>
+
+        {/* Main column: the rider's journal, as the feed. */}
+        <div>{ridesContent}</div>
       </div>
     </div>
   );
@@ -637,28 +668,6 @@ export default async function RiderProfilePage({
   );
 
   // ─── Journal tab (Instagram-style grid) ─────────────────────────
-  const ridesContent = (
-    <div>
-      {isOwner && (
-        <JournalComposerBar avatarUrl={avatar} firstName={rider.name.split(" ")[0]} />
-      )}
-      <div className={isOwner ? "mt-6" : ""}>
-        {journalForGrid.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
-            <BookText className="mx-auto h-8 w-8 text-muted/50" />
-            <p className="mt-3 text-sm text-muted">
-              {isOwner
-                ? "No ride journal entries yet. Use the box above to share your first ride story."
-                : `${rider.name} hasn't shared any ride journal entries yet.`}
-            </p>
-          </div>
-        ) : (
-          <JournalGrid entries={journalForGrid} isOwner={isOwner} isAuthenticated={Boolean(currentUser)} />
-        )}
-      </div>
-    </div>
-  );
-
   // ─── Gear tab ───────────────────────────────────────────────────
   const gearContent = isOwner ? (
     <GearTabbedView
@@ -866,8 +875,8 @@ export default async function RiderProfilePage({
   ) : null;
 
   const tabs: ProfileTab[] = [
-    { id: "overview", label: "Overview", content: overviewContent },
-    { id: "rides", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
+    // No separate Journal tab: the journal *is* the Overview's main column now.
+    { id: "overview", label: "Overview", count: rider.journalEntries.length, content: overviewContent },
     { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
@@ -900,44 +909,42 @@ export default async function RiderProfilePage({
   return (
     <section className="page-shell">
       <div className="content-wrap">
-        {/* COVER HERO */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-          <div className="relative h-40 w-full sm:h-56">
+        {/* PROFILE HEADER — cover with the avatar straddling its lower edge,
+            identity on the left, actions on the right, then the tab row. */}
+        <div className="overflow-hidden rounded-t-2xl border border-b-0 border-border bg-surface shadow-soft">
+          <div className="relative h-44 w-full sm:h-64">
             {cover ? (
               <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-linear-to-br from-asphalt via-asphalt to-sunset/40" />
             )}
-            <div className="absolute right-4 top-4">
-              {isOwner && profileData ? (
-                <div className="rounded-lg bg-surface/85 backdrop-blur">
-                  <ProfileEditButton profile={profileData} />
-                </div>
-              ) : currentUser ? (
-                <form action={toggleRiderFollowAction.bind(null, rider.handle)}>
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-black/35 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur transition hover:bg-black/55"
-                  >
-                    {isFollowing ? "Following" : "Follow Rider"}
-                  </button>
-                </form>
-              ) : null}
-            </div>
+            {/* Keeps the avatar readable against a busy cover photo. */}
+            <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/45 to-transparent" />
           </div>
 
-          <div className="px-5 pb-6 pt-5 sm:px-8">
-            {/* Avatar sits fully below the cover, alongside the name — no overlap. */}
-            <div className="flex flex-wrap items-center gap-4">
+          {/* Avatar is absolutely positioned so it reliably straddles the cover's
+              lower edge; a negative margin on a flex child doesn't lift it out. */}
+          <div className="relative px-5 pb-5 sm:px-8">
+            <div className="absolute -top-12 left-5 sm:-top-16 sm:left-8">
               {avatar ? (
-                <img src={avatar} alt={rider.name} className="h-20 w-20 rounded-2xl border border-border object-cover shadow-soft sm:h-24 sm:w-24" />
+                <img
+                  src={avatar}
+                  alt={rider.name}
+                  className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
+                />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-sunset/10 font-display text-3xl font-bold text-sunset shadow-soft sm:h-24 sm:w-24">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
                   {rider.name.charAt(0)}
                 </div>
               )}
-              <div>
-                <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">{rider.name}</h1>
+            </div>
+
+            {/* Clears the avatar: stacked under it on mobile, beside it from sm up. */}
+            <div className="flex flex-wrap items-start justify-between gap-4 pt-14 sm:pl-36 sm:pt-4">
+              <div className="min-w-0">
+                <h1 className="truncate font-display text-2xl font-bold text-ink sm:text-3xl">
+                  {rider.name}
+                </h1>
                 <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
                   <span>@{rider.handle}</span>
                   {rider.location && (
@@ -949,43 +956,58 @@ export default async function RiderProfilePage({
                   )}
                 </p>
               </div>
+
+              {isOwner && profileData ? (
+                <ProfileEditButton profile={profileData} />
+              ) : currentUser ? (
+                <form action={toggleRiderFollowAction.bind(null, rider.handle)}>
+                  <button
+                    type="submit"
+                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition ${
+                      isFollowing
+                        ? "border border-border bg-canvas text-ink hover:border-ink/30"
+                        : "bg-sunset text-white shadow-soft hover:bg-[#cf5a26]"
+                    }`}
+                  >
+                    {isFollowing ? "Following" : "Follow Rider"}
+                  </button>
+                </form>
+              ) : null}
             </div>
 
-            {rider.bio && <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>}
+            {rider.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>}
 
-            {/* STAT BAND */}
-            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
-              <Link href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`} className="rounded-lg bg-canvas p-3 text-center transition hover:ring-2 hover:ring-sunset/30">
-                <p className="font-display text-2xl font-bold text-asphalt">{rider.bikes.length}</p>
-                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
+            {/* Stats as one quiet line rather than four boxes — they're context,
+                not the point of the page. */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+              <Link
+                href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`}
+                className="hover:text-sunset"
+              >
+                <span className="font-semibold text-ink">{rider.bikes.length}</span> bike
+                {rider.bikes.length === 1 ? "" : "s"}
               </Link>
-              <div className="rounded-lg bg-canvas p-3 text-center">
-                <p className="font-display text-2xl font-bold text-asphalt">{ridesFromEvents}</p>
-                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
-              </div>
-              <div className="rounded-lg bg-canvas p-3 text-center">
-                <p className="font-display text-2xl font-bold text-asphalt">{rider.yearsRiding ?? "—"}</p>
-                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Years</p>
-              </div>
-              {rider.favoriteRoad ? (
-                <div className="rounded-lg bg-canvas p-3 text-center">
-                  <p className="truncate font-display text-sm font-bold text-asphalt" title={rider.favoriteRoad}>{rider.favoriteRoad}</p>
-                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Fav Road</p>
-                </div>
-              ) : (
-                <div className="rounded-lg bg-canvas p-3 text-center">
-                  <p className="font-display text-2xl font-bold text-asphalt">{rider.gearItems.length}</p>
-                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Gear</p>
-                </div>
-              )}
+              <span>
+                <span className="font-semibold text-ink">{ridesFromEvents}</span> ride
+                {ridesFromEvents === 1 ? "" : "s"}
+              </span>
+              {rider.yearsRiding ? (
+                <span>
+                  <span className="font-semibold text-ink">{rider.yearsRiding}</span> year
+                  {rider.yearsRiding === 1 ? "" : "s"} riding
+                </span>
+              ) : null}
+              {rider.trust && rider.trust.eventsAttended > 0 ? (
+                <TrustBadge level={rider.trust.level} score={rider.trust.score} />
+              ) : null}
             </div>
           </div>
+
         </div>
 
-        {/* TABS */}
-        <div className="mt-6">
-          <ProfileTabs tabs={tabs} />
-        </div>
+        {/* The tab rail is styled as the header card's bottom edge (hence the
+            card above is only rounded at the top), with panel content below it. */}
+        <ProfileTabs tabs={tabs} />
       </div>
     </section>
   );

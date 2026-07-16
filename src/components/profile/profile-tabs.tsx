@@ -15,10 +15,13 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
 
   return (
     <div>
+      {/* Rendered as the bottom rail of the profile header card above it, so it
+          carries the card's side/bottom borders and rounding rather than a
+          plain underline. */}
       <div
         role="tablist"
         aria-label="Profile sections"
-        className="flex flex-wrap gap-1 overflow-x-auto border-b border-border"
+        className="flex gap-1 overflow-x-auto rounded-b-2xl border border-t border-border bg-surface px-2 shadow-soft sm:px-4"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === current?.id;
