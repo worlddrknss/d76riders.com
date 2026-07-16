@@ -1,6 +1,6 @@
 "use server";
 
-import { CrewRole, SponsorTier } from "@prisma/client";
+import { ChallengeMetric, CrewRole, SponsorTier } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -262,6 +262,91 @@ export async function linkSponsorToEventAction(formData: FormData): Promise<void
 
   revalidatePath("/admin/community");
   revalidatePath(`/events/${event.slug}`);
+}
+
+// ---------- Challenges ----------
+
+export async function createChallengeAction(formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const name = text(formData.get("name"));
+  const slug = slugify(text(formData.get("slug")) || name);
+  const goal = Number.parseInt(text(formData.get("goal")), 10);
+  const startsAt = new Date(text(formData.get("startsAt")));
+  const endsAt = new Date(text(formData.get("endsAt")));
+  const metric = text(formData.get("metric"));
+
+  if (!name || !slug || !Number.isFinite(goal) || goal <= 0) {
+    redirect("/admin/community?error=challenge");
+  }
+
+  if (Number.isNaN(startsAt.getTime()) || Number.isNaN(endsAt.getTime()) || endsAt <= startsAt) {
+    redirect("/admin/community?error=challengeWindow");
+  }
+
+  if (await prisma.challenge.findUnique({ where: { slug }, select: { id: true } })) {
+    redirect("/admin/community?error=challengeSlug");
+  }
+
+  const crewId = text(formData.get("crewId")) || null;
+  const badgeId = text(formData.get("badgeId")) || null;
+
+  const challenge = await prisma.challenge.create({
+    data: {
+      slug,
+      name,
+      description: text(formData.get("description")) || name,
+      metric: Object.values(ChallengeMetric).includes(metric as ChallengeMetric)
+        ? (metric as ChallengeMetric)
+        : "EVENTS_ATTENDED",
+      goal,
+      startsAt,
+      endsAt,
+      crewId,
+      badgeId,
+    },
+    select: { id: true, name: true, slug: true, metric: true, goal: true },
+  });
+
+  await logAudit({
+    actorUserId: userId,
+    action: "challenge.create",
+    entityType: "Challenge",
+    entityId: challenge.id,
+    summary: `Created challenge "${challenge.name}" (${challenge.goal} ${challenge.metric})`,
+    after: challenge,
+  });
+
+  revalidatePath("/admin/community");
+  revalidatePath("/challenges");
+  redirect("/admin/community");
+}
+
+export async function deleteChallengeAction(challengeId: string): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    select: { id: true, name: true, slug: true },
+  });
+  if (!challenge) {
+    revalidatePath("/admin/community");
+    return;
+  }
+
+  await prisma.challenge.delete({ where: { id: challengeId } });
+
+  await logAudit({
+    actorUserId: userId,
+    action: "challenge.delete",
+    entityType: "Challenge",
+    entityId: challengeId,
+    summary: `Deleted challenge "${challenge.name}" and every rider's entry in it`,
+    before: challenge,
+  });
+
+  revalidatePath("/admin/community");
+  revalidatePath("/challenges");
 }
 
 // ---------- Event highlights ----------

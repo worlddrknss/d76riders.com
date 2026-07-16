@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  createChallengeAction,
   createCrewAction,
   createSponsorAction,
   linkSponsorToEventAction,
@@ -20,6 +21,9 @@ const ERRORS: Record<string, string> = {
   sponsorSlug: "A sponsor with that slug already exists.",
   sponsorUrl: "The website must be a valid http(s) URL.",
   link: "Couldn't find that sponsor or event.",
+  challenge: "A challenge needs a name and a positive goal.",
+  challengeSlug: "A challenge with that slug already exists.",
+  challengeWindow: "The end date must be after the start date.",
 };
 
 const inputClass =
@@ -34,7 +38,7 @@ export default async function AdminCommunityPage(props: {
   const error = searchParams.error ? ERRORS[searchParams.error] : null;
 
   const now = new Date();
-  const [crews, sponsors, events, referralLeaders] = await Promise.all([
+  const [crews, sponsors, events, referralLeaders, challenges, badges] = await Promise.all([
     prisma.crew.findMany({
       orderBy: { name: "asc" },
       include: { _count: { select: { members: true, events: true } } },
@@ -59,6 +63,15 @@ export default async function AdminCommunityPage(props: {
         _count: { select: { referrals: true } },
       },
     }),
+    prisma.challenge.findMany({
+      orderBy: { endsAt: "desc" },
+      include: { crew: { select: { name: true } }, _count: { select: { entries: true } } },
+    }),
+    prisma.badge.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   return (
@@ -67,7 +80,7 @@ export default async function AdminCommunityPage(props: {
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Growth</p>
         <h1 className="mt-2 font-display text-4xl font-bold text-white">Community</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
-          Crews, local business sponsors, featured rides, and referral performance.
+          Crews, challenges, local business sponsors, featured rides, and referral performance.
         </p>
       </section>
 
@@ -238,6 +251,102 @@ export default async function AdminCommunityPage(props: {
           ))}
         </div>
       ) : null}
+
+      {/* ── Challenges ── */}
+      <section className="grid gap-4 lg:grid-cols-2">
+        <form
+          action={createChallengeAction}
+          className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
+        >
+          <h2 className="font-display text-lg font-semibold text-white">New challenge</h2>
+          <p className="text-xs text-slate-400">
+            Only rides inside the window count toward it — that&apos;s what makes it a challenge rather than a badge.
+          </p>
+
+          <input name="name" required placeholder="Name (e.g. 500 Miles in July)" className={inputClass} />
+          <input name="description" placeholder="What it takes" className={inputClass} />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select name="metric" defaultValue="MILES_RIDDEN" className={inputClass}>
+              <option value="MILES_RIDDEN">Miles ridden</option>
+              <option value="EVENTS_ATTENDED">Rides attended</option>
+              <option value="EVENTS_ORGANIZED">Rides organized</option>
+            </select>
+            <input name="goal" type="number" min={1} required placeholder="Goal (e.g. 500)" className={inputClass} />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Starts
+              <input name="startsAt" type="datetime-local" required className={`mt-1 ${inputClass}`} />
+            </label>
+            <label className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+              Ends
+              <input name="endsAt" type="datetime-local" required className={`mt-1 ${inputClass}`} />
+            </label>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select name="crewId" defaultValue="" className={inputClass}>
+              <option value="">Open to everyone</option>
+              {crews.map((crew) => (
+                <option key={crew.id} value={crew.id}>
+                  {crew.name} crew only
+                </option>
+              ))}
+            </select>
+            <select name="badgeId" defaultValue="" className={inputClass}>
+              <option value="">No badge</option>
+              {badges.map((badge) => (
+                <option key={badge.id} value={badge.id}>
+                  Award: {badge.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button type="submit" className={submitClass}>
+            Create Challenge
+          </button>
+        </form>
+
+        <div className="space-y-2">
+          {challenges.length === 0 ? (
+            <p className="rounded-xl border border-white/10 bg-white/3 p-5 text-sm text-slate-400 shadow-lg">
+              No challenges yet.
+            </p>
+          ) : (
+            challenges.map((challenge) => (
+              <article
+                key={challenge.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/3 p-4 shadow-lg"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/challenges/${challenge.slug}`}
+                      className="font-semibold text-white hover:text-sunset"
+                    >
+                      {challenge.name}
+                    </Link>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.6rem] font-semibold uppercase text-slate-400">
+                      {challenge.goal} {challenge.metric.replaceAll("_", " ").toLowerCase()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {challenge.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} –{" "}
+                    {challenge.endsAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    {" · "}
+                    {challenge._count.entries} rider{challenge._count.entries === 1 ? "" : "s"} in
+                    {challenge.crew ? ` · ${challenge.crew.name} crew` : ""}
+                  </p>
+                </div>
+                <CommunityDeleteButton kind="challenge" id={challenge.id} name={challenge.name} />
+              </article>
+            ))
+          )}
+        </div>
+      </section>
 
       {/* ── Referrals ── */}
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">

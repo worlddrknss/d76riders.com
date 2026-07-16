@@ -25,6 +25,7 @@ export const siteImages = {
     sponsors: u("photo-1444723121867-7a241cacace9", 2000), // Clarksville — where the businesses are
     policies: u("photo-1450101499163-c8848c66ca85", 2000),
     invite: u("photo-1464822759023-fed622ff2c3b", 2000), // as /join
+    challenges: "/images/hero/events.webp", // challenges are won on rides
   },
   history: {
     clarksville: u("photo-1444723121867-7a241cacace9", 1400),

@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient, TrustLevel } from "@prisma/client";
 
+import { syncRiderChallenges } from "@/lib/challenges";
 import { prisma } from "@/lib/prisma";
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -232,11 +233,15 @@ export async function evaluateBadges(riderId: string, db: Db = prisma): Promise<
   return earned;
 }
 
-// Refresh trust and award badges together, then notify the rider of anything new.
-// Called after a ride closes and after a rider checks in or out.
+// Refresh trust, award badges, and score challenges together, then notify the
+// rider of anything new. Called after a ride closes and after a check-in.
 export async function syncRiderProgression(riderId: string): Promise<void> {
   await refreshRiderTrust(riderId);
   const earnedIds = await evaluateBadges(riderId);
+
+  // Challenges hang off the same hooks as trust and badges — the evidence is the
+  // same check-ins, so scoring them anywhere else would drift.
+  await syncRiderChallenges(riderId);
 
   if (earnedIds.length === 0) return;
 

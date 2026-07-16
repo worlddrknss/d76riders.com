@@ -20,15 +20,12 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 12 | Media and Storytelling | ⬜ Not started |
 | 13 | Admin and Moderation Enhancements | ✅ Done |
 | 14 | Platform Reliability and Insights | ⬜ Not started |
-| 15 | Challenges | ⬜ Not started |
+| 15 | Challenges | ✅ Done |
 
-Remaining, in the order they'd be quickest to build: **15 → 5 → 14 → 9 → 12**.
+Remaining, in the order they'd be quickest to build: **5 → 14 → 9 → 12**.
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
-- **15 — Challenges.** Two models and a page, but the hard part is done: `EventCheckIn`,
-  `RiderTrust.milesRidden`, and the badge-criteria engine in `src/lib/reputation.ts` already compute
-  everything a challenge scores on.
 - **5 — Hazard Reporting.** One model and an activity type, but new map-overlay UI and a TTL story.
 - **14 — Reliability.** Mostly greenfield: there is no service worker or manifest today.
 - **9 — Route Intelligence.** Needs an elevation source and a second routing profile; `Route` has no
@@ -389,9 +386,9 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 15: Challenges
+## Phase 15: Challenges ✅
 
-**Effort:** Medium — two models and a page; the scoring engine already exists.
+**Effort:** Medium — two models and a page; the scoring engine already existed.
 
 **Why:** The one feature worth borrowing from REVER. They run time-boxed competitions ("500 miles in
 March", "ride 8 of 10 Sunday rides"); we have badges, which are permanent and individual, but nothing
@@ -407,20 +404,19 @@ page to model the standings UI on.
 
 **Work:**
 
-- [ ] Add `Challenge` model (slug, name, description, metric, goal, startsAt, endsAt, crewId?, active)
-- [ ] Add `ChallengeEntry` model (challengeId, riderId, progress, completedAt) — one row per rider per challenge
-- [ ] Metrics: MILES_RIDDEN, EVENTS_ATTENDED, EVENTS_ORGANIZED, DISTINCT_ROADS — mirroring `BadgeCriteria`
-      so the two engines stay recognisably the same shape
-- [ ] Scoring: count only check-ins **within the challenge window**, so progress is earned during the
+- [x] Add `Challenge` model (slug, name, description, metric, goal, startsAt, endsAt, crewId?, active)
+- [x] Add `ChallengeEntry` model (challengeId, riderId, progress, completedAt) — one row per rider per challenge
+- [x] Metrics: MILES_RIDDEN, EVENTS_ATTENDED, EVENTS_ORGANIZED — mirroring `BadgeCriteria` so the two engines stay recognisably the same shape. **DISTINCT_ROADS was dropped**: `Road.routeId` and `RideEvent.routeId` are both unique 1:1 to `Route` and each creation path mints its own, so an attended ride can never resolve to a road — it would have scored zero forever
+- [x] Scoring: count only check-ins **within the challenge window**, so progress is earned during the
       challenge rather than backfilled from history the day someone joins
-- [ ] Join/leave action; auto-enrol is deliberately avoided — a challenge nobody opted into is just a chart
-- [ ] Recompute progress in `syncRiderProgression`, alongside trust and badges, so it lands on the same
+- [x] Join/leave action; auto-enrol is deliberately avoided — a challenge nobody opted into is just a chart
+- [x] Recompute progress in `syncRiderProgression`, alongside trust and badges, so it lands on the same
       hooks (check-in, manual check-in, Close Ride)
-- [ ] `/challenges` index (active, upcoming, past) and `/challenges/[slug]` with standings
-- [ ] Optional crew-scoped challenges via `crewId` (Phase 11 already has crews and membership)
-- [ ] Award a badge on completion — reuse `RiderBadge` rather than inventing a second trophy case
-- [ ] Activity: `CHALLENGE_JOINED`, `CHALLENGE_COMPLETED`
-- [ ] Admin CRUD under `/admin/community`, audited like the rest of Phase 13
+- [x] `/challenges` index (active, upcoming, past) and `/challenges/[slug]` with standings
+- [x] Optional crew-scoped challenges via `crewId` (Phase 11 already has crews and membership)
+- [x] Award a badge on completion — reuse `RiderBadge` rather than inventing a second trophy case
+- [x] Activity: `CHALLENGE_JOINED`, `CHALLENGE_COMPLETED`
+- [x] Admin CRUD under `/admin/community`, audited like the rest of Phase 13
 
 **Schema sketch:**
 

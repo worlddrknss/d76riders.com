@@ -1,0 +1,69 @@
+// Challenges domain — time-boxed, opt-in competitions.
+//
+// Distinct from badges (reputation.prisma), which are permanent and individual.
+// A challenge has a deadline and a field: "500 miles in March", "8 of the 10
+// Sunday rides". Same shape as the badge criteria engine on purpose — see
+// src/lib/challenges.ts.
+
+model Challenge {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String
+  description String
+  metric      ChallengeMetric
+  goal        Int
+  startsAt    DateTime
+  endsAt      DateTime
+  // Optional crew scope — a challenge just for the touring crew, say.
+  crewId      String?
+  // Awarded to everyone who finishes, if set.
+  badgeId     String?
+  active      Boolean         @default(true)
+
+  crew    Crew?            @relation(fields: [crewId], references: [id], onDelete: SetNull)
+  badge   Badge?           @relation(fields: [badgeId], references: [id], onDelete: SetNull)
+  entries ChallengeEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, startsAt, endsAt])
+  @@index([crewId])
+}
+
+// Mirrors BadgeCriteria (reputation.prisma) on purpose — the two engines score
+// the same evidence, so they should read the same.
+//
+// A DISTINCT_ROADS metric was specced and dropped: Road.routeId and
+// RideEvent.routeId are both unique 1:1 to Route, and the two creation paths
+// each mint their own Route, so an attended ride can never resolve to a Road.
+// It would have scored zero forever. Revisit if rides are ever linked to roads.
+enum ChallengeMetric {
+  // Sum of distanceMiles across rides checked into during the window.
+  MILES_RIDDEN
+  // Count of rides checked into during the window.
+  EVENTS_ATTENDED
+  // Count of rides organized that completed during the window.
+  EVENTS_ORGANIZED
+}
+
+// One row per rider per challenge. Created by joining: enrolment is opt-in, so
+// a rider is only scored once they've actually signed up.
+model ChallengeEntry {
+  id          String    @id @default(cuid())
+  challengeId String
+  riderId     String
+  // Recomputed from check-ins, never incremented — see src/lib/challenges.ts.
+  progress    Int       @default(0)
+  // Latches: finishing is a fact about a moment, and isn't revoked if the data
+  // or the rules change later.
+  completedAt DateTime?
+  joinedAt    DateTime  @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  rider     Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, riderId])
+  @@index([riderId])
+  @@index([challengeId, progress(sort: Desc)])
+}

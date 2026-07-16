@@ -91,8 +91,9 @@ model Crew {
   active      Boolean @default(true)
   sortOrder   Int     @default(0)
 
-  members CrewMember[]
-  events  RideEvent[]
+  members    CrewMember[]
+  events     RideEvent[]
+  challenges Challenge[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
