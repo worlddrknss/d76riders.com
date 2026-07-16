@@ -14,9 +14,9 @@ export async function deleteNewsPostAction(slug: string): Promise<void> {
     await requireUserRole(currentUser?.id, "ADMINISTRATOR");
   } catch (error) {
     if (error instanceof AuthenticationError || error instanceof AuthorizationError) {
-      redirect("/news");
+      redirect("/magazine");
     }
-    redirect("/news");
+    redirect("/magazine");
   }
 
   const post = await prisma.newsPost.findUnique({
@@ -28,11 +28,11 @@ export async function deleteNewsPostAction(slug: string): Promise<void> {
   });
 
   if (!post) {
-    redirect("/news");
+    redirect("/magazine");
   }
 
   await prisma.newsPost.delete({ where: { id: post.id } });
   await deleteFileByUrl(post.coverImageUrl);
 
-  redirect("/news");
+  redirect("/magazine");
 }

@@ -167,5 +167,5 @@ export async function createNewsPostAction(
     },
   });
 
-  redirect(`/news/${slug}`);
+  redirect(`/magazine/${slug}`);
 }

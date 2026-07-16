@@ -47,7 +47,7 @@ export const navItems: NavItem[] = [
     label: "More",
     children: [
       { href: "/about", label: "About" },
-      { href: "/news", label: "News" },
+      { href: "/magazine", label: "Magazine" },
       { href: "/gallery", label: "Gallery" },
     ],
   },

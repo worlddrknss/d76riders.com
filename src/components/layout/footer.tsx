@@ -28,7 +28,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Events", href: "/events" },
       { label: "Garage", href: "/garage" },
       { label: "Riders", href: "/r" },
-      { label: "News", href: "/news" },
+      { label: "Magazine", href: "/magazine" },
     ],
   },
   {

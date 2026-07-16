@@ -9,12 +9,12 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "News & Updates",
+  title: "Magazine",
   description:
     "The latest news, ride recaps, and announcements from District 76 Riders — your source for Clarksville motorcycle community updates.",
-  alternates: { canonical: "/news" },
+  alternates: { canonical: "/magazine" },
   openGraph: {
-    title: "News — District 76 Riders",
+    title: "Magazine — District 76 Riders",
     description: "Community news, ride recaps, and announcements.",
   },
 };
@@ -58,7 +58,7 @@ export default async function NewsPage() {
     <div>
       <PageHero
         image={siteImages.pageHeroes.gallery}
-        eyebrow="News"
+        eyebrow="Magazine"
         title="District 76 News"
         description="Ride reports, gear talk, and stories from the road. Notes from riders who actually log the miles."
       />
@@ -69,7 +69,7 @@ export default async function NewsPage() {
           <div>
             {currentUser ? (
               <div className="mb-6 flex items-center justify-end">
-                <Link href="/news/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#cf5a26]">
+                <Link href="/magazine/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#cf5a26]">
                   Submit Article
                 </Link>
               </div>
@@ -78,7 +78,7 @@ export default async function NewsPage() {
             {articles.map((article, i) => (
               <StaggerItem key={article.id}>
               <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                <Link href={`/news/${article.id}`} className="block">
+                <Link href={`/magazine/${article.id}`} className="block">
                   <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}>
                     <span className="absolute bottom-0 left-0 bg-sunset px-3 py-1 text-[0.65rem] font-semibold uppercase tracking-wider text-white">
                       {article.category}
@@ -86,7 +86,7 @@ export default async function NewsPage() {
                   </div>
                 </Link>
                 <div className="p-5">
-                  <Link href={`/news/${article.id}`}>
+                  <Link href={`/magazine/${article.id}`}>
                     <h2 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
                       {article.title}
                     </h2>
@@ -96,7 +96,7 @@ export default async function NewsPage() {
                     <span className="inline-flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5 text-sunset" />No Comments</span>
                   </div>
                   <p className="mt-3 text-sm text-muted">{article.excerpt}</p>
-                  <Link href={`/news/${article.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                  <Link href={`/magazine/${article.id}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
                     Read More <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -125,7 +125,7 @@ export default async function NewsPage() {
               <ul className="mt-4 space-y-4">
                 {recent.map((article, i) => (
                   <li key={article.id}>
-                    <Link href={`/news/${article.id}`} className="flex items-center gap-3">
+                    <Link href={`/magazine/${article.id}`} className="flex items-center gap-3">
                       <span
                         className="h-14 w-14 shrink-0 rounded-md bg-cover bg-center"
                         style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}

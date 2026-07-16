@@ -71,7 +71,7 @@ function subjectView(report: ReportWithSubject): SubjectView {
         author: null,
         heading: report.newsPost?.title ?? null,
         body: report.newsPost ? `Status: ${report.newsPost.status}` : null,
-        href: report.newsPost ? `/news/${report.newsPost.slug}` : null,
+        href: report.newsPost ? `/magazine/${report.newsPost.slug}` : null,
       };
     default:
       return { author: null, heading: null, body: null, href: null };

@@ -48,8 +48,8 @@ const exploreFeatures = [
     description: "Weekly group rides with clear routes, meetup points, and pace guidance for every level.",
   },
   {
-    title: "News",
-    href: "/news",
+    title: "Magazine",
+    href: "/magazine",
     icon: Newspaper,
     description: "Ride reports, gear talk, and stories from riders who actually log the miles.",
   },
@@ -533,7 +533,7 @@ export default async function Home() {
               </h2>
               <p className="mt-1 text-sm text-muted">Latest stories from the District 76 community.</p>
             </div>
-            <Link href="/news" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+            <Link href="/magazine" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               All News <ArrowRight className="h-4 w-4" />
             </Link>
           </FadeUp>
@@ -541,7 +541,7 @@ export default async function Home() {
             {publishedNews.map((article, i) => (
               <StaggerItem key={article.slug}>
                 <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                <Link href={`/news/${article.slug}`} className="block">
+                <Link href={`/magazine/${article.slug}`} className="block">
                   <div
                     className="relative h-44 bg-cover bg-center"
                     style={{ backgroundImage: `url(${article.coverImageUrl || siteImages.galleryPage[i % siteImages.galleryPage.length]})` }}
@@ -552,13 +552,13 @@ export default async function Home() {
                   </div>
                 </Link>
                 <div className="p-5">
-                  <Link href={`/news/${article.slug}`}>
+                  <Link href={`/magazine/${article.slug}`}>
                     <h3 className="font-display text-base font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
                       {article.title}
                     </h3>
                   </Link>
                   <p className="mt-2 text-sm text-muted">{article.excerpt}</p>
-                  <Link href={`/news/${article.slug}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                  <Link href={`/magazine/${article.slug}`} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
                     Read More <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>

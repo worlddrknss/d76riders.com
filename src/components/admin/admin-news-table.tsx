@@ -152,7 +152,7 @@ export function AdminNewsTable({ posts, existingCategories, existingTags }: Admi
                   <td className="px-4 py-3 text-slate-400">{formatDate(post.updatedAt)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <a href={`/news/${post.slug}`} target="_blank" rel="noopener noreferrer" className="rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white" title="View">
+                      <a href={`/magazine/${post.slug}`} target="_blank" rel="noopener noreferrer" className="rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white" title="View">
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>
                       <button onClick={() => openEdit(post)} className="rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white" title="Edit">

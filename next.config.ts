@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
     ],
   },
+  async redirects() {
+    return [
+      // /news became /magazine. Permanent (308) so search engines transfer the
+      // ranking rather than treating these as two pages, and so existing links
+      // and shares keep working. The admin routes under /admin/news are
+      // untouched — only the public section was renamed.
+      { source: "/news", destination: "/magazine", permanent: true },
+      { source: "/news/:path*", destination: "/magazine/:path*", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

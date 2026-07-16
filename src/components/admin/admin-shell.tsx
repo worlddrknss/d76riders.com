@@ -62,8 +62,8 @@ const adminNavSections: NavSection[] = [
   {
     title: "Content",
     items: [
-      { href: "/admin/news", label: "Manage News", icon: PenSquare },
-      { href: "/admin/news/new", label: "Create News", icon: PenSquare },
+      { href: "/admin/news", label: "Manage Magazine", icon: PenSquare },
+      { href: "/admin/news/new", label: "Write Article", icon: PenSquare },
       { href: "/admin/news/moderation", label: "Moderation", icon: ClipboardCheck },
       { href: "/admin/news/categories", label: "Categories", icon: FolderOpen },
     ],

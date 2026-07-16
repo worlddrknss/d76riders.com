@@ -2,7 +2,7 @@
 
 import { useActionState, useMemo, useState } from "react";
 
-import { submitNewsAction, type SubmitNewsFormState } from "@/app/(site)/news/new/actions";
+import { submitNewsAction, type SubmitNewsFormState } from "@/app/(site)/magazine/new/actions";
 import { WysiwygEditor } from "@/components/admin/wysiwyg-editor";
 
 const initialState: SubmitNewsFormState = { error: null };

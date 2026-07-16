@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
-import { deleteNewsPostAction } from "@/app/(site)/news/[id]/actions";
+import { deleteNewsPostAction } from "@/app/(site)/magazine/[id]/actions";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return {
     title,
     description: description.slice(0, 160) || `Read ${title} on District 76 Riders.`,
-    alternates: { canonical: `/news/${id}` },
+    alternates: { canonical: `/magazine/${id}` },
     openGraph: {
       title,
       description: description.slice(0, 160) || `Read ${title} on District 76 Riders.`,
@@ -118,7 +118,7 @@ export default async function NewsArticlePage({
           <nav className="flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-slate-400">
             <Link href="/" className="hover:text-white">Home</Link>
             <ChevronRight className="h-3 w-3" />
-            <Link href="/news" className="hover:text-white">News</Link>
+            <Link href="/magazine" className="hover:text-white">Magazine</Link>
             <ChevronRight className="h-3 w-3 text-sunset" />
             <span className="text-sunset">{article.category}</span>
           </nav>
@@ -183,7 +183,7 @@ export default async function NewsArticlePage({
               </div>
             </div>
 
-            <Link href="/news" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+            <Link href="/magazine" className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               <ArrowLeft className="h-4 w-4" /> Back to News
             </Link>
             {dbPost && isAdmin ? (
@@ -214,7 +214,7 @@ export default async function NewsArticlePage({
               <ul className="mt-4 space-y-4">
                 {recent.map((post, i) => (
                   <li key={post.id}>
-                    <Link href={`/news/${post.id}`} className="flex items-center gap-3">
+                    <Link href={`/magazine/${post.id}`} className="flex items-center gap-3">
                       <span
                         className="h-14 w-14 shrink-0 rounded-md bg-cover bg-center"
                         style={{ backgroundImage: `url(${post.coverImageUrl || siteImages.galleryPage[(articleIndex + i + 1) % siteImages.galleryPage.length]})` }}

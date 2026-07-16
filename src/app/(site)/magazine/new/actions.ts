@@ -125,5 +125,5 @@ export async function submitNewsAction(
     },
   });
 
-  redirect("/news?submitted=1");
+  redirect("/magazine?submitted=1");
 }
