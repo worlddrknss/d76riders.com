@@ -487,31 +487,14 @@ export default async function RiderProfilePage({
   const garageContent = isOwner ? (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Personal Garage</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Personal Garage</span>
+          <span className="inline-flex items-center gap-1"><Bike className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{ownerBikes.length}</strong> bikes</span>
+          <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{totalMods}</strong> mods</span>
+          <span className="inline-flex items-center gap-1"><Receipt className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{totalServices}</strong> services</span>
+          <span className="inline-flex items-center gap-1"><DollarSign className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{formatCurrency(totalSpend)}</strong> invested</span>
+        </div>
         <CreateBikeDialog />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
-          <Bike className="mx-auto h-4 w-4 text-sunset" />
-          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{ownerBikes.length}</p>
-          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Bikes</p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
-          <Wrench className="mx-auto h-4 w-4 text-sunset" />
-          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{totalMods}</p>
-          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Modifications</p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
-          <Receipt className="mx-auto h-4 w-4 text-sunset" />
-          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{totalServices}</p>
-          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Services</p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
-          <DollarSign className="mx-auto h-4 w-4 text-sunset" />
-          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{formatCurrency(totalSpend)}</p>
-          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Total Invested</p>
-        </div>
       </div>
 
       {ownerBikes.length === 0 ? (
@@ -721,8 +704,8 @@ export default async function RiderProfilePage({
 
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewContent },
+    { id: "rides", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
     { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
-    { id: "rides", label: "Rides", count: rider.journalEntries.length, content: ridesContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
   ];
