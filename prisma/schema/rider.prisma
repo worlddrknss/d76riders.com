@@ -10,6 +10,11 @@ model Rider {
   bio            String?
   avatarUrl      String?
   coverUrl       String?
+  // Vertical framing of the cover photo, as the object-position Y percentage.
+  // 0 = align the top of the image, 100 = the bottom, 50 = centred (the default).
+  // Only Y: the cover is always scaled to the full width of the card, so there
+  // is never horizontal slack to pan through.
+  coverPosition  Int      @default(50)
   yearsRiding    Int?
   favoriteRoad   String?
   primaryBikeId  String?

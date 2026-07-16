@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 
 import { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -48,6 +49,35 @@ function isValidAvatarUrl(value: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Save the vertical framing of the rider's cover photo.
+ *
+ * `position` is the object-position Y percentage (0 = top, 100 = bottom). Only
+ * the owner can reframe their own cover, and the value is clamped rather than
+ * rejected — it arrives from a drag, so an out-of-range number means the UI
+ * over-shot, not that the request is hostile.
+ */
+export async function updateCoverPositionAction(position: number): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const safe = Number.isFinite(position) ? Math.round(Math.min(100, Math.max(0, position))) : 50;
+
+  const rider = await prisma.rider.findUnique({
+    where: { userId },
+    select: { handle: true },
+  });
+
+  if (!rider) return;
+
+  await prisma.rider.update({
+    where: { userId },
+    data: { coverPosition: safe },
+  });
+
+  revalidatePath(`/r/${rider.handle}`);
 }
 
 export async function updateAccountProfileAction(

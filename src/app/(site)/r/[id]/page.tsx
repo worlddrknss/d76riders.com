@@ -5,6 +5,7 @@ import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footpri
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
+import { CoverPhoto } from "@/components/profile/cover-photo";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { InviteLink } from "@/components/community/invite-link";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
@@ -98,6 +99,7 @@ export default async function RiderProfilePage({
       location: true,
       avatarUrl: true,
       coverUrl: true,
+      coverPosition: true,
       yearsRiding: true,
       favoriteRoad: true,
       joinedAt: true,
@@ -352,7 +354,15 @@ export default async function RiderProfilePage({
   }, 0);
 
   const memberSince = rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-  const hasSocials = Boolean(rider.youtubeUrl || rider.tiktokUrl || rider.instagramUrl || rider.twitterUrl);
+  // Lucide dropped brand icons in v1, so these are the nearest neutral stand-ins.
+  const socialAccounts = [
+    { label: "YouTube", href: rider.youtubeUrl, icon: Video },
+    { label: "TikTok", href: rider.tiktokUrl, icon: Video },
+    { label: "Instagram", href: rider.instagramUrl, icon: Camera },
+    { label: "X / Twitter", href: rider.twitterUrl, icon: BookText },
+  ].filter((social): social is { label: string; href: string; icon: typeof Video } =>
+    Boolean(social.href),
+  );
 
   const journalForGrid = rider.journalEntries.map((entry) => ({
     id: entry.id,
@@ -512,37 +522,7 @@ export default async function RiderProfilePage({
             </dl>
           </div>
 
-          {(hasSocials || isOwner) && (
-            <div className={cardClass}>
-              <h2 className={headingClass}>Socials</h2>
-              {hasSocials ? (
-                <div className="mt-3 space-y-2">
-                  {rider.youtubeUrl && (
-                    <a href={rider.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Video className="h-4 w-4 text-red-600" /> YouTube
-                    </a>
-                  )}
-                  {rider.tiktokUrl && (
-                    <a href={rider.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Video className="h-4 w-4 text-ink" /> TikTok
-                    </a>
-                  )}
-                  {rider.instagramUrl && (
-                    <a href={rider.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Camera className="h-4 w-4 text-pink-500" /> Instagram
-                    </a>
-                  )}
-                  {rider.twitterUrl && (
-                    <a href={rider.twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <BookText className="h-4 w-4 text-sky-500" /> X / Twitter
-                    </a>
-                  )}
-                </div>
-              ) : (
-                <p className="mt-3 text-xs text-muted">No social links yet. Add them from Edit Profile.</p>
-              )}
-            </div>
-          )}
+          {/* Socials moved into the header as icons — see socialAccounts above. */}
 
           <div className={cardClass}>
             <div className="flex items-center justify-between">
@@ -912,15 +892,12 @@ export default async function RiderProfilePage({
         {/* PROFILE HEADER — cover with the avatar straddling its lower edge,
             identity on the left, actions on the right, then the tab row. */}
         <div className="overflow-hidden rounded-t-2xl border border-b-0 border-border bg-surface shadow-soft">
-          <div className="relative h-44 w-full sm:h-64">
-            {cover ? (
-              <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
-            ) : (
-              <div className="h-full w-full bg-linear-to-br from-asphalt via-asphalt to-sunset/40" />
-            )}
-            {/* Keeps the avatar readable against a busy cover photo. */}
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/45 to-transparent" />
-          </div>
+          <CoverPhoto
+            url={cover || null}
+            name={rider.name}
+            position={rider.coverPosition}
+            canReposition={isOwner}
+          />
 
           {/* Avatar is absolutely positioned so it reliably straddles the cover's
               lower edge; a negative margin on a flex child doesn't lift it out. */}
@@ -999,6 +976,26 @@ export default async function RiderProfilePage({
               ) : null}
               {rider.trust && rider.trust.eventsAttended > 0 ? (
                 <TrustBadge level={rider.trust.level} score={rider.trust.score} />
+              ) : null}
+
+              {/* Socials as icons in the header rather than a sidebar card —
+                  they're a handful of links, not a section. */}
+              {socialAccounts.length > 0 ? (
+                <span className="flex items-center gap-1">
+                  {socialAccounts.map((social) => (
+                    <a
+                      key={social.label}
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={social.label}
+                      aria-label={`${rider.name} on ${social.label}`}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border text-muted transition hover:border-sunset/50 hover:text-sunset"
+                    >
+                      <social.icon className="h-3.5 w-3.5" />
+                    </a>
+                  ))}
+                </span>
               ) : null}
             </div>
           </div>
