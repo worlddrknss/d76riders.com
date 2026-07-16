@@ -85,7 +85,8 @@ export function formatDuration(seconds: number): string {
   return `${hours}h ${minutes}m`;
 }
 
-function haversineMiles(a: [number, number], b: [number, number]): number {
+/** Great-circle distance in miles between two [lng, lat] points. */
+export function haversineMiles(a: [number, number], b: [number, number]): number {
   const toRadians = (value: number) => (value * Math.PI) / 180;
   const earthRadiusMiles = 3958.8;
   const lat1 = toRadians(a[1]);
@@ -194,73 +195,21 @@ export function simplifyRouteGeometry(
   return simplified.length >= 2 ? simplified : [coordinates[0], coordinates[coordinates.length - 1]];
 }
 
-// --- Geocoding (MapTiler, same key as the basemap) ---------------------------
-
-const GEOCODE_BASE = "https://api.maptiler.com/geocoding";
-
-// Bias results toward Middle Tennessee so local searches rank first.
-const CLARKSVILLE_PROXIMITY = "-87.3595,36.5298";
-
-// Without an explicit `types`, MapTiler does not search points of interest at
-// all — only addresses and place names. That made every business unfindable:
-// searching a gas station returned street names in other states, or nothing.
-// `municipality` is here so typing a city still returns the city; with only
-// `poi` in the list, "Nashville" resolves to Nashville Christian School.
-const GEOCODE_TYPES = "poi,address,place,municipality";
-
-// MapTiler bridges punctuation and small typos on its own — "Bucees" finds
-// Buc-ee's, "Wafle House" finds Waffle House. What it cannot bridge is a brand
-// whose real name drops a letter, because the plausible misspelling is itself a
-// real POI name somewhere: "Quick Trip" matches stores in Kentucky and Missouri
-// exactly, and an exact match anywhere on earth outranks a fuzzy match next
-// door. Verified that no request shape fixes this — a bounding box containing
-// only Clarksville still returns Quick Stop and Quick Print rather than the
-// QuikTrip that is provably inside it.
+// --- Place search (Mapbox Search Box, via our own /api/geocode) ---------------
 //
-// So these get normalized before the request. Add a brand here only when its
-// real spelling is genuinely irregular; ordinary typos need no help.
-const IRREGULARLY_SPELLED_BRANDS = ["QuikTrip"];
-
-/** Lowercase and drop everything that isn't a letter or digit. */
-function normalizeForBrandMatch(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function editDistance(a: string, b: string): number {
-  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-
-  for (let i = 1; i <= a.length; i++) {
-    const row = [i];
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
-    }
-    prev = row;
-  }
-
-  return prev[b.length];
-}
-
-// Rewrites a leading brand name to its real spelling, leaving any trailing words
-// alone — "quick trip rossview" searches as "QuikTrip rossview". Longest match
-// wins, so a city that follows the brand can't be swallowed into the comparison.
-function canonicalizeBrand(query: string): string {
-  const words = query.split(/\s+/).filter(Boolean);
-
-  for (let take = words.length; take >= 1; take--) {
-    const head = normalizeForBrandMatch(words.slice(0, take).join(""));
-    // Short heads collide too easily to risk rewriting.
-    if (head.length < 5) continue;
-
-    for (const brand of IRREGULARLY_SPELLED_BRANDS) {
-      if (editDistance(head, normalizeForBrandMatch(brand)) <= 1) {
-        return [brand, ...words.slice(take)].join(" ");
-      }
-    }
-  }
-
-  return query;
-}
+// MapTiler's geocoder is OpenStreetMap-derived, and OSM simply has no street
+// address for a fair share of the places riders meet at — the QuikTrip on
+// Rossview Road is mapped with brand tags and nothing else. Mapbox's own POI
+// dataset does have them (19/20 vs 16/20 across the chains riders actually use),
+// and it matches "Quick Trip" to QuikTrip natively, which no MapTiler request
+// shape could be made to do.
+//
+// Requests go through /api/geocode rather than straight to Mapbox: the token
+// stays server-side (out of the bundle, and sourced at runtime rather than baked
+// into the image), and the route requires a session so the quota isn't open to
+// anyone who finds it. Ranking and result shaping live there too.
+//
+// The basemap is still MapTiler — only search moved.
 
 export type GeocodeResult = LngLat & {
   id: string;
@@ -268,78 +217,14 @@ export type GeocodeResult = LngLat & {
   context: string;
 };
 
-type MapTilerFeature = {
-  id: string;
-  text?: string;
-  place_name?: string;
-  place_type?: string[];
-  center: [number, number];
-};
-
-type MapTilerResponse = {
-  features?: MapTilerFeature[];
-};
-
-// MapTiler's `proximity` is a loose relevance nudge rather than a distance sort,
-// and it is coarse enough to be unhelpful: moving the point 15 miles flips the
-// top "Waffle House" for a Knoxville rider from one 5 miles away to one in
-// Bristol, 100 miles off — while the nearer stores sit at ranks 2 and 3 of the
-// same response. Its `relevance` score is 1 for every result, so it can't break
-// the tie either.
-//
-// So MapTiler decides which candidates match, and distance orders the ones where
-// distance is the only thing separating them — points of interest. A chain has
-// identical branches everywhere, so the nearest is always the one meant.
-//
-// Only points of interest. For an address the house number is what discriminates,
-// not distance: sorting those by distance answers "2235 Madison Street" with
-// whichever stretch of Madison Street is closest, dropping the actual building.
-// Same for a city — MapTiler's own ordering is what keeps "Nashville" resolving
-// to the city rather than to whichever Nashville-named business is nearest.
-// Groups keep the order MapTiler first used each type; the sort is stable, so
-// everything outside `poi` stays exactly as it arrived.
-function sortPoisByDistance(
-  features: MapTilerFeature[],
-  from: [number, number],
-): MapTilerFeature[] {
-  const typeOrder: string[] = [];
-  for (const f of features) {
-    const type = f.place_type?.[0] ?? "";
-    if (!typeOrder.includes(type)) typeOrder.push(type);
-  }
-
-  return [...features].sort((a, b) => {
-    const typeA = a.place_type?.[0] ?? "";
-    const typeB = b.place_type?.[0] ?? "";
-
-    const rankA = typeOrder.indexOf(typeA);
-    const rankB = typeOrder.indexOf(typeB);
-    if (rankA !== rankB) return rankA - rankB;
-
-    if (typeA !== "poi") return 0;
-    return haversineMiles(from, a.center) - haversineMiles(from, b.center);
-  });
-}
-
-function toGeocodeResult(feature: MapTilerFeature): GeocodeResult {
-  const [lng, lat] = feature.center;
-  const full = feature.place_name ?? feature.text ?? "";
-  const name = feature.text ?? full;
-  // Trailing context after the primary name (city, state, etc.).
-  const context = full.startsWith(name) ? full.slice(name.length).replace(/^,\s*/, "") : full;
-  return { id: feature.id, name, context, lng, lat };
-}
-
 /**
- * Forward geocode an address/place query into location results, nearest first.
+ * Forward geocode a place/address query into results, nearest first.
  *
- * `near` is where the rider is — results are ordered by distance from it, and it
- * biases which candidates MapTiler returns. It ranks rather than restricts, so a
- * genuinely distant place still surfaces. Defaults to Clarksville.
+ * `near` is where the rider is: it biases which candidates come back and orders
+ * the points of interest among them. Defaults to Clarksville.
  */
 export async function geocodeAddress(
   query: string,
-  token: string,
   signal?: AbortSignal,
   near?: LngLat,
 ): Promise<GeocodeResult[]> {
@@ -348,41 +233,37 @@ export async function geocodeAddress(
     return [];
   }
 
-  const from: [number, number] = near
-    ? [near.lng, near.lat]
-    : (CLARKSVILLE_PROXIMITY.split(",").map(Number) as [number, number]);
-  const searchFor = canonicalizeBrand(trimmed);
-
-  // A wider net than the 5 shown: the nearest match is often not in MapTiler's
-  // own top 5, so fetch more and let distance pick which 5 the rider sees.
-  const url =
-    `${GEOCODE_BASE}/${encodeURIComponent(searchFor)}.json` +
-    `?key=${token}&autocomplete=true&limit=10&proximity=${from[0]},${from[1]}&types=${GEOCODE_TYPES}`;
-
-  const res = await fetch(url, { signal });
-  if (!res.ok) {
-    throw new Error(`Geocoding failed: ${res.status}`);
+  const params = new URLSearchParams({ q: trimmed });
+  if (near) {
+    params.set("lng", String(near.lng));
+    params.set("lat", String(near.lat));
   }
 
-  const data: MapTilerResponse = await res.json();
-  return sortPoisByDistance(data.features ?? [], from)
-    .slice(0, 5)
-    .map(toGeocodeResult);
+  const res = await fetch(`/api/geocode?${params}`, { signal });
+  if (!res.ok) {
+    throw new Error(`Place search failed: ${res.status}`);
+  }
+
+  const data: { results?: GeocodeResult[] } = await res.json();
+  return data.results ?? [];
 }
 
 /** Reverse geocode a coordinate into a human-readable label. */
 export async function reverseGeocode(
   point: LngLat,
-  token: string,
   signal?: AbortSignal,
 ): Promise<string | null> {
-  const url = `${GEOCODE_BASE}/${point.lng},${point.lat}.json?key=${token}&limit=1`;
-  const res = await fetch(url, { signal });
+  const params = new URLSearchParams({
+    mode: "reverse",
+    lng: String(point.lng),
+    lat: String(point.lat),
+  });
+
+  const res = await fetch(`/api/geocode?${params}`, { signal });
   if (!res.ok) {
     return null;
   }
-  const data: MapTilerResponse = await res.json();
-  const feature = data.features?.[0];
-  return feature?.place_name ?? feature?.text ?? null;
-}
 
+  const data: { label?: string | null } = await res.json();
+  return data.label ?? null;
+}

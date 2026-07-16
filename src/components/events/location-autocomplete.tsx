@@ -28,9 +28,9 @@ const inputClass = `mt-1 ${fieldClass} text-sm`;
 // its own and leaves room for the pin.
 const addressInputClass = `${fieldClass} pl-8 text-xs`;
 
-// Address/place autocomplete backed by MapTiler geocoding. Captures a human
-// place name, its street address, and coordinates. Degrades to a plain text
-// input when no MapTiler key is configured.
+// Address/place autocomplete backed by Mapbox place search, proxied through
+// /api/geocode. Captures a human place name, its street address, and the
+// coordinates riders navigate to.
 export function LocationAutocomplete({
   fieldPrefix,
   label,
@@ -38,7 +38,6 @@ export function LocationAutocomplete({
   required,
   defaultValue,
 }: LocationAutocompleteProps) {
-  const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? "";
   const near = useRiderProximity();
   const [name, setName] = useState(defaultValue?.name ?? "");
   const [address, setAddress] = useState(defaultValue?.address ?? "");
@@ -53,7 +52,6 @@ export function LocationAutocomplete({
 
   // Debounced forward geocoding as the user types.
   useEffect(() => {
-    if (!token) return;
     if (skipNext.current) {
       skipNext.current = false;
       return;
@@ -65,7 +63,7 @@ export function LocationAutocomplete({
         return;
       }
       setSearching(true);
-      geocodeAddress(name, token, controller.signal, near ?? undefined)
+      geocodeAddress(name, controller.signal, near ?? undefined)
         .then((found) => {
           setResults(found);
           setOpen(true);
@@ -77,7 +75,7 @@ export function LocationAutocomplete({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [name, token, near]);
+  }, [name, near]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -130,11 +128,9 @@ export function LocationAutocomplete({
         )}
       </div>
 
-      {/* Editable rather than a read-only echo of the geocoder. Plenty of places
-          have no street address in the map data — the Rossview Road QuikTrip
-          comes back as just "Clarksville, Tennessee 37043" — and riders have to
-          navigate to this, so the organiser needs to be able to write the real
-          address in. Prefilled on pick, kept on edit. */}
+      {/* Editable rather than a read-only echo of the geocoder: a venue can still
+          come back without a street, and riders have to navigate to this. Prefilled
+          on pick, kept on edit. */}
       <div className="relative">
         <label htmlFor={`${fieldPrefix}-address`} className="sr-only">
           {label} address

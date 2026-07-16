@@ -619,7 +619,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
             Plan Your Ride
           </h1>
           <div className="mt-3">
-            <LocationSearch token={token} onSelect={addLocation} />
+            <LocationSearch onSelect={addLocation} />
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-white/70 p-1">
             <button

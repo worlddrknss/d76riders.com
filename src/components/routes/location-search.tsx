@@ -6,12 +6,11 @@ import { useRiderProximity } from "@/components/location/rider-proximity";
 import { geocodeAddress, reverseGeocode, type GeocodeResult } from "@/lib/routing";
 
 type LocationSearchProps = {
-  token: string;
   // Called when the user picks an address or uses their location.
   onSelect: (location: { lng: number; lat: number; label: string }) => void;
 };
 
-export function LocationSearch({ token, onSelect }: LocationSearchProps) {
+export function LocationSearch({ onSelect }: LocationSearchProps) {
   const listId = useId();
   const near = useRiderProximity();
   const [query, setQuery] = useState("");
@@ -34,7 +33,7 @@ export function LocationSearch({ token, onSelect }: LocationSearchProps) {
     const timer = setTimeout(() => {
       setSearching(true);
       setError(null);
-      geocodeAddress(query, token, controller.signal, near ?? undefined)
+      geocodeAddress(query, controller.signal, near ?? undefined)
         .then((found) => {
           setResults(found);
           setOpen(true);
@@ -51,7 +50,7 @@ export function LocationSearch({ token, onSelect }: LocationSearchProps) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, token, near]);
+  }, [query, near]);
 
   // Close the results dropdown on outside click.
   useEffect(() => {
@@ -83,7 +82,7 @@ export function LocationSearch({ token, onSelect }: LocationSearchProps) {
         const { longitude: lng, latitude: lat } = position.coords;
         let label = "My location";
         try {
-          const reversed = await reverseGeocode({ lng, lat }, token);
+          const reversed = await reverseGeocode({ lng, lat });
           if (reversed) {
             label = reversed;
           }

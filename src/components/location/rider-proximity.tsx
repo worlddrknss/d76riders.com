@@ -32,7 +32,6 @@ export function RiderProximityProvider({
   location: string | null;
   children: ReactNode;
 }) {
-  const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? "";
   const trimmed = location?.trim() ?? "";
 
   // Keyed by the location it was resolved from, so a resolved point is never
@@ -42,13 +41,13 @@ export function RiderProximityProvider({
   const near = resolved?.from === trimmed ? resolved.point : null;
 
   useEffect(() => {
-    if (!token || !trimmed) return;
+    if (!trimmed) return;
 
     // Deliberately not blocking render on this: proximity only matters once the
     // rider starts typing in a search field, which is always after mount.
     const controller = new AbortController();
 
-    geocodeAddress(trimmed, token, controller.signal)
+    geocodeAddress(trimmed, controller.signal)
       .then((results) => {
         const top = results[0];
         if (top) setResolved({ from: trimmed, point: { lng: top.lng, lat: top.lat } });
@@ -58,7 +57,7 @@ export function RiderProximityProvider({
       .catch(() => {});
 
     return () => controller.abort();
-  }, [trimmed, token]);
+  }, [trimmed]);
 
   return <RiderProximityContext.Provider value={near}>{children}</RiderProximityContext.Provider>;
 }
