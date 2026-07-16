@@ -55,7 +55,7 @@ export function Footer() {
             Clarksville, Tennessee
           </p>
           <p className="max-w-xs text-sm text-slate-400">
-            District 76 is a motorcycle community built for riders in Clarksville and Middle Tennessee.
+            Founded in Clarksville and built for riders across Tennessee.
           </p>
         </div>
 

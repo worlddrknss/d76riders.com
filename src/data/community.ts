@@ -358,7 +358,7 @@ export const joinBenefits: JoinBenefit[] = [
   },
   {
     title: "Support local riding culture",
-    description: "Help shape a positive rider community that represents Middle Tennessee well.",
+    description: "Help shape a positive rider community that represents Tennessee well.",
   },
 ];
 

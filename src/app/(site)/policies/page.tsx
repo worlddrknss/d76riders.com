@@ -11,7 +11,7 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata: Metadata = {
   title: "Policies",
   description:
-    "Community guidelines and safety waivers for District 76 Riders — how we ride together in Clarksville and Middle Tennessee.",
+    "Community guidelines and safety waivers for District 76 Riders: how we ride together across Tennessee.",
   alternates: { canonical: "/policies" },
   openGraph: {
     title: "Policies — District 76 Riders",

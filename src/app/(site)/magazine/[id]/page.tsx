@@ -178,7 +178,7 @@ export default async function NewsArticlePage({
               <div>
                 <p className="font-display text-sm font-bold uppercase tracking-tight text-asphalt">{article.author}</p>
                 <p className="mt-1 text-sm text-muted">
-                  District 76 member and contributor. Writes about riding, gear, and the roads around Middle Tennessee.
+                  District 76 member and contributor. Writes about riding, gear, and the roads around Tennessee.
                 </p>
               </div>
             </div>

@@ -48,6 +48,7 @@ export const metadata: Metadata = {
     "scenic rides",
     "District 76",
     "Middle Tennessee riders",
+    "Tennessee riders",
   ],
   authors: [{ name: "District 76 Riders" }],
   creator: "District 76 Riders",

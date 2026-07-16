@@ -98,7 +98,7 @@ function NavDropdown({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`relative flex items-center gap-1 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+        className={`relative flex items-center gap-1 rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors ${
           isActive ? "text-white" : "text-slate-300 hover:text-white"
         }`}
       >
@@ -206,7 +206,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                  className={`relative rounded-lg px-3.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition-colors ${
                     isActive ? "text-white" : "text-slate-300 hover:text-white"
                   }`}
                 >
@@ -421,7 +421,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`rounded-lg px-3 py-2 text-sm font-medium ${
+                      className={`rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
                         pathname === item.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
                       }`}
                       onClick={() => setIsOpen(false)}

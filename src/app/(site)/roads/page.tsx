@@ -67,7 +67,7 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
         image={siteImages.pageHeroes.roads}
         eyebrow="Featured Roads"
         title="Rider-Curated Roads"
-        description="Discover the best roads in Middle Tennessee. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
+        description="Discover the best roads in Tennessee. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
         actions={currentUser ? <CreateRoadDialog /> : undefined}
       />
 
