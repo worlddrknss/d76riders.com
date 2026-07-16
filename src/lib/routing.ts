@@ -201,6 +201,67 @@ const GEOCODE_BASE = "https://api.maptiler.com/geocoding";
 // Bias results toward Middle Tennessee so local searches rank first.
 const CLARKSVILLE_PROXIMITY = "-87.3595,36.5298";
 
+// Without an explicit `types`, MapTiler does not search points of interest at
+// all — only addresses and place names. That made every business unfindable:
+// searching a gas station returned street names in other states, or nothing.
+// `municipality` is here so typing a city still returns the city; with only
+// `poi` in the list, "Nashville" resolves to Nashville Christian School.
+const GEOCODE_TYPES = "poi,address,place,municipality";
+
+// MapTiler bridges punctuation and small typos on its own — "Bucees" finds
+// Buc-ee's, "Wafle House" finds Waffle House. What it cannot bridge is a brand
+// whose real name drops a letter, because the plausible misspelling is itself a
+// real POI name somewhere: "Quick Trip" matches stores in Kentucky and Missouri
+// exactly, and an exact match anywhere on earth outranks a fuzzy match next
+// door. Verified that no request shape fixes this — a bounding box containing
+// only Clarksville still returns Quick Stop and Quick Print rather than the
+// QuikTrip that is provably inside it.
+//
+// So these get normalized before the request. Add a brand here only when its
+// real spelling is genuinely irregular; ordinary typos need no help.
+const IRREGULARLY_SPELLED_BRANDS = ["QuikTrip"];
+
+/** Lowercase and drop everything that isn't a letter or digit. */
+function normalizeForBrandMatch(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function editDistance(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      row[j] = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + cost);
+    }
+    prev = row;
+  }
+
+  return prev[b.length];
+}
+
+// Rewrites a leading brand name to its real spelling, leaving any trailing words
+// alone — "quick trip rossview" searches as "QuikTrip rossview". Longest match
+// wins, so a city that follows the brand can't be swallowed into the comparison.
+function canonicalizeBrand(query: string): string {
+  const words = query.split(/\s+/).filter(Boolean);
+
+  for (let take = words.length; take >= 1; take--) {
+    const head = normalizeForBrandMatch(words.slice(0, take).join(""));
+    // Short heads collide too easily to risk rewriting.
+    if (head.length < 5) continue;
+
+    for (const brand of IRREGULARLY_SPELLED_BRANDS) {
+      if (editDistance(head, normalizeForBrandMatch(brand)) <= 1) {
+        return [brand, ...words.slice(take)].join(" ");
+      }
+    }
+  }
+
+  return query;
+}
+
 export type GeocodeResult = LngLat & {
   id: string;
   name: string;
@@ -227,20 +288,29 @@ function toGeocodeResult(feature: MapTilerFeature): GeocodeResult {
   return { id: feature.id, name, context, lng, lat };
 }
 
-/** Forward geocode an address/place query into ranked location results. */
+/**
+ * Forward geocode an address/place query into ranked location results.
+ *
+ * `near` biases results toward a point — it ranks, it does not restrict, so a
+ * genuinely distant match still surfaces. Defaults to Clarksville.
+ */
 export async function geocodeAddress(
   query: string,
   token: string,
   signal?: AbortSignal,
+  near?: LngLat,
 ): Promise<GeocodeResult[]> {
   const trimmed = query.trim();
   if (trimmed.length < 3) {
     return [];
   }
 
+  const proximity = near ? `${near.lng},${near.lat}` : CLARKSVILLE_PROXIMITY;
+  const searchFor = canonicalizeBrand(trimmed);
+
   const url =
-    `${GEOCODE_BASE}/${encodeURIComponent(trimmed)}.json` +
-    `?key=${token}&autocomplete=true&limit=5&proximity=${CLARKSVILLE_PROXIMITY}`;
+    `${GEOCODE_BASE}/${encodeURIComponent(searchFor)}.json` +
+    `?key=${token}&autocomplete=true&limit=5&proximity=${proximity}&types=${GEOCODE_TYPES}`;
 
   const res = await fetch(url, { signal });
   if (!res.ok) {
