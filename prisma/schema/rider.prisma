@@ -66,6 +66,7 @@ model Rider {
   referralCode   ReferralCode?
   challenges     ChallengeEntry[]
   challengesSet  Challenge[]  @relation("ChallengeCreator")
+  sponsorsSubmitted Sponsor[] @relation("SponsorSubmitter")
   quests         RiderQuest[]
   crews          CrewMember[]
 

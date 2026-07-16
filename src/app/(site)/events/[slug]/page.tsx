@@ -150,6 +150,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       },
       crew: { select: { name: true, slug: true } },
       sponsors: {
+        // A sponsor linked to a ride still has to be approved and active to be
+        // shown — the approval gate belongs on every public surface, not just
+        // /sponsors.
+        where: { sponsor: { status: "APPROVED", active: true } },
         select: {
           id: true,
           sponsor: { select: { name: true, logoUrl: true, websiteUrl: true, tier: true } },

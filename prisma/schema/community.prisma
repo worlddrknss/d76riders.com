@@ -123,26 +123,54 @@ enum CrewRole {
 
 // A local business partner. Sponsors are community-wide and can additionally be
 // attached to specific events.
+//
+// Businesses submit themselves and wait for review — the same shape NewsPost
+// uses, since it's the same problem: public submissions that must not appear
+// until a human has agreed they should. Nothing renders publicly until
+// APPROVED. Sponsors created from the admin console skip the queue.
 model Sponsor {
-  id          String      @id @default(cuid())
-  slug        String      @unique
+  id          String        @id @default(cuid())
+  slug        String        @unique
   name        String
   description String?
   logoUrl     String?
   websiteUrl  String?
-  tier        SponsorTier @default(SUPPORTER)
-  active      Boolean     @default(true)
+  tier        SponsorTier   @default(SUPPORTER)
+  status      SponsorStatus @default(PENDING_REVIEW)
+  active      Boolean       @default(true)
   // Optional owning account, so a SPONSOR-role user can be tied to their business.
   userId      String?
 
-  user   User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  events EventSponsor[]
+  // How to reach whoever put the business forward. Staff-only — never rendered
+  // on the public page.
+  contactName  String?
+  contactEmail String?
+
+  // Who submitted it, when a rider did. Null for admin-created sponsors.
+  submittedByRiderId String?
+
+  reviewedByUserId String?
+  reviewedAt       DateTime?
+  rejectionReason  String?
+
+  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  submittedBy Rider?         @relation("SponsorSubmitter", fields: [submittedByRiderId], references: [id], onDelete: SetNull)
+  reviewedBy  User?          @relation("SponsorReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
+  events      EventSponsor[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([active])
   @@index([userId])
+  @@index([status])
+  @@index([submittedByRiderId])
+}
+
+enum SponsorStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
 }
 
 enum SponsorTier {

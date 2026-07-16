@@ -3,9 +3,11 @@ import type { SponsorTier } from "@prisma/client";
 import { Store } from "lucide-react";
 
 import { PageHero } from "@/components/layout/page-hero";
+import { SubmitSponsorDialog } from "@/components/sponsors/submit-sponsor-dialog";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Sponsors",
@@ -27,8 +29,11 @@ const TIER_LABEL: Record<SponsorTier, string> = {
 };
 
 export default async function SponsorsPage() {
+  const currentUser = await getCurrentUser();
+
   const sponsors = await prisma.sponsor.findMany({
-    where: { active: true },
+    // APPROVED only — submissions are never public until a human has agreed.
+    where: { active: true, status: "APPROVED" },
     // Enum order is PARTNER, SUPPORTER, FRIEND — top tier first.
     orderBy: [{ tier: "asc" }, { name: "asc" }],
     select: {
@@ -49,6 +54,7 @@ export default async function SponsorsPage() {
         eyebrow="Community"
         title="Local Sponsors"
         description="Local businesses that support this community — the shops, stops, and people who look after riders around Clarksville. Worth your business."
+        actions={currentUser ? <SubmitSponsorDialog /> : undefined}
       />
 
       <section className="page-shell">

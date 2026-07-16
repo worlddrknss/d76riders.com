@@ -122,7 +122,8 @@ export default async function Home() {
   const sponsors = await safeQuery(
     () =>
       prisma.sponsor.findMany({
-        where: { active: true },
+        // Mirrors /sponsors: nothing public until it's been approved.
+        where: { active: true, status: "APPROVED" },
         orderBy: [{ tier: "asc" }, { name: "asc" }],
         take: 6,
         select: { id: true, name: true, logoUrl: true, websiteUrl: true },

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentType, type ReactNode, useMemo, useState } from "react";
-import { Award, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Users, UserCog } from "lucide-react";
+import { Award, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Star, Store, Trophy, Users, UserCog } from "lucide-react";
 
 import { type CurrentUser } from "@/lib/session";
 
@@ -50,8 +50,14 @@ const adminNavSections: NavSection[] = [
     ],
   },
   {
-    title: "Growth",
-    items: [{ href: "/admin/community", label: "Community", icon: Sprout }],
+    title: "Community",
+    items: [
+      { href: "/admin/community/crews", label: "Crews", icon: Users },
+      { href: "/admin/community/challenges", label: "Challenges", icon: Trophy },
+      { href: "/admin/community/sponsors", label: "Sponsors", icon: Store },
+      { href: "/admin/community/featured", label: "Featured Rides", icon: Star },
+      { href: "/admin/community/referrals", label: "Referrals", icon: Sprout },
+    ],
   },
   {
     title: "Content",

@@ -184,6 +184,10 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
       logoUrl: safeUrl(text(formData.get("logoUrl"))),
       websiteUrl,
       tier: Object.values(SponsorTier).includes(tier as SponsorTier) ? (tier as SponsorTier) : "SUPPORTER",
+      // Created here, so it's already been through a human — no queue to wait in.
+      status: "APPROVED",
+      reviewedByUserId: userId,
+      reviewedAt: new Date(),
     },
     select: { id: true, name: true, slug: true, tier: true },
   });
@@ -193,13 +197,13 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
     action: "sponsor.create",
     entityType: "Sponsor",
     entityId: sponsor.id,
-    summary: `Added sponsor "${sponsor.name}"`,
+    summary: `Added sponsor "${sponsor.name}" (approved on creation)`,
     after: sponsor,
   });
 
-  revalidatePath("/admin/community");
+  revalidatePath("/admin/community/sponsors");
   revalidatePath("/sponsors");
-  redirect("/admin/community");
+  redirect("/admin/community/sponsors");
 }
 
 export async function deleteSponsorAction(sponsorId: string): Promise<void> {
@@ -262,6 +266,94 @@ export async function linkSponsorToEventAction(formData: FormData): Promise<void
 
   revalidatePath("/admin/community");
   revalidatePath(`/events/${event.slug}`);
+}
+
+// ---------- Sponsor review ----------
+
+/**
+ * Approve a submitted business, and set the tier at the same time.
+ *
+ * Tier is decided here rather than on the public form: it describes the
+ * community's relationship with a business, which isn't an applicant's to
+ * choose.
+ */
+export async function approveSponsorAction(sponsorId: string, formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const sponsor = await prisma.sponsor.findUnique({
+    where: { id: sponsorId },
+    select: { id: true, name: true, status: true },
+  });
+  if (!sponsor) {
+    revalidatePath("/admin/community/sponsors");
+    return;
+  }
+
+  const tier = text(formData.get("tier"));
+
+  await prisma.sponsor.update({
+    where: { id: sponsorId },
+    data: {
+      status: "APPROVED",
+      tier: Object.values(SponsorTier).includes(tier as SponsorTier)
+        ? (tier as SponsorTier)
+        : "SUPPORTER",
+      reviewedByUserId: userId,
+      reviewedAt: new Date(),
+      rejectionReason: null,
+    },
+  });
+
+  await logAudit({
+    actorUserId: userId,
+    action: "sponsor.approve",
+    entityType: "Sponsor",
+    entityId: sponsorId,
+    summary: `Approved "${sponsor.name}" as a sponsor`,
+    before: { status: sponsor.status },
+    after: { status: "APPROVED", tier },
+  });
+
+  revalidatePath("/admin/community/sponsors");
+  revalidatePath("/sponsors");
+  revalidatePath("/");
+}
+
+export async function rejectSponsorAction(sponsorId: string, formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const sponsor = await prisma.sponsor.findUnique({
+    where: { id: sponsorId },
+    select: { id: true, name: true, status: true },
+  });
+  if (!sponsor) {
+    revalidatePath("/admin/community/sponsors");
+    return;
+  }
+
+  const reason = text(formData.get("reason"));
+
+  await prisma.sponsor.update({
+    where: { id: sponsorId },
+    data: {
+      status: "REJECTED",
+      reviewedByUserId: userId,
+      reviewedAt: new Date(),
+      rejectionReason: reason || null,
+    },
+  });
+
+  await logAudit({
+    actorUserId: userId,
+    action: "sponsor.reject",
+    entityType: "Sponsor",
+    entityId: sponsorId,
+    summary: `Rejected "${sponsor.name}" as a sponsor`,
+    before: { status: sponsor.status },
+    after: { status: "REJECTED", rejectionReason: reason || null },
+  });
+
+  revalidatePath("/admin/community/sponsors");
 }
 
 // ---------- Moderation edits ----------
