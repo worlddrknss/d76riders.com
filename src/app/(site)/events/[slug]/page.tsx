@@ -10,6 +10,7 @@ import { EventCheckInButton } from "@/components/events/event-check-in-button";
 import { AttendancePanel } from "@/components/events/attendance-panel";
 import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventOrganizers } from "@/components/events/event-organizers";
+import { MessageRidersDialog } from "@/components/events/message-riders-dialog";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
 import { Linkify } from "@/components/ui/linkify";
@@ -225,6 +226,24 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const viewerRider = currentUser
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
     : null;
+
+  // Audience sizes for the organizer's message dialog. `event.rsvps` only holds
+  // GOING, so the other states need their own count.
+  const rsvpStatusCounts = isOrganizer
+    ? await prisma.rsvp.groupBy({
+        by: ["status"],
+        where: { eventId: event.id },
+        _count: { status: true },
+      })
+    : [];
+  const countFor = (status: string) =>
+    rsvpStatusCounts.find((row) => row.status === status)?._count.status ?? 0;
+  const messageAudienceCounts = {
+    going: countFor("GOING"),
+    waitlisted: countFor("WAITLISTED"),
+    interested: countFor("INTERESTED"),
+    checkedIn: event.checkIns.length,
+  };
 
   // Viewer's own RSVP status (GOING or WAITLISTED — event.rsvps only lists GOING).
   let currentRsvp: "GOING" | "WAITLISTED" | null = null;
@@ -560,6 +579,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             isHost={isHost}
           />
         )}
+
+        {/* MESSAGE RIDERS — organizers only. Deliberately not gated on the ride
+            being active: delays and route changes are announced beforehand. */}
+        {isOrganizer && event.status !== "CANCELLED" ? (
+          <div className="content-wrap">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft">
+              <div>
+                <p className="text-sm font-semibold text-ink">Organizer tools</p>
+                <p className="text-xs text-muted">
+                  Send an update, delay, or cancellation to the riders on this ride.
+                </p>
+              </div>
+              <MessageRidersDialog
+                eventId={event.id}
+                eventTitle={event.title}
+                counts={messageAudienceCounts}
+              />
+            </div>
+          </div>
+        ) : null}
 
         {/* ATTENDANCE PANEL — organizers only */}
         {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (

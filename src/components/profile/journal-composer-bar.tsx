@@ -34,7 +34,7 @@ export function JournalComposerBar({ avatarUrl, firstName }: JournalComposerBarP
             onClick={() => setOpen(true)}
             className="flex-1 rounded-full bg-canvas px-4 py-2.5 text-left text-sm text-muted transition hover:bg-muted/10"
           >
-            What&apos;s on your mind, {firstName}?
+            Where&apos;d you ride, {firstName}?
           </button>
 
           <button

@@ -52,6 +52,20 @@ export const updateEventSchema = createEventSchema;
 // RSVP intent from the register/cancel button.
 export const rsvpIntentSchema = z.enum(["GOING", "CANCEL"]);
 
+// ---------- Batch message to a ride's riders ----------
+export const eventMessageAudienceSchema = z.enum([
+  "ALL",
+  "GOING",
+  "WAITLISTED",
+  "INTERESTED",
+  "CHECKED_IN",
+]);
+
+export const eventMessageSchema = z.object({
+  audience: eventMessageAudienceSchema,
+  body: z.string().min(1, "Write a message first.").max(1000),
+});
+
 // ---------- Rider Down incident ----------
 export const riderDownSchema = z.object({
   affectedRiderId: z.string().min(1, "Select the affected rider."),

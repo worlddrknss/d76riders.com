@@ -78,16 +78,22 @@ export function AccountProfileForm({ displayName, username, avatarUrl, bio, loca
 
         <div className="space-y-1.5">
           <label htmlFor="avatarUrl" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            Avatar URL
+            Avatar URL <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span>
           </label>
+          {/* type="text", not type="url" — an uploaded avatar is stored as a
+              relative /api/media/... path, which browser URL validation rejects,
+              blocking the save. Validated server-side instead. */}
           <input
             id="avatarUrl"
             name="avatarUrl"
-            type="url"
+            type="text"
             defaultValue={avatarUrl}
-            placeholder="https://..."
+            placeholder="Paste an image URL, or upload below"
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
+          <p className="text-xs text-muted">
+            Leave as-is to keep your current photo, clear it to remove, or upload a new one below.
+          </p>
         </div>
 
         <div className="space-y-1.5">

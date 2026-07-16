@@ -13,7 +13,7 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 5 | Route Hazard Reporting | ⬜ Not started |
 | 6 | Rider Down Quick Alert | ✅ Done |
 | 7 | Waitlist and RSVP Enhancements | ✅ Done |
-| 8 | Batch Messaging to RSVP Riders | ⬜ Not started |
+| 8 | Batch Messaging to RSVP Riders | ✅ Done |
 | 9 | Route Intelligence | ⬜ Not started |
 | 10 | Rider Reputation and Progression | ✅ Done |
 | 11 | Community Growth | ✅ Done |
@@ -22,14 +22,10 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 14 | Platform Reliability and Insights | ⬜ Not started |
 | 15 | Challenges | ⬜ Not started |
 
-Remaining, in the order they'd be quickest to build: **8 → 15 → 5 → 14 → 9 → 12**.
+Remaining, in the order they'd be quickest to build: **15 → 5 → 14 → 9 → 12**.
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
-- **8 — Batch Messaging.** Smallest by a distance. No new models: `logActivityForRiders` already
-  fans an activity out to a rider list (it's what Close Ride uses), `RsvpStatus` already provides the
-  audience filter, organizer authorization exists, and `/notifications` is already the inbox. It needs one
-  `ActivityType` value, one action, one dialog.
 - **15 — Challenges.** Two models and a page, but the hard part is done: `EventCheckIn`,
   `RiderTrust.milesRidden`, and the badge-criteria engine in `src/lib/reputation.ts` already compute
   everything a challenge scores on.
@@ -261,19 +257,26 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 8: Batch Messaging to RSVP Riders
+## Phase 8: Batch Messaging to RSVP Riders ✅
 
-**Effort:** Medium — new messaging UI, delivery tracking.
+**Effort:** Small — no new models; the fan-out, audience filter, and inbox all already existed.
 
 **Depends on:** Phase 1 (organizer permissions).
 
 **Work:**
 
-- [ ] Organizer action: "Message Riders" on event page
-- [ ] Compose message with audience filter (all RSVP, GOING only, WAITLISTED only)
-- [ ] Deliver as in-app activity with event reference
-- [ ] Message templates: update, delay, cancellation, custom
-- [ ] Future: email delivery channel with opt-in preference
+- [x] Organizer action: "Message Riders" on the event page (`MessageRidersDialog`)
+- [x] Compose with audience filter — everyone who RSVP'd, GOING, WAITLISTED, INTERESTED, or CHECKED_IN — each showing its live size
+- [x] Deliver as an in-app `EVENT_MESSAGE` activity with `refId` set to the event, landing in `/notifications`
+- [x] Templates: update, delay, weather call, cancelled, route change — each preselects a sensible audience and fills an editable opening line
+- [ ] Future: email delivery channel with opt-in preference (deferred — belongs with Phase 14's notification centre, which is where delivery tracking lives)
+
+**Notes:**
+
+- Reuses `logActivityForRiders`, the same fan-out Close Ride uses, rather than introducing a message store. Phase 14's notification centre is the right place to add delivery tracking, and doing it here would have pre-empted that design.
+- "Everyone who RSVP'd" means GOING + WAITLISTED + INTERESTED — deliberately not riders who answered NOT_GOING.
+- The sender is named in the message, and is excluded from their own fan-out.
+- Any organizer can send, not just the HOST, and the control is not gated on the ride being active: delays and route changes are announced beforehand.
 
 ---
 

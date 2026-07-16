@@ -74,8 +74,15 @@ export function ProfileEditDialog({ open, onOpenChange, profile }: ProfileEditDi
               </div>
             </div>
             <div>
-              <label htmlFor="ep-avatarUrl" className="text-xs font-semibold uppercase tracking-wide text-muted">Avatar URL</label>
-              <input id="ep-avatarUrl" name="avatarUrl" type="url" defaultValue={profile.avatarUrl} placeholder="https://..." className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+              <label htmlFor="ep-avatarUrl" className="text-xs font-semibold uppercase tracking-wide text-muted">Avatar URL <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span></label>
+              {/* Deliberately type="text", not type="url": an uploaded avatar is
+                  stored as a relative /api/media/... path, which the browser's URL
+                  validation rejects — that blocked saving the whole form, including
+                  a new upload. The action validates this properly server-side. */}
+              <input id="ep-avatarUrl" name="avatarUrl" type="text" defaultValue={profile.avatarUrl} placeholder="Paste an image URL, or upload below" className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+              <p className="mt-1 text-xs text-muted">
+                Leave as-is to keep your current photo, clear it to remove, or upload a new one below.
+              </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>

@@ -12,7 +12,7 @@ import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
-import { riderDownSchema, rsvpIntentSchema } from "@/lib/schemas";
+import { eventMessageSchema, riderDownSchema, rsvpIntentSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
@@ -267,6 +267,95 @@ export type RsvpResult = {
   error: string | null;
   status: "GOING" | "WAITLISTED" | "CANCELLED" | null;
 };
+
+export type EventMessageResult = { error: string | null; sent: number | null };
+
+/**
+ * Send a message from an organizer to the riders on an event.
+ *
+ * Delivered as an in-app activity, so it lands in the existing /notifications
+ * inbox rather than needing a parallel message store — the same fan-out Close
+ * Ride already uses.
+ *
+ * The sender is named in the summary because an unattributed message from
+ * "the event" is worth less than one from a rider you know is leading it.
+ */
+export async function messageEventRidersAction(
+  eventId: string,
+  formData: FormData,
+): Promise<EventMessageResult> {
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in.", sent: null };
+  }
+
+  const parsed = eventMessageSchema.safeParse({
+    audience: formData.get("audience")?.toString(),
+    body: formData.get("body")?.toString() ?? "",
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid message.", sent: null };
+  }
+  const { audience, body } = parsed.data;
+
+  // Any organizer of this event may message its riders.
+  const event = await prisma.rideEvent.findFirst({
+    where: { id: eventId, organizers: { some: { rider: { userId } } } },
+    select: { id: true, slug: true, title: true },
+  });
+
+  if (!event) {
+    return { error: "Only this ride's organizers can message riders.", sent: null };
+  }
+
+  const sender = await prisma.rider.findUnique({ where: { userId }, select: { id: true, name: true } });
+  if (!sender) {
+    return { error: "Rider profile not found.", sent: null };
+  }
+
+  // CHECKED_IN reads from check-ins; the rest are RSVP states.
+  let riderIds: string[];
+  if (audience === "CHECKED_IN") {
+    const checkIns = await prisma.eventCheckIn.findMany({
+      where: { eventId },
+      select: { riderId: true },
+    });
+    riderIds = checkIns.map((row) => row.riderId);
+  } else {
+    const rsvps = await prisma.rsvp.findMany({
+      where: {
+        eventId,
+        // ALL means everyone who signalled interest — not the riders who
+        // explicitly said they're not coming.
+        status: audience === "ALL" ? { in: ["GOING", "WAITLISTED", "INTERESTED"] } : audience,
+      },
+      select: { riderId: true },
+    });
+    riderIds = rsvps.map((row) => row.riderId);
+  }
+
+  // Don't notify the organizer about their own message.
+  const recipients = riderIds.filter((riderId) => riderId !== sender.id);
+
+  if (recipients.length === 0) {
+    return { error: "No riders match that audience yet.", sent: null };
+  }
+
+  await logActivityForRiders(recipients, {
+    type: "EVENT_MESSAGE",
+    summary: `${sender.name} — ${event.title}: ${body}`,
+    refId: event.id,
+  });
+
+  revalidatePath(`/events/${event.slug}`);
+  revalidatePath("/notifications");
+
+  return { error: null, sent: recipients.length };
+}
 
 export async function rsvpAction(
   eventId: string,
