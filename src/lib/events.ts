@@ -17,6 +17,62 @@ import { prisma } from "@/lib/prisma";
  */
 export const PUBLIC_EVENT_STATUSES: EventStatus[] = ["UPCOMING", "COMPLETED"];
 
+// Two picks of one forecourt land a few metres apart, and a place can be indexed
+// under more than one name — the Rossview Road QuikTrip comes back as "QuikTrip"
+// or "QuikTrip Certified Scale" depending on the search. Anything within this is
+// the same place however it was labelled.
+const SAME_PLACE_MILES = 0.031; // ~50 m
+
+function milesBetween(a: [number, number], b: [number, number]): number {
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const [aLng, aLat] = a;
+  const [bLng, bLat] = b;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(toRad(aLat)) * Math.cos(toRad(bLat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 3958.8 * Math.asin(Math.sqrt(h));
+}
+
+type EventLocations = {
+  meetLocation: string | null;
+  meetLat: number | null;
+  meetLng: number | null;
+  ksuLocation: string | null;
+  ksuLat: number | null;
+  ksuLng: number | null;
+};
+
+/**
+ * Whether kickstands-up happens somewhere other than the meetup.
+ *
+ * Almost always false. A normal ride meets at one place and departs from it —
+ * kickstands up is a *time*, not a second address. The KSU location only earns
+ * its own card when a ride genuinely stages elsewhere, and then riders need it:
+ * turning up at the meetup and missing that the group leaves from somewhere else
+ * is how someone gets left behind.
+ *
+ * Compares the point as well as the name, because the same forecourt can be
+ * labelled two ways and shouldn't render as two places.
+ */
+export function ksuLocationDiffers(event: EventLocations): boolean {
+  const ksu = event.ksuLocation?.trim();
+  if (!ksu) return false;
+
+  const meet = event.meetLocation?.trim();
+  // No meetup to compare against: whatever KSU says is the only location there is.
+  if (!meet) return true;
+
+  if (ksu.toLowerCase() === meet.toLowerCase()) return false;
+
+  if (event.meetLat != null && event.meetLng != null && event.ksuLat != null && event.ksuLng != null) {
+    const apart = milesBetween([event.meetLng, event.meetLat], [event.ksuLng, event.ksuLat]);
+    if (apart <= SAME_PLACE_MILES) return false;
+  }
+
+  return true;
+}
+
 /** A place riders have met at before, ready to reuse verbatim. */
 export type MeetupSpot = {
   name: string;

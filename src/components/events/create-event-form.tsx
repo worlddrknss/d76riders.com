@@ -136,10 +136,14 @@ export function CreateEventForm({
           placeholder="Search a place or address…"
           recentSpots={recentSpots?.meet}
         />
+        {/* Kickstands up is a time, not a second address: nearly every ride
+            leaves from the place it met at. Blank means exactly that, so this
+            only gets filled for the rare ride that stages elsewhere. */}
         <LocationAutocomplete
           fieldPrefix="ksu"
-          label="KSU Location"
-          placeholder="Search a place or address…"
+          label="KSU Location (optional)"
+          placeholder="Only if departing from somewhere else"
+          hint="Leave blank if kickstands up is at the meetup location."
           recentSpots={recentSpots?.ksu}
         />
       </div>

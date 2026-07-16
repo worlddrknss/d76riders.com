@@ -184,8 +184,9 @@ export function EventManageActions({ event }: { event: EventData }) {
                 />
                 <LocationAutocomplete
                   fieldPrefix="ksu"
-                  label="KSU Location"
-                  placeholder="Search a place or address…"
+                  label="KSU Location (optional)"
+                  placeholder="Only if departing from somewhere else"
+                  hint="Leave blank if kickstands up is at the meetup location."
                   defaultValue={{ name: event.ksuLocation, address: event.ksuAddress, lat: event.ksuLat, lng: event.ksuLng }}
                 />
               </div>

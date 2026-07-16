@@ -20,6 +20,8 @@ type LocationAutocompleteProps = {
   };
   /** Places riders have met at before, offered as one-click fills. */
   recentSpots?: MeetupSpot[];
+  /** Short note under the field, for when blank carries a meaning of its own. */
+  hint?: string;
 };
 
 const fieldClass =
@@ -41,6 +43,7 @@ export function LocationAutocomplete({
   required,
   defaultValue,
   recentSpots = [],
+  hint,
 }: LocationAutocompleteProps) {
   const near = useRiderProximity();
   const [name, setName] = useState(defaultValue?.name ?? "");
@@ -186,6 +189,8 @@ export function LocationAutocomplete({
           className={addressInputClass}
         />
       </div>
+
+      {hint ? <p className="text-[0.7rem] leading-snug text-muted">{hint}</p> : null}
 
       <input type="hidden" name={`${fieldPrefix}Lat`} value={lat ?? ""} />
       <input type="hidden" name={`${fieldPrefix}Lng`} value={lng ?? ""} />

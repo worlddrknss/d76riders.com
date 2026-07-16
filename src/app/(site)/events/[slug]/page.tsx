@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
+import { ksuLocationDiffers } from "@/lib/events";
 import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { EventCheckInButton } from "@/components/events/event-check-in-button";
@@ -207,6 +208,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   if (!event) {
     notFound();
   }
+
+  // Nearly every ride departs from its meetup point, so KSU only gets its own
+  // address when the ride genuinely stages somewhere else.
+  const departsElsewhere = ksuLocationDiffers(event);
 
   const coordinates = extractCoordinates(event.route?.geometry);
 
@@ -443,9 +448,32 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Clock3 className="h-3.5 w-3.5" />Kickstands Up</div>
                 <p className="mt-1.5 text-sm font-medium text-ink">{event.ksuAt ? formatTime(event.ksuAt) : "TBD"}</p>
                 <p className="text-xs text-muted">{event.ksuAt ? formatDate(event.ksuAt) : "Time not set"}</p>
+                {/* Only when the ride actually departs from somewhere else. Nearly
+                    always it leaves from the meetup, and repeating that address
+                    here would just be the same place written twice — but when it
+                    does differ, a rider who misses it gets left behind. */}
+                {departsElsewhere ? (
+                  <div className="mt-2 border-t border-border pt-2">
+                    <p className="text-xs font-medium text-ink">Departs from {event.ksuLocation}</p>
+                    {event.ksuAddress ? (
+                      <p className="text-xs text-muted">{event.ksuAddress}</p>
+                    ) : null}
+                    {event.ksuLat != null && event.ksuLng != null ? (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${event.ksuLat},${event.ksuLng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline"
+                      >
+                        <MapPin className="h-3 w-3" />
+                        Directions
+                      </a>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
               <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><MapPin className="h-3.5 w-3.5" />Location</div>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><MapPin className="h-3.5 w-3.5" />{departsElsewhere ? "Meetup" : "Location"}</div>
                 <p className="mt-1.5 text-sm font-medium text-ink">{event.meetLocation || event.ksuLocation || "TBD"}</p>
                 {event.meetAddress ? (
                   <p className="text-xs text-muted">{event.meetAddress}</p>
