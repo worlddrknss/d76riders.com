@@ -72,9 +72,9 @@ export async function updateAccountProfileAction(
   const avatarUrl = normalizeText(formData.get("avatarUrl"));
   const avatarFile = formData.get("avatarFile");
   const coverFile = formData.get("coverFile");
-  const bio = normalizeText(formData.get("bio"));
-  const location = normalizeText(formData.get("location"));
-  const favoriteRoad = normalizeText(formData.get("favoriteRoad"));
+  const bio = normalizeText(formData.get("bio")).slice(0, 1000);
+  const location = normalizeText(formData.get("location")).slice(0, 120);
+  const favoriteRoad = normalizeText(formData.get("favoriteRoad")).slice(0, 120);
   const yearStartedRidingInput = normalizeText(formData.get("yearStartedRiding"));
   const newPassword = normalizeText(formData.get("newPassword"));
   const youtubeUrl = normalizeText(formData.get("youtubeUrl"));

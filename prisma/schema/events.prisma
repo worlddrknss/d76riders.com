@@ -11,11 +11,19 @@ model RideEvent {
   startsAt      DateTime
   ksuAt         DateTime?
   ksuLocation   String?
+  ksuAddress    String?
+  ksuLat        Float?
+  ksuLng        Float?
   meetLocation  String?
+  meetAddress   String?
+  meetLat       Float?
+  meetLng       Float?
   distanceMiles Int?
   difficulty    RideDifficulty?
   status        EventStatus     @default(UPCOMING)
   routeId       String?         @unique
+  maxCapacity   Int?
+  rsvpDeadline  DateTime?
 
   host         Rider         @relation(fields: [hostId], references: [id], onDelete: Cascade)
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
@@ -25,6 +33,7 @@ model RideEvent {
   followers    EventFollow[]
   comments     Comment[]
   galleryItems GalleryItem[]
+  incidents    RideIncident[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -67,6 +76,7 @@ enum RsvpStatus {
   GOING
   INTERESTED
   NOT_GOING
+  WAITLISTED
 }
 
 model EventOrganizer {
@@ -110,4 +120,26 @@ enum CheckInMethod {
   QR
   NFC
   MANUAL
+}
+
+// Rider Down / safety incidents raised by organizers during a ride.
+model RideIncident {
+  id           String    @id @default(cuid())
+  eventId      String
+  riderId      String // the affected rider
+  reportedById String // organizer who raised the alert
+  notes        String?
+  locationText String?
+  lat          Float?
+  lng          Float?
+  resolvedAt   DateTime?
+
+  event      RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider      Rider     @relation("IncidentSubject", fields: [riderId], references: [id], onDelete: Cascade)
+  reportedBy Rider     @relation("IncidentReporter", fields: [reportedById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+  @@index([riderId])
 }

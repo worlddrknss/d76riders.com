@@ -4,7 +4,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb",
+      // Profile edit submits avatar + cover together, and event/garage/gear
+      // photo uploads all flow through Server Actions — modern phone photos are
+      // several MB each, so keep headroom for a multi-image submission.
+      bodySizeLimit: "30mb",
     },
   },
   images: {

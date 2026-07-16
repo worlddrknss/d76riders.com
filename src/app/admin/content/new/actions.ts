@@ -9,6 +9,7 @@ import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { getCurrentUser } from "@/lib/session";
 import { isS3Configured, uploadFile } from "@/lib/s3";
 
@@ -80,7 +81,7 @@ export async function createNewsPostAction(
   const title = normalizeText(formData.get("title"));
   const category = normalizeText(formData.get("category"));
   const excerpt = normalizeText(formData.get("excerpt"));
-  const contentHtml = normalizeText(formData.get("contentHtml"));
+  const contentHtml = sanitizeRichText(normalizeText(formData.get("contentHtml")));
   const tagsInput = normalizeText(formData.get("tags"));
   const statusInput = normalizeText(formData.get("status"));
   const publishedAtInput = normalizeText(formData.get("publishedAt"));

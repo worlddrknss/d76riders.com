@@ -20,6 +20,18 @@ function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
 }
 
+// Only persist a video URL if it's a well-formed http(s) URL; drop anything else.
+function toOptionalHttpUrl(value: string): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.toString().slice(0, 500);
+  } catch {
+    return null;
+  }
+}
+
 export async function createJournalEntryAction(
   _previousState: JournalFormState,
   formData: FormData,
@@ -40,7 +52,7 @@ export async function createJournalEntryAction(
   const title = normalizeText(formData.get("title"));
   const body = normalizeText(formData.get("body"));
   const ridePhoto = formData.get("ridePhoto");
-  const videoUrl = normalizeText(formData.get("videoUrl")) || null;
+  const videoUrl = toOptionalHttpUrl(normalizeText(formData.get("videoUrl")));
 
   const parsed = createJournalEntrySchema.safeParse({ title: title || "Untitled", body });
   if (!parsed.success) {
@@ -123,7 +135,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   const body = normalizeText(formData.get("body"));
   const ridePhoto = formData.get("ridePhoto");
   const removePhoto = formData.get("removePhoto") === "on";
-  const videoUrl = normalizeText(formData.get("videoUrl")) || null;
+  const videoUrl = toOptionalHttpUrl(normalizeText(formData.get("videoUrl")));
 
   if (!body) {
     return;

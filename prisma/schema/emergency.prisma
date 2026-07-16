@@ -1,0 +1,44 @@
+// Emergency domain — rider medical/emergency card exposed via NFC/QR.
+// Sensitive fields are stored using envelope encryption (see src/lib/emergency-crypto.ts):
+// a per-card random DEK (AES-256-GCM) encrypts the medical JSON payload, and the DEK
+// itself is encrypted with the master KEK from EMERGENCY_MASTER_KEY.
+
+model EmergencyCard {
+  id      String  @id @default(cuid())
+  riderId String  @unique
+  token   String  @unique @default(cuid())
+  active  Boolean @default(true)
+
+  // Envelope-encrypted payload — stored as ciphertext, never plaintext.
+  encryptedData Bytes
+  dekCiphertext Bytes
+
+  // Visibility toggles — which decrypted fields the public card reveals.
+  showBloodType   Boolean @default(true)
+  showAllergies   Boolean @default(true)
+  showConditions  Boolean @default(true)
+  showMedications Boolean @default(true)
+  showInsurance   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rider    Rider                @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  accesses EmergencyCardAccess[]
+}
+
+model EmergencyCardAccess {
+  id        String  @id @default(cuid())
+  cardId    String
+  ip        String?
+  userAgent String?
+  lat       Float?
+  lng       Float?
+  address   String?
+
+  createdAt DateTime @default(now())
+
+  card EmergencyCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+}

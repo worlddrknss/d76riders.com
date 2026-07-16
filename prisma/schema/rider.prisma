@@ -38,6 +38,9 @@ model Rider {
   organizedEvents EventOrganizer[]
   eventCheckIns  EventCheckIn[]
   events         RideEvent[]
+  emergencyCard  EmergencyCard?
+  incidents          RideIncident[] @relation("IncidentSubject")
+  reportedIncidents  RideIncident[] @relation("IncidentReporter")
   routes         Route[]
   roads          Road[]
   roadRatings    RoadRating[]

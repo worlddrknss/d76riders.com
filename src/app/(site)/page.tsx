@@ -223,9 +223,6 @@ export default async function Home() {
                 <Link href="/emergency-response" className="inline-flex items-center gap-2 rounded-md bg-sunset px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cf5a26]">
                   Learn More <ArrowRight className="h-4 w-4" />
                 </Link>
-                <span className="rounded-full border border-sunset/40 bg-sunset/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sunset">
-                  Coming Soon
-                </span>
               </div>
               <p className="mt-4 text-xs text-slate-400">
                 Free pickup at events and meetups. Shipping available for remote members.

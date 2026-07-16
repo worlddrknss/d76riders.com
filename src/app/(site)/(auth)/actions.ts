@@ -51,6 +51,10 @@ export async function registerAction(
     return { error: "Email is required." };
   }
 
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Enter a valid email address." };
+  }
+
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters." };
   }

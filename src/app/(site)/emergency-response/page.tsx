@@ -129,8 +129,8 @@ export default function SafetyPage() {
       <section className="w-full border-b border-sunset/20 bg-sunset/5">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
-            <span className="rounded-full bg-sunset/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sunset">In Development</span>
-            <p className="text-sm text-muted">This feature is currently being built. NFC stickers will be available soon.</p>
+            <span className="rounded-full bg-sunset/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-sunset">Available Now</span>
+            <p className="text-sm text-muted">Set up your encrypted emergency card from your rider profile.</p>
           </div>
           <p className="text-xs text-muted">Free at events and meetups. Shipping available for remote members.</p>
         </div>

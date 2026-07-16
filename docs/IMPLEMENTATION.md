@@ -59,8 +59,8 @@ enum EventOrganizerRole {
 - [x] Event page: show "Check Out" button after check-in
 - [x] Organizer attendance panel: live list of who checked in, who hasn't, timestamps
 - [x] "Close Ride" action for organizers — flags riders who checked in but didn't check out
-- [ ] Activity feed: add CHECK_IN and CHECK_OUT activity types
-- [ ] Missing checkout alert: notify organizers after event window ends
+- [x] Activity feed: add CHECK_IN and CHECK_OUT activity types
+- [x] Missing checkout alert: notify organizers after event window ends
 
 **Schema:**
 
@@ -88,7 +88,7 @@ enum CheckInMethod {
 
 ---
 
-## Phase 3: Emergency Contact Card
+## Phase 3: Emergency Contact Card ✅
 
 **Effort:** Medium — new fields on Rider, new profile section, encryption layer.
 
@@ -96,12 +96,12 @@ enum CheckInMethod {
 
 **Work:**
 
-- [ ] Add emergency fields to Rider or create separate `EmergencyCard` model
-- [ ] Envelope encryption: implement DEK/KEK pattern for medical data at rest
-- [ ] Profile settings: "Emergency Card" section to add/edit emergency contacts, blood type, allergies, conditions, medications
-- [ ] Rider controls: enable/disable card, choose which fields are visible
-- [ ] Token generation: create unique emergency token per rider
-- [ ] Access logging: `EmergencyCardAccess` model (token, IP, userAgent, timestamp)
+- [x] Add emergency fields to Rider or create separate `EmergencyCard` model
+- [x] Envelope encryption: implement DEK/KEK pattern for medical data at rest (`src/lib/emergency-crypto.ts`, AES-256-GCM, `EMERGENCY_MASTER_KEY`)
+- [x] Profile settings: "Emergency Card" section to add/edit emergency contacts, blood type, allergies, conditions, medications
+- [x] Rider controls: enable/disable card, choose which fields are visible
+- [x] Token generation: create unique emergency token per rider
+- [x] Access logging: `EmergencyCardAccess` model (token, IP, userAgent, timestamp)
 
 **Schema:**
 
@@ -143,7 +143,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 4: NFC Emergency ID Page
+## Phase 4: NFC Emergency ID Page ✅
 
 **Effort:** Medium — new public page, acknowledgment gate, NFC URL routing.
 
@@ -151,16 +151,16 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Create `/emergency/[token]` public route
-- [ ] Acknowledgment gate UI: "I am accessing this for emergency purposes" confirmation before revealing data
-- [ ] Decrypt and display emergency card fields based on visibility toggles
-- [ ] Geolocation: request scanner's position via browser Geolocation API, reverse geocode to street address
-- [ ] Display readable location + GPS coordinates on emergency card page
-- [ ] One-tap "Call 911" button with location context
-- [ ] Log access on every view (IP, user-agent, timestamp, coordinates)
-- [ ] Deactivated state: show "This emergency card has been deactivated" if token is inactive
-- [ ] Token regeneration action in rider profile settings
-- [ ] Add emergency card setup prompt to Safety page
+- [x] Create `/emergency/[token]` public route
+- [x] Acknowledgment gate UI: "I am accessing this for emergency purposes" confirmation before revealing data
+- [x] Decrypt and display emergency card fields based on visibility toggles
+- [x] Geolocation: request scanner's position via browser Geolocation API, reverse geocode to street address (Nominatim/OSM)
+- [x] Display readable location + GPS coordinates on emergency card page (shown to organizers/on incident log)
+- [x] One-tap "Call 911" button with location context
+- [x] Log access on every view (IP, user-agent, timestamp, coordinates)
+- [x] Deactivated state: show "This emergency card has been deactivated" if token is inactive
+- [x] Token regeneration action in rider profile settings
+- [x] Add emergency card setup prompt to Safety page
 
 ---
 
@@ -168,7 +168,7 @@ model EmergencyCardAccess {
 
 **Effort:** Medium — new model, map integration, real-time-ish feed.
 
-**What exists:** Routes with GeoJSON geometry, waypoints, Mapbox integration, road detail pages.
+**What exists:** Routes with GeoJSON geometry, waypoints, MapLibre integration, road detail pages.
 
 **Work:**
 
@@ -181,7 +181,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 6: Rider Down Quick Alert
+## Phase 6: Rider Down Quick Alert ✅
 
 **Effort:** Medium — alert flow UI, organizer notification, depends on check-in data.
 
@@ -189,16 +189,16 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] "Rider Down" emergency button on event page (visible to organizers during active ride)
-- [ ] Alert flow: select affected rider from checked-in list, add location/notes
-- [ ] Notify all organizers immediately (in-app activity + future push/SMS)
-- [ ] Incident record: `RideIncident` model with event, rider, location, notes, timestamp
-- [ ] Post-ride incident log visible to organizers for follow-up
-- [ ] Admin audit trail for incident records
+- [x] "Rider Down" emergency button on event page (visible to organizers during active ride)
+- [x] Alert flow: select affected rider from checked-in list, add location/notes (with GPS capture)
+- [x] Notify all organizers immediately (in-app activity + future push/SMS)
+- [x] Incident record: `RideIncident` model with event, rider, location, notes, timestamp
+- [x] Post-ride incident log visible to organizers for follow-up (resolve action + incident list)
+- [ ] Admin audit trail for incident records (deferred — belongs with Phase 13 AuditLog)
 
 ---
 
-## Phase 7: Waitlist and RSVP Enhancements
+## Phase 7: Waitlist and RSVP Enhancements ✅
 
 **Effort:** Medium — extends existing RSVP system.
 
@@ -206,12 +206,12 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Add `maxCapacity` field to RideEvent
-- [ ] Add WAITLISTED status to RsvpStatus enum
-- [ ] Auto-promote: when a GOING rider cancels, promote the earliest WAITLISTED rider
-- [ ] RSVP cutoff: add `rsvpDeadline` field, disable RSVP after deadline
-- [ ] No-show tracking: riders who RSVP'd GOING but never checked in get flagged
-- [ ] Notification: notify promoted riders and cutoff reminders
+- [x] Add `maxCapacity` field to RideEvent
+- [x] Add WAITLISTED status to RsvpStatus enum
+- [x] Auto-promote: when a GOING rider cancels, promote the earliest WAITLISTED rider
+- [x] RSVP cutoff: add `rsvpDeadline` field, disable RSVP after deadline
+- [x] No-show tracking: riders who RSVP'd GOING but never checked in get flagged (at Close Ride)
+- [x] Notification: notify promoted riders (in-app); cutoff shown on RSVP button — reminder scheduling deferred
 
 ---
 
@@ -235,13 +235,13 @@ model EmergencyCardAccess {
 
 **Effort:** Large — extends existing route/road infrastructure with analytics and suggestions.
 
-**What exists:** Route model with GeoJSON, waypoints (START, KSU, FUEL, FOOD, REST, STOP, END), road ratings, Mapbox integration.
+**What exists:** Route model with GeoJSON, waypoints (START, KSU, FUEL, FOOD, REST, STOP, END), road ratings, MapLibre integration.
 
 **Work:**
 
 - [ ] Turn-by-turn page: render route with ordered stops, fuel stations, regroup points
 - [ ] Route quality score: aggregate from road ratings + rider feedback post-ride
-- [ ] Difficulty prediction: compute from distance, elevation (from Mapbox API), and historical pace data
+- [ ] Difficulty prediction: compute from distance, elevation (from an open elevation source, e.g. Open-Elevation / OpenTopoData), and historical pace data
 - [ ] Best time to ride: seasonal/time-of-day suggestions based on historical event data and weather patterns
 - [ ] Post-ride feedback form: rate route difficulty, scenery, road conditions
 

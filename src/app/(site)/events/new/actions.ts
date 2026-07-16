@@ -30,6 +30,12 @@ function toOptionalInt(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function toOptionalCoord(value: string, min: number, max: number): number | null {
+  if (!value) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null;
+}
+
 function toOptionalFloat(value: string): number | null {
   if (!value) {
     return null;
@@ -138,9 +144,17 @@ export async function createEventAction(
   const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const startsAtInput = normalizeText(formData.get("startsAt"));
   const meetLocation = normalizeText(formData.get("meetLocation"));
+  const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
+  const meetLat = toOptionalCoord(normalizeText(formData.get("meetLat")), -90, 90);
+  const meetLng = toOptionalCoord(normalizeText(formData.get("meetLng")), -180, 180);
   const ksuAtInput = normalizeText(formData.get("ksuAt"));
   const ksuLocation = normalizeText(formData.get("ksuLocation"));
+  const ksuAddress = normalizeText(formData.get("ksuAddress")).slice(0, 300);
+  const ksuLat = toOptionalCoord(normalizeText(formData.get("ksuLat")), -90, 90);
+  const ksuLng = toOptionalCoord(normalizeText(formData.get("ksuLng")), -180, 180);
   const distanceMilesInput = normalizeText(formData.get("distanceMiles"));
+  const maxCapacityInput = normalizeText(formData.get("maxCapacity"));
+  const rsvpDeadlineInput = normalizeText(formData.get("rsvpDeadline"));
   const difficultyInput = normalizeText(formData.get("difficulty"));
 
   const routeName = normalizeText(formData.get("routeName"));
@@ -168,6 +182,16 @@ export async function createEventAction(
   const distanceMiles = toOptionalInt(distanceMilesInput);
   if (distanceMilesInput && distanceMiles === null) {
     return { error: "Distance must be a whole number of miles." };
+  }
+
+  const maxCapacity = toOptionalInt(maxCapacityInput);
+  if (maxCapacityInput && (maxCapacity === null || maxCapacity < 1)) {
+    return { error: "Max capacity must be a positive whole number." };
+  }
+
+  const rsvpDeadline = toOptionalDate(rsvpDeadlineInput);
+  if (rsvpDeadlineInput && !rsvpDeadline) {
+    return { error: "RSVP deadline date/time is invalid." };
   }
 
   const facebookEventUrl = facebookEventUrlInput ? toOptionalUrl(facebookEventUrlInput) : null;
@@ -291,8 +315,16 @@ export async function createEventAction(
         startsAt,
         ksuAt,
         ksuLocation: ksuLocation || null,
+        ksuAddress: ksuAddress || null,
+        ksuLat,
+        ksuLng,
         meetLocation: meetLocation || null,
+        meetAddress: meetAddress || null,
+        meetLat,
+        meetLng,
         distanceMiles: resolvedRouteDistanceMiles ? Math.round(resolvedRouteDistanceMiles) : distanceMiles,
+        maxCapacity,
+        rsvpDeadline,
         difficulty,
         routeId,
         galleryItems: eventPhotoUrl

@@ -1,20 +1,56 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, BookText, CalendarDays, Camera, HardHat, MapPin, Route, Shield, Video } from "lucide-react";
+import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, MapPin, Package, Receipt, Route, Shirt, Trash2, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalInteractions } from "@/components/profile/journal-interactions";
-import { ProfileSectionEdit } from "@/components/profile/profile-section-edit";
-import { RiderSubNav } from "@/components/layout/rider-sub-nav";
+import { ProfileEditButton } from "@/components/profile/profile-edit-button";
+import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
+import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
+import { PublicBikeCard } from "@/components/garage/public-bike-card";
+import { BikeCard } from "@/components/garage/bike-card";
+import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
+import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
+import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
+import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { Linkify } from "@/components/ui/linkify";
 import { VideoEmbed } from "@/components/ui/video-embed";
 import { JournalList } from "@/components/profile/journal-list";
 import { ReportJournalButton } from "@/components/profile/report-journal-button";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
+import { createGearItemAction, updateGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
+import { deleteVideoAction } from "@/app/(site)/videos/mine/actions";
+import { CreateVideoDialog } from "@/components/videos/create-video-dialog";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
+
+const gearSections = [
+  { key: "HELMET", label: "Helmets", icon: HardHat },
+  { key: "GLOVES", label: "Gloves", icon: Package },
+  { key: "JACKET", label: "Jackets", icon: Shirt },
+  { key: "PANTS", label: "Riding Pants", icon: Shirt },
+  { key: "BOOTS", label: "Boots", icon: Footprints },
+  { key: "CAMERA_GEAR", label: "Camera Gear", icon: Camera },
+  { key: "ACCESSORY", label: "Accessories", icon: Package },
+] as const;
+
+// Owner gear editor sections (icon resolved by key inside GearTabbedView).
+const ownerGearSections = [
+  { key: "HELMET", label: "Helmets", description: "Daily, touring, and backup lids.", iconKey: "HardHat" },
+  { key: "GLOVES", label: "Gloves", description: "Summer, winter, and rain setups.", iconKey: "Package" },
+  { key: "JACKET", label: "Jackets", description: "Mesh, textile, and cold-weather layers.", iconKey: "Shirt" },
+  { key: "PANTS", label: "Riding Pants", description: "Protective pants and over-pants.", iconKey: "Shirt" },
+  { key: "BOOTS", label: "Boots", description: "Riding boots, shoes, and covers.", iconKey: "Footprints" },
+  { key: "CAMERA_GEAR", label: "Camera Gear", description: "Action cams, mounts, and cards.", iconKey: "Camera" },
+  { key: "ACCESSORY", label: "Accessories", description: "Intercoms, locks, bags, and extras.", iconKey: "Package" },
+];
+
+function formatCurrency(value: number): string {
+  if (!value) return "$0";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -66,8 +102,29 @@ export default async function RiderProfilePage({
       tiktokUrl: true,
       instagramUrl: true,
       twitterUrl: true,
+      primaryBikeId: true,
       bikes: {
-        select: { id: true, name: true, make: true, model: true },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          make: true,
+          model: true,
+          year: true,
+          type: true,
+          engineType: true,
+          displacement: true,
+          photos: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { url: true, caption: true },
+          },
+          _count: { select: { modifications: true, serviceRecords: true } },
+        },
+      },
+      videos: {
+        orderBy: { createdAt: "desc" },
+        select: { id: true, url: true, platform: true, title: true, createdAt: true },
       },
       journalEntries: {
         orderBy: { createdAt: "desc" },
@@ -149,14 +206,7 @@ export default async function RiderProfilePage({
         },
       },
       gearItems: {
-        orderBy: [{ category: "asc" }, { createdAt: "desc" }],
-        select: {
-          id: true,
-          category: true,
-          name: true,
-          brand: true,
-          model: true,
-        },
+        orderBy: [{ category: "asc" }, { purchaseDate: "desc" }, { createdAt: "desc" }],
       },
     },
   });
@@ -216,321 +266,559 @@ export default async function RiderProfilePage({
     twitterHandle: rider.twitterUrl?.replace(/^https:\/\/x\.com\//, "") || "",
   } : null;
 
+  // Emergency card (owner-only) — decrypt the medical payload for editing.
+  const emergencyConfigured = isEmergencyCryptoConfigured();
+  let emergencyCard: EmergencyCardData | null = null;
+  if (isOwner) {
+    const cardRow = await prisma.emergencyCard.findUnique({ where: { riderId: rider.id } });
+    if (cardRow && emergencyConfigured) {
+      try {
+        emergencyCard = {
+          token: cardRow.token,
+          active: cardRow.active,
+          showBloodType: cardRow.showBloodType,
+          showAllergies: cardRow.showAllergies,
+          showConditions: cardRow.showConditions,
+          showMedications: cardRow.showMedications,
+          showInsurance: cardRow.showInsurance,
+          payload: decryptEmergencyPayload({
+            encryptedData: cardRow.encryptedData,
+            dekCiphertext: cardRow.dekCiphertext,
+          }),
+        };
+      } catch {
+        emergencyCard = null;
+      }
+    }
+  }
+
+  // Owner-only rich bike data — modification/service costs stay private to the owner.
+  const ownerBikes = isOwner && currentUser
+    ? await prisma.bike.findMany({
+        where: { rider: { userId: currentUser.id } },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          make: true,
+          name: true,
+          model: true,
+          year: true,
+          type: true,
+          engineType: true,
+          displacement: true,
+          photos: {
+            orderBy: { createdAt: "desc" },
+            take: 8,
+            select: { id: true, url: true, caption: true, createdAt: true },
+          },
+          modifications: {
+            orderBy: { installedAt: "desc" },
+            select: { id: true, title: true, category: true, cost: true, mileage: true, notes: true, installedAt: true },
+          },
+          serviceRecords: {
+            orderBy: { servicedAt: "desc" },
+            select: { id: true, title: true, serviceType: true, cost: true, mileage: true, notes: true, servicedAt: true },
+          },
+        },
+      })
+    : [];
+
+  const totalMods = ownerBikes.reduce((sum, bike) => sum + bike.modifications.length, 0);
+  const totalServices = ownerBikes.reduce((sum, bike) => sum + bike.serviceRecords.length, 0);
+  const totalSpend = ownerBikes.reduce((sum, bike) => {
+    const modSpend = bike.modifications.reduce((s, m) => s + (m.cost ?? 0), 0);
+    const svcSpend = bike.serviceRecords.reduce((s, r) => s + (r.cost ?? 0), 0);
+    return sum + modSpend + svcSpend;
+  }, 0);
+
+  const memberSince = rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const hasSocials = Boolean(rider.youtubeUrl || rider.tiktokUrl || rider.instagramUrl || rider.twitterUrl);
+
+  const journalForList = rider.journalEntries.map((entry) => ({
+    ...entry,
+    likeCount: entry._count.likes,
+    commentCount: entry._count.comments,
+    isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,
+    comments: entry.comments.map((c) => ({
+      id: c.id,
+      body: c.body,
+      authorName: c.author.name,
+      authorHandle: c.author.handle,
+      createdAt: c.createdAt.toISOString(),
+    })),
+    profileUrl: `/r/${rider.handle}`,
+  }));
+
+  const cardClass = "rounded-xl border border-border bg-surface p-5 shadow-soft";
+  const headingClass = "flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt";
+
+  // ─── Overview tab ───────────────────────────────────────────────
+  const overviewContent = (
+    <div className="grid gap-5 lg:grid-cols-2">
+      <div className="space-y-5">
+        <div className={cardClass}>
+          <h2 className={headingClass}>Details</h2>
+          <dl className="mt-3 space-y-3">
+            {rider.favoriteRoad && (
+              <div className="flex items-start gap-3">
+                <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                <div>
+                  <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
+                  <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
+                </div>
+              </div>
+            )}
+            <div className="flex items-start gap-3">
+              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+              <div>
+                <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
+                <dd className="text-sm font-medium text-asphalt">{memberSince}</dd>
+              </div>
+            </div>
+            {rider.bikes.length > 0 && (
+              <div className="flex items-start gap-3">
+                <Bike className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                <div>
+                  <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Bikes</dt>
+                  <dd className="text-sm font-medium text-asphalt">
+                    {rider.bikes.map((b) => b.name || `${b.make} ${b.model ?? ""}`.trim()).join(", ")}
+                  </dd>
+                </div>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        {(hasSocials || isOwner) && (
+          <div className={cardClass}>
+            <h2 className={headingClass}>Socials</h2>
+            {hasSocials ? (
+              <div className="mt-3 space-y-2">
+                {rider.youtubeUrl && (
+                  <a href={rider.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                    <Video className="h-4 w-4 text-red-600" /> YouTube
+                  </a>
+                )}
+                {rider.tiktokUrl && (
+                  <a href={rider.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                    <Video className="h-4 w-4 text-ink" /> TikTok
+                  </a>
+                )}
+                {rider.instagramUrl && (
+                  <a href={rider.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                    <Camera className="h-4 w-4 text-pink-500" /> Instagram
+                  </a>
+                )}
+                {rider.twitterUrl && (
+                  <a href={rider.twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
+                    <BookText className="h-4 w-4 text-sky-500" /> X / Twitter
+                  </a>
+                )}
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted">No social links yet. Add them from Edit Profile.</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        <div className={cardClass}>
+          <div className="flex items-center justify-between">
+            <h2 className={headingClass}><CalendarDays className="h-3.5 w-3.5 text-sunset" />Events</h2>
+            {isOwner && <Link href="/events/new" className="text-xs font-semibold text-sunset hover:underline">+ New</Link>}
+          </div>
+          {rider.events.length === 0 ? (
+            <p className="mt-3 text-xs text-muted">No events yet.</p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {rider.events.map((event) => (
+                <li key={event.id}>
+                  <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
+                    <span className="font-medium text-ink">{event.title}</span>
+                    <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className={cardClass}>
+          <h2 className={headingClass}><Users className="h-3.5 w-3.5 text-sunset" />People</h2>
+          <div className="mt-3 space-y-3">
+            <div>
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
+              <div className="mt-2 space-y-1.5">
+                {rider.followers.length > 0 ? rider.followers.map((entry) => (
+                  <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
+                    {entry.follower.name}
+                  </Link>
+                )) : <p className="text-xs text-muted">No followers yet.</p>}
+              </div>
+            </div>
+            <div>
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
+              <div className="mt-2 space-y-1.5">
+                {rider.following.length > 0 ? rider.following.map((entry) => (
+                  <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
+                    {entry.following.name}
+                  </Link>
+                )) : <p className="text-xs text-muted">Not following anyone yet.</p>}
+              </div>
+            </div>
+            <div>
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
+              <div className="mt-2 space-y-1.5">
+                {rider.followedEvents.length > 0 ? rider.followedEvents.map((entry) => (
+                  <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
+                    {entry.event.title}
+                  </Link>
+                )) : <p className="text-xs text-muted">No followed events yet.</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ─── Garage tab ─────────────────────────────────────────────────
+  const garageContent = isOwner ? (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Personal Garage</p>
+        <CreateBikeDialog />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
+          <Bike className="mx-auto h-4 w-4 text-sunset" />
+          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{ownerBikes.length}</p>
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Bikes</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
+          <Wrench className="mx-auto h-4 w-4 text-sunset" />
+          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{totalMods}</p>
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Modifications</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
+          <Receipt className="mx-auto h-4 w-4 text-sunset" />
+          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{totalServices}</p>
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Services</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4 text-center shadow-soft">
+          <DollarSign className="mx-auto h-4 w-4 text-sunset" />
+          <p className="mt-1 font-display text-2xl font-bold text-asphalt">{formatCurrency(totalSpend)}</p>
+          <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Total Invested</p>
+        </div>
+      </div>
+
+      {ownerBikes.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+          <Bike className="mx-auto h-8 w-8 text-muted/50" />
+          <p className="mt-3 text-sm text-muted">No bikes in your garage yet.</p>
+          <p className="mt-1 text-xs text-muted">Click &quot;Add Bike&quot; above to add your first machine.</p>
+        </div>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {ownerBikes.map((bike) => (
+            <BikeCard key={bike.id} bike={bike} isPrimary={bike.id === rider.primaryBikeId} />
+          ))}
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="space-y-5">
+      {rider.bikes.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+          <Bike className="mx-auto h-8 w-8 text-muted/50" />
+          <p className="mt-3 text-sm text-muted">{rider.name} hasn&apos;t added any bikes yet.</p>
+        </div>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {rider.bikes.map((bike) => (
+            <PublicBikeCard key={bike.id} bike={bike} isPrimary={bike.id === rider.primaryBikeId} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // ─── Rides tab ──────────────────────────────────────────────────
+  const ridesContent = (
+    <div>
+      {isOwner && (
+        <JournalComposerBar avatarUrl={avatar} firstName={rider.name.split(" ")[0]} />
+      )}
+      <div className={isOwner ? "mt-6 space-y-5" : "space-y-5"}>
+        {rider.journalEntries.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+            <BookText className="mx-auto h-8 w-8 text-muted/50" />
+            <p className="mt-3 text-sm text-muted">
+              {isOwner
+                ? "No ride journal entries yet. Click the + button above to share your first ride story."
+                : `${rider.name} hasn't shared any ride journal entries yet.`}
+            </p>
+          </div>
+        ) : isOwner ? (
+          <JournalList entries={journalForList} />
+        ) : (
+          rider.journalEntries.map((entry) => {
+            const entryImage = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
+            const isLiked = viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false;
+            const entryComments = entry.comments.map((c) => ({
+              id: c.id,
+              body: c.body,
+              authorName: c.author.name,
+              authorHandle: c.author.handle,
+              createdAt: c.createdAt.toISOString(),
+            }));
+            return (
+              <article key={entry.id} className="relative overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+                {currentUser && (
+                  <div className="absolute right-3 top-3 z-10">
+                    <ReportJournalButton entryId={entry.id} />
+                  </div>
+                )}
+                {entryImage ? (
+                  <div className="aspect-square w-full overflow-hidden">
+                    <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
+                  </div>
+                ) : entry.videoUrl ? (
+                  <VideoEmbed url={entry.videoUrl} />
+                ) : null}
+                <div className="p-5">
+                  <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
+                    {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                  {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
+                  <p className="mt-2 leading-relaxed text-muted"><Linkify text={entry.body} /></p>
+                </div>
+                <JournalInteractions
+                  entryId={entry.id}
+                  likeCount={entry._count.likes}
+                  commentCount={entry._count.comments}
+                  isLiked={isLiked}
+                  isAuthenticated={Boolean(currentUser)}
+                  comments={entryComments}
+                  entryUrl={`/r/${rider.handle}`}
+                />
+              </article>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+
+  // ─── Gear tab ───────────────────────────────────────────────────
+  const gearContent = isOwner ? (
+    <GearTabbedView
+      sections={ownerGearSections}
+      items={rider.gearItems}
+      createAction={createGearItemAction}
+      updateAction={updateGearItemAction}
+      deleteAction={deleteGearItemAction}
+    />
+  ) : (
+    <div className="space-y-5">
+      {rider.gearItems.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+          <HardHat className="mx-auto h-8 w-8 text-muted/50" />
+          <p className="mt-3 text-sm text-muted">
+            {isOwner ? "No gear logged yet." : `${rider.name} hasn't added any gear yet.`}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {gearSections.map((section) => {
+            const items = rider.gearItems.filter((item) => item.category === section.key);
+            if (items.length === 0) return null;
+            const Icon = section.icon;
+            return (
+              <article key={section.key} className="flex flex-col rounded-xl border border-border bg-surface shadow-soft">
+                <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sunset/10 text-sunset">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-ink">{section.label}</p>
+                  </div>
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-canvas px-1.5 text-xs font-bold text-asphalt">
+                    {items.length}
+                  </span>
+                </div>
+                <div className="flex-1 space-y-2 p-4">
+                  {items.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2.5">
+                      <p className="text-sm font-semibold text-ink">{item.name}</p>
+                      {(item.brand || item.model) ? (
+                        <p className="text-xs text-muted">{[item.brand, item.model].filter(Boolean).join(" ")}</p>
+                      ) : null}
+                      {(item.size || item.color || item.condition) ? (
+                        <p className="mt-0.5 text-xs text-muted">
+                          {[item.size && `Size ${item.size}`, item.color, item.condition].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                      {item.notes ? <p className="mt-1 text-xs italic text-muted">{item.notes}</p> : null}
+                      {item.purchaseUrl ? (
+                        <a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline">
+                          <ExternalLink className="h-3 w-3" /> Buy this
+                        </a>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // ─── Videos tab ─────────────────────────────────────────────────
+  const videosContent = (
+    <div className="space-y-5">
+      {isOwner && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Your Videos</p>
+          <CreateVideoDialog />
+        </div>
+      )}
+      {rider.videos.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+          <Video className="mx-auto h-8 w-8 text-muted/50" />
+          <p className="mt-3 text-sm text-muted">
+            {isOwner ? "No videos yet. Paste a YouTube or TikTok URL above." : `${rider.name} hasn't added any videos yet.`}
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {rider.videos.map((video) => (
+            <article key={video.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+              <RiderVideoEmbed url={video.url} platform={video.platform} />
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-ink">{video.title || video.url}</p>
+                  <p className="text-xs text-muted">{video.platform} · {video.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                </div>
+                {isOwner && (
+                  <form action={deleteVideoAction.bind(null, video.id)}>
+                    <button type="submit" className="rounded-lg p-1.5 text-red-600 transition hover:bg-red-50" title="Delete video">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </form>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const tabs: ProfileTab[] = [
+    { id: "overview", label: "Overview", content: overviewContent },
+    { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
+    { id: "rides", label: "Rides", count: rider.journalEntries.length, content: ridesContent },
+    { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
+    { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
+  ];
+  if (isOwner) {
+    tabs.push({
+      id: "emergency",
+      label: "Emergency",
+      content: (
+        <div className="max-w-md">
+          <EmergencyCardManager card={emergencyCard} configured={emergencyConfigured} />
+        </div>
+      ),
+    });
+  }
+
   return (
     <section className="page-shell">
       <div className="content-wrap">
-        {isOwner && <RiderSubNav handle={rider.handle} />}
-
-        {cover && (
-          <div className="mb-6 h-40 w-full overflow-hidden rounded-xl sm:h-52">
-            <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
-          </div>
-        )}
-        <div className="grid items-start gap-8 lg:grid-cols-[20rem_1fr]">
-          {/* SIDEBAR */}
-          <aside className="space-y-5">
-            <div className="group rounded-xl border border-border bg-surface p-6 shadow-soft">
-              {isOwner && profileData && (
-                <div className="mb-3 flex justify-end opacity-0 transition-opacity group-hover:opacity-100">
-                  <ProfileSectionEdit section="identity" data={profileData} />
+        {/* COVER HERO */}
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+          <div className="relative h-40 w-full sm:h-56">
+            {cover ? (
+              <img src={cover} alt={`${rider.name}'s cover`} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full bg-linear-to-br from-asphalt via-asphalt to-sunset/40" />
+            )}
+            <div className="absolute right-4 top-4">
+              {isOwner && profileData ? (
+                <div className="rounded-lg bg-surface/85 backdrop-blur">
+                  <ProfileEditButton profile={profileData} />
                 </div>
-              )}
-              {avatar ? (
-                <img src={avatar} alt={rider.name} className="mx-auto h-32 w-32 rounded-full border-2 border-sunset/30 object-cover" />
-              ) : (
-                <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-sunset/10 font-display text-4xl font-bold text-sunset">
-                  {rider.name.charAt(0)}
-                </div>
-              )}
-              <h1 className="mt-4 text-center font-display text-2xl font-semibold text-ink">{rider.name}</h1>
-              <p className="text-center text-sm text-muted">@{rider.handle}</p>
-              {rider.location && (
-                <p className="mt-2 flex items-center justify-center gap-1 text-xs text-muted">
-                  <MapPin className="h-3 w-3 text-sunset" />{rider.location}
-                </p>
-              )}
-              <p className="mt-3 text-center text-sm text-muted">{rider.bio || "No bio yet."}</p>
-
-              <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
-                <Link href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`} className="rounded-lg bg-canvas p-3 text-center transition hover:ring-2 hover:ring-sunset/40">
-                  <p className="font-display text-xl font-bold text-asphalt">{rider.bikes.length}</p>
-                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
-                </Link>
-                <div className="rounded-lg bg-canvas p-3 text-center">
-                  <p className="font-display text-xl font-bold text-asphalt">{ridesFromEvents}</p>
-                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
-                </div>
-                <div className="rounded-lg bg-canvas p-3 text-center">
-                  <p className="font-display text-xl font-bold text-asphalt">{rider.yearsRiding ?? "—"}</p>
-                  <p className="text-[0.6rem] uppercase tracking-widest text-muted">Years</p>
-                </div>
-              </div>
-
-              {!isOwner && currentUser ? (
-                <form action={toggleRiderFollowAction.bind(null, rider.handle)} className="mt-4">
-                  <button type="submit" className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt">
+              ) : currentUser ? (
+                <form action={toggleRiderFollowAction.bind(null, rider.handle)}>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/40 bg-black/35 px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white backdrop-blur transition hover:bg-black/55"
+                  >
                     {isFollowing ? "Following" : "Follow Rider"}
                   </button>
                 </form>
               ) : null}
-
-              {isOwner && (
-                <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  <Link href="/garage/mine" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-asphalt transition hover:border-asphalt">
-                    <Bike className="h-3 w-3" />Garage
-                  </Link>
-                  <Link href="/gear/mine" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-asphalt transition hover:border-asphalt">
-                    <Shield className="h-3 w-3" />Gear
-                  </Link>
-                </div>
-              )}
-
-              {/* Details */}
-              <div className="group/details mt-5 space-y-3 border-t border-border pt-4 text-left">
-                {isOwner && profileData && (
-                  <div className="flex justify-end opacity-0 transition-opacity group-hover/details:opacity-100">
-                    <ProfileSectionEdit section="details" data={profileData} />
-                  </div>
-                )}
-                <dl className="space-y-3">
-                {rider.favoriteRoad && (
-                  <div className="flex items-start gap-3">
-                    <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                    <div>
-                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
-                      <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                  <div>
-                    <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
-                    <dd className="text-sm font-medium text-asphalt">
-                      {rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                    </dd>
-                  </div>
-                </div>
-                {rider.bikes.length > 0 && (
-                  <div className="flex items-start gap-3">
-                    <Bike className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                    <div>
-                      <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Bikes</dt>
-                      <dd className="text-sm font-medium text-asphalt">
-                        {rider.bikes.map((b) => b.name || `${b.make} ${b.model ?? ""}`.trim()).join(", ")}
-                      </dd>
-                    </div>
-                  </div>
-                )}
-              </dl>
-              </div>
-            </div>
-
-            {/* Social Links */}
-            {(rider.youtubeUrl || rider.tiktokUrl || rider.instagramUrl || rider.twitterUrl || isOwner) && (
-              <div className="group rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">Socials</h2>
-                  {isOwner && profileData && (
-                    <span className="opacity-0 transition-opacity group-hover:opacity-100">
-                      <ProfileSectionEdit section="socials" data={profileData} />
-                    </span>
-                  )}
-                </div>
-                <div className="mt-3 space-y-2">
-                  {rider.youtubeUrl && (
-                    <a href={rider.youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Video className="h-4 w-4 text-red-600" /> YouTube
-                    </a>
-                  )}
-                  {rider.tiktokUrl && (
-                    <a href={rider.tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Video className="h-4 w-4 text-ink" /> TikTok
-                    </a>
-                  )}
-                  {rider.instagramUrl && (
-                    <a href={rider.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <Camera className="h-4 w-4 text-pink-500" /> Instagram
-                    </a>
-                  )}
-                  {rider.twitterUrl && (
-                    <a href={rider.twitterUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-ink hover:text-sunset">
-                      <BookText className="h-4 w-4 text-sky-500" /> X / Twitter
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Events */}
-            <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-              <div className="flex items-center justify-between">
-                <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
-                  <CalendarDays className="h-3.5 w-3.5 text-sunset" />Events
-                </h2>
-                {isOwner && (
-                  <Link href="/events/new" className="text-xs font-semibold text-sunset hover:underline">+ New</Link>
-                )}
-              </div>
-              {rider.events.length === 0 ? (
-                <p className="mt-3 text-xs text-muted">No events yet.</p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {rider.events.map((event) => (
-                    <li key={event.id}>
-                      <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
-                        <span className="font-medium text-ink">{event.title}</span>
-                        <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Gear */}
-            {rider.gearItems.length > 0 && (
-              <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
-                    <HardHat className="h-3.5 w-3.5 text-sunset" />Gear
-                  </h2>
-                  <Link href={`/gear/${rider.handle}`} className="text-xs font-semibold text-sunset hover:underline">View All</Link>
-                </div>
-                <ul className="mt-3 space-y-2">
-                  {rider.gearItems.slice(0, 6).map((item) => (
-                    <li key={item.id} className="rounded-lg bg-canvas px-3 py-2">
-                      <p className="text-sm font-medium text-ink">{item.name}</p>
-                      <p className="text-xs text-muted">
-                        {[item.brand, item.model].filter(Boolean).join(" ") || item.category.replaceAll("_", " ")}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* People */}
-            <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-              <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">People</h2>
-              <div className="mt-3 space-y-3">
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.followers.length > 0 ? rider.followers.map((entry) => (
-                      <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.follower.name}
-                      </Link>
-                    )) : <p className="text-xs text-muted">No followers yet.</p>}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.following.length > 0 ? rider.following.map((entry) => (
-                      <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.following.name}
-                      </Link>
-                    )) : <p className="text-xs text-muted">Not following anyone yet.</p>}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
-                  <div className="mt-2 space-y-1.5">
-                    {rider.followedEvents.length > 0 ? rider.followedEvents.map((entry) => (
-                      <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
-                        {entry.event.title}
-                      </Link>
-                    )) : <p className="text-xs text-muted">No followed events yet.</p>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* MAIN — Ride Journal */}
-          <div>
-            {isOwner && (
-              <div>
-                <JournalComposerBar
-                  avatarUrl={avatar}
-                  firstName={rider.name.split(" ")[0]}
-                />
-              </div>
-            )}
-
-            <div className="mt-6 space-y-5">
-              {rider.journalEntries.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
-                  <BookText className="mx-auto h-8 w-8 text-muted/50" />
-                  <p className="mt-3 text-sm text-muted">
-                    {isOwner
-                      ? "No ride journal entries yet. Click the + button above to share your first ride story."
-                      : `${rider.name} hasn\u0027t shared any ride journal entries yet.`}
-                  </p>
-                </div>
-              ) : isOwner ? (
-                <JournalList entries={rider.journalEntries.map((entry) => ({
-                  ...entry,
-                  likeCount: entry._count.likes,
-                  commentCount: entry._count.comments,
-                  isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,
-                  comments: entry.comments.map((c) => ({
-                    id: c.id,
-                    body: c.body,
-                    authorName: c.author.name,
-                    authorHandle: c.author.handle,
-                    createdAt: c.createdAt.toISOString(),
-                  })),
-                  profileUrl: `/r/${rider.handle}`,
-                }))} />
-              ) : (
-                rider.journalEntries.map((entry) => {
-                  const entryImage = entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null;
-                  const isLiked = viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false;
-                  const entryComments = entry.comments.map((c) => ({
-                    id: c.id,
-                    body: c.body,
-                    authorName: c.author.name,
-                    authorHandle: c.author.handle,
-                    createdAt: c.createdAt.toISOString(),
-                  }));
-                  return (
-                    <article key={entry.id} className="relative overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-                      {currentUser && (
-                        <div className="absolute right-3 top-3 z-10">
-                          <ReportJournalButton entryId={entry.id} />
-                        </div>
-                      )}
-                      {entryImage ? (
-                        <div className="aspect-square w-full overflow-hidden">
-                          <img src={entryImage} alt={entry.galleryItems[0]?.caption || entry.title || "Ride"} className="h-full w-full object-cover" />
-                        </div>
-                      ) : entry.videoUrl ? (
-                        <VideoEmbed url={entry.videoUrl} />
-                      ) : null}
-                      <div className="p-5">
-                        <p className="text-[0.65rem] font-bold uppercase tracking-widest text-sunset">
-                          {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                        </p>
-                        {entry.title && <h3 className="mt-1 font-display text-lg font-semibold text-ink">{entry.title}</h3>}
-                        <p className="mt-2 leading-relaxed text-muted"><Linkify text={entry.body} /></p>
-                      </div>
-                      <JournalInteractions
-                        entryId={entry.id}
-                        likeCount={entry._count.likes}
-                        commentCount={entry._count.comments}
-                        isLiked={isLiked}
-                        isAuthenticated={Boolean(currentUser)}
-                        comments={entryComments}
-                        entryUrl={`/r/${rider.handle}`}
-                      />
-                    </article>
-                  );
-                })
-              )}
             </div>
           </div>
+
+          <div className="px-5 pb-6 pt-5 sm:px-8">
+            {/* Avatar sits fully below the cover, alongside the name — no overlap. */}
+            <div className="flex flex-wrap items-center gap-4">
+              {avatar ? (
+                <img src={avatar} alt={rider.name} className="h-20 w-20 rounded-2xl border border-border object-cover shadow-soft sm:h-24 sm:w-24" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-sunset/10 font-display text-3xl font-bold text-sunset shadow-soft sm:h-24 sm:w-24">
+                  {rider.name.charAt(0)}
+                </div>
+              )}
+              <div>
+                <h1 className="font-display text-2xl font-semibold text-ink sm:text-3xl">{rider.name}</h1>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+                  <span>@{rider.handle}</span>
+                  {rider.location && (
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden>·</span>
+                      <MapPin className="h-3 w-3 text-sunset" />
+                      {rider.location}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {rider.bio && <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>}
+
+            {/* STAT BAND */}
+            <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border pt-4 sm:grid-cols-4">
+              <Link href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`} className="rounded-lg bg-canvas p-3 text-center transition hover:ring-2 hover:ring-sunset/30">
+                <p className="font-display text-2xl font-bold text-asphalt">{rider.bikes.length}</p>
+                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Bikes</p>
+              </Link>
+              <div className="rounded-lg bg-canvas p-3 text-center">
+                <p className="font-display text-2xl font-bold text-asphalt">{ridesFromEvents}</p>
+                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Rides</p>
+              </div>
+              <div className="rounded-lg bg-canvas p-3 text-center">
+                <p className="font-display text-2xl font-bold text-asphalt">{rider.yearsRiding ?? "—"}</p>
+                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Years</p>
+              </div>
+              <div className="rounded-lg bg-canvas p-3 text-center">
+                <p className="truncate font-display text-sm font-bold text-asphalt" title={rider.favoriteRoad ?? undefined}>{rider.favoriteRoad || "—"}</p>
+                <p className="text-[0.6rem] uppercase tracking-widest text-muted">Fav Road</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* TABS */}
+        <div className="mt-6">
+          <ProfileTabs tabs={tabs} />
         </div>
       </div>
     </section>

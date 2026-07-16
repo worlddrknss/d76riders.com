@@ -8,6 +8,7 @@ import {
 } from "@/app/(site)/events/new/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { EventRoutePlannerField } from "@/components/events/event-route-planner-field";
+import { LocationAutocomplete } from "@/components/events/location-autocomplete";
 
 const initialCreateEventFormState: CreateEventFormState = {
   error: null,
@@ -123,31 +124,16 @@ export function CreateEventForm() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="meetLocation" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            Meetup Location
-          </label>
-          <input
-            id="meetLocation"
-            name="meetLocation"
-            type="text"
-            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-            placeholder="Clarksville Speedway Parking Lot"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="ksuLocation" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            KSU Location
-          </label>
-          <input
-            id="ksuLocation"
-            name="ksuLocation"
-            type="text"
-            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-            placeholder="Exit ramp lot, Hwy 79"
-          />
-        </div>
+        <LocationAutocomplete
+          fieldPrefix="meet"
+          label="Meetup Location"
+          placeholder="Search a place or address…"
+        />
+        <LocationAutocomplete
+          fieldPrefix="ksu"
+          label="KSU Location"
+          placeholder="Search a place or address…"
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -181,6 +167,36 @@ export function CreateEventForm() {
             <option value="INTERMEDIATE">Intermediate</option>
             <option value="SCENIC">Scenic</option>
           </select>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="maxCapacity" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Max Capacity (Optional)
+          </label>
+          <input
+            id="maxCapacity"
+            name="maxCapacity"
+            type="number"
+            min={1}
+            step={1}
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+            placeholder="No limit"
+          />
+          <p className="text-xs text-muted">Riders beyond capacity join a waitlist.</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="rsvpDeadline" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            RSVP Deadline (Optional)
+          </label>
+          <input
+            id="rsvpDeadline"
+            name="rsvpDeadline"
+            type="datetime-local"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          />
         </div>
       </div>
 

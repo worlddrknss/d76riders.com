@@ -2,8 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requireUserRole } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { deleteFile, listAllKeys, urlToKey } from "@/lib/s3";
+import { getCurrentUser } from "@/lib/session";
+
+// Server actions are directly-callable POST endpoints, so authorization must be
+// enforced inside the action — the admin layout gate does not protect them.
+async function requireAdmin(): Promise<void> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new Error("Not authenticated");
+  }
+  await requireUserRole(currentUser.id, "ADMINISTRATOR");
+}
 
 export type OrphanScanResult = {
   totalS3Keys: number;
@@ -12,6 +24,8 @@ export type OrphanScanResult = {
 };
 
 export async function scanOrphanedImagesAction(): Promise<OrphanScanResult> {
+  await requireAdmin();
+
   // 1. List all S3 keys
   const allKeys = await listAllKeys();
 
@@ -53,8 +67,21 @@ export async function scanOrphanedImagesAction(): Promise<OrphanScanResult> {
 }
 
 export async function deleteOrphanedImagesAction(keys: string[]): Promise<number> {
+  await requireAdmin();
+
+  if (!Array.isArray(keys)) return 0;
+
+  // Only delete keys that are genuinely orphaned right now — never trust the
+  // client-supplied list blindly, or a caller could delete referenced objects.
+  const { orphanedKeys } = await scanOrphanedImagesAction();
+  const orphanSet = new Set(orphanedKeys);
+
+  const toDelete = keys.filter(
+    (key): key is string => typeof key === "string" && key.length > 0 && orphanSet.has(key),
+  );
+
   let deleted = 0;
-  for (const key of keys) {
+  for (const key of toDelete) {
     await deleteFile(key);
     deleted++;
   }

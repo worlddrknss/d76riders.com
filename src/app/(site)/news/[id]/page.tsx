@@ -6,6 +6,7 @@ import { NewsPostStatus } from "@prisma/client";
 import { deleteNewsPostAction } from "@/app/(site)/news/[id]/actions";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { getCurrentUser } from "@/lib/session";
 
 async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
@@ -65,7 +66,7 @@ export default async function NewsArticlePage({
         }),
         author: dbPost.authorName,
         excerpt: dbPost.excerpt,
-        body: [dbPost.contentHtml],
+        body: [sanitizeRichText(dbPost.contentHtml)],
         pullQuote: undefined,
         tags: dbPost.postTags.map((pt) => pt.tag.name),
         coverImageUrl: dbPost.coverImageUrl,

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
 import { updateEventAction, deleteEventAction } from "@/app/(site)/events/[slug]/actions";
+import { LocationAutocomplete } from "@/components/events/location-autocomplete";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,9 +36,17 @@ type EventData = {
   startsAt: string; // ISO string from server
   ksuAt: string | null;
   meetLocation: string | null;
+  meetAddress: string | null;
+  meetLat: number | null;
+  meetLng: number | null;
   ksuLocation: string | null;
+  ksuAddress: string | null;
+  ksuLat: number | null;
+  ksuLng: number | null;
   distanceMiles: number | null;
   difficulty: string | null;
+  maxCapacity: number | null;
+  rsvpDeadline: string | null;
   hasPhoto: boolean;
   hasRoute: boolean;
 };
@@ -167,14 +176,18 @@ export function EventManageActions({ event }: { event: EventData }) {
                 </div>
               </div>
               <div className="grid gap-4 grid-cols-2">
-                <div>
-                  <label htmlFor="edit-event-meet" className="text-xs font-semibold uppercase tracking-wide text-muted">Meet Location</label>
-                  <Input id="edit-event-meet" name="meetLocation" defaultValue={event.meetLocation ?? ""} className="mt-1" />
-                </div>
-                <div>
-                  <label htmlFor="edit-event-ksu-loc" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU Location</label>
-                  <Input id="edit-event-ksu-loc" name="ksuLocation" defaultValue={event.ksuLocation ?? ""} className="mt-1" />
-                </div>
+                <LocationAutocomplete
+                  fieldPrefix="meet"
+                  label="Meet Location"
+                  placeholder="Search a place or address…"
+                  defaultValue={{ name: event.meetLocation, address: event.meetAddress, lat: event.meetLat, lng: event.meetLng }}
+                />
+                <LocationAutocomplete
+                  fieldPrefix="ksu"
+                  label="KSU Location"
+                  placeholder="Search a place or address…"
+                  defaultValue={{ name: event.ksuLocation, address: event.ksuAddress, lat: event.ksuLat, lng: event.ksuLng }}
+                />
               </div>
               <div className="grid gap-4 grid-cols-2">
                 <div>
@@ -189,6 +202,16 @@ export function EventManageActions({ event }: { event: EventData }) {
                     <option value="INTERMEDIATE">Intermediate</option>
                     <option value="SCENIC">Scenic</option>
                   </select>
+                </div>
+              </div>
+              <div className="grid gap-4 grid-cols-2">
+                <div>
+                  <label htmlFor="edit-event-capacity" className="text-xs font-semibold uppercase tracking-wide text-muted">Max Capacity</label>
+                  <Input id="edit-event-capacity" name="maxCapacity" type="number" min={1} placeholder="No limit" defaultValue={event.maxCapacity ?? ""} className="mt-1" />
+                </div>
+                <div>
+                  <label htmlFor="edit-event-rsvp-deadline" className="text-xs font-semibold uppercase tracking-wide text-muted">RSVP Deadline</label>
+                  <Input id="edit-event-rsvp-deadline" name="rsvpDeadline" type="datetime-local" defaultValue={event.rsvpDeadline ?? ""} className="mt-1" />
                 </div>
               </div>
               <div>

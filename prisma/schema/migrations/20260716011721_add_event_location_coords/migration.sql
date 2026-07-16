@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE "RideEvent" ADD COLUMN     "ksuAddress" TEXT,
+ADD COLUMN     "ksuLat" DOUBLE PRECISION,
+ADD COLUMN     "ksuLng" DOUBLE PRECISION,
+ADD COLUMN     "meetAddress" TEXT,
+ADD COLUMN     "meetLat" DOUBLE PRECISION,
+ADD COLUMN     "meetLng" DOUBLE PRECISION;
+

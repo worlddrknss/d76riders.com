@@ -2,16 +2,59 @@
 
 import crypto from "node:crypto";
 
-import { RideDifficulty } from "@prisma/client";
+import { Prisma, RideDifficulty } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
+import { riderDownSchema, rsvpIntentSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
+
+// Organizer rider ids for an event (for fanning out notifications).
+async function organizerRiderIds(eventId: string): Promise<string[]> {
+  const organizers = await prisma.eventOrganizer.findMany({
+    where: { eventId },
+    select: { riderId: true },
+  });
+  return organizers.map((o) => o.riderId);
+}
+
+// Promote the earliest-waitlisted riders into any spots freed under maxCapacity.
+async function promoteFromWaitlist(
+  tx: Prisma.TransactionClient,
+  eventId: string,
+  eventTitle: string,
+  maxCapacity: number,
+) {
+  const goingCount = await tx.rsvp.count({ where: { eventId, status: "GOING" } });
+  const openSpots = maxCapacity - goingCount;
+  if (openSpots <= 0) return;
+
+  const nextUp = await tx.rsvp.findMany({
+    where: { eventId, status: "WAITLISTED" },
+    orderBy: { createdAt: "asc" },
+    take: openSpots,
+    select: { id: true, riderId: true },
+  });
+
+  for (const rsvp of nextUp) {
+    await tx.rsvp.update({ where: { id: rsvp.id }, data: { status: "GOING" } });
+    await logActivity(
+      {
+        riderId: rsvp.riderId,
+        type: "WAITLIST_PROMOTED",
+        summary: `A spot opened up — you're confirmed for ${eventTitle}`,
+        refId: eventId,
+      },
+      tx,
+    );
+  }
+}
 
 async function requireOrganizerRider(userId: string) {
   const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
@@ -29,6 +72,12 @@ function toOptionalDate(value: string): Date | null {
   }
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function toOptionalCoord(value: string, min: number, max: number): number | null {
+  if (!value) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null;
 }
 
 function toOptionalInt(value: string): number | null {
@@ -81,9 +130,17 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const startsAt = toOptionalDate(normalizeText(formData.get("startsAt")));
   const ksuAt = toOptionalDate(normalizeText(formData.get("ksuAt")));
   const meetLocation = normalizeText(formData.get("meetLocation"));
+  const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
+  const meetLat = toOptionalCoord(normalizeText(formData.get("meetLat")), -90, 90);
+  const meetLng = toOptionalCoord(normalizeText(formData.get("meetLng")), -180, 180);
   const ksuLocation = normalizeText(formData.get("ksuLocation"));
+  const ksuAddress = normalizeText(formData.get("ksuAddress")).slice(0, 300);
+  const ksuLat = toOptionalCoord(normalizeText(formData.get("ksuLat")), -90, 90);
+  const ksuLng = toOptionalCoord(normalizeText(formData.get("ksuLng")), -180, 180);
   const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const distanceMiles = toOptionalInt(normalizeText(formData.get("distanceMiles")));
+  const maxCapacity = toOptionalInt(normalizeText(formData.get("maxCapacity")));
+  const rsvpDeadline = toOptionalDate(normalizeText(formData.get("rsvpDeadline")));
   const difficultyInput = normalizeText(formData.get("difficulty"));
   const removeRoute = formData.get("removeRoute") === "on";
   const eventPhoto = formData.get("eventPhoto");
@@ -98,7 +155,11 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
     redirect(`/events/${event.slug}`);
   }
 
-  const difficulty = difficultyInput ? (difficultyInput as RideDifficulty) : null;
+  const allowedDifficulties = new Set<string>(Object.values(RideDifficulty));
+  const difficulty =
+    difficultyInput && allowedDifficulties.has(difficultyInput)
+      ? (difficultyInput as RideDifficulty)
+      : null;
   const previousPhotoUrls = event.galleryItems.map((item) => item.url);
   let nextPhotoUrl: string | null = null;
 
@@ -125,9 +186,17 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         startsAt,
         ksuAt,
         meetLocation: meetLocation || null,
+        meetAddress: meetAddress || null,
+        meetLat,
+        meetLng,
         ksuLocation: ksuLocation || null,
+        ksuAddress: ksuAddress || null,
+        ksuLat,
+        ksuLng,
         facebookEventUrl,
         distanceMiles,
+        maxCapacity,
+        rsvpDeadline,
         difficulty,
         routeId: removeRoute ? null : undefined,
       },
@@ -193,32 +262,110 @@ export async function deleteEventAction(eventId: string): Promise<void> {
   revalidatePath("/events");
 }
 
-export async function rsvpAction(eventId: string, status: "GOING" | "CANCEL"): Promise<void> {
+export type RsvpResult = {
+  error: string | null;
+  status: "GOING" | "WAITLISTED" | "CANCELLED" | null;
+};
+
+export async function rsvpAction(
+  eventId: string,
+  intentInput: "GOING" | "CANCEL",
+): Promise<RsvpResult> {
+  const parsedIntent = rsvpIntentSchema.safeParse(intentInput);
+  if (typeof eventId !== "string" || !eventId || !parsedIntent.success) {
+    return { error: "Invalid request.", status: null };
+  }
+  const intent = parsedIntent.data;
+
   const currentUser = await getCurrentUser();
-  const userId = requireUserId(currentUser?.id);
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in to RSVP.", status: null };
+  }
 
   const rider = await prisma.rider.findUnique({
     where: { userId },
     select: { id: true },
   });
-
   if (!rider) {
-    return;
+    return { error: "Rider profile not found.", status: null };
   }
 
-  if (status === "CANCEL") {
-    await prisma.rsvp.deleteMany({
-      where: { eventId, riderId: rider.id },
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { id: true, slug: true, title: true, maxCapacity: true, rsvpDeadline: true },
+  });
+  if (!event) {
+    return { error: "Event not found.", status: null };
+  }
+
+  if (intent === "CANCEL") {
+    await prisma.$transaction(async (tx) => {
+      const existing = await tx.rsvp.findUnique({
+        where: { eventId_riderId: { eventId, riderId: rider.id } },
+        select: { status: true },
+      });
+      await tx.rsvp.deleteMany({ where: { eventId, riderId: rider.id } });
+
+      // Freeing a GOING spot promotes the earliest waitlisted rider.
+      if (existing?.status === "GOING" && event.maxCapacity != null) {
+        await promoteFromWaitlist(tx, event.id, event.title, event.maxCapacity);
+      }
     });
-  } else {
-    await prisma.rsvp.upsert({
+
+    revalidatePath(`/events/${event.slug}`);
+    revalidatePath("/events");
+    return { error: null, status: "CANCELLED" };
+  }
+
+  // RSVP cutoff.
+  if (event.rsvpDeadline && event.rsvpDeadline.getTime() < Date.now()) {
+    return { error: "RSVPs for this ride are closed.", status: null };
+  }
+
+  const result = await prisma.$transaction<RsvpResult>(async (tx) => {
+    const existing = await tx.rsvp.findUnique({
       where: { eventId_riderId: { eventId, riderId: rider.id } },
-      create: { eventId, riderId: rider.id, status: "GOING" },
-      update: { status: "GOING" },
+      select: { status: true },
     });
-  }
+    // Already holding a confirmed or waitlisted spot — nothing to change.
+    if (existing?.status === "GOING") return { error: null, status: "GOING" };
+    if (existing?.status === "WAITLISTED") return { error: null, status: "WAITLISTED" };
 
+    let nextStatus: "GOING" | "WAITLISTED" = "GOING";
+    if (event.maxCapacity != null) {
+      const goingCount = await tx.rsvp.count({ where: { eventId, status: "GOING" } });
+      if (goingCount >= event.maxCapacity) {
+        nextStatus = "WAITLISTED";
+      }
+    }
+
+    await tx.rsvp.upsert({
+      where: { eventId_riderId: { eventId, riderId: rider.id } },
+      create: { eventId, riderId: rider.id, status: nextStatus },
+      update: { status: nextStatus },
+    });
+
+    if (nextStatus === "WAITLISTED") {
+      await logActivity(
+        {
+          riderId: rider.id,
+          type: "RSVP_WAITLISTED",
+          summary: `You're on the waitlist for ${event.title}`,
+          refId: event.id,
+        },
+        tx,
+      );
+    }
+
+    return { error: null, status: nextStatus };
+  });
+
+  revalidatePath(`/events/${event.slug}`);
   revalidatePath("/events");
+  return result;
 }
 
 // ─── Check-in / Check-out ───────────────────────────────────────────
@@ -237,10 +384,27 @@ export async function checkInAction(eventId: string): Promise<void> {
   });
   if (!rsvp || rsvp.status !== "GOING") return;
 
-  await prisma.eventCheckIn.upsert({
+  const existing = await prisma.eventCheckIn.findUnique({
     where: { eventId_riderId: { eventId, riderId: rider.id } },
-    create: { eventId, riderId: rider.id, method: "QR" },
-    update: {},
+    select: { id: true },
+  });
+  if (existing) {
+    revalidatePath("/events");
+    return;
+  }
+
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { title: true },
+  });
+  await prisma.eventCheckIn.create({
+    data: { eventId, riderId: rider.id, method: "QR" },
+  });
+  await logActivity({
+    riderId: rider.id,
+    type: "CHECK_IN",
+    summary: `Checked in to ${event?.title ?? "a ride"}`,
+    refId: eventId,
   });
 
   revalidatePath("/events");
@@ -253,10 +417,23 @@ export async function checkOutAction(eventId: string): Promise<void> {
   const rider = await requireOrganizerRider(userId);
   if (!rider) return;
 
-  await prisma.eventCheckIn.updateMany({
+  const updated = await prisma.eventCheckIn.updateMany({
     where: { eventId, riderId: rider.id, checkOutAt: null },
     data: { checkOutAt: new Date() },
   });
+
+  if (updated.count > 0) {
+    const event = await prisma.rideEvent.findUnique({
+      where: { id: eventId },
+      select: { title: true },
+    });
+    await logActivity({
+      riderId: rider.id,
+      type: "CHECK_OUT",
+      summary: `Checked out of ${event?.title ?? "a ride"}`,
+      refId: eventId,
+    });
+  }
 
   revalidatePath("/events");
 }
@@ -272,10 +449,27 @@ export async function manualCheckInAction(eventId: string, targetRiderId: string
   });
   if (!organizer) return;
 
-  await prisma.eventCheckIn.upsert({
+  const existing = await prisma.eventCheckIn.findUnique({
     where: { eventId_riderId: { eventId, riderId: targetRiderId } },
-    create: { eventId, riderId: targetRiderId, method: "MANUAL" },
-    update: {},
+    select: { id: true },
+  });
+  if (existing) {
+    revalidatePath("/events");
+    return;
+  }
+
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { title: true },
+  });
+  await prisma.eventCheckIn.create({
+    data: { eventId, riderId: targetRiderId, method: "MANUAL" },
+  });
+  await logActivity({
+    riderId: targetRiderId,
+    type: "CHECK_IN",
+    summary: `Checked in to ${event?.title ?? "a ride"}`,
+    refId: eventId,
   });
 
   revalidatePath("/events");
@@ -291,16 +485,71 @@ export async function closeRideAction(eventId: string): Promise<void> {
   });
   if (!organizer) return;
 
-  // Mark event as completed
-  await prisma.rideEvent.update({
+  const event = await prisma.rideEvent.findUnique({
     where: { id: eventId },
-    data: { status: "COMPLETED" },
+    select: { title: true },
+  });
+  const eventTitle = event?.title ?? "a ride";
+
+  // Capture riders still checked in without a checkout BEFORE auto-checkout.
+  const missingCheckout = await prisma.eventCheckIn.findMany({
+    where: { eventId, checkOutAt: null },
+    select: { rider: { select: { id: true, name: true } } },
   });
 
-  // Auto-checkout everyone who hasn't checked out
-  await prisma.eventCheckIn.updateMany({
-    where: { eventId, checkOutAt: null },
-    data: { checkOutAt: new Date() },
+  // No-shows: riders who committed (GOING) but never checked in.
+  const goingRsvps = await prisma.rsvp.findMany({
+    where: { eventId, status: "GOING" },
+    select: { riderId: true, rider: { select: { name: true } } },
+  });
+  const checkedInRiderIds = new Set(
+    (await prisma.eventCheckIn.findMany({ where: { eventId }, select: { riderId: true } })).map(
+      (c) => c.riderId,
+    ),
+  );
+  const noShows = goingRsvps.filter((r) => !checkedInRiderIds.has(r.riderId));
+
+  await prisma.$transaction(async (tx) => {
+    await tx.rideEvent.update({
+      where: { id: eventId },
+      data: { status: "COMPLETED" },
+    });
+    // Auto-checkout everyone who hasn't checked out.
+    await tx.eventCheckIn.updateMany({
+      where: { eventId, checkOutAt: null },
+      data: { checkOutAt: new Date() },
+    });
+
+    // Alert organizers about riders who never checked out.
+    if (missingCheckout.length > 0) {
+      const organizers = await tx.eventOrganizer.findMany({
+        where: { eventId },
+        select: { riderId: true },
+      });
+      const names = missingCheckout.map((c) => c.rider.name).join(", ");
+      await logActivityForRiders(
+        organizers.map((o) => o.riderId),
+        {
+          type: "MISSING_CHECKOUT",
+          summary: `${missingCheckout.length} rider${missingCheckout.length > 1 ? "s" : ""} never checked out of ${eventTitle}: ${names}`,
+          refId: eventId,
+        },
+        tx,
+      );
+    }
+
+    // Flag no-shows in each affected rider's feed.
+    for (const ns of noShows) {
+      await logActivity(
+        {
+          riderId: ns.riderId,
+          type: "NO_SHOW",
+          summary: `Marked as a no-show for ${eventTitle} (RSVP'd but never checked in)`,
+          refId: eventId,
+        },
+        tx,
+      );
+    }
   });
 
   revalidatePath("/events");
@@ -313,6 +562,13 @@ export async function addOrganizerAction(
   targetHandle: string,
   role: "LEAD" | "SWEEP" | "MARSHAL",
 ): Promise<{ error: string | null }> {
+  if (role !== "LEAD" && role !== "SWEEP" && role !== "MARSHAL") {
+    return { error: "Invalid organizer role." };
+  }
+  if (typeof eventId !== "string" || !eventId || typeof targetHandle !== "string" || !targetHandle) {
+    return { error: "Invalid request." };
+  }
+
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
@@ -358,4 +614,106 @@ export async function removeOrganizerAction(eventId: string, organizerId: string
 
   await prisma.eventOrganizer.delete({ where: { id: organizerId } });
   revalidatePath("/events");
+}
+
+// ─── Rider Down Quick Alert ─────────────────────────────────────────
+
+export type RiderDownResult = { error: string | null; success: boolean };
+
+export async function riderDownAction(
+  eventId: string,
+  affectedRiderId: string,
+  notes: string,
+  locationText: string,
+  lat: number | null,
+  lng: number | null,
+): Promise<RiderDownResult> {
+  const parsed = riderDownSchema.safeParse({ affectedRiderId, notes, locationText, lat, lng });
+  if (typeof eventId !== "string" || !eventId) {
+    return { error: "Invalid request.", success: false };
+  }
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input.", success: false };
+  }
+  const fields = parsed.data;
+
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in again.", success: false };
+  }
+
+  // Only organizers can raise an incident.
+  const organizer = await prisma.eventOrganizer.findFirst({
+    where: { eventId, rider: { userId } },
+    select: { riderId: true },
+  });
+  if (!organizer) return { error: "Only ride organizers can raise an alert.", success: false };
+
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { title: true, slug: true },
+  });
+  if (!event) return { error: "Event not found.", success: false };
+
+  const affected = await prisma.rider.findUnique({
+    where: { id: fields.affectedRiderId },
+    select: { id: true, name: true },
+  });
+  if (!affected) return { error: "Select a rider from the roster.", success: false };
+
+  const cleanNotes = fields.notes.trim();
+  const cleanLocation = fields.locationText.trim();
+
+  const incident = await prisma.rideIncident.create({
+    data: {
+      eventId,
+      riderId: affected.id,
+      reportedById: organizer.riderId,
+      notes: cleanNotes || null,
+      locationText: cleanLocation || null,
+      lat: fields.lat,
+      lng: fields.lng,
+    },
+    select: { id: true },
+  });
+
+  // Notify every organizer immediately (in-app; push/SMS is future work).
+  const organizerIds = await organizerRiderIds(eventId);
+  const locationSuffix = cleanLocation ? ` near ${cleanLocation}` : "";
+  await logActivityForRiders(organizerIds, {
+    type: "RIDER_DOWN",
+    summary: `🚨 Rider down: ${affected.name} on ${event.title}${locationSuffix}`,
+    refId: eventId,
+    metadata: { incidentId: incident.id, affectedRiderId: affected.id },
+  });
+
+  revalidatePath(`/events/${event.slug}`);
+  return { error: null, success: true };
+}
+
+export async function resolveIncidentAction(incidentId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const incident = await prisma.rideIncident.findUnique({
+    where: { id: incidentId },
+    select: { eventId: true, event: { select: { slug: true } } },
+  });
+  if (!incident) return;
+
+  const organizer = await prisma.eventOrganizer.findFirst({
+    where: { eventId: incident.eventId, rider: { userId } },
+    select: { id: true },
+  });
+  if (!organizer) return;
+
+  await prisma.rideIncident.update({
+    where: { id: incidentId },
+    data: { resolvedAt: new Date() },
+  });
+
+  revalidatePath(`/events/${incident.event.slug}`);
 }

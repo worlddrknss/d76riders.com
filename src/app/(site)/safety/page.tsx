@@ -10,6 +10,7 @@ import {
   Hand,
   AlertTriangle,
   CheckCircle2,
+  HeartPulse,
 } from "lucide-react";
 
 import { PageHero } from "@/components/layout/page-hero";
@@ -114,6 +115,34 @@ export default function SafetyPage() {
               </StaggerItem>
             ))}
           </StaggerList>
+        </div>
+      </section>
+
+      {/* EMERGENCY CARD PROMPT */}
+      <section className="w-full bg-canvas">
+        <div className="mx-auto w-full max-w-5xl px-4 pb-8 sm:px-6 lg:px-8">
+          <FadeUp>
+            <div className="flex flex-col items-start gap-5 rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100">
+                  <HeartPulse className="h-6 w-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="font-display text-xl font-semibold text-asphalt">Set Up Your Emergency Card</h2>
+                  <p className="mt-1 max-w-xl text-sm text-muted">
+                    Store encrypted medical info and emergency contacts that first responders can reach by
+                    scanning an NFC tag or QR code on your bike or helmet. Manage it from your rider profile.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/emergency-response"
+                className="shrink-0 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
+              >
+                Learn More
+              </Link>
+            </div>
+          </FadeUp>
         </div>
       </section>
 

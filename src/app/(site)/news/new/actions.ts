@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { isS3Configured, uploadFile } from "@/lib/s3";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { getCurrentUser } from "@/lib/session";
 
 export type SubmitNewsFormState = { error: string | null };
@@ -65,7 +66,7 @@ export async function submitNewsAction(
   const title = normalizeText(formData.get("title"));
   const categoryId = normalizeText(formData.get("categoryId"));
   const excerpt = normalizeText(formData.get("excerpt"));
-  const contentHtml = normalizeText(formData.get("contentHtml"));
+  const contentHtml = sanitizeRichText(normalizeText(formData.get("contentHtml")));
   const tagsInput = normalizeText(formData.get("tags"));
   const coverImage = formData.get("coverImage");
 

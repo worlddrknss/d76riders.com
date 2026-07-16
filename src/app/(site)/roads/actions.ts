@@ -10,6 +10,7 @@ import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { distanceMilesFromGeometry } from "@/lib/routing";
+import { routeGeometrySchema, routeWaypointsSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
@@ -34,6 +35,19 @@ function toOptionalFloat(value: string): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+// Scenic rating is a 0–5 scale; reject anything outside it rather than trust input.
+function toOptionalRating(value: string): number | null {
+  const parsed = toOptionalFloat(value);
+  if (parsed === null) return null;
+  return parsed >= 0 && parsed <= 5 ? parsed : null;
+}
+
+const allowedRoadDifficulties = new Set<string>(Object.values(RideDifficulty));
+
+function toOptionalDifficulty(value: string): RideDifficulty | null {
+  return value && allowedRoadDifficulties.has(value) ? (value as RideDifficulty) : null;
+}
+
 function toSlug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 80);
 }
@@ -51,17 +65,10 @@ async function buildUniqueRoadSlug(baseName: string): Promise<string> {
   }
 }
 
-type PlannerWaypointInput = {
-  lng: number;
-  lat: number;
-  kind: "START" | "KSU" | "FUEL" | "FOOD" | "REST" | "STOP" | "END";
-  label?: string;
-};
-
-function parseJsonValue<T>(value: string): T | null {
+function parseJsonValue(value: string): unknown {
   if (!value) return null;
   try {
-    return JSON.parse(value) as T;
+    return JSON.parse(value);
   } catch {
     return null;
   }
@@ -74,12 +81,14 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
   const name = normalizeText(formData.get("name"));
   const description = normalizeText(formData.get("description"));
   const difficultyInput = normalizeText(formData.get("difficulty"));
-  const scenicRating = toOptionalFloat(normalizeText(formData.get("scenicRating")));
+  const scenicRating = toOptionalRating(normalizeText(formData.get("scenicRating")));
   const routeName = normalizeText(formData.get("routeName"));
   const routeDescription = normalizeText(formData.get("routeDescription"));
   const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
-  const routeGeometry = parseJsonValue<{ type: "LineString"; coordinates: [number, number][] }>(normalizeText(formData.get("routeGeometryJson")));
-  const routeWaypoints = parseJsonValue<PlannerWaypointInput[]>(normalizeText(formData.get("routeWaypointsJson"))) ?? [];
+  const routeGeometryResult = routeGeometrySchema.safeParse(parseJsonValue(normalizeText(formData.get("routeGeometryJson"))));
+  const routeGeometry = routeGeometryResult.success ? routeGeometryResult.data : null;
+  const routeWaypointsResult = routeWaypointsSchema.safeParse(parseJsonValue(normalizeText(formData.get("routeWaypointsJson"))) ?? []);
+  const routeWaypoints = routeWaypointsResult.success ? routeWaypointsResult.data : [];
   const coverImage = formData.get("coverImage");
 
   if (!name) {
@@ -92,7 +101,7 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
   }
 
   const slug = await buildUniqueRoadSlug(name);
-  const difficulty = difficultyInput ? (difficultyInput as RideDifficulty) : null;
+  const difficulty = toOptionalDifficulty(difficultyInput);
   const routeKsuWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "KSU");
   const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
   const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;
@@ -221,12 +230,14 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
   const name = normalizeText(formData.get("name"));
   const description = normalizeText(formData.get("description"));
   const difficultyInput = normalizeText(formData.get("difficulty"));
-  const scenicRating = toOptionalFloat(normalizeText(formData.get("scenicRating")));
+  const scenicRating = toOptionalRating(normalizeText(formData.get("scenicRating")));
   const routeName = normalizeText(formData.get("routeName"));
   const routeDescription = normalizeText(formData.get("routeDescription"));
   const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
-  const routeGeometry = parseJsonValue<{ type: "LineString"; coordinates: [number, number][] }>(normalizeText(formData.get("routeGeometryJson")));
-  const routeWaypoints = parseJsonValue<PlannerWaypointInput[]>(normalizeText(formData.get("routeWaypointsJson"))) ?? [];
+  const routeGeometryResult = routeGeometrySchema.safeParse(parseJsonValue(normalizeText(formData.get("routeGeometryJson"))));
+  const routeGeometry = routeGeometryResult.success ? routeGeometryResult.data : null;
+  const routeWaypointsResult = routeWaypointsSchema.safeParse(parseJsonValue(normalizeText(formData.get("routeWaypointsJson"))) ?? []);
+  const routeWaypoints = routeWaypointsResult.success ? routeWaypointsResult.data : [];
   const coverImage = formData.get("coverImage");
   const removeCoverImage = formData.get("removeCoverImage") === "on";
   const removeRoute = formData.get("removeRoute") === "on";
@@ -235,7 +246,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
     redirect(`/roads/${road.slug}`);
   }
 
-  const difficulty = difficultyInput ? (difficultyInput as RideDifficulty) : null;
+  const difficulty = toOptionalDifficulty(difficultyInput);
   const routeKsuWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "KSU");
   const routeStartWaypoint = routeWaypoints.find((waypoint) => waypoint.kind === "START");
   const ksuLat = routeKsuWaypoint?.lat ?? routeStartWaypoint?.lat ?? null;

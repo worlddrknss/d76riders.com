@@ -8,6 +8,7 @@ import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { EventCheckInButton } from "@/components/events/event-check-in-button";
 import { AttendancePanel } from "@/components/events/attendance-panel";
+import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventOrganizers } from "@/components/events/event-organizers";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
@@ -176,30 +177,34 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? event.organizers.some((o) => o.rider.userId === currentUser.id && o.role === "HOST")
     : false;
 
-  // Look up current user's rider to check RSVP status
-  let currentRsvp: "GOING" | "INTERESTED" | null = null;
-  if (currentUser) {
-    const rider = await prisma.rider.findUnique({
-      where: { userId: currentUser.id },
-      select: { id: true },
-    });
-    if (rider) {
-      const existingRsvp = event.rsvps.find((r) => r.riderId === rider.id);
-      if (existingRsvp) {
-        currentRsvp = "GOING";
-      }
-    }
-  }
-
-  const attendeeCount = event.rsvps.length;
-  const trackedCount = event.followers.length;
+  // Look up current user's rider once and reuse for RSVP, tracking, check-in.
   const viewerRider = currentUser
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
     : null;
+
+  // Viewer's own RSVP status (GOING or WAITLISTED — event.rsvps only lists GOING).
+  let currentRsvp: "GOING" | "WAITLISTED" | null = null;
+  if (viewerRider) {
+    const viewerRsvp = await prisma.rsvp.findUnique({
+      where: { eventId_riderId: { eventId: event.id, riderId: viewerRider.id } },
+      select: { status: true },
+    });
+    if (viewerRsvp?.status === "GOING") currentRsvp = "GOING";
+    else if (viewerRsvp?.status === "WAITLISTED") currentRsvp = "WAITLISTED";
+  }
+
+  const attendeeCount = event.rsvps.length;
+  const waitlistCount = await prisma.rsvp.count({
+    where: { eventId: event.id, status: "WAITLISTED" },
+  });
+  const trackedCount = event.followers.length;
   const isTracking = viewerRider ? event.followers.some((item) => item.riderId === viewerRider.id) : false;
 
-  // Check-in state
   const now = new Date();
+  const rsvpClosed = event.rsvpDeadline ? event.rsvpDeadline.getTime() < now.getTime() : false;
+  const capacityFull = event.maxCapacity != null && attendeeCount >= event.maxCapacity;
+
+  // Check-in state
   const eventDate = event.startsAt;
   const isEventDay = eventDate.getUTCFullYear() === now.getUTCFullYear()
     && eventDate.getUTCMonth() === now.getUTCMonth()
@@ -223,6 +228,31 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             ? { checkInAt: checkIn.checkInAt.toISOString(), checkOutAt: checkIn.checkOutAt?.toISOString() ?? null }
             : null,
         };
+      })
+    : [];
+
+  // Rider Down: checked-in riders the organizer can flag, plus the incident log.
+  const showSafetyPanel = isOrganizer && (isActiveEvent || event.status === "COMPLETED");
+  const checkedInRoster = showSafetyPanel
+    ? attendeesForPanel
+        .filter((a) => a.checkIn)
+        .map((a) => ({ riderId: a.riderId, name: a.name }))
+    : [];
+  const incidents = showSafetyPanel
+    ? await prisma.rideIncident.findMany({
+        where: { eventId: event.id },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          notes: true,
+          locationText: true,
+          lat: true,
+          lng: true,
+          resolvedAt: true,
+          createdAt: true,
+          rider: { select: { name: true, handle: true } },
+          reportedBy: { select: { name: true } },
+        },
       })
     : [];
 
@@ -268,9 +298,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       startsAt: toLocalISOString(event.startsAt),
                       ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
                       meetLocation: event.meetLocation,
+                      meetAddress: event.meetAddress,
+                      meetLat: event.meetLat,
+                      meetLng: event.meetLng,
                       ksuLocation: event.ksuLocation,
+                      ksuAddress: event.ksuAddress,
+                      ksuLat: event.ksuLat,
+                      ksuLng: event.ksuLng,
                       distanceMiles: event.distanceMiles,
                       difficulty: event.difficulty,
+                      maxCapacity: event.maxCapacity,
+                      rsvpDeadline: event.rsvpDeadline ? toLocalISOString(event.rsvpDeadline) : null,
                       hasPhoto: event.galleryItems.length > 0,
                       hasRoute: !!event.routeId,
                     }}
@@ -294,7 +332,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               <div className="rounded-lg border border-border bg-canvas p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><MapPin className="h-3.5 w-3.5" />Location</div>
                 <p className="mt-1.5 text-sm font-medium text-ink">{event.meetLocation || event.ksuLocation || "TBD"}</p>
-                <p className="text-xs text-muted">Meetup point</p>
+                {event.meetAddress ? (
+                  <p className="text-xs text-muted">{event.meetAddress}</p>
+                ) : (
+                  <p className="text-xs text-muted">Meetup point</p>
+                )}
+                {event.meetLat != null && event.meetLng != null && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${event.meetLat},${event.meetLng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline"
+                  >
+                    <MapPin className="h-3 w-3" />
+                    Directions
+                  </a>
+                )}
               </div>
               <div className="rounded-lg border border-border bg-canvas p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Signal className="h-3.5 w-3.5" />Pace</div>
@@ -322,6 +375,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   eventId={event.id}
                   currentRsvp={currentRsvp}
                   attendeeCount={attendeeCount}
+                  waitlistCount={waitlistCount}
+                  capacity={event.maxCapacity}
+                  capacityFull={capacityFull}
+                  rsvpClosed={rsvpClosed}
+                  rsvpDeadline={event.rsvpDeadline ? formatDate(event.rsvpDeadline) : null}
                   isLoggedIn={!!currentUser}
                 />
                 {canCheckIn && (
@@ -417,6 +475,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             eventId={event.id}
             attendees={attendeesForPanel}
             eventStatus={event.status}
+          />
+        )}
+
+        {/* RIDER DOWN / SAFETY — organizers only */}
+        {showSafetyPanel && (
+          <RiderDownPanel
+            eventId={event.id}
+            roster={checkedInRoster}
+            incidents={incidents.map((i) => ({
+              id: i.id,
+              riderName: i.rider.name,
+              riderHandle: i.rider.handle,
+              reportedByName: i.reportedBy.name,
+              notes: i.notes,
+              locationText: i.locationText,
+              lat: i.lat,
+              lng: i.lng,
+              resolvedAt: i.resolvedAt?.toISOString() ?? null,
+              createdAt: i.createdAt.toISOString(),
+            }))}
           />
         )}
       </div>
