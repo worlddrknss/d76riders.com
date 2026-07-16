@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Crosshair, Loader2, MapPin, Search, X } from "lucide-react";
+import { useRiderProximity } from "@/components/location/rider-proximity";
 import { geocodeAddress, reverseGeocode, type GeocodeResult } from "@/lib/routing";
 
 type LocationSearchProps = {
@@ -12,6 +13,7 @@ type LocationSearchProps = {
 
 export function LocationSearch({ token, onSelect }: LocationSearchProps) {
   const listId = useId();
+  const near = useRiderProximity();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -32,7 +34,7 @@ export function LocationSearch({ token, onSelect }: LocationSearchProps) {
     const timer = setTimeout(() => {
       setSearching(true);
       setError(null);
-      geocodeAddress(query, token, controller.signal)
+      geocodeAddress(query, token, controller.signal, near ?? undefined)
         .then((found) => {
           setResults(found);
           setOpen(true);
@@ -49,7 +51,7 @@ export function LocationSearch({ token, onSelect }: LocationSearchProps) {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [query, token]);
+  }, [query, token, near]);
 
   // Close the results dropdown on outside click.
   useEffect(() => {

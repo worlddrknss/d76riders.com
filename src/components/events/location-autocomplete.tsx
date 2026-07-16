@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, MapPin } from "lucide-react";
 
+import { useRiderProximity } from "@/components/location/rider-proximity";
 import { geocodeAddress, type GeocodeResult } from "@/lib/routing";
 
 type LocationAutocompleteProps = {
@@ -32,6 +33,7 @@ export function LocationAutocomplete({
   defaultValue,
 }: LocationAutocompleteProps) {
   const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? "";
+  const near = useRiderProximity();
   const [name, setName] = useState(defaultValue?.name ?? "");
   const [address, setAddress] = useState(defaultValue?.address ?? "");
   const [lat, setLat] = useState<number | null>(defaultValue?.lat ?? null);
@@ -57,7 +59,7 @@ export function LocationAutocomplete({
         return;
       }
       setSearching(true);
-      geocodeAddress(name, token, controller.signal)
+      geocodeAddress(name, token, controller.signal, near ?? undefined)
         .then((found) => {
           setResults(found);
           setOpen(true);
@@ -69,7 +71,7 @@ export function LocationAutocomplete({
       controller.abort();
       clearTimeout(timer);
     };
-  }, [name, token]);
+  }, [name, token, near]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {

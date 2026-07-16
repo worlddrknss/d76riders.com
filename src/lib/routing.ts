@@ -272,12 +272,54 @@ type MapTilerFeature = {
   id: string;
   text?: string;
   place_name?: string;
+  place_type?: string[];
   center: [number, number];
 };
 
 type MapTilerResponse = {
   features?: MapTilerFeature[];
 };
+
+// MapTiler's `proximity` is a loose relevance nudge rather than a distance sort,
+// and it is coarse enough to be unhelpful: moving the point 15 miles flips the
+// top "Waffle House" for a Knoxville rider from one 5 miles away to one in
+// Bristol, 100 miles off — while the nearer stores sit at ranks 2 and 3 of the
+// same response. Its `relevance` score is 1 for every result, so it can't break
+// the tie either.
+//
+// So MapTiler decides which candidates match, and distance orders the ones where
+// distance is the only thing separating them — points of interest. A chain has
+// identical branches everywhere, so the nearest is always the one meant.
+//
+// Only points of interest. For an address the house number is what discriminates,
+// not distance: sorting those by distance answers "2235 Madison Street" with
+// whichever stretch of Madison Street is closest, dropping the actual building.
+// Same for a city — MapTiler's own ordering is what keeps "Nashville" resolving
+// to the city rather than to whichever Nashville-named business is nearest.
+// Groups keep the order MapTiler first used each type; the sort is stable, so
+// everything outside `poi` stays exactly as it arrived.
+function sortPoisByDistance(
+  features: MapTilerFeature[],
+  from: [number, number],
+): MapTilerFeature[] {
+  const typeOrder: string[] = [];
+  for (const f of features) {
+    const type = f.place_type?.[0] ?? "";
+    if (!typeOrder.includes(type)) typeOrder.push(type);
+  }
+
+  return [...features].sort((a, b) => {
+    const typeA = a.place_type?.[0] ?? "";
+    const typeB = b.place_type?.[0] ?? "";
+
+    const rankA = typeOrder.indexOf(typeA);
+    const rankB = typeOrder.indexOf(typeB);
+    if (rankA !== rankB) return rankA - rankB;
+
+    if (typeA !== "poi") return 0;
+    return haversineMiles(from, a.center) - haversineMiles(from, b.center);
+  });
+}
 
 function toGeocodeResult(feature: MapTilerFeature): GeocodeResult {
   const [lng, lat] = feature.center;
@@ -289,10 +331,11 @@ function toGeocodeResult(feature: MapTilerFeature): GeocodeResult {
 }
 
 /**
- * Forward geocode an address/place query into ranked location results.
+ * Forward geocode an address/place query into location results, nearest first.
  *
- * `near` biases results toward a point — it ranks, it does not restrict, so a
- * genuinely distant match still surfaces. Defaults to Clarksville.
+ * `near` is where the rider is — results are ordered by distance from it, and it
+ * biases which candidates MapTiler returns. It ranks rather than restricts, so a
+ * genuinely distant place still surfaces. Defaults to Clarksville.
  */
 export async function geocodeAddress(
   query: string,
@@ -305,12 +348,16 @@ export async function geocodeAddress(
     return [];
   }
 
-  const proximity = near ? `${near.lng},${near.lat}` : CLARKSVILLE_PROXIMITY;
+  const from: [number, number] = near
+    ? [near.lng, near.lat]
+    : (CLARKSVILLE_PROXIMITY.split(",").map(Number) as [number, number]);
   const searchFor = canonicalizeBrand(trimmed);
 
+  // A wider net than the 5 shown: the nearest match is often not in MapTiler's
+  // own top 5, so fetch more and let distance pick which 5 the rider sees.
   const url =
     `${GEOCODE_BASE}/${encodeURIComponent(searchFor)}.json` +
-    `?key=${token}&autocomplete=true&limit=5&proximity=${proximity}&types=${GEOCODE_TYPES}`;
+    `?key=${token}&autocomplete=true&limit=10&proximity=${from[0]},${from[1]}&types=${GEOCODE_TYPES}`;
 
   const res = await fetch(url, { signal });
   if (!res.ok) {
@@ -318,7 +365,9 @@ export async function geocodeAddress(
   }
 
   const data: MapTilerResponse = await res.json();
-  return (data.features ?? []).map(toGeocodeResult);
+  return sortPoisByDistance(data.features ?? [], from)
+    .slice(0, 5)
+    .map(toGeocodeResult);
 }
 
 /** Reverse geocode a coordinate into a human-readable label. */

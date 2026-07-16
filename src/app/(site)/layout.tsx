@@ -1,16 +1,30 @@
 import { Footer } from "@/components/layout/footer";
+import { RiderProximityProvider } from "@/components/location/rider-proximity";
+import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
-export default function SiteLayout({
+export default async function SiteLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Read here rather than in each page so every location search across the site
+  // shares one lookup. Signed-out riders get null, and searches fall back to
+  // Clarksville.
+  const currentUser = await getCurrentUser();
+  const rider = currentUser?.id
+    ? await prisma.rider.findUnique({
+        where: { userId: currentUser.id },
+        select: { location: true },
+      })
+    : null;
+
   return (
-    <>
+    <RiderProximityProvider location={rider?.location ?? null}>
       <main>{children}</main>
       <Footer />
-    </>
+    </RiderProximityProvider>
   );
 }
