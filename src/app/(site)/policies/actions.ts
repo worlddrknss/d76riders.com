@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { syncRiderProgression } from "@/lib/reputation";
 import { getCurrentUser } from "@/lib/session";
 
 export type AcknowledgeState = { error: string | null; success: string | null };
@@ -31,7 +32,7 @@ export async function acknowledgePolicyAction(slug: string): Promise<Acknowledge
 
   const policy = await prisma.policy.findUnique({
     where: { slug },
-    select: { id: true, version: true, active: true, title: true },
+    select: { id: true, version: true, active: true, title: true, type: true },
   });
 
   if (!policy || !policy.active) {
@@ -57,6 +58,11 @@ export async function acknowledgePolicyAction(slug: string): Promise<Acknowledge
     },
     update: {},
   });
+
+  // Accepting the safety waiver is a trust signal, so the score needs to catch up.
+  if (policy.type === "SAFETY_WAIVER") {
+    await syncRiderProgression(rider.id);
+  }
 
   revalidatePath(`/policies/${slug}`);
   revalidatePath("/policies");

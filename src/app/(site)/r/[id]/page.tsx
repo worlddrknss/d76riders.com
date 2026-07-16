@@ -7,6 +7,7 @@ import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
+import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
@@ -204,6 +205,23 @@ export default async function RiderProfilePage({
       gearItems: {
         orderBy: [{ category: "asc" }, { purchaseDate: "desc" }, { createdAt: "desc" }],
       },
+      trust: true,
+      badges: {
+        orderBy: { awardedAt: "desc" },
+        select: {
+          id: true,
+          badge: { select: { name: true, icon: true, tier: true, description: true } },
+        },
+      },
+      skills: {
+        orderBy: { skill: { sortOrder: "asc" } },
+        select: {
+          id: true,
+          level: true,
+          verifiedAt: true,
+          skill: { select: { name: true } },
+        },
+      },
     },
   });
 
@@ -361,9 +379,23 @@ export default async function RiderProfilePage({
     rider.followers.length > 0 || rider.following.length > 0 || rider.followedEvents.length > 0;
 
   // ─── Overview tab ───────────────────────────────────────────────
+  const reputationPanel = (
+    <ReputationPanel
+      trust={rider.trust}
+      badges={rider.badges.map((held) => ({ id: held.id, ...held.badge }))}
+      skills={rider.skills.map((held) => ({
+        id: held.id,
+        name: held.skill.name,
+        level: held.level,
+        verified: held.verifiedAt !== null,
+      }))}
+    />
+  );
+
   const overviewContent = (
     <div className="grid gap-5 lg:grid-cols-2">
       <div className="space-y-5">
+        {reputationPanel}
         {featuredBike && (
           <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
             <div className="relative h-44 w-full bg-linear-to-br from-asphalt to-sunset/40">

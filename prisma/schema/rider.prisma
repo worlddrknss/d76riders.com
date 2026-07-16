@@ -54,6 +54,10 @@ model Rider {
   reportsAgainst Report[]     @relation("ReportsAgainst")
   adminIncidents AdminIncident[] @relation("AdminIncidentSubject")
   policyAcknowledgments PolicyAcknowledgment[]
+  trust          RiderTrust?
+  badges         RiderBadge[]
+  skills         RiderSkill[]
+  verifiedSkills RiderSkill[] @relation("SkillVerifier")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

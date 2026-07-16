@@ -21,10 +21,18 @@ export const navItems: NavItem[] = [
   { href: "/roads", label: "Roads" },
   { href: "/r", label: "Riders" },
   {
+    label: "Progression",
+    children: [
+      { href: "/leaderboard", label: "Leaderboard" },
+      { href: "/skills", label: "Skill Tracks" },
+    ],
+  },
+  {
     label: "Preparedness",
     children: [
       { href: "/safety", label: "Ride Safety" },
       { href: "/emergency-response", label: "Emergency Response" },
+      { href: "/policies", label: "Policies" },
     ],
   },
   {

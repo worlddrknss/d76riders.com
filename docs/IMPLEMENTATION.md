@@ -247,7 +247,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 10: Rider Reputation and Progression
+## Phase 10: Rider Reputation and Progression ✅
 
 **Effort:** Large — new models, computation logic, profile UI.
 
@@ -255,12 +255,18 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Trust signals: compute from attendance rate, punctuality (check-in time vs event start), safety acknowledgments
-- [ ] `Badge` and `RiderBadge` models with criteria definitions
-- [ ] Auto-award badges: first group ride, 500 miles, 10 events attended, mentor status
-- [ ] Skill tracks: formation riding, cornering, hand signals — self-reported or organizer-verified
-- [ ] Profile display: badges and trust level on rider profile
-- [ ] Leaderboard/progression page
+- [x] Trust signals: `RiderTrust` snapshot computed in `src/lib/reputation.ts` from attendance rate (40 pts), punctuality vs event start with a 15-minute grace (25 pts), safety-waiver acceptance (15 pts), and ride volume (20 pts) → a 0–100 score and a `TrustLevel`
+- [x] `Badge` and `RiderBadge` models with data-driven criteria (`BadgeCriteria` + `threshold`) rather than per-badge hard-coding
+- [x] Auto-award badges: first group ride, 500/2,000 miles, 10/50 events attended, ride leader, mentor, safety-first — seeded in `prisma/seed.ts`, awarded on check-in, manual check-in, and Close Ride
+- [x] Skill tracks: `SkillTrack` + `RiderSkill` (formation riding, cornering, hand signals, group braking) — self-reported at `/skills`, with MENTOR reserved for organizer verification
+- [x] Profile display: `ReputationPanel` on the rider Overview tab showing trust level, score breakdown, badges, and skills
+- [x] Leaderboard/progression page at `/leaderboard`, sortable by trust, miles, rides, or badges
+
+**Notes:**
+
+- Trust is recomputed, never incremented, so it can't drift from the underlying check-in data. Badges are additive — once earned, a later dip in signals never revokes one.
+- Attendance is measured against past events the rider RSVP'd GOING to, so never RSVPing doesn't read as a 0% attendance rate.
+- Ties into Phase 13: accepting the current `SAFETY_WAIVER` policy is worth 15 points, and bumping that policy's version invalidates the signal. Because trust is a cached snapshot refreshed on ride events, use "Recompute trust for all riders" on `/admin/badges` after a waiver version bump or a scoring change.
 
 ---
 

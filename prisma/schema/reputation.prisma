@@ -1,0 +1,145 @@
+// Reputation domain — trust signals, badges, and skill tracks.
+//
+// Everything here is derived from what riders actually did (check-ins, mileage,
+// policy acceptance) rather than self-declared, with the exception of skill
+// tracks, which are self-reported until an organizer verifies them.
+
+// Cached trust snapshot for a rider. Recomputed rather than incremented, so it
+// can never drift from the underlying check-in data — see src/lib/reputation.ts.
+model RiderTrust {
+  id      String     @id @default(cuid())
+  riderId String     @unique
+  score   Int        @default(0)
+  level   TrustLevel @default(NEW)
+
+  // Component signals, kept so the profile can explain the score.
+  eventsAttended  Int   @default(0)
+  eventsCommitted Int   @default(0)
+  noShows         Int   @default(0)
+  onTimeCheckIns  Int   @default(0)
+  milesRidden     Int   @default(0)
+  attendanceRate  Float @default(0)
+  punctualityRate Float @default(0)
+  safetyAcked     Boolean @default(false)
+
+  computedAt DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([score(sort: Desc)])
+  @@index([level])
+}
+
+enum TrustLevel {
+  NEW
+  ESTABLISHED
+  TRUSTED
+  VETERAN
+}
+
+// A badge definition. `criteria` + `threshold` describe what earns it, which
+// keeps awarding data-driven instead of hard-coding rules per badge.
+model Badge {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String
+  // Lucide icon name rendered on the profile.
+  icon        String        @default("award")
+  tier        BadgeTier     @default(BRONZE)
+  criteria    BadgeCriteria
+  threshold   Int           @default(1)
+  active      Boolean       @default(true)
+
+  riderBadges RiderBadge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([criteria])
+}
+
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum BadgeCriteria {
+  // threshold = number of rides checked into
+  EVENTS_ATTENDED
+  // threshold = cumulative miles across attended rides
+  MILES_RIDDEN
+  // threshold = number of rides organized
+  EVENTS_ORGANIZED
+  // threshold = number of skills verified at MENTOR level
+  MENTOR
+  // accepted the current safety waiver
+  SAFETY_ACKNOWLEDGED
+  // awarded by hand from the admin badge screen
+  MANUAL
+}
+
+model RiderBadge {
+  id      String @id @default(cuid())
+  riderId String
+  badgeId String
+  // Set only for MANUAL awards — records which admin granted it.
+  awardedByUserId String?
+  awardedAt       DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  awardedBy User? @relation(fields: [awardedByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([riderId, badgeId])
+  @@index([riderId])
+  @@index([badgeId])
+}
+
+// A trainable skill (formation riding, cornering, hand signals).
+model SkillTrack {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  icon        String @default("target")
+  sortOrder   Int    @default(0)
+  active      Boolean @default(true)
+
+  riderSkills RiderSkill[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// A rider's standing on one skill track. Starts self-reported; an organizer can
+// verify it, which is what makes MENTOR meaningful.
+model RiderSkill {
+  id      String     @id @default(cuid())
+  riderId String
+  skillId String
+  level   SkillLevel @default(LEARNING)
+
+  verifiedByRiderId String?
+  verifiedAt        DateTime?
+
+  rider      Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  skill      SkillTrack @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  verifiedBy Rider?     @relation("SkillVerifier", fields: [verifiedByRiderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([riderId, skillId])
+  @@index([riderId])
+  @@index([skillId])
+}
+
+enum SkillLevel {
+  LEARNING
+  PRACTICING
+  PROFICIENT
+  MENTOR
+}

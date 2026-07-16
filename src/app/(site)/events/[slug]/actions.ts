@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 
 import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
+import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -407,6 +408,10 @@ export async function checkInAction(eventId: string): Promise<void> {
     refId: eventId,
   });
 
+  // Checking in can immediately earn a badge (first group ride, mileage), so
+  // refresh progression rather than waiting for the ride to close.
+  await syncRiderProgression(rider.id);
+
   revalidatePath("/events");
 }
 
@@ -471,6 +476,8 @@ export async function manualCheckInAction(eventId: string, targetRiderId: string
     summary: `Checked in to ${event?.title ?? "a ride"}`,
     refId: eventId,
   });
+
+  await syncRiderProgression(targetRiderId);
 
   revalidatePath("/events");
 }
@@ -552,7 +559,19 @@ export async function closeRideAction(eventId: string): Promise<void> {
     }
   });
 
+  // Closing the ride is what finalises attendance, so recompute progression for
+  // everyone it touched — attendees (who may have earned badges) and no-shows
+  // (whose attendance rate just dropped). Done outside the transaction: a
+  // reputation hiccup must not roll back the ride closing.
+  const affectedRiderIds = [
+    ...new Set([...checkedInRiderIds, ...noShows.map((ns) => ns.riderId)]),
+  ];
+  for (const affectedRiderId of affectedRiderIds) {
+    await syncRiderProgression(affectedRiderId);
+  }
+
   revalidatePath("/events");
+  revalidatePath("/leaderboard");
 }
 
 // ─── Organizer Management ───────────────────────────────────────────

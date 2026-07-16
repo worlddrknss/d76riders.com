@@ -223,7 +223,138 @@ async function main() {
     }
   }
 
+  await seedReputationCatalog();
+
   console.log("Seed complete.");
+}
+
+// Badge and skill definitions are reference data the reputation engine reads —
+// without them, nothing can ever be awarded. Upserted by slug so re-seeding is
+// safe and tweaks to copy/thresholds roll forward.
+async function seedReputationCatalog() {
+  const badges = [
+    {
+      slug: "first-group-ride",
+      name: "First Group Ride",
+      description: "Checked in to your first District 76 group ride.",
+      icon: "flag",
+      tier: "BRONZE" as const,
+      criteria: "EVENTS_ATTENDED" as const,
+      threshold: 1,
+    },
+    {
+      slug: "ten-rides",
+      name: "Regular",
+      description: "Attended 10 group rides.",
+      icon: "repeat",
+      tier: "SILVER" as const,
+      criteria: "EVENTS_ATTENDED" as const,
+      threshold: 10,
+    },
+    {
+      slug: "fifty-rides",
+      name: "Road Family",
+      description: "Attended 50 group rides.",
+      icon: "users",
+      tier: "GOLD" as const,
+      criteria: "EVENTS_ATTENDED" as const,
+      threshold: 50,
+    },
+    {
+      slug: "five-hundred-miles",
+      name: "500 Miles",
+      description: "Covered 500 miles on group rides.",
+      icon: "gauge",
+      tier: "SILVER" as const,
+      criteria: "MILES_RIDDEN" as const,
+      threshold: 500,
+    },
+    {
+      slug: "two-thousand-miles",
+      name: "2,000 Miles",
+      description: "Covered 2,000 miles on group rides.",
+      icon: "milestone",
+      tier: "GOLD" as const,
+      criteria: "MILES_RIDDEN" as const,
+      threshold: 2000,
+    },
+    {
+      slug: "ride-leader",
+      name: "Ride Leader",
+      description: "Organized 5 completed rides.",
+      icon: "map",
+      tier: "GOLD" as const,
+      criteria: "EVENTS_ORGANIZED" as const,
+      threshold: 5,
+    },
+    {
+      slug: "mentor",
+      name: "Mentor",
+      description: "Verified at mentor level on a skill track.",
+      icon: "graduation-cap",
+      tier: "PLATINUM" as const,
+      criteria: "MENTOR" as const,
+      threshold: 1,
+    },
+    {
+      slug: "safety-first",
+      name: "Safety First",
+      description: "Accepted the current safety waiver.",
+      icon: "shield-check",
+      tier: "BRONZE" as const,
+      criteria: "SAFETY_ACKNOWLEDGED" as const,
+      threshold: 1,
+    },
+  ];
+
+  for (const badge of badges) {
+    await prisma.badge.upsert({
+      where: { slug: badge.slug },
+      create: badge,
+      update: badge,
+    });
+  }
+
+  const skills = [
+    {
+      slug: "formation-riding",
+      name: "Formation Riding",
+      description: "Holding a staggered formation, spacing, and lane discipline.",
+      icon: "grid-3x3",
+      sortOrder: 1,
+    },
+    {
+      slug: "cornering",
+      name: "Cornering",
+      description: "Entry speed, lines, and body position through corners.",
+      icon: "spline",
+      sortOrder: 2,
+    },
+    {
+      slug: "hand-signals",
+      name: "Hand Signals",
+      description: "Group hand signals for hazards, stops, and formation changes.",
+      icon: "hand",
+      sortOrder: 3,
+    },
+    {
+      slug: "group-braking",
+      name: "Group Braking",
+      description: "Progressive braking and following distance in a pack.",
+      icon: "octagon",
+      sortOrder: 4,
+    },
+  ];
+
+  for (const skill of skills) {
+    await prisma.skillTrack.upsert({
+      where: { slug: skill.slug },
+      create: skill,
+      update: skill,
+    });
+  }
+
+  console.log(`Seeded ${badges.length} badges and ${skills.length} skill tracks.`);
 }
 
 main()
