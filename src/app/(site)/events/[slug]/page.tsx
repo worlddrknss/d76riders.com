@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
 import { ksuLocationDiffers } from "@/lib/events";
@@ -623,11 +623,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   Send an update, delay, or cancellation to the riders on this ride.
                 </p>
               </div>
-              <MessageRidersDialog
-                eventId={event.id}
-                eventTitle={event.title}
-                counts={messageAudienceCounts}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/events/${event.slug}/analytics`}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:border-sunset/50 hover:text-sunset"
+                >
+                  <BarChart3 className="h-4 w-4 text-sunset" />
+                  Analytics
+                </Link>
+                <MessageRidersDialog
+                  eventId={event.id}
+                  eventTitle={event.title}
+                  counts={messageAudienceCounts}
+                />
+              </div>
             </div>
           </div>
         ) : null}

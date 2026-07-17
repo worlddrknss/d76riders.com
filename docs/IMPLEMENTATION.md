@@ -19,7 +19,7 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 11 | Community Growth | ✅ Done |
 | 12 | Media and Storytelling | ⬜ Not started |
 | 13 | Admin and Moderation Enhancements | ✅ Done |
-| 14 | Platform Reliability and Insights | ⬜ Not started |
+| 14 | Platform Reliability and Insights | 🚧 In progress |
 | 15 | Challenges | ✅ Done |
 
 Remaining, in the order they'd be quickest to build: **14 → 9 → 12**.
@@ -395,10 +395,23 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Organizer analytics dashboard: attendance trends, churn rate, RSVP-to-attendance conversion
+- [x] Organizer analytics: `/events/[slug]/analytics`, reached from an "Analytics" link on the event page,
+      gated to that ride's host/organizers (`userId` matches the host or an `EventOrganizer` row — a
+      non-organizer gets a 404, not a forbidden). Shows **this ride** (RSVP→check-in→checkout funnel,
+      conversion, punctuality vs a 15-min grace, the named no-shows) and **your rides overall** (turnout
+      trend, RSVP→attendance, churn among your riders across two 90-day windows). Computations in
+      `src/lib/analytics.ts` reuse the trust-scoring definitions so the numbers match a rider's profile.
 - [ ] Notification center: unified notification model with delivery tracking (in-app, email, push)
 - [ ] Calendar sync: generate .ics feeds for Google/Apple/Outlook calendar subscriptions
 - [ ] PWA enhancements: offline event card, quick check-in action, install prompts
+
+**Notes:**
+
+- **Organizer, not admin.** Analytics live with the ride and its organizers, not in `/admin` — an organizer
+  never needs the admin tree to see how their own rides are doing. Access is per-event (you organize the ride
+  you came from); the cross-event "your rides overall" section is scoped to the events that viewer organizes.
+- Same discipline as everywhere else: every figure is computed from check-ins and RSVPs on demand, never a
+  stored counter, so it can't drift from the underlying data.
 
 ---
 
