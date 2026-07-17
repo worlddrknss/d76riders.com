@@ -3,6 +3,7 @@ import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarChart3, CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
 import { ksuLocationDiffers } from "@/lib/events";
@@ -652,11 +653,33 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     </button>
                   </form>
                 ) : null}
+                {event.facebookEventUrl ? (
+                  <a
+                    href={event.facebookEventUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-[#1877F2] hover:text-[#1877F2]"
+                  >
+                    <SiFacebook className="h-4 w-4" />
+                    Facebook event
+                  </a>
+                ) : null}
                 <p className="pt-1 text-center text-xs text-muted">
                   {attendeeCount} going · {trackedCount} tracking
                 </p>
               </div>
             </div>
+
+            {/* The event's poster. A portrait flyer fills the rail's width; in
+                the wide main column it stranded the write-up in dead space. */}
+            {flyerUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mediaUrl(flyerUrl)}
+                alt={event.galleryItems[0].caption || `${event.title} flyer`}
+                className="w-full rounded-xl border border-border shadow-soft"
+              />
+            ) : null}
 
             {/* The going list, compact — five faces and a Show all, not a wall. */}
             <EventRidersList
@@ -670,27 +693,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
           {/* MAIN column */}
           <div className="space-y-6 lg:col-start-1 lg:row-start-1">
-            {/* Flyer + About. A flyer is a portrait poster: paired with the
-                description it fills the width, and alone it stays a bounded
-                block on the left rather than a billboard stranded in dead space. */}
-            {flyerUrl && aboutCard ? (
-              <div className="grid gap-6 md:grid-cols-[minmax(0,19rem)_1fr] md:items-start">
-                <img
-                  src={mediaUrl(flyerUrl)}
-                  alt={event.galleryItems[0].caption || `${event.title} flyer`}
-                  className="w-full rounded-xl border border-border shadow-soft"
-                />
-                {aboutCard}
-              </div>
-            ) : flyerUrl ? (
-              <img
-                src={mediaUrl(flyerUrl)}
-                alt={event.galleryItems[0].caption || `${event.title} flyer`}
-                className="w-full max-w-sm rounded-xl border border-border shadow-soft"
-              />
-            ) : (
-              aboutCard
-            )}
+            {/* The flyer is a portrait poster and lives in the rail, where a tall
+                image fills the column instead of stranding text beside it. The
+                main column leads with the write-up. */}
+            {aboutCard}
 
         {/* FULL-WIDTH ROUTE MAP */}
         {coordinates.length >= 2 ? (
