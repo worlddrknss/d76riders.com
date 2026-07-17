@@ -18,12 +18,15 @@ import {
   AdminTr,
 } from "@/components/admin/admin-table";
 import { CommunityDeleteButton } from "@/components/admin/community-delete-button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL, TIER_LABEL } from "@/lib/shops";
 
 export type AdminSponsor = {
@@ -45,9 +48,11 @@ export type AdminSponsor = {
   submittedByHandle: string | null;
 };
 
-const inputClass =
-  "mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sunset/50 focus:outline-none";
-const labelClass = "text-xs font-semibold uppercase tracking-[0.12em] text-slate-400";
+// The dialog is light (bg-surface/text-ink) even though the admin shell around
+// it is dark, so the form has to be styled for the dialog, not the shell.
+const selectClass =
+  "mt-1 w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none";
+const labelClass = "text-xs font-semibold uppercase tracking-wide text-muted";
 
 /**
  * The shops directory, as one table and one dialog.
@@ -189,7 +194,7 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
             <DialogTitle>{editing ? `Edit ${editing.name}` : "Add a business"}</DialogTitle>
           </DialogHeader>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-muted">
             {editing
               ? "Changes go live on the directory as soon as you save."
               : "Added from here it is approved on the spot, no queue."}
@@ -208,13 +213,13 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
               <label htmlFor="sd-name" className={labelClass}>
                 Business name
               </label>
-              <input
+              <Input
                 id="sd-name"
                 name="name"
                 required
+                maxLength={120}
                 defaultValue={editing?.name ?? ""}
-                placeholder="MotoAlliance"
-                className={inputClass}
+                className="mt-1"
               />
             </div>
 
@@ -222,13 +227,12 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
               <label htmlFor="sd-desc" className={labelClass}>
                 What they do
               </label>
-              <textarea
+              <Textarea
                 id="sd-desc"
                 name="description"
                 rows={2}
                 defaultValue={editing?.description ?? ""}
-                placeholder="Tires, service, and a decent coffee while you wait."
-                className={inputClass}
+                className="mt-1"
               />
             </div>
 
@@ -237,7 +241,7 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
                 <label htmlFor="sd-cat" className={labelClass}>
                   Category
                 </label>
-                <select id="sd-cat" name="category" defaultValue={editing?.category ?? ""} className={inputClass}>
+                <select id="sd-cat" name="category" defaultValue={editing?.category ?? ""} className={selectClass}>
                   <option value="">None</option>
                   {SHOP_CATEGORIES.map((c) => (
                     <option key={c} value={c}>
@@ -252,7 +256,7 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
                 <label htmlFor="sd-tier" className={labelClass}>
                   Sponsor tier
                 </label>
-                <select id="sd-tier" name="tier" defaultValue={editing?.tier ?? ""} className={inputClass}>
+                <select id="sd-tier" name="tier" defaultValue={editing?.tier ?? ""} className={selectClass}>
                   <option value="">Not a sponsor (listed only)</option>
                   <option value="PARTNER">Partner</option>
                   <option value="SUPPORTER">Supporter</option>
@@ -265,12 +269,11 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
               <label htmlFor="sd-addr" className={labelClass}>
                 Address
               </label>
-              <input
+              <Input
                 id="sd-addr"
                 name="address"
                 defaultValue={editing?.address ?? ""}
-                placeholder="522 Dover Rd Ste A, Clarksville, TN 37042"
-                className={inputClass}
+                className="mt-1"
               />
             </div>
 
@@ -279,28 +282,28 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
                 <label htmlFor="sd-lat" className={labelClass}>
                   Latitude
                 </label>
-                <input
+                <Input
                   id="sd-lat"
                   name="lat"
+                  inputMode="decimal"
                   defaultValue={editing?.lat ?? ""}
-                  placeholder="36.55117"
-                  className={inputClass}
+                  className="mt-1"
                 />
               </div>
               <div>
                 <label htmlFor="sd-lng" className={labelClass}>
                   Longitude
                 </label>
-                <input
+                <Input
                   id="sd-lng"
                   name="lng"
+                  inputMode="decimal"
                   defaultValue={editing?.lng ?? ""}
-                  placeholder="-87.41525"
-                  className={inputClass}
+                  className="mt-1"
                 />
               </div>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted">
               Coordinates drive the Directions link. Riders submitting a shop get these from place search.
             </p>
 
@@ -309,25 +312,25 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
                 <label htmlFor="sd-phone" className={labelClass}>
                   Phone
                 </label>
-                <input
+                <Input
                   id="sd-phone"
                   name="phone"
+                  type="tel"
                   defaultValue={editing?.phone ?? ""}
-                  placeholder="(931) 555-0100"
-                  className={inputClass}
+                  className="mt-1"
                 />
               </div>
               <div>
                 <label htmlFor="sd-web" className={labelClass}>
                   Website
                 </label>
-                <input
+                <Input
                   id="sd-web"
                   name="websiteUrl"
                   type="url"
                   defaultValue={editing?.websiteUrl ?? ""}
                   placeholder="https://…"
-                  className={inputClass}
+                  className="mt-1"
                 />
               </div>
             </div>
@@ -336,42 +339,35 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
               <label htmlFor="sd-logo" className={labelClass}>
                 Logo URL
               </label>
-              <input
+              <Input
                 id="sd-logo"
                 name="logoUrl"
                 type="url"
                 defaultValue={editing?.logoUrl ?? ""}
                 placeholder="https://…"
-                className={inputClass}
+                className="mt-1"
               />
             </div>
 
             {editing ? (
-              <label className="flex items-center gap-3 text-sm text-slate-200">
+              <label className="flex items-center gap-3 text-sm text-ink">
                 <input
                   type="checkbox"
                   name="active"
                   defaultChecked={editing.active}
-                  className="h-4 w-4 rounded border-white/20 bg-white/5"
+                  className="h-4 w-4 rounded border-border accent-sunset"
                 />
                 Visible on the public directory
               </label>
             ) : null}
 
             <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/5"
-              >
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
                 Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
-              >
+              </Button>
+              <Button type="submit" variant="accent">
                 {editing ? "Save changes" : "Add business"}
-              </button>
+              </Button>
             </div>
           </form>
         </DialogContent>
