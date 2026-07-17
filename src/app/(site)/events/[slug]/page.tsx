@@ -12,6 +12,7 @@ import { EventCheckInButton } from "@/components/events/event-check-in-button";
 import { AttendancePanel } from "@/components/events/attendance-panel";
 import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventOrganizers } from "@/components/events/event-organizers";
+import { EventRidersList } from "@/components/events/event-riders-list";
 import { MessageRidersDialog } from "@/components/events/message-riders-dialog";
 import { RouteExportOptions } from "@/components/events/route-export-options";
 import { ShareEvent } from "@/components/events/share-event";
@@ -386,6 +387,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           ? { label: "Completed", cls: "border-border bg-canvas text-muted" }
           : { label: "Upcoming", cls: "border-forest/40 bg-forest/10 text-forest" };
 
+  const flyerUrl = event.galleryItems[0]?.url ?? null;
+  // Borderless on purpose: the flyer beside it is the framed element, and a
+  // second frame around the blurb just makes two boxes fight for the eye.
+  const aboutCard = event.description ? (
+    <div>
+      <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
+      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
+        <Linkify text={event.description} />
+      </p>
+    </div>
+  ) : null;
+
   return (
     <section className="page-shell">
       <JsonLd data={eventJsonLd({
@@ -513,6 +526,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
         </header>
 
+        {/* Organizer controls sit up top with the other manage actions, not in a
+            card at the bottom of the page. */}
+        {isOrganizer && event.status !== "CANCELLED" ? (
+          <div className="flex flex-wrap items-center gap-2 border-y border-border py-3">
+            <span className="mr-1 text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+              Organizer
+            </span>
+            <Link
+              href={`/events/${event.slug}/analytics`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-semibold text-ink transition hover:border-sunset/50 hover:text-sunset"
+            >
+              <BarChart3 className="h-4 w-4 text-sunset" />
+              Analytics
+            </Link>
+            <MessageRidersDialog
+              eventId={event.id}
+              eventTitle={event.title}
+              counts={messageAudienceCounts}
+            />
+          </div>
+        ) : null}
+
         {/* Content + sticky action rail. The rail is first in the DOM so a phone
             leads with the facts and the RSVP / check-in / Rider Down actions,
             before the flyer and the long stuff; on desktop it moves to the right
@@ -623,50 +658,39 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               </div>
             </div>
 
-            {/* Organizer tools — a couple of links and a modal, not a card each. */}
-            {isOrganizer && event.status !== "CANCELLED" ? (
-              <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Organizer</p>
-                <div className="mt-3 space-y-2.5">
-                  <Link
-                    href={`/events/${event.slug}/analytics`}
-                    className="flex items-center gap-2 text-sm font-semibold text-ink transition hover:text-sunset"
-                  >
-                    <BarChart3 className="h-4 w-4 text-sunset" />
-                    View ride analytics
-                  </Link>
-                  <MessageRidersDialog
-                    eventId={event.id}
-                    eventTitle={event.title}
-                    counts={messageAudienceCounts}
-                  />
-                </div>
-              </div>
-            ) : null}
+            {/* The going list, compact — five faces and a Show all, not a wall. */}
+            <EventRidersList
+              riders={event.rsvps.map((rsvp) => ({
+                handle: rsvp.rider.handle,
+                name: rsvp.rider.name,
+                avatarUrl: rsvp.rider.avatarUrl ? mediaUrl(rsvp.rider.avatarUrl) : null,
+              }))}
+            />
           </aside>
 
           {/* MAIN column */}
           <div className="space-y-6 lg:col-start-1 lg:row-start-1">
-            {/* Flyer */}
-            {event.galleryItems[0]?.url ? (
-              <div className="overflow-hidden rounded-xl border border-border bg-canvas shadow-soft">
+            {/* Flyer + About. A flyer is a portrait poster: paired with the
+                description it fills the width, and alone it stays a bounded
+                block on the left rather than a billboard stranded in dead space. */}
+            {flyerUrl && aboutCard ? (
+              <div className="grid gap-6 md:grid-cols-[minmax(0,19rem)_1fr] md:items-start">
                 <img
-                  src={mediaUrl(event.galleryItems[0].url)}
+                  src={mediaUrl(flyerUrl)}
                   alt={event.galleryItems[0].caption || `${event.title} flyer`}
-                  className="mx-auto max-h-136 w-auto object-contain"
+                  className="w-full rounded-xl border border-border shadow-soft"
                 />
+                {aboutCard}
               </div>
-            ) : null}
-
-            {/* About */}
-            {event.description ? (
-              <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
-                <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
-                  <Linkify text={event.description} />
-                </p>
-              </div>
-            ) : null}
+            ) : flyerUrl ? (
+              <img
+                src={mediaUrl(flyerUrl)}
+                alt={event.galleryItems[0].caption || `${event.title} flyer`}
+                className="w-full max-w-sm rounded-xl border border-border shadow-soft"
+              />
+            ) : (
+              aboutCard
+            )}
 
         {/* FULL-WIDTH ROUTE MAP */}
         {coordinates.length >= 2 ? (
@@ -687,37 +711,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
           </div>
         ) : null}
-
-        {/* REGISTERED RIDERS */}
-        {event.rsvps.length > 0 && (
-          <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
-            <h2 className="font-display text-xl font-semibold text-asphalt">
-              Registered Riders
-              <span className="ml-2 text-sm font-normal text-muted">({event.rsvps.length})</span>
-            </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {event.rsvps.map((rsvp) => (
-                <Link
-                  key={rsvp.riderId}
-                  href={`/r/${rsvp.rider.handle}`}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-canvas p-3 transition hover:border-sunset/30 hover:shadow-sm"
-                >
-                  {rsvp.rider.avatarUrl ? (
-                    <img src={mediaUrl(rsvp.rider.avatarUrl)} alt={rsvp.rider.name} className="h-10 w-10 rounded-full border border-border object-cover" />
-                  ) : (
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sunset/10 text-sm font-bold text-sunset">
-                      {rsvp.rider.name.charAt(0)}
-                    </span>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{rsvp.rider.name}</p>
-                    <p className="text-xs text-muted">@{rsvp.rider.handle}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* RIDE STAFF */}
         {event.organizers.length > 0 && (
