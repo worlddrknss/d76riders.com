@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { CreateEventForm } from "@/components/events/create-event-form";
 import { recentMeetupSpots } from "@/lib/events";
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { DEFAULT_TIMEZONE } from "@/lib/datetime";
+import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export default async function CreateEventPage() {
@@ -26,6 +28,12 @@ export default async function CreateEventPage() {
   // Read after the auth gate: nothing here is public, and an unauthorised
   // visitor shouldn't cost a query.
   const recentSpots = await recentMeetupSpots();
+  // Default the event's timezone to the organizer's own, so most rides need no
+  // thought about it.
+  const rider = currentUser
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { timezone: true } })
+    : null;
+  const defaultTimezone = rider?.timezone ?? DEFAULT_TIMEZONE;
 
   return (
     <section className="page-shell">
@@ -44,7 +52,7 @@ export default async function CreateEventPage() {
             </Link>
           </div>
 
-          <CreateEventForm recentSpots={recentSpots} />
+          <CreateEventForm recentSpots={recentSpots} defaultTimezone={defaultTimezone} />
         </div>
       </div>
     </section>

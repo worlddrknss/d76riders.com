@@ -6,6 +6,13 @@ import { BarChart3, CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIc
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
+import {
+  formatEventDate,
+  formatEventTime,
+  isSameDayInTz,
+  toZonedInputValue,
+  viewerTimeHint,
+} from "@/lib/datetime";
 import { ksuLocationDiffers } from "@/lib/events";
 import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
@@ -36,6 +43,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: true,
       meetLocation: true,
       startsAt: true,
+      timezone: true,
       status: true,
       distanceMiles: true,
       galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
@@ -43,11 +51,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
   if (!event) return { title: "Event Not Found" };
 
-  const when = event.startsAt.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const when = formatEventDate(event.startsAt, event.timezone);
 
   // Prefer the hand-written excerpt; fall back to the description, then to a
   // generated line that still carries the date, distance, and start point.
@@ -124,29 +128,6 @@ function DetailRow({
       </div>
     </div>
   );
-}
-
-// Format a Date as YYYY-MM-DDTHH:mm string preserving the raw stored values
-// (dates are stored naive/UTC-as-local in the DB)
-function toLocalISOString(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`;
-}
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 function extractCoordinates(value: unknown): [number, number][] {
@@ -260,10 +241,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? event.organizers.some((o) => o.rider.userId === currentUser.id && o.role === "HOST")
     : false;
 
-  // Look up current user's rider once and reuse for RSVP, tracking, check-in.
+  // Look up current user's rider once and reuse for RSVP, tracking, check-in,
+  // and the "your time" hint on event times.
   const viewerRider = currentUser
-    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
     : null;
+  const viewerTz = viewerRider?.timezone ?? null;
 
   // Audience sizes for the organizer's message dialog. `event.rsvps` only holds
   // GOING, so the other states need their own count.
@@ -305,12 +288,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const rsvpClosed = event.rsvpDeadline ? event.rsvpDeadline.getTime() < now.getTime() : false;
   const capacityFull = event.maxCapacity != null && attendeeCount >= event.maxCapacity;
 
-  // Check-in state
-  const eventDate = event.startsAt;
-  const isEventDay = eventDate.getUTCFullYear() === now.getUTCFullYear()
-    && eventDate.getUTCMonth() === now.getUTCMonth()
-    && eventDate.getUTCDate() === now.getUTCDate();
+  // Check-in state — "today" is judged in the event's own timezone.
+  const isEventDay = isSameDayInTz(event.startsAt, event.timezone);
   const isActiveEvent = event.status === "UPCOMING" && isEventDay;
+  // Only set when the viewer's zone differs from the event's.
+  const meetHint = viewerTimeHint(event.startsAt, event.timezone, viewerTz);
   const viewerCheckIn = viewerRider
     ? event.checkIns.find((c) => c.riderId === viewerRider.id)
     : null;
@@ -486,8 +468,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
             {event.excerpt ? <p className="mt-2 max-w-2xl text-sm text-muted">{event.excerpt}</p> : null}
             <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted">
-              <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-sunset" />{formatDate(event.startsAt)}</span>
-              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-sunset" />Meet {formatTime(event.startsAt)}</span>
+              <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-sunset" />{formatEventDate(event.startsAt, event.timezone)}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-sunset" />Meet {formatEventTime(event.startsAt, event.timezone)}</span>
               <span className="inline-flex items-center gap-1.5"><Signal className="h-4 w-4 text-sunset" />{difficultyLabel(event.difficulty)}</span>
               {event.distanceMiles ? (
                 <span className="inline-flex items-center gap-1.5"><RouteIcon className="h-4 w-4 text-sunset" />{event.distanceMiles} mi</span>
@@ -505,8 +487,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   excerpt: event.excerpt,
                   description: event.description,
                   facebookEventUrl: event.facebookEventUrl,
-                  startsAt: toLocalISOString(event.startsAt),
-                  ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
+                  timezone: event.timezone,
+                  startsAt: toZonedInputValue(event.startsAt, event.timezone),
+                  ksuAt: event.ksuAt ? toZonedInputValue(event.ksuAt, event.timezone) : null,
                   meetLocation: event.meetLocation,
                   meetAddress: event.meetAddress,
                   meetLat: event.meetLat,
@@ -518,7 +501,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   distanceMiles: event.distanceMiles,
                   difficulty: event.difficulty,
                   maxCapacity: event.maxCapacity,
-                  rsvpDeadline: event.rsvpDeadline ? toLocalISOString(event.rsvpDeadline) : null,
+                  rsvpDeadline: event.rsvpDeadline ? toZonedInputValue(event.rsvpDeadline, event.timezone) : null,
                   hasPhoto: event.galleryItems.length > 0,
                   hasRoute: !!event.routeId,
                 }}
@@ -560,11 +543,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
             <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
               <dl className="space-y-3.5">
-                <DetailRow icon={CalendarDays} label="Date" sub={`Meetup at ${formatTime(event.startsAt)}`}>
-                  {formatDate(event.startsAt)}
+                <DetailRow
+                  icon={CalendarDays}
+                  label="Date"
+                  sub={
+                    <>
+                      Meetup at {formatEventTime(event.startsAt, event.timezone)}
+                      {meetHint ? <span className="text-sunset"> · {meetHint}</span> : null}
+                    </>
+                  }
+                >
+                  {formatEventDate(event.startsAt, event.timezone)}
                 </DetailRow>
-                <DetailRow icon={Clock3} label="Kickstands up" sub={event.ksuAt ? formatDate(event.ksuAt) : "Time not set"}>
-                  {event.ksuAt ? formatTime(event.ksuAt) : "TBD"}
+                <DetailRow icon={Clock3} label="Kickstands up" sub={event.ksuAt ? formatEventDate(event.ksuAt, event.timezone) : "Time not set"}>
+                  {event.ksuAt ? formatEventTime(event.ksuAt, event.timezone) : "TBD"}
                 </DetailRow>
                 <DetailRow
                   icon={MapPin}
@@ -633,7 +625,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   capacity={event.maxCapacity}
                   capacityFull={capacityFull}
                   rsvpClosed={rsvpClosed}
-                  rsvpDeadline={event.rsvpDeadline ? formatDate(event.rsvpDeadline) : null}
+                  rsvpDeadline={event.rsvpDeadline ? formatEventDate(event.rsvpDeadline, event.timezone) : null}
                   isLoggedIn={!!currentUser}
                 />
                 {canCheckIn && (

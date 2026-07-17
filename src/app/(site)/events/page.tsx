@@ -5,8 +5,10 @@ import { siteImages } from "@/data/images";
 import { mediaUrl } from "@/lib/media-url";
 import { PageHero } from "@/components/layout/page-hero";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
+import { eventDayMonth, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";
 import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Upcoming Rides & Events",
@@ -19,35 +21,19 @@ export const metadata: Metadata = {
   },
 };
 
-function dateBadge(date: string) {
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) {
-    return { day: "--", month: "" };
-  }
-  return {
-    day: String(parsed.getDate()).padStart(2, "0"),
-    month: parsed.toLocaleString("en-US", { month: "short" }).toUpperCase(),
-  };
-}
-
-function formatEventTime(date: Date | null): string {
-  if (!date) {
-    return "TBD";
-  }
-
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 export default async function EventsPage() {
-  const now = new Date();
+  // "Upcoming" means today or later, in the viewer's zone — so a ride happening
+  // this evening stays listed all day rather than dropping off at its start
+  // time. Logged-out visitors get the community default zone.
+  const currentUser = await getCurrentUser();
+  const viewerTz = currentUser
+    ? (await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { timezone: true } }))?.timezone ?? null
+    : null;
 
   // A cancelled or draft ride isn't an upcoming ride. Without this, moderation
   // cancelling an event (which is what the triage queue's takedown does) left it
   // still advertising itself here and still taking RSVPs.
-  const publiclyVisible = { startsAt: { gte: now }, status: { in: PUBLIC_EVENT_STATUSES } };
+  const publiclyVisible = { startsAt: { gte: startOfTodayUtc(viewerTz) }, status: { in: PUBLIC_EVENT_STATUSES } };
 
   const upcomingEvents = await prisma.rideEvent.findMany({
     where: publiclyVisible,
@@ -105,10 +91,9 @@ export default async function EventsPage() {
               </div>
             ) : null}
             {upcomingEvents.map((event, i) => {
-              const badge = dateBadge(event.startsAt.toISOString());
-              const meetupAt = event.startsAt;
-              const meetupTime = formatEventTime(meetupAt);
-              const ksuTime = event.ksuAt ? formatEventTime(event.ksuAt) : "TBD";
+              const badge = eventDayMonth(event.startsAt, event.timezone);
+              const meetupTime = formatEventTimeShort(event.startsAt, event.timezone);
+              const ksuTime = event.ksuAt ? formatEventTimeShort(event.ksuAt, event.timezone) : "TBD";
               const coverImage = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : siteImages.rides[i % siteImages.rides.length];
               return (
                 <StaggerItem key={event.id}>

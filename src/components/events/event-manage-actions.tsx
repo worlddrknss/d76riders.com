@@ -9,6 +9,7 @@ import { LocationAutocomplete } from "@/components/events/location-autocomplete"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { US_TIMEZONES } from "@/lib/datetime";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,8 @@ type EventData = {
   excerpt: string | null;
   description: string | null;
   facebookEventUrl: string | null;
-  startsAt: string; // ISO string from server
+  timezone: string;
+  startsAt: string; // datetime-local string, already in the event's timezone
   ksuAt: string | null;
   meetLocation: string | null;
   meetAddress: string | null;
@@ -165,6 +167,15 @@ export function EventManageActions({ event }: { event: EventData }) {
 
             {/* Right column */}
             <div className="space-y-4">
+              <div>
+                <label htmlFor="edit-event-tz" className="text-xs font-semibold uppercase tracking-wide text-muted">Timezone</label>
+                <select id="edit-event-tz" name="timezone" defaultValue={event.timezone} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink">
+                  {US_TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted">The times below are the ride&apos;s local time in this zone.</p>
+              </div>
               <div className="grid gap-4 grid-cols-2">
                 <div>
                   <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Starts At</label>

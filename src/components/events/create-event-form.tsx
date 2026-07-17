@@ -11,6 +11,7 @@ import {
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { EventRoutePlannerField } from "@/components/events/event-route-planner-field";
 import { LocationAutocomplete } from "@/components/events/location-autocomplete";
+import { DEFAULT_TIMEZONE, US_TIMEZONES } from "@/lib/datetime";
 
 const initialCreateEventFormState: CreateEventFormState = {
   error: null,
@@ -18,8 +19,10 @@ const initialCreateEventFormState: CreateEventFormState = {
 
 export function CreateEventForm({
   recentSpots,
+  defaultTimezone = DEFAULT_TIMEZONE,
 }: {
   recentSpots?: { meet: MeetupSpot[]; ksu: MeetupSpot[] };
+  defaultTimezone?: string;
 }) {
   const [state, formAction] = useActionState<CreateEventFormState, FormData>(
     createEventAction,
@@ -100,6 +103,25 @@ export function CreateEventForm({
           accept="image/png,image/jpeg,image/webp"
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft file:mr-3 file:rounded-md file:border-0 file:bg-asphalt file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <label htmlFor="timezone" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+          Timezone
+        </label>
+        <select
+          id="timezone"
+          name="timezone"
+          defaultValue={defaultTimezone}
+          className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+        >
+          {US_TIMEZONES.map((tz) => (
+            <option key={tz.value} value={tz.value}>
+              {tz.label}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted">The times below are the ride&apos;s local time in this zone.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

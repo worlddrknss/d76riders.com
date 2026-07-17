@@ -12,6 +12,7 @@ type ProfileEditButtonProps = {
     avatarUrl: string;
     bio: string;
     location: string;
+    timezone: string | null;
     favoriteRoad: string;
     yearStartedRiding: number | null;
     youtubeHandle: string;

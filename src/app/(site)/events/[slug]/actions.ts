@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 
 import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
+import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -67,14 +68,6 @@ function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
 }
 
-function toOptionalDate(value: string): Date | null {
-  if (!value) {
-    return null;
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
 function toOptionalCoord(value: string, min: number, max: number): number | null {
   if (!value) return null;
   const parsed = Number.parseFloat(value);
@@ -128,8 +121,10 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const title = normalizeText(formData.get("title"));
   const excerpt = normalizeText(formData.get("excerpt"));
   const description = normalizeText(formData.get("description"));
-  const startsAt = toOptionalDate(normalizeText(formData.get("startsAt")));
-  const ksuAt = toOptionalDate(normalizeText(formData.get("ksuAt")));
+  const timezoneInput = normalizeText(formData.get("timezone"));
+  const timezone = isValidTimezone(timezoneInput) ? timezoneInput : DEFAULT_TIMEZONE;
+  const startsAt = zonedInputToUtc(normalizeText(formData.get("startsAt")), timezone);
+  const ksuAt = zonedInputToUtc(normalizeText(formData.get("ksuAt")), timezone);
   const meetLocation = normalizeText(formData.get("meetLocation"));
   const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
   const meetLat = toOptionalCoord(normalizeText(formData.get("meetLat")), -90, 90);
@@ -141,7 +136,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const distanceMiles = toOptionalInt(normalizeText(formData.get("distanceMiles")));
   const maxCapacity = toOptionalInt(normalizeText(formData.get("maxCapacity")));
-  const rsvpDeadline = toOptionalDate(normalizeText(formData.get("rsvpDeadline")));
+  const rsvpDeadline = zonedInputToUtc(normalizeText(formData.get("rsvpDeadline")), timezone);
   const difficultyInput = normalizeText(formData.get("difficulty"));
   const removeRoute = formData.get("removeRoute") === "on";
   const eventPhoto = formData.get("eventPhoto");
@@ -186,6 +181,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         description: description || null,
         startsAt,
         ksuAt,
+        timezone,
         meetLocation: meetLocation || null,
         meetAddress: meetAddress || null,
         meetLat,

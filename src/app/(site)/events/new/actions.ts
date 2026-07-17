@@ -6,6 +6,7 @@ import { RideDifficulty } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -78,15 +79,6 @@ function parseJsonValue<T>(value: string): T | null {
   } catch {
     return null;
   }
-}
-
-function toOptionalDate(value: string): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function toSlug(value: string): string {
@@ -168,13 +160,17 @@ export async function createEventAction(
     return { error: "Event title is required." };
   }
 
-  const startsAt = toOptionalDate(startsAtInput);
+  // The wall-clock the organizer typed is in this zone; store true UTC.
+  const timezoneInput = normalizeText(formData.get("timezone"));
+  const timezone = isValidTimezone(timezoneInput) ? timezoneInput : DEFAULT_TIMEZONE;
+
+  const startsAt = zonedInputToUtc(startsAtInput, timezone);
 
   if (!startsAt) {
     return { error: "A valid event start date and time is required." };
   }
 
-  const ksuAt = toOptionalDate(ksuAtInput);
+  const ksuAt = zonedInputToUtc(ksuAtInput, timezone);
   if (ksuAtInput && !ksuAt) {
     return { error: "KSU date/time is invalid." };
   }
@@ -189,7 +185,7 @@ export async function createEventAction(
     return { error: "Max capacity must be a positive whole number." };
   }
 
-  const rsvpDeadline = toOptionalDate(rsvpDeadlineInput);
+  const rsvpDeadline = zonedInputToUtc(rsvpDeadlineInput, timezone);
   if (rsvpDeadlineInput && !rsvpDeadline) {
     return { error: "RSVP deadline date/time is invalid." };
   }
@@ -314,6 +310,7 @@ export async function createEventAction(
         facebookEventUrl,
         startsAt,
         ksuAt,
+        timezone,
         ksuLocation: ksuLocation || null,
         ksuAddress: ksuAddress || null,
         ksuLat,

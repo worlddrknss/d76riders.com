@@ -14,7 +14,7 @@ export default async function AccountPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { handle: true, bio: true, yearsRiding: true, location: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true },
+    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true },
   });
 
   const currentYear = new Date().getFullYear();
@@ -51,6 +51,7 @@ export default async function AccountPage() {
               avatarUrl={currentUser.avatarUrl ?? currentUser.image ?? ""}
               bio={rider?.bio ?? ""}
               location={rider?.location ?? ""}
+              timezone={rider?.timezone ?? null}
               favoriteRoad={rider?.favoriteRoad ?? ""}
               yearStartedRiding={yearStartedRiding}
               youtubeUrl={extractHandle(rider?.youtubeUrl ?? null)}

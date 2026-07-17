@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { US_TIMEZONES } from "@/lib/datetime";
 
 type ProfileData = {
   displayName: string;
@@ -21,6 +22,7 @@ type ProfileData = {
   avatarUrl: string;
   bio: string;
   location: string;
+  timezone: string | null;
   favoriteRoad: string;
   yearStartedRiding: number | null;
   youtubeHandle: string;
@@ -113,9 +115,20 @@ export function ProfileEditDialog({ open, onOpenChange, profile }: ProfileEditDi
                 <input id="ep-favoriteRoad" name="favoriteRoad" type="text" defaultValue={profile.favoriteRoad} placeholder="e.g. Natchez Trace" className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               </div>
             </div>
-            <div className="w-1/2">
-              <label htmlFor="ep-yearStartedRiding" className="text-xs font-semibold uppercase tracking-wide text-muted">Year Started Riding</label>
-              <input id="ep-yearStartedRiding" name="yearStartedRiding" type="number" min={1900} max={new Date().getFullYear()} defaultValue={profile.yearStartedRiding ?? undefined} placeholder="2018" className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="ep-yearStartedRiding" className="text-xs font-semibold uppercase tracking-wide text-muted">Year Started Riding</label>
+                <input id="ep-yearStartedRiding" name="yearStartedRiding" type="number" min={1900} max={new Date().getFullYear()} defaultValue={profile.yearStartedRiding ?? undefined} placeholder="2018" className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label htmlFor="ep-timezone" className="text-xs font-semibold uppercase tracking-wide text-muted">Timezone</label>
+                <select id="ep-timezone" name="timezone" defaultValue={profile.timezone ?? ""} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm">
+                  <option value="">Not set</option>
+                  {US_TIMEZONES.map((tz) => (
+                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </fieldset>
 

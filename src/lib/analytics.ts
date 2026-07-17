@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
+import { formatEventDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -27,7 +28,8 @@ function organizedPastWhere(riderId: string, now: Date): Prisma.RideEventWhereIn
   };
 }
 
-const shortDate = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+const shortDate = (utc: Date, tz: string) =>
+  formatEventDate(utc, tz).replace(/^\w+,\s/, "").replace(/,\s\d{4}$/, "");
 
 // ── Per-organizer, across all their rides ──────────────────────────────────
 
@@ -61,7 +63,7 @@ export async function getOrganizerAnalytics(
     prisma.rideEvent.findMany({
       where,
       orderBy: { startsAt: "asc" },
-      select: { id: true, slug: true, title: true, startsAt: true },
+      select: { id: true, slug: true, title: true, startsAt: true, timezone: true },
     }),
     prisma.rsvp.groupBy({ by: ["eventId"], where: { status: "GOING", event: where }, _count: { _all: true } }),
     prisma.eventCheckIn.groupBy({ by: ["eventId"], where: { event: where }, _count: { _all: true } }),
@@ -83,7 +85,7 @@ export async function getOrganizerAnalytics(
   const trend: EventPoint[] = events.map((e) => ({
     slug: e.slug,
     title: e.title,
-    date: shortDate(e.startsAt),
+    date: shortDate(e.startsAt, e.timezone),
     going: goingMap.get(e.id) ?? 0,
     attended: attendedMap.get(e.id) ?? 0,
   }));

@@ -8,8 +8,13 @@ model RideEvent {
   excerpt       String?         @db.VarChar(255)
   description   String?
   facebookEventUrl String?
+  // startsAt/ksuAt/rsvpDeadline are true UTC instants; `timezone` is the IANA
+  // zone the ride happens in, and the times are rendered in it. Storing the
+  // instant + zone (rather than a naive wall-clock) is what lets the upcoming
+  // filter and "riding today" compare against the real clock correctly.
   startsAt      DateTime
   ksuAt         DateTime?
+  timezone      String          @default("America/Chicago")
   ksuLocation   String?
   ksuAddress    String?
   ksuLat        Float?

@@ -7,6 +7,9 @@ model Rider {
   handle         String   @unique
   name           String
   location       String?
+  // Preferred IANA zone. Defaults the timezone of events they create and shows
+  // a "your time" hint on events happening in a different zone. Null = unset.
+  timezone       String?
   bio            String?
   avatarUrl      String?
   coverUrl       String?

@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
+import { isValidTimezone } from "@/lib/datetime";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
@@ -105,6 +106,14 @@ export async function updateAccountProfileAction(
   const coverFile = formData.get("coverFile");
   const bio = normalizeText(formData.get("bio")).slice(0, 1000);
   const location = normalizeText(formData.get("location")).slice(0, 120);
+  // Only forms that include a timezone field should touch it — undefined leaves
+  // the stored value alone, so saving from a form without the field never wipes
+  // a rider's zone.
+  const timezone = formData.has("timezone")
+    ? isValidTimezone(normalizeText(formData.get("timezone")))
+      ? normalizeText(formData.get("timezone"))
+      : null
+    : undefined;
   const favoriteRoad = normalizeText(formData.get("favoriteRoad")).slice(0, 120);
   const yearStartedRidingInput = normalizeText(formData.get("yearStartedRiding"));
   const newPassword = normalizeText(formData.get("newPassword"));
@@ -244,6 +253,7 @@ export async function updateAccountProfileAction(
           coverUrl: nextCoverUrl !== undefined ? nextCoverUrl : undefined,
           bio: bio || null,
           location: location || null,
+          timezone,
           favoriteRoad: favoriteRoad || null,
           yearsRiding,
           youtubeUrl: resolvedYoutubeUrl,

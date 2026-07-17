@@ -1,8 +1,10 @@
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
 import Link from "next/link";
 
+import { formatEventDate, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";
 import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 const PAGE_SIZE = 12;
 
@@ -13,14 +15,6 @@ type SearchParams = {
   page?: string;
 };
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
-
 export default async function AllEventsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const query = params.q?.trim() || "";
@@ -28,7 +22,13 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
   const timeFilter = params.time || "upcoming";
   const page = Math.max(1, parseInt(params.page || "1", 10));
 
-  const now = new Date();
+  // "Today or later" in the viewer's zone is the upcoming/past boundary, so a
+  // ride happening today counts as upcoming until the day is out.
+  const currentUser = await getCurrentUser();
+  const viewerTz = currentUser
+    ? (await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { timezone: true } }))?.timezone ?? null
+    : null;
+  const todayStart = startOfTodayUtc(viewerTz);
 
   // Build where clause
   const where: Record<string, unknown> = {
@@ -49,9 +49,9 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
   }
 
   if (timeFilter === "upcoming") {
-    where.startsAt = { gte: now };
+    where.startsAt = { gte: todayStart };
   } else if (timeFilter === "past") {
-    where.startsAt = { lt: now };
+    where.startsAt = { lt: todayStart };
   }
 
   const [events, totalCount] = await Promise.all([
@@ -168,7 +168,7 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {events.map((event) => {
-              const isPast = event.startsAt < now;
+              const isPast = event.startsAt < todayStart;
               return (
                 <Link
                   key={event.id}
@@ -178,7 +178,7 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                   <div className="flex-1 p-5">
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-xs font-semibold uppercase tracking-widest text-sunset">
-                        {formatDate(event.startsAt)}
+                        {formatEventDate(event.startsAt, event.timezone)}
                       </p>
                       {isPast && (
                         <span className="rounded-full bg-canvas px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-muted">Past</span>
@@ -210,7 +210,7 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                   </div>
                   <div className="flex items-center justify-between border-t border-border px-5 py-3">
                     <span className="text-xs text-muted">
-                      {!isPast ? `Meetup ${formatTime(event.startsAt)}` : "Completed"}
+                      {!isPast ? `Meetup ${formatEventTimeShort(event.startsAt, event.timezone)}` : "Completed"}
                     </span>
                     {event._count.rsvps > 0 ? (
                       <span className="inline-flex items-center gap-1 text-xs text-muted">

@@ -9,6 +9,7 @@ import {
   updateAccountProfileAction,
 } from "@/app/(site)/account/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
+import { US_TIMEZONES } from "@/lib/datetime";
 
 type AccountProfileFormProps = {
   displayName: string;
@@ -16,6 +17,7 @@ type AccountProfileFormProps = {
   avatarUrl: string;
   bio: string;
   location: string;
+  timezone: string | null;
   favoriteRoad: string;
   yearStartedRiding: number | null;
   youtubeUrl: string;
@@ -33,7 +35,7 @@ const initialDeleteAccountFormState: DeleteAccountFormState = {
   error: null,
 };
 
-export function AccountProfileForm({ displayName, username, avatarUrl, bio, location, favoriteRoad, yearStartedRiding, youtubeUrl, tiktokUrl, instagramUrl, twitterUrl }: AccountProfileFormProps) {
+export function AccountProfileForm({ displayName, username, avatarUrl, bio, location, timezone, favoriteRoad, yearStartedRiding, youtubeUrl, tiktokUrl, instagramUrl, twitterUrl }: AccountProfileFormProps) {
   const [state, formAction] = useActionState<AccountFormState, FormData>(
     updateAccountProfileAction,
     initialAccountFormState,
@@ -164,6 +166,24 @@ export function AccountProfileForm({ displayName, username, avatarUrl, bio, loca
               className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
             />
           </div>
+        </div>
+
+        <div className="space-y-1.5 sm:w-1/2">
+          <label htmlFor="timezone" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Timezone
+          </label>
+          <select
+            id="timezone"
+            name="timezone"
+            defaultValue={timezone ?? ""}
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          >
+            <option value="">Not set</option>
+            {US_TIMEZONES.map((tz) => (
+              <option key={tz.value} value={tz.value}>{tz.label}</option>
+            ))}
+          </select>
+          <p className="text-xs text-muted">Defaults the timezone of rides you create and shows a &ldquo;your time&rdquo; hint on events elsewhere.</p>
         </div>
 
         <div className="space-y-1.5">
