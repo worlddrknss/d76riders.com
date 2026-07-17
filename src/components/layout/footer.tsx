@@ -92,28 +92,6 @@ export function Footer() {
       </div>
       <div className="border-t border-white/10 py-5 text-center text-xs text-slate-500">
         <p>© 2026 District 76. All rights reserved.</p>
-        {/* The maps carry this themselves via MapLibre's attribution control, but
-            event pages print geocoded addresses with no map on them. Site-wide is
-            the honest place for it. See ATTRIBUTION.md for the stored fields. */}
-        <p className="mt-2">
-          Maps and place search{" "}
-          <a
-            href="https://www.maptiler.com/copyright/"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-slate-300"
-          >
-            © MapTiler
-          </a>{" "}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-slate-300"
-          >
-            © OpenStreetMap contributors
-          </a>
-        </p>
         <p className="mt-2">
           This site is also community developed. To contribute, visit{" "}
           <a
