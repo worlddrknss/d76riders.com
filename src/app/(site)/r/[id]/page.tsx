@@ -796,70 +796,89 @@ export default async function RiderProfilePage({
 
   // ─── Invite tab (owner only) ────────────────────────────────────
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
+  // Laid out like the Overview tab: a narrow left panel of who/what, and the
+  // activity as the wide main column. Same grid, same card and heading tokens,
+  // so the two tabs read as one page rather than two.
   const inviteContent = referral ? (
-    <div className="space-y-5">
-      <p className="text-sm text-muted">Share your link. Anyone who joins through it is credited to you.</p>
+    <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
+      <div className="space-y-5">
+        <div className={cardClass}>
+          <h2 className={headingClass}>
+            <UserPlus className="h-4 w-4 text-sunset" />
+            Your invite
+          </h2>
+          <p className="mt-2 text-sm text-muted">
+            Share your link. Anyone who joins through it is credited to you.
+          </p>
+          <div className="mt-4">
+            <InviteLink url={`${siteUrl}/i/${referral.code}`} code={referral.code ?? ""} />
+          </div>
+        </div>
 
-      <InviteLink url={`${siteUrl}/i/${referral.code}`} code={referral.code ?? ""} />
-
-      {/* Two numbers do not need two cards. Sat next to each other on one line
-          they also read as the ratio they actually are: opens, of which joins. */}
-      <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
-        <p className="flex items-baseline gap-2">
-          <span className="font-display text-3xl font-bold text-ink">{referral.clicks}</span>
-          <span className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</span>
-        </p>
-        <p className="flex items-baseline gap-2">
-          <span className="font-display text-3xl font-bold text-sunset">{referral.conversions}</span>
-          <span className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</span>
-        </p>
+        <div className={cardClass}>
+          <h2 className={headingClass}>So far</h2>
+          {/* Two numbers, side by side, where they also read as the ratio they
+              are: opens, of which joins. */}
+          <div className="mt-3 flex items-baseline gap-x-8 gap-y-2">
+            <p className="flex flex-col">
+              <span className="font-display text-3xl font-bold text-ink">{referral.clicks}</span>
+              <span className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</span>
+            </p>
+            <p className="flex flex-col">
+              <span className="font-display text-3xl font-bold text-sunset">{referral.conversions}</span>
+              <span className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</span>
+            </p>
+          </div>
+        </div>
       </div>
 
-      <InviteChart data={referral.series} />
+      <div className="space-y-5">
+        <InviteChart data={referral.series} />
 
-      <div>
-        <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
-        {referral.referrals.length === 0 ? (
-          <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-soft">
-            <UserPlus className="mx-auto h-7 w-7 text-muted/50" />
-            <p className="mt-2 text-sm text-muted">No one has joined through your link yet.</p>
-          </div>
-        ) : (
-          <ul className="mt-3 space-y-2">
-            {referral.referrals.map((entry) => {
-              const referred = entry.referredUser.rider;
-              if (!referred) return null;
-              return (
-                <li key={referred.handle}>
-                  <Link
-                    href={`/r/${referred.handle}`}
-                    className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
-                  >
-                    {referred.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={mediaUrl(referred.avatarUrl)}
-                        alt=""
-                        className="h-8 w-8 rounded-full border border-border object-cover"
-                      />
-                    ) : (
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-canvas text-[0.6rem] font-bold text-muted">
-                        {referred.name.slice(0, 2).toUpperCase()}
+        <div>
+          <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
+          {referral.referrals.length === 0 ? (
+            <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-soft">
+              <UserPlus className="mx-auto h-7 w-7 text-muted/50" />
+              <p className="mt-2 text-sm text-muted">No one has joined through your link yet.</p>
+            </div>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {referral.referrals.map((entry) => {
+                const referred = entry.referredUser.rider;
+                if (!referred) return null;
+                return (
+                  <li key={referred.handle}>
+                    <Link
+                      href={`/r/${referred.handle}`}
+                      className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
+                    >
+                      {referred.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={mediaUrl(referred.avatarUrl)}
+                          alt=""
+                          className="h-9 w-9 rounded-full border border-border object-cover"
+                        />
+                      ) : (
+                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-canvas text-[0.6rem] font-bold text-muted">
+                          {referred.name.slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-ink">{referred.name}</span>
+                        <span className="block truncate text-xs text-muted">@{referred.handle}</span>
                       </span>
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-ink">{referred.name}</span>
-                      <span className="block truncate text-xs text-muted">@{referred.handle}</span>
-                    </span>
-                    <span className="shrink-0 text-xs text-muted">
-                      {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                      <span className="shrink-0 text-xs text-muted">
+                        {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   ) : null;
