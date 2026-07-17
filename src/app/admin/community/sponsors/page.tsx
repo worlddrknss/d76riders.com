@@ -1,15 +1,26 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { ExternalLink, Pencil, Store } from "lucide-react";
 
 import {
   createSponsorAction,
   linkSponsorToEventAction,
 } from "@/app/admin/community/actions";
+import {
+  AdminBadge,
+  AdminRowActions,
+  AdminTable,
+  AdminTableBody,
+  AdminTableEmpty,
+  AdminTableHead,
+  AdminTd,
+  AdminTh,
+  AdminTr,
+} from "@/components/admin/admin-table";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { CommunityDeleteButton } from "@/components/admin/community-delete-button";
 import { SponsorReviewActions } from "@/components/admin/sponsor-review-actions";
 import { prisma } from "@/lib/prisma";
-import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL } from "@/lib/shops";
+import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL, TIER_LABEL } from "@/lib/shops";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +62,8 @@ export default async function AdminSponsorsPage(props: {
     <div className="space-y-6">
       <AdminSectionHeader
         eyebrow="Community"
-        title="Sponsors"
-        description="Local businesses that support the community. Riders put them forward from /sponsors and they wait here — nothing appears publicly until it's approved. You can also add one directly."
+        title="Shops & Sponsors"
+        description="The local businesses riders use, and the ones that back us. Riders put them forward from /shops and they wait here; nothing appears publicly until it is approved. A tier is what makes a listing a sponsor."
         actions={
           pending.length > 0 ? (
             <span className="rounded-full border border-sunset/40 bg-sunset/15 px-3 py-1 text-sm font-semibold text-orange-200">
@@ -151,7 +162,7 @@ export default async function AdminSponsorsPage(props: {
           action={createSponsorAction}
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
-          <h2 className="font-display text-lg font-semibold text-white">Add a sponsor</h2>
+          <h2 className="font-display text-lg font-semibold text-white">Add a business</h2>
           <p className="text-xs text-slate-400">Added from here, it&apos;s approved on the spot.</p>
           <input name="name" required placeholder="Business name" className={inputClass} />
           <input name="description" placeholder="What they do" className={inputClass} />
@@ -175,7 +186,7 @@ export default async function AdminSponsorsPage(props: {
             <option value="FRIEND">Friend of the Community</option>
           </select>
           <button type="submit" className={submitClass}>
-            Add Sponsor
+            Add Business
           </button>
         </form>
 
@@ -201,43 +212,100 @@ export default async function AdminSponsorsPage(props: {
         </form>
       </section>
 
-      {/* ── Reviewed ── */}
-      {reviewed.length > 0 ? (
-        <div className="space-y-2">
-          {reviewed.map((sponsor) => (
-            <article
-              key={sponsor.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/3 p-4 shadow-lg"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-white">{sponsor.name}</span>
-                  <span
-                    className={`rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold uppercase ${
-                      sponsor.status === "APPROVED"
-                        ? "border-forest/40 bg-forest/15 text-emerald-200"
-                        : "border-red-400/40 bg-red-500/10 text-red-200"
-                    }`}
-                  >
-                    {sponsor.status === "APPROVED" ? sponsor.tier : "Rejected"}
-                  </span>
-                  {!sponsor.active ? (
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[0.6rem] font-semibold uppercase text-slate-400">
-                      Inactive
-                    </span>
-                  ) : null}
-                </div>
-                <p className="text-xs text-slate-500">
-                  {sponsor._count.events} sponsored ride{sponsor._count.events === 1 ? "" : "s"}
-                  {sponsor.submittedBy ? ` · put forward by @${sponsor.submittedBy.handle}` : " · added here"}
-                  {sponsor.rejectionReason ? ` · "${sponsor.rejectionReason}"` : ""}
-                </p>
-              </div>
-              <CommunityDeleteButton kind="sponsor" id={sponsor.id} name={sponsor.name} />
-            </article>
-          ))}
+      {/* ── The directory ──
+          A table rather than a stack of cards: a moderator needs to see what a
+          listing is and act on it without opening each one, and every row needs
+          an edit route. Sponsors had create and delete but no update, so fixing
+          a typo meant deleting the business and retyping it. */}
+      <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
+        <h2 className="font-display text-lg font-semibold text-white">Listings</h2>
+        <p className="mt-1 text-xs text-slate-400">
+          Everything reviewed, sponsors and plain listings alike. Tier is what makes a business a sponsor;
+          blank means it&apos;s in the directory only.
+        </p>
+
+        <div className="mt-4">
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTh>Business</AdminTh>
+              <AdminTh>Category</AdminTh>
+              <AdminTh>Tier</AdminTh>
+              <AdminTh>Status</AdminTh>
+              <AdminTh className="text-right">Rides</AdminTh>
+              <AdminTh className="text-right">Actions</AdminTh>
+            </AdminTableHead>
+            <AdminTableBody>
+              {reviewed.length === 0 ? (
+                <AdminTableEmpty colSpan={6}>Nothing listed yet.</AdminTableEmpty>
+              ) : (
+                reviewed.map((sponsor) => (
+                  <AdminTr key={sponsor.id}>
+                    <AdminTd>
+                      <div className="min-w-0">
+                        <p className="font-medium text-white">{sponsor.name}</p>
+                        <p className="truncate text-xs text-slate-500">
+                          {sponsor.address ?? "No address"}
+                          {sponsor.submittedBy ? ` · @${sponsor.submittedBy.handle}` : ""}
+                        </p>
+                      </div>
+                    </AdminTd>
+                    <AdminTd>
+                      {sponsor.category ? (
+                        SHOP_CATEGORY_LABEL[sponsor.category]
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
+                    </AdminTd>
+                    <AdminTd>
+                      {sponsor.tier ? (
+                        <AdminBadge tone="warn">{TIER_LABEL[sponsor.tier]}</AdminBadge>
+                      ) : (
+                        <span className="text-slate-600">Listing</span>
+                      )}
+                    </AdminTd>
+                    <AdminTd>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {sponsor.status === "APPROVED" ? (
+                          <AdminBadge tone="good">Approved</AdminBadge>
+                        ) : (
+                          <AdminBadge tone="bad">Rejected</AdminBadge>
+                        )}
+                        {!sponsor.active ? <AdminBadge>Hidden</AdminBadge> : null}
+                      </div>
+                      {sponsor.rejectionReason ? (
+                        <p className="mt-1 max-w-48 truncate text-xs text-slate-500">
+                          {sponsor.rejectionReason}
+                        </p>
+                      ) : null}
+                    </AdminTd>
+                    <AdminTd className="text-right tabular-nums">{sponsor._count.events}</AdminTd>
+                    <AdminTd>
+                      <AdminRowActions>
+                        <Link
+                          href="/shops"
+                          target="_blank"
+                          title="View on the public directory"
+                          className="rounded-md p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          href={`/admin/community/sponsors/${sponsor.id}/edit`}
+                          title={`Edit ${sponsor.name}`}
+                          className="rounded-md p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                        <CommunityDeleteButton kind="sponsor" id={sponsor.id} name={sponsor.name} compact />
+                      </AdminRowActions>
+                    </AdminTd>
+                  </AdminTr>
+                ))
+              )}
+            </AdminTableBody>
+          </AdminTable>
         </div>
-      ) : null}
+      </section>
     </div>
   );
 }

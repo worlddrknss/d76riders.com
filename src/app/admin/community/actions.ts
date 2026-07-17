@@ -242,6 +242,78 @@ export async function deleteSponsorAction(sponsorId: string): Promise<void> {
   revalidatePath("/shops");
 }
 
+/**
+ * Edit a listing.
+ *
+ * Crews and challenges have had this since they shipped; sponsors never did, so
+ * a typo in a business name meant deleting the row and retyping it, and a shop
+ * that started sponsoring could not be promoted at all.
+ *
+ * Blank tier is meaningful rather than missing: it means listed in the directory
+ * without sponsoring, so it has to be settable back to null, which is why the
+ * form sends "NONE" rather than an empty string that could be mistaken for
+ * "field absent".
+ */
+export async function updateSponsorAction(sponsorId: string, formData: FormData): Promise<void> {
+  const userId = await requireAdminUserId();
+
+  const existing = await prisma.sponsor.findUnique({ where: { id: sponsorId } });
+  if (!existing) {
+    redirect("/admin/community/sponsors");
+  }
+
+  const tier = text(formData.get("tier"));
+  const category = text(formData.get("category"));
+  const latRaw = text(formData.get("lat"));
+  const lngRaw = text(formData.get("lng"));
+  const lat = latRaw ? Number(latRaw) : null;
+  const lng = lngRaw ? Number(lngRaw) : null;
+  // A half-captured point would drop a pin in the ocean, so coordinates only
+  // count as a pair.
+  const hasPoint = lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng);
+
+  const next = {
+    name: text(formData.get("name")) || existing.name,
+    description: text(formData.get("description")) || null,
+    websiteUrl: safeUrl(text(formData.get("websiteUrl"))),
+    logoUrl: safeUrl(text(formData.get("logoUrl"))),
+    address: text(formData.get("address")) || null,
+    phone: text(formData.get("phone")) || null,
+    lat: hasPoint ? lat : null,
+    lng: hasPoint ? lng : null,
+    category: Object.values(ShopCategory).includes(category as ShopCategory)
+      ? (category as ShopCategory)
+      : null,
+    tier: Object.values(SponsorTier).includes(tier as SponsorTier) ? (tier as SponsorTier) : null,
+    active: formData.get("active") === "on",
+  };
+
+  const { before, after } = diffFields(existing, next);
+
+  await prisma.sponsor.update({ where: { id: sponsorId }, data: next });
+
+  if (Object.keys(after).length > 0) {
+    await logAudit({
+      actorUserId: userId,
+      action: "sponsor.update",
+      entityType: "Sponsor",
+      entityId: sponsorId,
+      summary:
+        before.tier !== undefined
+          ? next.tier
+            ? `Made "${next.name}" a sponsor (${next.tier})`
+            : `Removed sponsor tier from "${next.name}" — still listed`
+          : `Updated "${next.name}"`,
+      before,
+      after,
+    });
+  }
+
+  revalidatePath("/admin/community/sponsors");
+  revalidatePath("/shops");
+  redirect("/admin/community/sponsors");
+}
+
 // Attach or detach a sponsor from a specific ride.
 export async function linkSponsorToEventAction(formData: FormData): Promise<void> {
   const userId = await requireAdminUserId();
