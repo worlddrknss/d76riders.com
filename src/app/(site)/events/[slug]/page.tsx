@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarChart3, CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
@@ -95,6 +96,32 @@ function difficultyLabel(value: string | null): string {
     default:
       return "Not specified";
   }
+}
+
+// A labelled fact in the sidebar — icon, label, value, optional secondary line.
+// The old four-box grid became this: the same facts, without four borders
+// competing for attention with the actual call to action beneath them.
+function DetailRow({
+  icon: Icon,
+  label,
+  children,
+  sub,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  children: ReactNode;
+  sub?: ReactNode;
+}) {
+  return (
+    <div className="flex gap-3">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+      <div className="min-w-0">
+        <p className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted">{label}</p>
+        <div className="text-sm font-medium text-ink">{children}</div>
+        {sub ? <div className="text-xs text-muted">{sub}</div> : null}
+      </div>
+    </div>
+  );
 }
 
 // Format a Date as YYYY-MM-DDTHH:mm string preserving the raw stored values
@@ -328,6 +355,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       })
     : [];
 
+  // Built once, placed twice: at the top of the sidebar during a live ride
+  // (an emergency lever has to be reachable in seconds), and as a review log at
+  // the bottom of a completed ride. Never both — an event is one or the other.
+  const safetyPanel = showSafetyPanel ? (
+    <RiderDownPanel
+      eventId={event.id}
+      roster={checkedInRoster}
+      incidents={incidents.map((i) => ({
+        id: i.id,
+        riderName: i.rider.name,
+        riderHandle: i.rider.handle,
+        reportedByName: i.reportedBy.name,
+        notes: i.notes,
+        locationText: i.locationText,
+        lat: i.lat,
+        lng: i.lng,
+        resolvedAt: i.resolvedAt?.toISOString() ?? null,
+        createdAt: i.createdAt.toISOString(),
+      }))}
+    />
+  ) : null;
+
+  const statusMeta =
+    event.status === "CANCELLED"
+      ? { label: "Cancelled", cls: "border-red-300 bg-red-50 text-red-700" }
+      : isActiveEvent
+        ? { label: "Riding today", cls: "border-sunset/40 bg-sunset/10 text-sunset" }
+        : event.status === "COMPLETED"
+          ? { label: "Completed", cls: "border-border bg-canvas text-muted" }
+          : { label: "Upcoming", cls: "border-forest/40 bg-forest/10 text-forest" };
+
   return (
     <section className="page-shell">
       <JsonLd data={eventJsonLd({
@@ -392,128 +450,145 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       ) : null}
       <div className="content-wrap space-y-6">
-        {/* BREADCRUMB */}
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
+          <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
+          <ChevronRight className="h-3 w-3 text-border" />
+          <Link href="/events" className="text-muted transition hover:text-sunset">Events</Link>
+          <ChevronRight className="h-3 w-3 text-border" />
+          <span className="truncate text-asphalt">{event.title}</span>
+        </nav>
 
-        {/* TWO-COLUMN: Details | Flyer */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_20rem] xl:grid-cols-[1fr_24rem]">
-          {/* EVENT DETAILS */}
-          <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-            {/* HEADER: Title + Actions */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <h1 className="font-display text-3xl font-semibold text-ink">{event.title}</h1>
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">{event.description ? <Linkify text={event.description} /> : "No event description yet."}</p>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <ShareEvent title={event.title} slug={event.slug} />
-                <EventQrCode eventUrl={`/events/${event.slug}`} eventTitle={event.title} />
-                {(isOwner || isOrganizer) && (
-                  <EventManageActions
-                    event={{
-                      id: event.id,
-                      title: event.title,
-                      excerpt: event.excerpt,
-                      description: event.description,
-                      facebookEventUrl: event.facebookEventUrl,
-                      startsAt: toLocalISOString(event.startsAt),
-                      ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
-                      meetLocation: event.meetLocation,
-                      meetAddress: event.meetAddress,
-                      meetLat: event.meetLat,
-                      meetLng: event.meetLng,
-                      ksuLocation: event.ksuLocation,
-                      ksuAddress: event.ksuAddress,
-                      ksuLat: event.ksuLat,
-                      ksuLng: event.ksuLng,
-                      distanceMiles: event.distanceMiles,
-                      difficulty: event.difficulty,
-                      maxCapacity: event.maxCapacity,
-                      rsvpDeadline: event.rsvpDeadline ? toLocalISOString(event.rsvpDeadline) : null,
-                      hasPhoto: event.galleryItems.length > 0,
-                      hasRoute: !!event.routeId,
-                    }}
-                  />
-                )}
-              </div>
+        {/* Header: title, status, quick facts, and the share/manage actions. The
+            facts here are the scan-at-a-glance version; the sidebar has the full
+            set with directions and the call to action. */}
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">{event.title}</h1>
+              <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em] ${statusMeta.cls}`}>
+                {statusMeta.label}
+              </span>
             </div>
+            {event.excerpt ? <p className="mt-2 max-w-2xl text-sm text-muted">{event.excerpt}</p> : null}
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted">
+              <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-sunset" />{formatDate(event.startsAt)}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-sunset" />Meet {formatTime(event.startsAt)}</span>
+              <span className="inline-flex items-center gap-1.5"><Signal className="h-4 w-4 text-sunset" />{difficultyLabel(event.difficulty)}</span>
+              {event.distanceMiles ? (
+                <span className="inline-flex items-center gap-1.5"><RouteIcon className="h-4 w-4 text-sunset" />{event.distanceMiles} mi</span>
+              ) : null}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <ShareEvent title={event.title} slug={event.slug} />
+            <EventQrCode eventUrl={`/events/${event.slug}`} eventTitle={event.title} />
+            {(isOwner || isOrganizer) && (
+              <EventManageActions
+                event={{
+                  id: event.id,
+                  title: event.title,
+                  excerpt: event.excerpt,
+                  description: event.description,
+                  facebookEventUrl: event.facebookEventUrl,
+                  startsAt: toLocalISOString(event.startsAt),
+                  ksuAt: event.ksuAt ? toLocalISOString(event.ksuAt) : null,
+                  meetLocation: event.meetLocation,
+                  meetAddress: event.meetAddress,
+                  meetLat: event.meetLat,
+                  meetLng: event.meetLng,
+                  ksuLocation: event.ksuLocation,
+                  ksuAddress: event.ksuAddress,
+                  ksuLat: event.ksuLat,
+                  ksuLng: event.ksuLng,
+                  distanceMiles: event.distanceMiles,
+                  difficulty: event.difficulty,
+                  maxCapacity: event.maxCapacity,
+                  rsvpDeadline: event.rsvpDeadline ? toLocalISOString(event.rsvpDeadline) : null,
+                  hasPhoto: event.galleryItems.length > 0,
+                  hasRoute: !!event.routeId,
+                }}
+              />
+            )}
+          </div>
+        </header>
 
-            {/* INFO CARDS */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><CalendarDays className="h-3.5 w-3.5" />Date</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">{formatDate(event.startsAt)}</p>
-                <p className="text-xs text-muted">Meetup at {formatTime(event.startsAt)}</p>
-              </div>
-              <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Clock3 className="h-3.5 w-3.5" />Kickstands Up</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">{event.ksuAt ? formatTime(event.ksuAt) : "TBD"}</p>
-                <p className="text-xs text-muted">{event.ksuAt ? formatDate(event.ksuAt) : "Time not set"}</p>
-                {/* Only when the ride actually departs from somewhere else. Nearly
-                    always it leaves from the meetup, and repeating that address
-                    here would just be the same place written twice — but when it
-                    does differ, a rider who misses it gets left behind. */}
+        {/* Content + sticky action rail. The rail is first in the DOM so a phone
+            leads with the facts and the RSVP / check-in / Rider Down actions,
+            before the flyer and the long stuff; on desktop it moves to the right
+            and sticks while the main column scrolls. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] xl:grid-cols-[minmax(0,1fr)_23rem]">
+          <aside className="space-y-4 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20 lg:self-start">
+            {/* Live ride: the emergency lever comes first. */}
+            {isActiveEvent ? safetyPanel : null}
+
+            <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
+              <dl className="space-y-3.5">
+                <DetailRow icon={CalendarDays} label="Date" sub={`Meetup at ${formatTime(event.startsAt)}`}>
+                  {formatDate(event.startsAt)}
+                </DetailRow>
+                <DetailRow icon={Clock3} label="Kickstands up" sub={event.ksuAt ? formatDate(event.ksuAt) : "Time not set"}>
+                  {event.ksuAt ? formatTime(event.ksuAt) : "TBD"}
+                </DetailRow>
+                <DetailRow
+                  icon={MapPin}
+                  label={departsElsewhere ? "Meetup" : "Location"}
+                  sub={
+                    <>
+                      {event.meetAddress ?? "Meetup point"}
+                      {event.meetLat != null && event.meetLng != null ? (
+                        <>
+                          {" · "}
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${event.meetLat},${event.meetLng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-sunset hover:underline"
+                          >
+                            Directions
+                          </a>
+                        </>
+                      ) : null}
+                    </>
+                  }
+                >
+                  {event.meetLocation || event.ksuLocation || "TBD"}
+                </DetailRow>
                 {departsElsewhere ? (
-                  <div className="mt-2 border-t border-border pt-2">
-                    <p className="text-xs font-medium text-ink">Departs from {event.ksuLocation}</p>
-                    {event.ksuAddress ? (
-                      <p className="text-xs text-muted">{event.ksuAddress}</p>
-                    ) : null}
-                    {event.ksuLat != null && event.ksuLng != null ? (
-                      <a
-                        href={`https://www.google.com/maps/search/?api=1&query=${event.ksuLat},${event.ksuLng}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline"
-                      >
-                        <MapPin className="h-3 w-3" />
-                        Directions
-                      </a>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-              <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><MapPin className="h-3.5 w-3.5" />{departsElsewhere ? "Meetup" : "Location"}</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">{event.meetLocation || event.ksuLocation || "TBD"}</p>
-                {event.meetAddress ? (
-                  <p className="text-xs text-muted">{event.meetAddress}</p>
-                ) : (
-                  <p className="text-xs text-muted">Meetup point</p>
-                )}
-                {event.meetLat != null && event.meetLng != null && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${event.meetLat},${event.meetLng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline"
+                  <DetailRow
+                    icon={MapPin}
+                    label="Departs from"
+                    sub={
+                      <>
+                        {event.ksuAddress ?? null}
+                        {event.ksuLat != null && event.ksuLng != null ? (
+                          <>
+                            {event.ksuAddress ? " · " : null}
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${event.ksuLat},${event.ksuLng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-semibold text-sunset hover:underline"
+                            >
+                              Directions
+                            </a>
+                          </>
+                        ) : null}
+                      </>
+                    }
                   >
-                    <MapPin className="h-3 w-3" />
-                    Directions
-                  </a>
-                )}
-              </div>
-              <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Signal className="h-3.5 w-3.5" />Pace</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">{difficultyLabel(event.difficulty)}</p>
-                <p className="text-xs text-muted">{event.distanceMiles ? `${event.distanceMiles} miles` : "Distance TBD"}</p>
-              </div>
-            </div>
-
-            {/* HOST + DISTANCE + RSVP */}
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-5">
-              <div className="flex flex-wrap items-center gap-6 text-sm text-muted">
-                <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Host: <Link href={`/r/${event.host.handle}`} className="font-medium text-ink hover:text-sunset">{event.host.name}</Link></span>
-                <span className="inline-flex items-center gap-2"><RouteIcon className="h-4 w-4 text-sunset" />Distance: <span className="font-medium text-ink">{event.distanceMiles ? `${event.distanceMiles} mi` : "TBD"}</span></span>
-                <span className="inline-flex items-center gap-2">Tracking: <span className="font-medium text-ink">{trackedCount}</span></span>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                {currentUser ? (
-                  <form action={toggleEventFollowAction.bind(null, event.id)}>
-                    <button type="submit" className="rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt hover:border-asphalt">
-                      {isTracking ? "Tracking" : "Track Event"}
-                    </button>
-                  </form>
+                    {event.ksuLocation}
+                  </DetailRow>
                 ) : null}
+                <DetailRow icon={Signal} label="Pace" sub={event.distanceMiles ? `${event.distanceMiles} miles` : "Distance TBD"}>
+                  {difficultyLabel(event.difficulty)}
+                </DetailRow>
+                <DetailRow icon={UserRound} label="Host">
+                  <Link href={`/r/${event.host.handle}`} className="hover:text-sunset">{event.host.name}</Link>
+                </DetailRow>
+              </dl>
+
+              <div className="mt-5 space-y-2 border-t border-border pt-4">
                 <EventRsvpButton
                   eventId={event.id}
                   currentRsvp={currentRsvp}
@@ -532,21 +607,66 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     isCheckedOut={!!viewerCheckIn?.checkOutAt}
                   />
                 )}
+                {currentUser ? (
+                  <form action={toggleEventFollowAction.bind(null, event.id)}>
+                    <button
+                      type="submit"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt"
+                    >
+                      {isTracking ? "Tracking this ride" : "Track event"}
+                    </button>
+                  </form>
+                ) : null}
+                <p className="pt-1 text-center text-xs text-muted">
+                  {attendeeCount} going · {trackedCount} tracking
+                </p>
               </div>
             </div>
-          </div>
 
-          {/* FLYER IMAGE */}
-          {event.galleryItems[0]?.url ? (
-            <div className="relative overflow-hidden rounded-xl border border-border shadow-soft lg:self-stretch">
-              <img
-                src={mediaUrl(event.galleryItems[0].url)}
-                alt={event.galleryItems[0].caption || `${event.title} flyer`}
-                className="aspect-8.5/11 h-full w-full object-cover"
-              />
-            </div>
-          ) : null}
-        </div>
+            {/* Organizer tools — a couple of links and a modal, not a card each. */}
+            {isOrganizer && event.status !== "CANCELLED" ? (
+              <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Organizer</p>
+                <div className="mt-3 space-y-2.5">
+                  <Link
+                    href={`/events/${event.slug}/analytics`}
+                    className="flex items-center gap-2 text-sm font-semibold text-ink transition hover:text-sunset"
+                  >
+                    <BarChart3 className="h-4 w-4 text-sunset" />
+                    View ride analytics
+                  </Link>
+                  <MessageRidersDialog
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    counts={messageAudienceCounts}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </aside>
+
+          {/* MAIN column */}
+          <div className="space-y-6 lg:col-start-1 lg:row-start-1">
+            {/* Flyer */}
+            {event.galleryItems[0]?.url ? (
+              <div className="overflow-hidden rounded-xl border border-border bg-canvas shadow-soft">
+                <img
+                  src={mediaUrl(event.galleryItems[0].url)}
+                  alt={event.galleryItems[0].caption || `${event.title} flyer`}
+                  className="mx-auto max-h-136 w-auto object-contain"
+                />
+              </div>
+            ) : null}
+
+            {/* About */}
+            {event.description ? (
+              <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
+                <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
+                  <Linkify text={event.description} />
+                </p>
+              </div>
+            ) : null}
 
         {/* FULL-WIDTH ROUTE MAP */}
         {coordinates.length >= 2 ? (
@@ -612,63 +732,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           />
         )}
 
-        {/* MESSAGE RIDERS — organizers only. Deliberately not gated on the ride
-            being active: delays and route changes are announced beforehand. */}
-        {isOrganizer && event.status !== "CANCELLED" ? (
-          <div className="content-wrap">
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft">
-              <div>
-                <p className="text-sm font-semibold text-ink">Organizer tools</p>
-                <p className="text-xs text-muted">
-                  Send an update, delay, or cancellation to the riders on this ride.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href={`/events/${event.slug}/analytics`}
-                  className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold text-ink transition hover:border-sunset/50 hover:text-sunset"
-                >
-                  <BarChart3 className="h-4 w-4 text-sunset" />
-                  Analytics
-                </Link>
-                <MessageRidersDialog
-                  eventId={event.id}
-                  eventTitle={event.title}
-                  counts={messageAudienceCounts}
-                />
-              </div>
-            </div>
+            {/* Attendance — organizers, during or after the ride */}
+            {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
+              <AttendancePanel
+                eventId={event.id}
+                attendees={attendeesForPanel}
+                eventStatus={event.status}
+              />
+            )}
+
+            {/* Post-ride: the incident log is review material, so it stays down
+                here rather than up in the live-ride safety slot. */}
+            {event.status === "COMPLETED" ? safetyPanel : null}
           </div>
-        ) : null}
-
-        {/* ATTENDANCE PANEL — organizers only */}
-        {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
-          <AttendancePanel
-            eventId={event.id}
-            attendees={attendeesForPanel}
-            eventStatus={event.status}
-          />
-        )}
-
-        {/* RIDER DOWN / SAFETY — organizers only */}
-        {showSafetyPanel && (
-          <RiderDownPanel
-            eventId={event.id}
-            roster={checkedInRoster}
-            incidents={incidents.map((i) => ({
-              id: i.id,
-              riderName: i.rider.name,
-              riderHandle: i.rider.handle,
-              reportedByName: i.reportedBy.name,
-              notes: i.notes,
-              locationText: i.locationText,
-              lat: i.lat,
-              lng: i.lng,
-              resolvedAt: i.resolvedAt?.toISOString() ?? null,
-              createdAt: i.createdAt.toISOString(),
-            }))}
-          />
-        )}
+        </div>
       </div>
     </section>
   );
