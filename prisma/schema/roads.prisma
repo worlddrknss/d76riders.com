@@ -16,6 +16,7 @@ model Road {
   route        Route?        @relation(fields: [routeId], references: [id], onDelete: SetNull)
   galleryItems GalleryItem[]
   ratings      RoadRating[]
+  hazards      HazardReport[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

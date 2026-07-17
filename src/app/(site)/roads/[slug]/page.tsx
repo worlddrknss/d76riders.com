@@ -4,10 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, Star, UserRound } from "lucide-react";
 
+import { HazardList } from "@/components/hazards/hazard-list";
+import { HazardMap } from "@/components/hazards/hazard-map";
+import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
 import { StarRating } from "@/components/roads/star-rating";
-import { RouteMap } from "@/components/routes/route-map";
 import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
+import { activeHazardWhere } from "@/lib/hazards";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
@@ -79,10 +82,12 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
     _count: { score: true },
   });
 
+  let viewerRiderId: string | null = null;
   let userRating: number | null = null;
   if (currentUser) {
     const rider = await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } });
     if (rider) {
+      viewerRiderId = rider.id;
       const existing = await prisma.roadRating.findUnique({
         where: { roadId_riderId: { roadId: road.id, riderId: rider.id } },
         select: { score: true },
@@ -104,6 +109,47 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
   }));
 
   const isOwner = currentUser?.id === road.rider.userId;
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
+
+  // Active hazards on this road, newest first. Hazards only make sense on a
+  // mapped road, so this whole surface is gated on the route having geometry.
+  const hasMap = coordinates.length >= 2;
+  const activeHazards = hasMap
+    ? await prisma.hazardReport.findMany({
+        where: { roadId: road.id, ...activeHazardWhere() },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          type: true,
+          lat: true,
+          lng: true,
+          description: true,
+          createdAt: true,
+          riderId: true,
+          rider: { select: { name: true, handle: true } },
+        },
+      })
+    : [];
+
+  const hazardPins = activeHazards.map((h) => ({ id: h.id, type: h.type, lat: h.lat, lng: h.lng }));
+  const hazardListItems = activeHazards.map((h) => ({
+    id: h.id,
+    type: h.type,
+    description: h.description,
+    createdAt: h.createdAt.toISOString(),
+    reporterName: h.rider.name,
+    reporterHandle: h.rider.handle,
+    canClear: isAdmin || isOwner || h.riderId === viewerRiderId,
+  }));
+
+  // A hazard needs a location even before the rider taps. Default to the route's
+  // KSU, else the middle of the line.
+  const defaultPoint =
+    road.route?.ksuLat != null && road.route?.ksuLng != null
+      ? { lat: road.route.ksuLat, lng: road.route.ksuLng }
+      : coordinates.length > 0
+        ? { lat: coordinates[Math.floor(coordinates.length / 2)][1], lng: coordinates[Math.floor(coordinates.length / 2)][0] }
+        : { lat: 36.5298, lng: -87.3595 };
 
   return (
     <section className="page-shell">
@@ -208,15 +254,43 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
           ) : null}
         </div>
 
-        {/* FULL-WIDTH ROUTE MAP */}
-        {coordinates.length >= 2 ? (
+        {/* FULL-WIDTH ROUTE MAP + HAZARDS */}
+        {hasMap ? (
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
-            <div>
-              <h2 className="font-display text-xl font-semibold text-asphalt">Saved Road Route</h2>
-              <p className="mt-1 text-sm text-muted">Route geometry attached to this featured road.</p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-display text-xl font-semibold text-asphalt">Saved Road Route</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {activeHazards.length > 0
+                    ? `${activeHazards.length} active ${activeHazards.length === 1 ? "hazard" : "hazards"} flagged by riders.`
+                    : "Route geometry attached to this featured road."}
+                </p>
+              </div>
+              {currentUser ? (
+                <ReportHazardDialog
+                  roadId={road.id}
+                  coordinates={coordinates}
+                  hazards={hazardPins}
+                  defaultPoint={defaultPoint}
+                />
+              ) : null}
             </div>
             <div className="mt-4">
-              <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
+              <HazardMap
+                coordinates={coordinates}
+                hazards={hazardPins}
+                waypoints={waypoints}
+                className="h-120 w-full"
+              />
+            </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+                Hazards on this road
+              </h3>
+              <div className="mt-3">
+                <HazardList hazards={hazardListItems} />
+              </div>
             </div>
           </div>
         ) : null}

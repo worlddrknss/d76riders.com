@@ -120,6 +120,15 @@ export const routeGeometrySchema = z.object({
   coordinates: z.array(z.tuple([z.number(), z.number()])).max(50000),
 });
 
+// ---------- Hazard reports ----------
+export const hazardReportSchema = z.object({
+  roadId: z.string().min(1),
+  type: z.enum(["DEBRIS", "POLICE", "ROADWORK", "WEATHER", "ANIMAL", "ACCIDENT", "OTHER"]),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+  description: z.string().max(280).optional(),
+});
+
 // ---------- Auth ----------
 export const registerSchema = z.object({
   username: z

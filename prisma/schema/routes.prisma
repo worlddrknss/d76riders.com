@@ -15,6 +15,7 @@ model Route {
   event     RideEvent?
   road      Road?
   waypoints Waypoint[]
+  hazards   HazardReport[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

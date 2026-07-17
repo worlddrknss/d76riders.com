@@ -10,7 +10,7 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 2 | Live Check-In / Check-Out | ✅ Done |
 | 3 | Emergency Contact Card | ✅ Done |
 | 4 | NFC Emergency ID Page | ✅ Done |
-| 5 | Route Hazard Reporting | ⬜ Not started |
+| 5 | Route Hazard Reporting | ✅ Done |
 | 6 | Rider Down Quick Alert | ✅ Done |
 | 7 | Waitlist and RSVP Enhancements | ✅ Done |
 | 8 | Batch Messaging to RSVP Riders | ✅ Done |
@@ -22,7 +22,7 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 14 | Platform Reliability and Insights | ⬜ Not started |
 | 15 | Challenges | ✅ Done |
 
-Remaining, in the order they'd be quickest to build: **5 → 14 → 9 → 12**.
+Remaining, in the order they'd be quickest to build: **14 → 9 → 12**.
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
@@ -203,7 +203,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 5: Route Hazard Reporting
+## Phase 5: Route Hazard Reporting ✅
 
 **Effort:** Medium — new model, map integration, real-time-ish feed.
 
@@ -211,12 +211,28 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Add `HazardReport` model (riderId, routeId/roadId, type enum, lat/lng, description, status, expiresAt)
-- [ ] Hazard types: DEBRIS, POLICE, ROADWORK, WEATHER, ANIMAL, ACCIDENT, OTHER
-- [ ] Report UI: button on route/road pages and during active rides
-- [ ] Map overlay: show active hazards as markers on route maps
-- [ ] Auto-expire hazards after configurable TTL (e.g., 4 hours for debris, 24 hours for roadwork)
-- [ ] Activity feed: HAZARD_REPORTED activity type
+- [x] `HazardReport` model (`prisma/schema/hazards.prisma`): riderId, roadId?/routeId?, `HazardType`, lat/lng, description, `expiresAt`, `clearedAt`/`clearedByRiderId`
+- [x] Hazard types: DEBRIS, POLICE, ROADWORK, WEATHER, ANIMAL, ACCIDENT, OTHER
+- [x] Report UI: `ReportHazardDialog` on the road detail page — pick a type, tap the map to drop the pin, optional note
+- [x] Map overlay: `HazardMap` (built on the same `useRouteMap` hook as `RouteMap`) draws active hazards as colour-coded pins over the route line and its waypoints
+- [x] Auto-expire: `expiresAt` is stamped per type at creation (debris/animal 4h, weather/police 6h, accident 12h, roadwork 7d, other 24h). No job — "active" is `clearedAt == null AND expiresAt > now()`, one indexed query (`src/lib/hazards.ts` `activeHazardWhere`)
+- [x] Activity feed: `HAZARD_REPORTED`, sent to the road's curator (unless they filed it)
+
+**Notes:**
+
+- **Compute, don't store, "active"** — same discipline as trust and challenge progress. A hazard is never
+  flipped to inactive by a job; it simply stops matching `activeHazardWhere()` once its timer passes. The
+  lifespan is the hazard's whole point, so it's a real `expiresAt` timestamp, not a status column.
+- **Reporter or road owner (or an admin) can clear** a hazard early — whoever rode past and saw it gone.
+  `clearedAt` is a timestamp, not a boolean, so a cleared hazard can still say *when*.
+- **Gated on a mapped road.** Hazards only surface where the road's route has geometry (`coordinates >= 2`);
+  a hazard needs a place, and a road with no line has nowhere to put one. The report pin defaults to the
+  route's KSU, else the line's midpoint, so a location always exists even before the rider taps.
+- Reporting is open to any signed-in rider, not just the road's owner — a warning is only useful the moment
+  it's seen, and the short self-expiry keeps the cost of a wrong one low.
+- Deferred: the "during active rides" report entry point (event pages) and a route-planner overlay — the
+  model is shared (`routeId` is already on `HazardReport`), so both are additive when Phase 9/14 touch those
+  surfaces.
 
 ---
 

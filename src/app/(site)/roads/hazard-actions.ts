@@ -1,0 +1,104 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { logActivity } from "@/lib/activity";
+import { requireUserId } from "@/lib/authz";
+import { HAZARD_META, hazardExpiresAt } from "@/lib/hazards";
+import { prisma } from "@/lib/prisma";
+import { hazardReportSchema } from "@/lib/schemas";
+import { getCurrentUser } from "@/lib/session";
+
+export type HazardFormState = { error: string | null; success: string | null };
+
+/**
+ * Flag a hazard on a road. Anyone signed in can report — a hazard warning is
+ * only useful if it goes up the moment a rider sees it, and it self-expires, so
+ * the cost of a wrong one is low and short-lived.
+ */
+export async function reportHazardAction(
+  _prev: HazardFormState,
+  formData: FormData,
+): Promise<HazardFormState> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return { error: "No rider profile found.", success: null };
+
+  const parsed = hazardReportSchema.safeParse({
+    roadId: formData.get("roadId")?.toString() ?? "",
+    type: formData.get("type")?.toString() ?? "",
+    lat: Number(formData.get("lat")),
+    lng: Number(formData.get("lng")),
+    description: formData.get("description")?.toString().trim() || undefined,
+  });
+  if (!parsed.success) {
+    return { error: "Pick a hazard type and drop it on the map.", success: null };
+  }
+  const { roadId, type, lat, lng, description } = parsed.data;
+
+  const road = await prisma.road.findUnique({
+    where: { id: roadId },
+    select: { id: true, slug: true, routeId: true, name: true, riderId: true },
+  });
+  if (!road) return { error: "That road no longer exists.", success: null };
+
+  await prisma.hazardReport.create({
+    data: {
+      riderId: rider.id,
+      roadId: road.id,
+      routeId: road.routeId,
+      type,
+      lat,
+      lng,
+      description: description ?? null,
+      expiresAt: hazardExpiresAt(type),
+    },
+  });
+
+  // Tell the rider who curated the road, unless they are the one reporting it.
+  if (road.riderId !== rider.id) {
+    await logActivity({
+      riderId: road.riderId,
+      type: "HAZARD_REPORTED",
+      summary: `${HAZARD_META[type].label} reported on ${road.name}`,
+      refId: road.id,
+      metadata: { roadSlug: road.slug, hazardType: type },
+    });
+  }
+
+  revalidatePath(`/roads/${road.slug}`);
+  return { error: null, success: `${HAZARD_META[type].label} reported. Thanks for the heads up.` };
+}
+
+/**
+ * Mark a hazard cleared before its timer runs out. The reporter and the road's
+ * curator can both do it — whoever rode past and saw it was gone.
+ */
+export async function clearHazardAction(hazardId: string): Promise<HazardFormState> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return { error: "No rider profile found.", success: null };
+
+  const hazard = await prisma.hazardReport.findUnique({
+    where: { id: hazardId },
+    select: { id: true, riderId: true, clearedAt: true, road: { select: { slug: true, riderId: true } } },
+  });
+  if (!hazard) return { error: "That hazard no longer exists.", success: null };
+  if (hazard.clearedAt) return { error: null, success: "Already cleared." };
+
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR");
+  const canClear = hazard.riderId === rider.id || hazard.road?.riderId === rider.id || isAdmin;
+  if (!canClear) return { error: "Only the reporter or the road owner can clear this.", success: null };
+
+  await prisma.hazardReport.update({
+    where: { id: hazard.id },
+    data: { clearedAt: new Date(), clearedByRiderId: rider.id },
+  });
+
+  if (hazard.road?.slug) revalidatePath(`/roads/${hazard.road.slug}`);
+  return { error: null, success: "Marked cleared." };
+}

@@ -1,0 +1,43 @@
+// Hazards domain — rider-reported conditions on a road, with a lifespan.
+
+// A hazard someone flagged on a road: debris, police, roadwork, weather. It has
+// a location (a point on the road's map) and, crucially, an expiry — a hazard
+// is a moment, not a permanent property of the road. `expiresAt` is set per
+// type at creation (debris clears fast, roadwork lingers), so "is it still
+// live?" is a cheap indexed query, never a background job: a hazard is active
+// when clearedAt is null AND expiresAt is in the future.
+model HazardReport {
+  id          String     @id @default(cuid())
+  riderId     String
+  roadId      String?
+  routeId     String?
+  type        HazardType
+  lat         Float
+  lng         Float
+  description String?
+  expiresAt   DateTime
+
+  // A rider can say "it's gone now" before the timer runs out. Kept as a
+  // timestamp, not a boolean, so the feed can show when it was cleared.
+  clearedAt        DateTime?
+  clearedByRiderId String?
+
+  rider Rider  @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  road  Road?  @relation(fields: [roadId], references: [id], onDelete: Cascade)
+  route Route? @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([roadId, clearedAt, expiresAt])
+  @@index([routeId, clearedAt, expiresAt])
+}
+
+enum HazardType {
+  DEBRIS
+  POLICE
+  ROADWORK
+  WEATHER
+  ANIMAL
+  ACCIDENT
+  OTHER
+}

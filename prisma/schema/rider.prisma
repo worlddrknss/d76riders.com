@@ -49,6 +49,7 @@ model Rider {
   routes         Route[]
   roads          Road[]
   roadRatings    RoadRating[]
+  hazardReports  HazardReport[]
   journalEntries JournalEntry[]
   comments       Comment[]
   likes          Like[]
