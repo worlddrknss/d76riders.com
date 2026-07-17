@@ -763,7 +763,7 @@ export default async function RiderProfilePage({
 
   // ─── Skills tab ─────────────────────────────────────────────────
   const skillsContent = (
-    <div className="max-w-3xl space-y-3">
+    <div className="space-y-4">
       <p className="text-sm text-muted">
         {isOwner
           ? "Set your own level as you learn. A ride organizer can verify it — mentor level is theirs to award."
@@ -775,21 +775,23 @@ export default async function RiderProfilePage({
           <p className="text-sm text-muted">No skill tracks are set up yet.</p>
         </div>
       ) : (
-        skillTracks.map((track) => {
-          const mine = track.riderSkills[0];
-          return (
-            <SkillTrackCard
-              key={track.id}
-              slug={track.slug}
-              name={track.name}
-              description={track.description}
-              icon={track.icon}
-              level={mine?.level ?? null}
-              verified={Boolean(mine?.verifiedAt)}
-              editable={isOwner}
-            />
-          );
-        })
+        <div className="grid gap-4 sm:grid-cols-2">
+          {skillTracks.map((track) => {
+            const mine = track.riderSkills[0];
+            return (
+              <SkillTrackCard
+                key={track.id}
+                slug={track.slug}
+                name={track.name}
+                description={track.description}
+                icon={track.icon}
+                level={mine?.level ?? null}
+                verified={Boolean(mine?.verifiedAt)}
+                editable={isOwner}
+              />
+            );
+          })}
+        </div>
       )}
     </div>
   );
