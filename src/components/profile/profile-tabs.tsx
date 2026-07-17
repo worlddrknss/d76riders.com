@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 export type ProfileTab = {
@@ -9,9 +10,41 @@ export type ProfileTab = {
   content: ReactNode;
 };
 
+/**
+ * Profile sections, addressable by URL.
+ *
+ * The tab lives in ?tab= rather than only in component state, because plenty of
+ * things need to send a rider to a specific section: the onboarding quests want
+ * the emergency card, and a rider sharing "look at my garage" expects the link to
+ * open the garage. Local state alone meant every one of those landed on Overview.
+ *
+ * State is kept alongside the URL rather than read from it on every render, so a
+ * click paints immediately instead of waiting for the router. The URL is updated
+ * without scrolling, since the tab rail is already under the reader's eye.
+ */
 export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
-  const [active, setActive] = useState(tabs[0]?.id);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const requested = searchParams.get("tab");
+  const initial = tabs.some((tab) => tab.id === requested) ? requested : tabs[0]?.id;
+
+  const [active, setActive] = useState(initial);
   const current = tabs.find((tab) => tab.id === active) ?? tabs[0];
+
+  function select(id: string) {
+    setActive(id);
+
+    const next = new URLSearchParams(searchParams.toString());
+    if (id === tabs[0]?.id) {
+      // The default section doesn't need saying, and a bare URL shares better.
+      next.delete("tab");
+    } else {
+      next.set("tab", id);
+    }
+    const query = next.toString();
+    router.replace(query ? `?${query}` : "?", { scroll: false });
+  }
 
   return (
     <div>
@@ -31,7 +64,7 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
               type="button"
               role="tab"
               aria-selected={isActive}
-              onClick={() => setActive(tab.id)}
+              onClick={() => select(tab.id)}
               className={`relative -mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors ${
                 isActive
                   ? "border-sunset text-sunset"

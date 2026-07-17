@@ -239,7 +239,7 @@ const QUESTS = [
     name: "Set up your emergency card",
     description: "So we can help if the worst happens on a ride.",
     icon: "heart-pulse",
-    href: "/profile",
+    href: "/profile?tab=emergency",
     criteria: "ADD_EMERGENCY_CARD" as const,
     sortOrder: 5,
   },
