@@ -121,11 +121,11 @@ export function EventManageActions({ event }: { event: EventData }) {
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-h-[88vh] max-w-5xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
           </DialogHeader>
-          <form ref={formRef} action={handleEdit} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <form ref={formRef} action={handleEdit} className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
             {/* Left column */}
             <div className="space-y-4">
               <div>
