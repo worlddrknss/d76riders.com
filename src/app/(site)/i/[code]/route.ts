@@ -37,10 +37,14 @@ export async function GET(_request: Request, context: { params: Promise<{ code: 
     return redirectTo("/join");
   }
 
-  await prisma.referralCode.update({
-    where: { id: referral.id },
-    data: { clicks: { increment: 1 } },
-  });
+  // The counter stays as the cheap read; the log is what the chart plots.
+  await prisma.$transaction([
+    prisma.referralCode.update({
+      where: { id: referral.id },
+      data: { clicks: { increment: 1 } },
+    }),
+    prisma.referralClick.create({ data: { codeId: referral.id } }),
+  ]);
 
   const query = new URLSearchParams({ ref: normalized, from: referral.rider.handle });
   const response = redirectTo(`/join?${query}`);

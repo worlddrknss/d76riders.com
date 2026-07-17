@@ -80,10 +80,61 @@ export async function recordReferral(code: string, referredUserId: string): Prom
   }
 }
 
+const CHART_DAYS = 30;
+
+/** Midnight local, `days` ago — the left edge of the chart window. */
+function windowStart(days: number): Date {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (days - 1));
+  return start;
+}
+
+const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+
+/**
+ * One point per day for the last 30 days, zero-filled.
+ *
+ * Zero-filling matters: without it a day with no opens is simply missing, and
+ * the line would jump straight from one busy day to the next as though the quiet
+ * stretch never happened.
+ */
+async function dailySeries(codeId: string) {
+  const since = windowStart(CHART_DAYS);
+
+  const [clicks, joins] = await Promise.all([
+    prisma.referralClick.findMany({
+      where: { codeId, createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+    prisma.referral.findMany({
+      where: { codeId, createdAt: { gte: since } },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  const opens = new Map<string, number>();
+  const joined = new Map<string, number>();
+  for (const c of clicks) opens.set(dayKey(c.createdAt), (opens.get(dayKey(c.createdAt)) ?? 0) + 1);
+  for (const j of joins) joined.set(dayKey(j.createdAt), (joined.get(dayKey(j.createdAt)) ?? 0) + 1);
+
+  return Array.from({ length: CHART_DAYS }, (_, i) => {
+    const day = new Date(since);
+    day.setDate(since.getDate() + i);
+    const key = dayKey(day);
+    return {
+      date: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      opens: opens.get(key) ?? 0,
+      joins: joined.get(key) ?? 0,
+    };
+  });
+}
+
 export async function referralStats(riderId: string) {
   const code = await prisma.referralCode.findUnique({
     where: { riderId },
     select: {
+      id: true,
       code: true,
       clicks: true,
       referrals: {
@@ -99,7 +150,7 @@ export async function referralStats(riderId: string) {
   });
 
   if (!code) {
-    return { code: null, clicks: 0, conversions: 0, referrals: [] };
+    return { code: null, clicks: 0, conversions: 0, referrals: [], series: [] };
   }
 
   return {
@@ -107,5 +158,6 @@ export async function referralStats(riderId: string) {
     clicks: code.clicks,
     conversions: code.referrals.length,
     referrals: code.referrals,
+    series: await dailySeries(code.id),
   };
 }

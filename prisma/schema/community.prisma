@@ -10,12 +10,31 @@ model ReferralCode {
   // read for the invite page.
   clicks  Int    @default(0)
 
-  rider     Rider      @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  rider     Rider           @relation(fields: [riderId], references: [id], onDelete: Cascade)
   referrals Referral[]
+  clickLog  ReferralClick[]
 
   createdAt DateTime @default(now())
 
   @@index([code])
+}
+
+// One row per link open, so the invite page can plot opens over time. The
+// `clicks` counter above says how many but never when, which is no use to a
+// chart — this is the same event with a timestamp on it.
+//
+// Deliberately nothing else: no IP, no user agent, no visitor id. Counting an
+// open needs a date and a code, and anything more would be surveillance of
+// people who have not joined yet and never agreed to it.
+model ReferralClick {
+  id     String @id @default(cuid())
+  codeId String
+
+  code ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([codeId, createdAt])
 }
 
 // One row per converted signup. `referredUserId` is unique — a user can only

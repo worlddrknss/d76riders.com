@@ -11,6 +11,7 @@ import { CoverPhoto } from "@/components/profile/cover-photo";
 import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { InviteLink } from "@/components/community/invite-link";
+import { InviteChart } from "@/components/profile/invite-chart";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
@@ -796,21 +797,25 @@ export default async function RiderProfilePage({
   // ─── Invite tab (owner only) ────────────────────────────────────
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
   const inviteContent = referral ? (
-    <div className="max-w-2xl space-y-5">
+    <div className="space-y-5">
       <p className="text-sm text-muted">Share your link. Anyone who joins through it is credited to you.</p>
 
       <InviteLink url={`${siteUrl}/i/${referral.code}`} code={referral.code ?? ""} />
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</p>
-          <p className="mt-1 font-display text-3xl font-bold text-ink">{referral.clicks}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</p>
-          <p className="mt-1 font-display text-3xl font-bold text-sunset">{referral.conversions}</p>
-        </div>
+      {/* Two numbers do not need two cards. Sat next to each other on one line
+          they also read as the ratio they actually are: opens, of which joins. */}
+      <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-3xl font-bold text-ink">{referral.clicks}</span>
+          <span className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</span>
+        </p>
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-3xl font-bold text-sunset">{referral.conversions}</span>
+          <span className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</span>
+        </p>
       </div>
+
+      <InviteChart data={referral.series} />
 
       <div>
         <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
