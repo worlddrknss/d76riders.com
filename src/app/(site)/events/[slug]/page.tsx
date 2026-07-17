@@ -371,10 +371,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : { label: "Upcoming", cls: "border-forest/40 bg-forest/10 text-forest" };
 
   const flyerUrl = event.galleryItems[0]?.url ?? null;
-  // Borderless on purpose: the flyer beside it is the framed element, and a
-  // second frame around the blurb just makes two boxes fight for the eye.
   const aboutCard = event.description ? (
-    <div>
+    <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
       <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
       <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
         <Linkify text={event.description} />
@@ -541,6 +539,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             {/* Live ride: the emergency lever comes first. */}
             {isActiveEvent ? safetyPanel : null}
 
+            {/* The event's poster, above the details it summarises. A portrait
+                flyer fills the rail's width instead of stranding text beside it. */}
+            {flyerUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mediaUrl(flyerUrl)}
+                alt={event.galleryItems[0].caption || `${event.title} flyer`}
+                className="w-full rounded-xl border border-border shadow-soft"
+              />
+            ) : null}
+
             <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
               <dl className="space-y-3.5">
                 <DetailRow
@@ -662,17 +671,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               </div>
             </div>
 
-            {/* The event's poster. A portrait flyer fills the rail's width; in
-                the wide main column it stranded the write-up in dead space. */}
-            {flyerUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={mediaUrl(flyerUrl)}
-                alt={event.galleryItems[0].caption || `${event.title} flyer`}
-                className="w-full rounded-xl border border-border shadow-soft"
-              />
-            ) : null}
-
             {/* The going list, compact — five faces and a Show all, not a wall. */}
             <EventRidersList
               riders={event.rsvps.map((rsvp) => ({
@@ -706,6 +704,30 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
             <div className="mt-4">
               <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
+            </div>
+          </div>
+        ) : event.meetLat != null && event.meetLng != null ? (
+          // No saved route — show the meetup on a map anyway, so every event has
+          // one and the page keeps its shape.
+          <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
+            <div>
+              <h2 className="font-display text-xl font-semibold text-asphalt">Meetup Location</h2>
+              <p className="mt-1 text-sm text-muted">{event.meetLocation ?? "Where the ride gathers."}</p>
+            </div>
+            <div className="mt-4">
+              <RouteMap
+                coordinates={[[event.meetLng, event.meetLat]]}
+                waypoints={[
+                  {
+                    id: "meetup",
+                    lng: event.meetLng,
+                    lat: event.meetLat,
+                    label: event.meetLocation ?? "Meetup",
+                    kind: "START",
+                  },
+                ]}
+                className="h-96 w-full"
+              />
             </div>
           </div>
         ) : null}
