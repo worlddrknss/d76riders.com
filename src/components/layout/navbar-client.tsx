@@ -178,8 +178,27 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
     return initialsFromName(currentUser.name, currentUser.email);
   }, [currentUser]);
 
+  // The navbar isn't a fixed height: the logo animates between h-20 and h-14 on
+  // scroll, so it breathes between roughly 93px and 69px. The admin sidebar is
+  // pinned beneath it and used to guess 64px, which left the navbar covering the
+  // top of the sidebar. Publish the real height instead of making anyone guess.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+
+    const publish = () =>
+      document.documentElement.style.setProperty("--nav-h", `${el.getBoundingClientRect().height}px`);
+
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <motion.header
+      ref={headerRef}
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}

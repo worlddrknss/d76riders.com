@@ -96,8 +96,8 @@ export function AdminShell({ children, currentUser }: AdminShellProps) {
   );
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-asphalt text-slate-100">
-      <div className="pointer-events-none fixed inset-0 top-16 -z-10 bg-[linear-gradient(160deg,#161616_0%,#1c1c1c_55%,#242424_100%)]" />
+    <div className="min-h-[calc(100vh-var(--nav-h))] bg-asphalt text-slate-100">
+      <div className="pointer-events-none fixed inset-0 top-(--nav-h) -z-10 bg-[linear-gradient(160deg,#161616_0%,#1c1c1c_55%,#242424_100%)]" />
 
       <button
         type="button"
@@ -109,7 +109,7 @@ export function AdminShell({ children, currentUser }: AdminShellProps) {
       </button>
 
       <aside
-        className={`fixed bottom-0 left-0 top-16 z-40 flex flex-col border-r border-white/10 bg-[linear-gradient(180deg,#141414_0%,#1a1a1a_100%)] backdrop-blur transition-all duration-200 ${
+        className={`fixed bottom-0 left-0 top-(--nav-h) z-40 flex flex-col border-r border-white/10 bg-[linear-gradient(180deg,#141414_0%,#1a1a1a_100%)] backdrop-blur transition-all duration-200 ${
           collapsed ? "w-20" : "w-64"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
@@ -189,8 +189,8 @@ export function AdminShell({ children, currentUser }: AdminShellProps) {
         </div>
       </aside>
 
-      <div className={`min-h-[calc(100vh-4rem)] transition-all duration-200 ${collapsed ? "md:ml-20" : "md:ml-64"}`}>
-        <header className="sticky top-16 z-30 border-b border-white/10 bg-asphalt/95 px-4 py-3 backdrop-blur sm:px-6">
+      <div className={`min-h-[calc(100vh-var(--nav-h))] transition-all duration-200 ${collapsed ? "md:ml-20" : "md:ml-64"}`}>
+        <header className="sticky top-(--nav-h) z-30 border-b border-white/10 bg-asphalt/95 px-4 py-3 backdrop-blur sm:px-6">
           <div className="mx-auto flex w-full max-w-7xl items-center justify-end gap-3">
             <span className="hidden text-sm font-semibold text-slate-300 sm:inline">@{currentUser.handle || currentUser.name || "admin"}</span>
             {currentUser.avatarUrl ? (

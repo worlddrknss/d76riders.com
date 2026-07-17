@@ -1,26 +1,11 @@
 import Link from "next/link";
-import { ExternalLink, Pencil, Store } from "lucide-react";
+import { Store } from "lucide-react";
 
-import {
-  createSponsorAction,
-  linkSponsorToEventAction,
-} from "@/app/admin/community/actions";
-import {
-  AdminBadge,
-  AdminRowActions,
-  AdminTable,
-  AdminTableBody,
-  AdminTableEmpty,
-  AdminTableHead,
-  AdminTd,
-  AdminTh,
-  AdminTr,
-} from "@/components/admin/admin-table";
+import { linkSponsorToEventAction } from "@/app/admin/community/actions";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
-import { CommunityDeleteButton } from "@/components/admin/community-delete-button";
+import { SponsorDirectory } from "@/components/admin/sponsor-directory";
 import { SponsorReviewActions } from "@/components/admin/sponsor-review-actions";
 import { prisma } from "@/lib/prisma";
-import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL, TIER_LABEL } from "@/lib/shops";
 
 export const dynamic = "force-dynamic";
 
@@ -156,46 +141,32 @@ export default async function AdminSponsorsPage(props: {
         )}
       </section>
 
-      {/* ── Add directly ── */}
-      <section className="grid gap-4 lg:grid-cols-2">
-        <form
-          action={createSponsorAction}
-          className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
-        >
-          <h2 className="font-display text-lg font-semibold text-white">Add a business</h2>
-          <p className="text-xs text-slate-400">Added from here, it&apos;s approved on the spot.</p>
-          <input name="name" required placeholder="Business name" className={inputClass} />
-          <input name="description" placeholder="What they do" className={inputClass} />
-          <input name="websiteUrl" type="url" placeholder="https://example.com" className={inputClass} />
-          <input name="logoUrl" type="url" placeholder="Logo URL (https://…)" className={inputClass} />
-          <input name="address" placeholder="522 Dover Rd Ste A, Clarksville, TN 37042" className={inputClass} />
-          <input name="phone" placeholder="(931) 555-0100" className={inputClass} />
-          <select name="category" defaultValue="" className={inputClass}>
-            <option value="">Category (none)</option>
-            {SHOP_CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {SHOP_CATEGORY_LABEL[c]}
-              </option>
-            ))}
-          </select>
-          {/* Blank is the normal case: a listed shop that doesn't sponsor. */}
-          <select name="tier" defaultValue="" className={inputClass}>
-            <option value="">Not a sponsor (directory listing)</option>
-            <option value="PARTNER">Partner</option>
-            <option value="SUPPORTER">Supporter</option>
-            <option value="FRIEND">Friend of the Community</option>
-          </select>
-          <button type="submit" className={submitClass}>
-            Add Business
-          </button>
-        </form>
+      <SponsorDirectory
+        sponsors={reviewed.map((sponsor) => ({
+          id: sponsor.id,
+          name: sponsor.name,
+          description: sponsor.description,
+          websiteUrl: sponsor.websiteUrl,
+          logoUrl: sponsor.logoUrl,
+          category: sponsor.category,
+          address: sponsor.address,
+          phone: sponsor.phone,
+          lat: sponsor.lat,
+          lng: sponsor.lng,
+          tier: sponsor.tier,
+          status: sponsor.status,
+          active: sponsor.active,
+          rejectionReason: sponsor.rejectionReason,
+          eventCount: sponsor._count.events,
+          submittedByHandle: sponsor.submittedBy?.handle ?? null,
+        }))}
+      />
 
-        <form
-          action={linkSponsorToEventAction}
-          className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
-        >
-          <h2 className="font-display text-lg font-semibold text-white">Sponsor a ride</h2>
-          <p className="text-xs text-slate-400">Attach a sponsor to a specific event.</p>
+      {/* Linking a sponsor to a ride is its own job, not part of editing one. */}
+      <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg lg:max-w-md">
+        <h2 className="font-display text-lg font-semibold text-white">Sponsor a ride</h2>
+        <p className="mt-1 text-xs text-slate-400">Attach a business to a specific event.</p>
+        <form action={linkSponsorToEventAction} className="mt-4 space-y-3">
           <select name="sponsorId" required className={inputClass}>
             {reviewed
               .filter((sponsor) => sponsor.status === "APPROVED")
@@ -210,101 +181,6 @@ export default async function AdminSponsorsPage(props: {
             Link Sponsor
           </button>
         </form>
-      </section>
-
-      {/* ── The directory ──
-          A table rather than a stack of cards: a moderator needs to see what a
-          listing is and act on it without opening each one, and every row needs
-          an edit route. Sponsors had create and delete but no update, so fixing
-          a typo meant deleting the business and retyping it. */}
-      <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-        <h2 className="font-display text-lg font-semibold text-white">Listings</h2>
-        <p className="mt-1 text-xs text-slate-400">
-          Everything reviewed, sponsors and plain listings alike. Tier is what makes a business a sponsor;
-          blank means it&apos;s in the directory only.
-        </p>
-
-        <div className="mt-4">
-          <AdminTable>
-            <AdminTableHead>
-              <AdminTh>Business</AdminTh>
-              <AdminTh>Category</AdminTh>
-              <AdminTh>Tier</AdminTh>
-              <AdminTh>Status</AdminTh>
-              <AdminTh className="text-right">Rides</AdminTh>
-              <AdminTh className="text-right">Actions</AdminTh>
-            </AdminTableHead>
-            <AdminTableBody>
-              {reviewed.length === 0 ? (
-                <AdminTableEmpty colSpan={6}>Nothing listed yet.</AdminTableEmpty>
-              ) : (
-                reviewed.map((sponsor) => (
-                  <AdminTr key={sponsor.id}>
-                    <AdminTd>
-                      <div className="min-w-0">
-                        <p className="font-medium text-white">{sponsor.name}</p>
-                        <p className="truncate text-xs text-slate-500">
-                          {sponsor.address ?? "No address"}
-                          {sponsor.submittedBy ? ` · @${sponsor.submittedBy.handle}` : ""}
-                        </p>
-                      </div>
-                    </AdminTd>
-                    <AdminTd>
-                      {sponsor.category ? (
-                        SHOP_CATEGORY_LABEL[sponsor.category]
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
-                    </AdminTd>
-                    <AdminTd>
-                      {sponsor.tier ? (
-                        <AdminBadge tone="warn">{TIER_LABEL[sponsor.tier]}</AdminBadge>
-                      ) : (
-                        <span className="text-slate-600">Listing</span>
-                      )}
-                    </AdminTd>
-                    <AdminTd>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {sponsor.status === "APPROVED" ? (
-                          <AdminBadge tone="good">Approved</AdminBadge>
-                        ) : (
-                          <AdminBadge tone="bad">Rejected</AdminBadge>
-                        )}
-                        {!sponsor.active ? <AdminBadge>Hidden</AdminBadge> : null}
-                      </div>
-                      {sponsor.rejectionReason ? (
-                        <p className="mt-1 max-w-48 truncate text-xs text-slate-500">
-                          {sponsor.rejectionReason}
-                        </p>
-                      ) : null}
-                    </AdminTd>
-                    <AdminTd className="text-right tabular-nums">{sponsor._count.events}</AdminTd>
-                    <AdminTd>
-                      <AdminRowActions>
-                        <Link
-                          href="/shops"
-                          target="_blank"
-                          title="View on the public directory"
-                          className="rounded-md p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Link>
-                        <Link
-                          href={`/admin/community/sponsors/${sponsor.id}/edit`}
-                          title={`Edit ${sponsor.name}`}
-                          className="rounded-md p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                        <CommunityDeleteButton kind="sponsor" id={sponsor.id} name={sponsor.name} compact />
-                      </AdminRowActions>
-                    </AdminTd>
-                  </AdminTr>
-                ))
-              )}
-            </AdminTableBody>
-          </AdminTable>
-        </div>
       </section>
     </div>
   );

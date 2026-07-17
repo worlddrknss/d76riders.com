@@ -13,6 +13,11 @@
   --border: #e2ddd4;
   --ink: #1c1c1c;
   --muted: #6b6b6b;
+  /* The live height of the site navbar. The navbar itself measures and updates
+     this; anything pinned below it (the admin sidebar) reads it instead of
+     guessing. The default is its unscrolled height, so the first server-rendered
+     paint lands in the right place before the measurement runs. */
+  --nav-h: 93px;
   --ridge: linear-gradient(135deg, rgba(232, 112, 58, 0.16), rgba(28, 28, 28, 0.12));
   --panel: #1c1c1c;
   --panel-text: #ededed;

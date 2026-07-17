@@ -161,17 +161,17 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
   const slug = slugify(text(formData.get("slug")) || name);
 
   if (!name || !slug) {
-    redirect("/admin/community?error=sponsor");
+    redirect("/admin/community/sponsors?error=sponsor");
   }
 
   if (await prisma.sponsor.findUnique({ where: { slug }, select: { id: true } })) {
-    redirect("/admin/community?error=sponsorSlug");
+    redirect("/admin/community/sponsors?error=sponsorSlug");
   }
 
   const websiteInput = text(formData.get("websiteUrl"));
   const websiteUrl = safeUrl(websiteInput);
   if (websiteInput && !websiteUrl) {
-    redirect("/admin/community?error=sponsorUrl");
+    redirect("/admin/community/sponsors?error=sponsorUrl");
   }
 
   const tier = text(formData.get("tier"));
@@ -212,7 +212,6 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
 
   revalidatePath("/admin/community/sponsors");
   revalidatePath("/shops");
-  redirect("/admin/community/sponsors");
 }
 
 export async function deleteSponsorAction(sponsorId: string): Promise<void> {
@@ -238,7 +237,7 @@ export async function deleteSponsorAction(sponsorId: string): Promise<void> {
     before: sponsor,
   });
 
-  revalidatePath("/admin/community");
+  revalidatePath("/admin/community/sponsors");
   revalidatePath("/shops");
 }
 
@@ -254,10 +253,13 @@ export async function deleteSponsorAction(sponsorId: string): Promise<void> {
  * form sends "NONE" rather than an empty string that could be mistaken for
  * "field absent".
  */
-export async function updateSponsorAction(sponsorId: string, formData: FormData): Promise<void> {
+export async function updateSponsorAction(formData: FormData): Promise<void> {
   const userId = await requireAdminUserId();
 
-  const existing = await prisma.sponsor.findUnique({ where: { id: sponsorId } });
+  const sponsorId = text(formData.get("id"));
+  const existing = sponsorId
+    ? await prisma.sponsor.findUnique({ where: { id: sponsorId } })
+    : null;
   if (!existing) {
     redirect("/admin/community/sponsors");
   }
@@ -311,7 +313,6 @@ export async function updateSponsorAction(sponsorId: string, formData: FormData)
 
   revalidatePath("/admin/community/sponsors");
   revalidatePath("/shops");
-  redirect("/admin/community/sponsors");
 }
 
 // Attach or detach a sponsor from a specific ride.
