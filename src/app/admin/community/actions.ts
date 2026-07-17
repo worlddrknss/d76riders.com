@@ -1,6 +1,6 @@
 "use server";
 
-import { ChallengeMetric, CrewRole, SponsorTier } from "@prisma/client";
+import { ChallengeMetric, CrewRole, SponsorTier, ShopCategory } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -175,6 +175,7 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
   }
 
   const tier = text(formData.get("tier"));
+  const category = text(formData.get("category"));
 
   const sponsor = await prisma.sponsor.create({
     data: {
@@ -183,7 +184,15 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
       description: text(formData.get("description")) || null,
       logoUrl: safeUrl(text(formData.get("logoUrl"))),
       websiteUrl,
-      tier: Object.values(SponsorTier).includes(tier as SponsorTier) ? (tier as SponsorTier) : "SUPPORTER",
+      // Empty means listed in the directory without sponsoring anything, which
+      // is what most businesses are. Defaulting to SUPPORTER would quietly put
+      // every shop on the sponsor wall.
+      tier: Object.values(SponsorTier).includes(tier as SponsorTier) ? (tier as SponsorTier) : null,
+      category: Object.values(ShopCategory).includes(category as ShopCategory)
+        ? (category as ShopCategory)
+        : null,
+      address: text(formData.get("address")) || null,
+      phone: text(formData.get("phone")) || null,
       // Created here, so it's already been through a human — no queue to wait in.
       status: "APPROVED",
       reviewedByUserId: userId,
@@ -202,7 +211,7 @@ export async function createSponsorAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/community/sponsors");
-  revalidatePath("/sponsors");
+  revalidatePath("/shops");
   redirect("/admin/community/sponsors");
 }
 
@@ -230,7 +239,7 @@ export async function deleteSponsorAction(sponsorId: string): Promise<void> {
   });
 
   revalidatePath("/admin/community");
-  revalidatePath("/sponsors");
+  revalidatePath("/shops");
 }
 
 // Attach or detach a sponsor from a specific ride.
@@ -315,7 +324,7 @@ export async function approveSponsorAction(sponsorId: string, formData: FormData
   });
 
   revalidatePath("/admin/community/sponsors");
-  revalidatePath("/sponsors");
+  revalidatePath("/shops");
   revalidatePath("/");
 }
 

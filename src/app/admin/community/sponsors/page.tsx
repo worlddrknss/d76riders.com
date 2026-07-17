@@ -9,6 +9,7 @@ import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { CommunityDeleteButton } from "@/components/admin/community-delete-button";
 import { SponsorReviewActions } from "@/components/admin/sponsor-review-actions";
 import { prisma } from "@/lib/prisma";
+import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL } from "@/lib/shops";
 
 export const dynamic = "force-dynamic";
 
@@ -156,7 +157,19 @@ export default async function AdminSponsorsPage(props: {
           <input name="description" placeholder="What they do" className={inputClass} />
           <input name="websiteUrl" type="url" placeholder="https://example.com" className={inputClass} />
           <input name="logoUrl" type="url" placeholder="Logo URL (https://…)" className={inputClass} />
-          <select name="tier" defaultValue="SUPPORTER" className={inputClass}>
+          <input name="address" placeholder="522 Dover Rd Ste A, Clarksville, TN 37042" className={inputClass} />
+          <input name="phone" placeholder="(931) 555-0100" className={inputClass} />
+          <select name="category" defaultValue="" className={inputClass}>
+            <option value="">Category (none)</option>
+            {SHOP_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {SHOP_CATEGORY_LABEL[c]}
+              </option>
+            ))}
+          </select>
+          {/* Blank is the normal case: a listed shop that doesn't sponsor. */}
+          <select name="tier" defaultValue="" className={inputClass}>
+            <option value="">Not a sponsor (directory listing)</option>
             <option value="PARTNER">Partner</option>
             <option value="SUPPORTER">Supporter</option>
             <option value="FRIEND">Friend of the Community</option>

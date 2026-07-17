@@ -578,7 +578,7 @@ export default async function Home() {
                 Sponsors
               </h2>
               <Link
-                href="/sponsors"
+                href="/shops?tier=sponsor"
                 className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]"
               >
                 All Sponsors <ArrowRight className="h-4 w-4" />

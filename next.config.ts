@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
       // untouched — only the public section was renamed.
       { source: "/news", destination: "/magazine", permanent: true },
       { source: "/news/:path*", destination: "/magazine/:path*", permanent: true },
+      // Sponsors folded into the directory: a sponsor is a shop that also backs
+      // us, and two near-empty pages served nobody. The filter keeps the
+      // sponsors-only view that /sponsors used to be.
+      { source: "/sponsors", destination: "/shops?tier=sponsor", permanent: true },
     ];
   },
 };

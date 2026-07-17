@@ -32,7 +32,7 @@ export const navItems: NavItem[] = [
       { href: "/crews", label: "Crews" },
       { href: "/challenges", label: "Challenges" },
       { href: "/leaderboard", label: "Leaderboard" },
-      { href: "/sponsors", label: "Sponsors" },
+      { href: "/shops", label: "Shops & Sponsors" },
     ],
   },
   {

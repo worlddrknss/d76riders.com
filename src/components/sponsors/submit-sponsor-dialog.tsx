@@ -3,7 +3,9 @@
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { submitSponsorAction, type SponsorSubmitState } from "@/app/(site)/sponsors/actions";
+import { submitSponsorAction, type SponsorSubmitState } from "@/app/(site)/shops/actions";
+import { LocationAutocomplete } from "@/components/events/location-autocomplete";
+import { SHOP_CATEGORIES, SHOP_CATEGORY_LABEL } from "@/lib/shops";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -67,16 +69,57 @@ export function SubmitSponsorDialog() {
                     rows={3}
                     required
                     maxLength={300}
-                    placeholder="Tyres, service, and a decent coffee while you wait."
+                    placeholder="Tires, service, and a decent coffee while you wait."
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="sp-web" className="text-xs font-semibold uppercase tracking-wide text-muted">
-                    Website <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span>
+                  <label htmlFor="sp-cat" className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    What kind of business
                   </label>
-                  <Input id="sp-web" name="websiteUrl" type="url" placeholder="https://…" className="mt-1" />
+                  <select
+                    id="sp-cat"
+                    name="category"
+                    required
+                    defaultValue=""
+                    className="mt-1 w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+                  >
+                    <option value="" disabled>
+                      Pick one…
+                    </option>
+                    {SHOP_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {SHOP_CATEGORY_LABEL[c]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* The same place search the event form uses, so a shop lands on the
+                    real forecourt and keeps an address even where the map data has
+                    no street for it. Only the address and coordinates are stored;
+                    the search box is just how you find the place. */}
+                <LocationAutocomplete
+                  fieldPrefix="shop"
+                  label="Where is it"
+                  placeholder="Search the business or its address…"
+                  hint="Search for the business to pin it on the map. Correct the address by hand if the search gets it wrong."
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="sp-phone" className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Phone <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span>
+                    </label>
+                    <Input id="sp-phone" name="phone" maxLength={40} placeholder="(931) 555-0100" className="mt-1" />
+                  </div>
+                  <div>
+                    <label htmlFor="sp-web" className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      Website <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span>
+                    </label>
+                    <Input id="sp-web" name="websiteUrl" type="url" placeholder="https://…" className="mt-1" />
+                  </div>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
