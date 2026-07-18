@@ -49,6 +49,35 @@ export async function toggleJournalLikeAction(entryId: string): Promise<void> {
   }
 }
 
+// Toggle a private save (bookmark) on a journal post. Never public, no count on
+// the post, notifies no one — it just lands in the rider's /saved list.
+export async function toggleJournalSaveAction(entryId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return;
+
+  const existing = await prisma.save.findUnique({
+    where: { riderId_journalEntryId: { riderId: rider.id, journalEntryId: entryId } },
+  });
+
+  if (existing) {
+    await prisma.save.delete({ where: { id: existing.id } });
+  } else {
+    await prisma.save.create({ data: { riderId: rider.id, journalEntryId: entryId } });
+  }
+
+  const entry = await prisma.journalEntry.findUnique({
+    where: { id: entryId },
+    select: { author: { select: { handle: true } } },
+  });
+  if (entry?.author.handle) {
+    revalidatePath(`/r/${entry.author.handle}`);
+  }
+  revalidatePath("/saved");
+}
+
 export async function addJournalCommentAction(entryId: string, formData: FormData): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);

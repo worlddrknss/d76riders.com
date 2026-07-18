@@ -10,6 +10,7 @@ model JournalEntry {
   author       Rider            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   likes        Like[]
+  saves        Save[]
   reports      Report[]
   galleryItems GalleryItem[]
   hashtags     JournalHashtag[]
@@ -80,6 +81,22 @@ model Like {
   createdAt DateTime @default(now())
 
   @@unique([riderId, journalEntryId])
+}
+
+// A private bookmark — a rider saving a post to revisit later. Unlike a Like it's
+// never public, carries no count on the post, and notifies no one.
+model Save {
+  id             String @id @default(cuid())
+  riderId        String
+  journalEntryId String
+
+  rider        Rider        @relation(fields: [riderId], references: [id], onDelete: Cascade)
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([riderId, journalEntryId])
+  @@index([riderId])
 }
 
 // Reports — flagged content for moderator review.

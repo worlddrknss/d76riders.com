@@ -160,6 +160,9 @@ export default async function RiderProfilePage({
           likes: {
             select: { riderId: true },
           },
+          saves: {
+            select: { riderId: true },
+          },
           comments: {
             orderBy: { createdAt: "asc" },
             take: 10,
@@ -456,6 +459,7 @@ export default async function RiderProfilePage({
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
     isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,
+    isSaved: viewer ? entry.saves.some((s) => s.riderId === viewer.id) : false,
     comments: entry.comments.map((c) => ({
       id: c.id,
       body: c.body,

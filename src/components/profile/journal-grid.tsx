@@ -36,6 +36,7 @@ export type JournalGridEntry = {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  isSaved: boolean;
   comments: Comment[];
   authorName: string;
   authorAvatarUrl: string;
@@ -232,6 +233,7 @@ function JournalCard({
               likeCount={entry.likeCount}
               commentCount={entry.commentCount}
               isLiked={entry.isLiked}
+              isSaved={entry.isSaved}
               isAuthenticated={isAuthenticated}
               comments={entry.comments}
               entryUrl={entry.profileUrl}

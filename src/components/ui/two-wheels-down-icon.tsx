@@ -1,9 +1,10 @@
-// The biker "two wheels down" salute — index + middle fingers pointed low at the
-// ground. Passing riders give it to mean "keep both wheels down, ride safe." It's
-// our reaction gesture, so this is a hand-authored mark rather than a stock emoji.
+// The biker "two wheels down" salute — a peace/victory hand angled at the road,
+// two fingers pointed down ("keep both wheels down, ride safe"). This is the
+// Phosphor `hand-peace` icon (MIT), rotated 180° into the arm-down posture: an
+// outline while idle, filling in when the reaction is active — mirroring the
+// like it replaces.
 //
-// `filled` fills the hand silhouette (the reaction is active); otherwise it renders
-// as a lucide-style outline. Sizing/colour come from `className` (currentColor).
+// Sizing/colour come from `className` (currentColor). viewBox is Phosphor's 256.
 
 export function TwoWheelsDownIcon({
   className,
@@ -14,23 +15,18 @@ export function TwoWheelsDownIcon({
 }) {
   return (
     <svg
-      viewBox="0 0 24 24"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={1.9}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      viewBox="0 0 256 256"
+      fill="currentColor"
       className={className}
       aria-hidden="true"
     >
-      {/* back of the hand + curled knuckles */}
-      <path d="M6.3 10.6V8a2.35 2.35 0 0 1 4.7 0" />
-      <path d="M11 8V7.1a2.35 2.35 0 0 1 4.7 0v3.4" />
-      {/* thumb tucked across */}
-      <path d="M15.7 9.4c1-.9 2.6-.7 3 .7.2 1-.3 1.9-1.2 2.5" />
-      {/* index + middle fingers pointed down at the road */}
-      <path d="M8 10.6 6.9 19.6" />
-      <path d="M13.1 10.9 13.9 20.6" />
+      <g transform="rotate(180 128 128)">
+        {filled ? (
+          <path d="M96.55 36.14a16 16 0 0 1 11-19.52c8.61-2.46 17.65 3 20 11.65l16 59.78a4 4 0 0 1-3.18 5A31.8 31.8 0 0 0 128 98c-.56.37-1.1.76-1.64 1.17c-.33-.58-.67-1.16-1-1.72a31.74 31.74 0 0 0-14-11.72a3.94 3.94 0 0 1-2.25-2.62ZM80.4 176.65a16 16 0 0 0 3.23.33a16 16 0 0 0 3.17-31.68l-19.59-4a16 16 0 0 0-6.41 31.35Zm-19.6-53l34.64 7.07a16 16 0 1 0 6.4-31.35l-34.63-7.04a16 16 0 0 0-18.88 12.47a16 16 0 0 0 12.47 18.88Zm102-28.16l23.55 4.81a4 4 0 0 0 4.65-2.86l16.42-61.3a16 16 0 0 0-30.91-8.28l-16.8 62.7a4 4 0 0 0 3.1 4.96Zm37.34 31.74a23.9 23.9 0 0 0-15.67-11l-35.6-7.23a16 16 0 0 0-15.12 5a14 14 0 0 0-2.43 3.57a16 16 0 0 0 1.72 17a16.5 16.5 0 0 0 9.8 5.93l15.24 3.11a8.06 8.06 0 0 1 6.32 9.36a28 28 0 0 0 2.77 19a8.19 8.19 0 0 1-1.93 10.41a8 8 0 0 1-11.94-2.43a44 44 0 0 1-5.48-22.09l-8.55-1.86A31.78 31.78 0 0 1 119 142.32c-.38-.57-.73-1.15-1.06-1.74a32 32 0 0 1-6.87 4A32 32 0 0 1 83.63 193a32.3 32.3 0 0 1-6.43-.65l-19.59-4h-.06a2.61 2.61 0 0 0-3 3.57A80.19 80.19 0 0 0 128 240h.61c43.77-.33 79.39-36.62 79.39-80.9v-3.34a55.7 55.7 0 0 0-7.85-28.5Z" />
+        ) : (
+          <path d="M212.24 30A28 28 0 0 0 161 36.77l-13 48.32l-12.95-48.32A28 28 0 1 0 81 51.26l9.38 35l-8.73-1.68a28 28 0 0 0-24.85 47.8a27.86 27.86 0 0 0-8.8 20.49V160a80 80 0 0 0 80 80h.61c43.78-.33 79.39-36.62 79.39-80.9v-3.34a55.88 55.88 0 0 0-11.77-34.27L215 51.26A27.8 27.8 0 0 0 212.24 30M97.61 38a12 12 0 0 1 22 2.9l14.77 55.15a28 28 0 0 0-14 4.77a2 2 0 0 0-.16-.26A27.65 27.65 0 0 0 108 90.35L96.42 47.12A11.94 11.94 0 0 1 97.61 38m-33.36 71.6a12 12 0 0 1 14.25-9.34l20.71 4a12 12 0 0 1 9.36 14.16a12 12 0 0 1-14.25 9.34l-20.75-4a12 12 0 0 1-9.32-14.15Zm0 40.72a12 12 0 0 1 14-9.37l10.11 2a12 12 0 0 1 9.36 14.15a12 12 0 0 1-14.2 9.35l-10-2a12 12 0 0 1-9.34-14.16ZM192 159.1c0 35.53-28.49 64.64-63.5 64.9a64.08 64.08 0 0 1-61.56-44.78a31 31 0 0 0 3.48.95l10 2a28.3 28.3 0 0 0 5.61.57a28 28 0 0 0 24.16-42.14c.79-.43 1.57-.89 2.32-1.4l.16.26a27.82 27.82 0 0 0 17.78 12l6.32 1.26a36 36 0 0 0 9.53 32.49A8 8 0 0 0 157.71 174a20 20 0 0 1-3.31-23.51a8 8 0 0 0-5.46-11.66l-15.34-3.07a12 12 0 0 1-9.35-14.15a12 12 0 0 1 14.18-9.35l21.41 4.28A40.1 40.1 0 0 1 192 155.76Zm7.59-112l-16.62 62a55.6 55.6 0 0 0-20-8.28l-2.5-.5l15.93-59.41a12 12 0 1 1 23.18 6.21Z" />
+        )}
+      </g>
     </svg>
   );
 }

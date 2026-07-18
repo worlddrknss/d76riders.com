@@ -68,6 +68,7 @@ model Rider {
   journalMentions JournalMention[] @relation("JournalMentions")
   comments       Comment[]
   likes          Like[]
+  saves          Save[]
   rsvps          Rsvp[]
   galleryItems   GalleryItem[]
   activities     Activity[]

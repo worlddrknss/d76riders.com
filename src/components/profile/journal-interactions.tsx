@@ -1,9 +1,13 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { MessageCircle, Share2 } from "lucide-react";
+import { Bookmark, MessageCircle, Share2 } from "lucide-react";
 
-import { toggleJournalLikeAction, addJournalCommentAction } from "@/app/(site)/r/journal-actions";
+import {
+  toggleJournalLikeAction,
+  toggleJournalSaveAction,
+  addJournalCommentAction,
+} from "@/app/(site)/r/journal-actions";
 import { JournalText } from "@/components/ui/journal-text";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 
@@ -20,6 +24,7 @@ type JournalInteractionsProps = {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  isSaved: boolean;
   isAuthenticated: boolean;
   comments: CommentData[];
   entryUrl: string;
@@ -30,12 +35,14 @@ export function JournalInteractions({
   likeCount,
   commentCount,
   isLiked,
+  isSaved,
   isAuthenticated,
   comments,
   entryUrl,
 }: JournalInteractionsProps) {
   const [showComments, setShowComments] = useState(false);
   const [likePending, startLikeTransition] = useTransition();
+  const [savePending, startSaveTransition] = useTransition();
   const [commentPending, startCommentTransition] = useTransition();
   const [shared, setShared] = useState(false);
   const commentFormRef = useRef<HTMLFormElement>(null);
@@ -44,6 +51,13 @@ export function JournalInteractions({
     if (!isAuthenticated) return;
     startLikeTransition(async () => {
       await toggleJournalLikeAction(entryId);
+    });
+  }
+
+  function handleSave() {
+    if (!isAuthenticated) return;
+    startSaveTransition(async () => {
+      await toggleJournalSaveAction(entryId);
     });
   }
 
@@ -99,6 +113,21 @@ export function JournalInteractions({
           <Share2 className="h-4 w-4" />
           {shared ? "Copied!" : "Share"}
         </button>
+
+        {isAuthenticated && (
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={savePending}
+            title={isSaved ? "Saved — tap to remove" : "Save this post"}
+            className={`ml-auto inline-flex items-center gap-1.5 text-sm font-medium transition ${
+              isSaved ? "text-ink" : "text-muted hover:text-ink"
+            } disabled:opacity-50`}
+          >
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+            {isSaved ? "Saved" : "Save"}
+          </button>
+        )}
       </div>
 
       {/* Comments section */}
