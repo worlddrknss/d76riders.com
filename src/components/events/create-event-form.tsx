@@ -139,6 +139,18 @@ export function CreateEventForm({
         </div>
 
         <div className="space-y-1.5">
+          <label htmlFor="endsAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Event End (Optional)
+          </label>
+          <input
+            id="endsAt"
+            name="endsAt"
+            type="datetime-local"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          />
+        </div>
+
+        <div className="space-y-1.5">
           <label htmlFor="ksuAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
             KSU Time (Optional)
           </label>
@@ -231,6 +243,19 @@ export function CreateEventForm({
             type="datetime-local"
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="galleryClosesAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Gallery Closes (Optional)
+          </label>
+          <input
+            id="galleryClosesAt"
+            name="galleryClosesAt"
+            type="datetime-local"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          />
+          <p className="text-xs text-muted">Photo uploads stay open until this time, then the gallery closes.</p>
         </div>
       </div>
 

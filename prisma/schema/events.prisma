@@ -13,6 +13,12 @@ model RideEvent {
   // instant + zone (rather than a naive wall-clock) is what lets the upcoming
   // filter and "riding today" compare against the real clock correctly.
   startsAt      DateTime
+  endsAt        DateTime?
+  // Organizer-set grace deadline for the community gallery: attendees can keep
+  // uploading photos until this instant, after which the gallery is closed.
+  // Null = no deadline (open while the ride isn't completed). Computed on read —
+  // no job flips anything.
+  galleryClosesAt DateTime?
   ksuAt         DateTime?
   timezone      String          @default("America/Chicago")
   ksuLocation   String?

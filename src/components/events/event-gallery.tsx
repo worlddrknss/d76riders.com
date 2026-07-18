@@ -30,10 +30,13 @@ export function EventGallery({
   eventId,
   photos,
   canUpload,
+  closed = false,
 }: {
   eventId: string;
   photos: EventPhoto[];
   canUpload: boolean;
+  /** Uploads are closed (past the grace deadline / ride closed). */
+  closed?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
@@ -62,12 +65,14 @@ export function EventGallery({
         <h2 className="font-display text-lg font-semibold text-ink">
           Gallery {photos.length > 0 && <span className="text-muted">· {photos.length}</span>}
         </h2>
-        {canUpload && (
+        {canUpload ? (
           <Button variant="accent" size="sm" onClick={() => setOpen(true)} className="gap-1.5">
             <ImagePlus className="h-4 w-4" />
             Add photos
           </Button>
-        )}
+        ) : closed ? (
+          <span className="text-xs font-medium text-muted">Uploads closed</span>
+        ) : null}
       </div>
 
       {photos.length === 0 ? (

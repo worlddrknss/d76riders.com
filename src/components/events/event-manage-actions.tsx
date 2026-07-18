@@ -36,6 +36,7 @@ type EventData = {
   facebookEventUrl: string | null;
   timezone: string;
   startsAt: string; // datetime-local string, already in the event's timezone
+  endsAt: string | null;
   ksuAt: string | null;
   meetLocation: string | null;
   meetAddress: string | null;
@@ -49,6 +50,7 @@ type EventData = {
   difficulty: string | null;
   maxCapacity: number | null;
   rsvpDeadline: string | null;
+  galleryClosesAt: string | null;
   hasPhoto: boolean;
   hasRoute: boolean;
 };
@@ -186,6 +188,10 @@ export function EventManageActions({ event }: { event: EventData }) {
                   <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={event.startsAt} className="mt-1" required />
                 </div>
                 <div>
+                  <label htmlFor="edit-event-ends" className="text-xs font-semibold uppercase tracking-wide text-muted">Ends At (optional)</label>
+                  <Input id="edit-event-ends" name="endsAt" type="datetime-local" defaultValue={event.endsAt ?? ""} className="mt-1" />
+                </div>
+                <div>
                   <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU At</label>
                   <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt ?? ""} className="mt-1" />
                 </div>
@@ -229,6 +235,11 @@ export function EventManageActions({ event }: { event: EventData }) {
                   <label htmlFor="edit-event-rsvp-deadline" className="text-xs font-semibold uppercase tracking-wide text-muted">RSVP Deadline</label>
                   <Input id="edit-event-rsvp-deadline" name="rsvpDeadline" type="datetime-local" defaultValue={event.rsvpDeadline ?? ""} className="mt-1" />
                 </div>
+              </div>
+              <div>
+                <label htmlFor="edit-event-gallery-closes" className="text-xs font-semibold uppercase tracking-wide text-muted">Gallery closes at (optional)</label>
+                <Input id="edit-event-gallery-closes" name="galleryClosesAt" type="datetime-local" defaultValue={event.galleryClosesAt ?? ""} className="mt-1" />
+                <p className="mt-1 text-xs text-muted">Keep photo uploads open until this time (e.g. a week after the ride). After it, the gallery closes.</p>
               </div>
               <div>
                 <label htmlFor="edit-event-photo" className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</label>

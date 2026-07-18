@@ -22,6 +22,7 @@ import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventGallery } from "@/components/events/event-gallery";
 import { EventOrganizers } from "@/components/events/event-organizers";
 import { EventRecap } from "@/components/events/event-recap";
+import { isGalleryOpen } from "@/lib/event-gallery";
 import { EventRidersList } from "@/components/events/event-riders-list";
 import { MessageRidersDialog } from "@/components/events/message-riders-dialog";
 import { RouteExportOptions } from "@/components/events/route-export-options";
@@ -313,6 +314,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // Check-in state — "today" is judged in the event's own timezone.
   const isEventDay = isSameDayInTz(event.startsAt, event.timezone);
   const isActiveEvent = event.status === "UPCOMING" && isEventDay;
+  // A ride whose start time has passed but was never closed — organizers still
+  // need to manage attendance and close it out.
+  const hasStarted = event.startsAt.getTime() <= now.getTime();
   // Only set when the viewer's zone differs from the event's.
   const meetHint = viewerTimeHint(event.startsAt, event.timezone, viewerTz);
   const viewerCheckIn = viewerRider
@@ -489,7 +493,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             {event.excerpt ? <p className="mt-2 max-w-2xl text-sm text-muted">{event.excerpt}</p> : null}
             <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-muted">
               <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-sunset" />{formatEventDate(event.startsAt, event.timezone)}</span>
-              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-sunset" />Meet {formatEventTime(event.startsAt, event.timezone)}</span>
+              <span className="inline-flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-sunset" />Meet {formatEventTime(event.startsAt, event.timezone)}{event.endsAt ? ` – ${formatEventTime(event.endsAt, event.timezone)}` : ""}</span>
               <span className="inline-flex items-center gap-1.5"><Signal className="h-4 w-4 text-sunset" />{difficultyLabel(event.difficulty)}</span>
               {event.distanceMiles ? (
                 <span className="inline-flex items-center gap-1.5"><RouteIcon className="h-4 w-4 text-sunset" />{event.distanceMiles} mi</span>
@@ -509,6 +513,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   facebookEventUrl: event.facebookEventUrl,
                   timezone: event.timezone,
                   startsAt: toZonedInputValue(event.startsAt, event.timezone),
+                  endsAt: event.endsAt ? toZonedInputValue(event.endsAt, event.timezone) : null,
                   ksuAt: event.ksuAt ? toZonedInputValue(event.ksuAt, event.timezone) : null,
                   meetLocation: event.meetLocation,
                   meetAddress: event.meetAddress,
@@ -522,6 +527,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   difficulty: event.difficulty,
                   maxCapacity: event.maxCapacity,
                   rsvpDeadline: event.rsvpDeadline ? toZonedInputValue(event.rsvpDeadline, event.timezone) : null,
+                  galleryClosesAt: event.galleryClosesAt ? toZonedInputValue(event.galleryClosesAt, event.timezone) : null,
                   hasPhoto: event.galleryItems.length > 0,
                   hasRoute: !!event.routeId,
                 }}
@@ -789,10 +795,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             )}
 
             {/* Community photo gallery — attendees contribute, anyone can view */}
-            <EventGallery eventId={event.id} photos={eventPhotos} canUpload={Boolean(viewerRider)} />
+            <EventGallery
+              eventId={event.id}
+              photos={eventPhotos}
+              canUpload={Boolean(viewerRider) && isGalleryOpen(event)}
+              closed={!isGalleryOpen(event)}
+            />
 
             {/* Attendance — organizers, during or after the ride */}
-            {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
+            {isOrganizer && (isActiveEvent || hasStarted || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
               <AttendancePanel
                 eventId={event.id}
                 attendees={attendeesForPanel}

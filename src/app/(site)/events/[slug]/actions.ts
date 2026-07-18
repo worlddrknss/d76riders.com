@@ -127,6 +127,8 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const timezoneInput = normalizeText(formData.get("timezone"));
   const timezone = isValidTimezone(timezoneInput) ? timezoneInput : DEFAULT_TIMEZONE;
   const startsAt = zonedInputToUtc(normalizeText(formData.get("startsAt")), timezone);
+  const endsAt = zonedInputToUtc(normalizeText(formData.get("endsAt")), timezone);
+  const galleryClosesAt = zonedInputToUtc(normalizeText(formData.get("galleryClosesAt")), timezone);
   const ksuAt = zonedInputToUtc(normalizeText(formData.get("ksuAt")), timezone);
   const meetLocation = normalizeText(formData.get("meetLocation"));
   const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
@@ -183,6 +185,8 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         excerpt: excerpt ? excerpt.slice(0, 255) : null,
         description: description || null,
         startsAt,
+        endsAt,
+        galleryClosesAt,
         ksuAt,
         timezone,
         meetLocation: meetLocation || null,

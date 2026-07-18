@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 
 import { logActivity } from "@/lib/activity";
+import { isGalleryOpen } from "@/lib/event-gallery";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -23,8 +24,13 @@ export async function addEventPhotosAction(eventId: string, formData: FormData):
   if (!rider) return;
   if (!isS3Configured()) return;
 
-  const event = await prisma.rideEvent.findUnique({ where: { id: eventId }, select: { id: true, slug: true, title: true } });
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { id: true, slug: true, title: true, status: true, galleryClosesAt: true },
+  });
   if (!event) return;
+  // Gallery closed (past its grace deadline, or the ride was closed) — no uploads.
+  if (!isGalleryOpen(event)) return;
 
   const caption = (formData.get("caption")?.toString() ?? "").trim().slice(0, 200) || null;
   const files = formData.getAll("photos").filter((f): f is File => f instanceof File && f.size > 0);

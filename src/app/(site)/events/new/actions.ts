@@ -175,6 +175,21 @@ export async function createEventAction(
     return { error: "KSU date/time is invalid." };
   }
 
+  const endsAtInput = normalizeText(formData.get("endsAt"));
+  const endsAt = zonedInputToUtc(endsAtInput, timezone);
+  if (endsAtInput && !endsAt) {
+    return { error: "End date/time is invalid." };
+  }
+  if (endsAt && startsAt && endsAt.getTime() < startsAt.getTime()) {
+    return { error: "End time must be after the start time." };
+  }
+
+  const galleryClosesAtInput = normalizeText(formData.get("galleryClosesAt"));
+  const galleryClosesAt = zonedInputToUtc(galleryClosesAtInput, timezone);
+  if (galleryClosesAtInput && !galleryClosesAt) {
+    return { error: "Gallery close date/time is invalid." };
+  }
+
   const distanceMiles = toOptionalInt(distanceMilesInput);
   if (distanceMilesInput && distanceMiles === null) {
     return { error: "Distance must be a whole number of miles." };
@@ -309,6 +324,8 @@ export async function createEventAction(
         description: description || null,
         facebookEventUrl,
         startsAt,
+        endsAt,
+        galleryClosesAt,
         ksuAt,
         timezone,
         ksuLocation: ksuLocation || null,
