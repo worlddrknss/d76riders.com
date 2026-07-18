@@ -33,6 +33,15 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: "D76 Riders",
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "D76 Riders" },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
   title: {
     default: "District 76 Riders — Founded in Clarksville, Built for Tennessee Riders",
     template: "%s | District 76 Riders",
