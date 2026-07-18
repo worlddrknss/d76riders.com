@@ -178,22 +178,29 @@ export default async function ShopsPage({
                       ) : (
                         <Store className="h-9 w-9 text-muted/30" />
                       )}
-                      {shop.tier ? (
-                        <span className="absolute right-3 top-3 rounded-full border border-sunset/40 bg-sunset/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-sunset">
-                          {TIER_LABEL[shop.tier]}
-                        </span>
-                      ) : null}
                     </div>
 
                     <div className="flex flex-1 flex-col p-5">
-                      <h2 className="font-display text-base font-semibold text-ink">
-                        {shop.name}
-                      </h2>
-                      {shop.category ? (
-                        <p className="text-xs font-medium text-sunset">
-                          {SHOP_CATEGORY_LABEL[shop.category]}
-                        </p>
-                      ) : null}
+                      {/* Tier sits beside the name, not over the logo — a long
+                          label like "Friend of the Community" was overlapping
+                          logos that filled the band's corner. */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h2 className="font-display text-base font-semibold text-ink">
+                            {shop.name}
+                          </h2>
+                          {shop.category ? (
+                            <p className="text-xs font-medium text-sunset">
+                              {SHOP_CATEGORY_LABEL[shop.category]}
+                            </p>
+                          ) : null}
+                        </div>
+                        {shop.tier ? (
+                          <span className="shrink-0 rounded-full border border-sunset/40 bg-sunset/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-[0.08em] text-sunset">
+                            {TIER_LABEL[shop.tier]}
+                          </span>
+                        ) : null}
+                      </div>
 
                       {shop.description ? (
                         <p className="mt-2 line-clamp-3 flex-1 text-sm text-muted">
