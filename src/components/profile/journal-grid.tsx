@@ -8,7 +8,7 @@ import { updateJournalEntryAction, deleteJournalEntryAction } from "@/app/(site)
 import { JournalInteractions } from "@/components/profile/journal-interactions";
 import { ReportJournalButton } from "@/components/profile/report-journal-button";
 import { VideoEmbed } from "@/components/ui/video-embed";
-import { Linkify } from "@/components/ui/linkify";
+import { JournalText } from "@/components/ui/journal-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -212,7 +212,7 @@ function JournalCard({
                 <h3 className="font-display text-base font-semibold text-ink">{entry.title}</h3>
               )}
               <p ref={bodyRef} className={`text-sm text-muted ${expanded ? "" : "line-clamp-3"}`}>
-                <Linkify text={entry.body} />
+                <JournalText text={entry.body} />
               </p>
               {clampable && (
                 <button

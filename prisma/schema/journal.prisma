@@ -7,16 +7,45 @@ model JournalEntry {
   body     String
   videoUrl String?
 
-  author       Rider         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author       Rider            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   likes        Like[]
   reports      Report[]
   galleryItems GalleryItem[]
+  hashtags     JournalHashtag[]
+  mentions     JournalMention[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([authorId])
+}
+
+// Extracted from the body on save (normalized: lowercase, no leading '#'), so
+// #tags are browsable at /tags/<tag> without scanning every post's text.
+model JournalHashtag {
+  id      String @id @default(cuid())
+  entryId String
+  tag     String
+
+  entry JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, tag])
+  @@index([tag])
+}
+
+// A rider @mentioned in an entry — only ever a real rider (typos are dropped on
+// save), which is what lets a mention notify someone and light up their feed.
+model JournalMention {
+  id               String @id @default(cuid())
+  entryId          String
+  mentionedRiderId String
+
+  entry JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  rider Rider        @relation("JournalMentions", fields: [mentionedRiderId], references: [id], onDelete: Cascade)
+
+  @@unique([entryId, mentionedRiderId])
+  @@index([mentionedRiderId])
 }
 
 // A Comment lives on either a JournalEntry or a RideEvent.

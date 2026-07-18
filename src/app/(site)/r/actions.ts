@@ -4,6 +4,8 @@ import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { syncJournalTagsAndMentions } from "@/lib/journal-sync";
+
 import { reportContentAction, type ReportFormState } from "@/app/(site)/report/actions";
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -90,7 +92,7 @@ export async function createJournalEntryAction(
     photoUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
   }
 
-  await prisma.journalEntry.create({
+  const created = await prisma.journalEntry.create({
     data: {
       authorId: rider.id,
       title: title || null,
@@ -105,7 +107,10 @@ export async function createJournalEntryAction(
           }
         : undefined,
     },
+    select: { id: true },
   });
+
+  await syncJournalTagsAndMentions({ entryId: created.id, body, authorId: rider.id });
 
   revalidatePath("/r", "layout");
   revalidatePath(`/r/${rider.handle}`);
@@ -184,6 +189,8 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   if (nextPhotoUrl || removePhoto) {
     await deleteFilesByUrls(previousPhotoUrls);
   }
+
+  await syncJournalTagsAndMentions({ entryId: entry.id, body, authorId: entry.author.id });
 
   revalidatePath("/r", "layout");
 }

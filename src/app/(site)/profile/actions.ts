@@ -3,6 +3,8 @@
 import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 
+import { syncJournalTagsAndMentions } from "@/lib/journal-sync";
+
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -75,7 +77,7 @@ export async function createJournalEntryAction(
     photoUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
   }
 
-  await prisma.journalEntry.create({
+  const created = await prisma.journalEntry.create({
     data: {
       authorId: rider.id,
       title: title || null,
@@ -89,7 +91,10 @@ export async function createJournalEntryAction(
           }
         : undefined,
     },
+    select: { id: true },
   });
+
+  await syncJournalTagsAndMentions({ entryId: created.id, body, authorId: rider.id });
 
   return { error: null, success: "Ride history entry published." };
 }
@@ -163,6 +168,8 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   if (nextPhotoUrl || removePhoto) {
     await deleteFilesByUrls(previousPhotoUrls);
   }
+
+  await syncJournalTagsAndMentions({ entryId: entry.id, body, authorId: entry.author.id });
 
   redirect("/garage/mine");
 }

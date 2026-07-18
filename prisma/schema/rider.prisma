@@ -57,6 +57,7 @@ model Rider {
   roadRatings    RoadRating[]
   hazardReports  HazardReport[]
   journalEntries JournalEntry[]
+  journalMentions JournalMention[] @relation("JournalMentions")
   comments       Comment[]
   likes          Like[]
   rsvps          Rsvp[]
