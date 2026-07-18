@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { CheckCircle2, Circle, Flag, UserPlus } from "lucide-react";
+import { CheckCircle2, Flag, UserPlus } from "lucide-react";
 
 import { manualCheckInAction, closeRideAction } from "@/app/(site)/events/[slug]/actions";
 import { mediaUrl } from "@/lib/media-url";

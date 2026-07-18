@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
 import { markAllReadAction } from "@/app/(site)/notifications/actions";
-import { navItems, type NavItem } from "@/data/community";
+import { navItems } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
 
 type ActivityItem = {
@@ -67,12 +67,12 @@ function useScrolled(threshold = 10) {
 
 function NavDropdown({
   label,
-  children,
+  items,
   isActive,
   pathname,
 }: {
   label: string;
-  children: { href: string; label: string }[];
+  items: { href: string; label: string }[];
   isActive: boolean;
   pathname: string;
 }) {
@@ -80,9 +80,13 @@ function NavDropdown({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Close on navigation — adjusted at render on a pathname change rather than in
+  // an effect.
+  const [navPath, setNavPath] = useState(pathname);
+  if (pathname !== navPath) {
+    setNavPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   function handleEnter() {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -121,7 +125,7 @@ function NavDropdown({
             transition={{ duration: 0.12 }}
             className="absolute left-0 top-full z-50 mt-1 min-w-40 overflow-hidden rounded-xl border border-white/10 bg-[#171a1f] p-1.5 shadow-xl"
           >
-            {children.map((child) => {
+            {items.map((child) => {
               const active = pathname === child.href || pathname.startsWith(child.href + "/");
               return (
                 <Link
@@ -152,11 +156,14 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
   const scrolled = useScrolled();
   const isAdministrator = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
-  useEffect(() => {
+  // Close all menus on navigation — adjusted at render on a pathname change.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
     setIsOpen(false);
     setMenuOpen(false);
     setNotifOpen(false);
-  }, [pathname]);
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -246,7 +253,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
               <NavDropdown
                 key={item.label}
                 label={item.label}
-                children={item.children}
+                items={item.children}
                 isActive={isChildActive}
                 pathname={pathname}
               />

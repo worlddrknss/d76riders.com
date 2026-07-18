@@ -21,16 +21,16 @@ export function LocationSearch({ onSelect }: LocationSearchProps) {
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Debounced forward geocoding as the user types.
+  // Debounced forward geocoding as the user types. The short-query clear lives
+  // inside the timer so no state is set synchronously in the effect body.
   useEffect(() => {
-    if (query.trim().length < 3) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-
     const controller = new AbortController();
     const timer = setTimeout(() => {
+      if (query.trim().length < 3) {
+        setResults([]);
+        setSearching(false);
+        return;
+      }
       setSearching(true);
       setError(null);
       geocodeAddress(query, controller.signal, near ?? undefined)
@@ -112,6 +112,7 @@ export function LocationSearch({ onSelect }: LocationSearchProps) {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             type="text"
+            role="combobox"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setOpen(true)}

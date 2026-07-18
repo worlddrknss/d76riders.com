@@ -191,7 +191,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
                         </span>
 
                         {entry.rider.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
+                           
                           <img
                             src={mediaUrl(entry.rider.avatarUrl)}
                             alt=""

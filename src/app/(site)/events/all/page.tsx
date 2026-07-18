@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
 import Link from "next/link";
 
 import { formatEventDate, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";

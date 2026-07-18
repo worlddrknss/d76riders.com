@@ -83,7 +83,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
       <header className="mt-3 flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           {crew.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
+             
             <img
               src={crew.avatarUrl}
               alt=""
@@ -145,7 +145,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
                 className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
               >
                 {member.rider.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
+                   
                   <img
                     src={member.rider.avatarUrl}
                     alt=""

@@ -194,11 +194,12 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!smartAutoLock && traceLockMode === "auto") {
-      setTraceLockMode("unlocked");
-    }
-  }, [smartAutoLock, traceLockMode]);
+  // Auto-lock only exists while smart lock is on; drop back to unlocked the
+  // moment it's turned off. Adjusted at render (converges immediately) rather
+  // than in an effect.
+  if (!smartAutoLock && traceLockMode === "auto") {
+    setTraceLockMode("unlocked");
+  }
 
   const getSnapshot = useCallback((): PlannerSnapshot => {
     return {
@@ -396,9 +397,13 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
     }
 
     if (activePoints.length < 2) {
-      setRoute(null);
-      setError(null);
-      setRouteLine([]);
+      // Deferred to a microtask (same pattern as setRouting below) so no state
+      // is set synchronously in the effect body.
+      Promise.resolve().then(() => {
+        setRoute(null);
+        setError(null);
+        setRouteLine([]);
+      });
       return;
     }
 

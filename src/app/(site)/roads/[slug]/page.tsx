@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, Star, UserRound } from "lucide-react";
+import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";

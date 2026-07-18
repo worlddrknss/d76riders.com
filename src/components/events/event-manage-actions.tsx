@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -58,9 +58,13 @@ export function EventManageActions({ event }: { event: EventData }) {
   const [editPending, startEditTransition] = useTransition();
   const [excerptValue, setExcerptValue] = useState(event.excerpt ?? "");
 
-  useEffect(() => {
+  // Refresh the excerpt when the dialog opens — the render-time "adjust state on
+  // a change" pattern rather than an effect, so it never lags a frame.
+  const [wasEditOpen, setWasEditOpen] = useState(editOpen);
+  if (editOpen !== wasEditOpen) {
+    setWasEditOpen(editOpen);
     if (editOpen) setExcerptValue(event.excerpt ?? "");
-  }, [editOpen, event.excerpt]);
+  }
   const [deletePending, startDeleteTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();

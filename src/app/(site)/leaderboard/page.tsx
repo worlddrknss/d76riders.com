@@ -128,7 +128,7 @@ export default async function LeaderboardPage(props: {
                     </span>
 
                     {rider.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <img
                         src={rider.avatarUrl}
                         alt=""

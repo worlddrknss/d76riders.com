@@ -858,7 +858,7 @@ export default async function RiderProfilePage({
                       className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
                     >
                       {referred.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img
                           src={mediaUrl(referred.avatarUrl)}
                           alt=""

@@ -423,7 +423,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       className="inline-flex items-center gap-2 text-sm font-semibold text-ink hover:text-sunset"
                     >
                       {sponsor.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img src={sponsor.logoUrl} alt="" className="h-6 w-auto object-contain" />
                       ) : null}
                       {sponsor.name}
@@ -431,7 +431,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   ) : (
                     <span key={id} className="inline-flex items-center gap-2 text-sm font-semibold text-ink">
                       {sponsor.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img src={sponsor.logoUrl} alt="" className="h-6 w-auto object-contain" />
                       ) : null}
                       {sponsor.name}
@@ -542,7 +542,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             {/* The event's poster, above the details it summarises. A portrait
                 flyer fills the rail's width instead of stranding text beside it. */}
             {flyerUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
+               
               <img
                 src={mediaUrl(flyerUrl)}
                 alt={event.galleryItems[0].caption || `${event.title} flyer`}

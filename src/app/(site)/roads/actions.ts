@@ -23,11 +23,6 @@ function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
 }
 
-function toOptionalInt(value: string): number | null {
-  if (!value) return null;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) ? parsed : null;
-}
 
 function toOptionalFloat(value: string): number | null {
   if (!value) return null;

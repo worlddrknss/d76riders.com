@@ -96,7 +96,7 @@ export function CoverPhoto({ url, name, position, canReposition }: CoverPhotoPro
       }}
     >
       {url ? (
-        // eslint-disable-next-line @next/next/no-img-element
+         
         <img
           src={url}
           alt={`${name}'s cover`}

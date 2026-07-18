@@ -27,12 +27,11 @@ function buildAppleMapsUrl(waypoints: PlannerWaypoint[], coordinates: [number, n
   const end = points[points.length - 1];
   const midpoints = points.slice(1, -1);
 
-  let url = `https://maps.apple.com/?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&dirflg=d`;
-  if (midpoints.length > 0) {
-    // Apple Maps doesn't natively support waypoints via URL, so we link to the destination
-    // with start set — best we can do without the MapKit JS SDK
-  }
-  return url;
+  // Apple Maps doesn't take waypoints via URL, so we link start → destination —
+  // the best we can do without the MapKit JS SDK. `midpoints` is intentionally
+  // unused for that reason.
+  void midpoints;
+  return `https://maps.apple.com/?saddr=${start.lat},${start.lng}&daddr=${end.lat},${end.lng}&dirflg=d`;
 }
 
 function buildWazeUrl(waypoints: PlannerWaypoint[], coordinates: [number, number][]): string {

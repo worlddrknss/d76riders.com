@@ -148,7 +148,7 @@ export function MentionTextarea({
                     className={`flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm ${i === active ? "bg-sunset/10" : "hover:bg-canvas"}`}
                   >
                     {r.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <img src={r.avatarUrl} alt="" className="h-6 w-6 shrink-0 rounded-full border border-border object-cover" />
                     ) : (
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sunset/10 text-[0.6rem] font-bold text-sunset">

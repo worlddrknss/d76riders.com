@@ -32,6 +32,13 @@ export function CreateJournalDialog({ open, onOpenChange }: CreateJournalDialogP
     return createJournalEntryAction(_prev, formData);
   }, initial);
 
+  // Start every fresh open on the photo tab — adjusted at render on an open change.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setMediaType("photo");
+  }
+
   useEffect(() => {
     if (!state.success) {
       return;
@@ -39,7 +46,6 @@ export function CreateJournalDialog({ open, onOpenChange }: CreateJournalDialogP
 
     onOpenChange(false);
     formRef.current?.reset();
-    setMediaType("photo");
     router.refresh();
   }, [router, state.success, onOpenChange]);
 

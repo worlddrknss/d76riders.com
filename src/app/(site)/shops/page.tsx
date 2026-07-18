@@ -169,7 +169,7 @@ export default async function ShopsPage({
                         cropped — a wordmark cropped to a square is unreadable. */}
                     <div className="relative flex h-32 shrink-0 items-center justify-center border-b border-border bg-white p-5">
                       {shop.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img
                           src={shop.logoUrl}
                           alt={shop.name}

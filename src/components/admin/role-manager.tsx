@@ -18,7 +18,7 @@ const ROLES = [
   { value: "ADMINISTRATOR", label: "Administrator", description: "Full system access" },
 ];
 
-export function RoleManager({ users, selectedUserId, selectedUserName }: RoleManagerProps) {
+export function RoleManager({ users, selectedUserId }: RoleManagerProps) {
   const [state, formAction] = useActionState<{ error?: string }, FormData>(
     async (_prev, formData) => grantRoleAction(formData),
     {},

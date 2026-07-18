@@ -76,7 +76,7 @@ export default async function CrewsPage() {
                     >
                       <div className="flex items-center gap-3">
                         {crew.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
+                           
                           <img
                             src={crew.avatarUrl}
                             alt=""

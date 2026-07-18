@@ -313,7 +313,7 @@ export default async function Home() {
                   >
                     <div className="relative h-40 w-full bg-linear-to-br from-asphalt to-sunset/40">
                       {event.galleryItems[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
+                         
                         <img
                           src={mediaUrl(event.galleryItems[0].url) ?? ""}
                           alt=""
@@ -590,7 +590,7 @@ export default async function Home() {
                 const logo = (
                   <div className="flex h-20 items-center justify-center rounded-xl border border-border bg-surface p-3 transition hover:border-ink/30">
                     {sponsor.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
+                       
                       <img
                         src={sponsor.logoUrl}
                         alt={sponsor.name}

@@ -120,7 +120,7 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5">
                         {sponsor.logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
+                           
                           <img src={sponsor.logoUrl} alt="" className="max-h-full max-w-full object-contain" />
                         ) : (
                           <Store className="h-3.5 w-3.5 text-slate-500" />

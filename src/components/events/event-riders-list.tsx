@@ -14,7 +14,7 @@ export type EventRider = {
 function Avatar({ rider, size }: { rider: EventRider; size: "sm" | "md" }) {
   const cls = size === "sm" ? "h-7 w-7 text-[0.6rem]" : "h-9 w-9 text-sm";
   return rider.avatarUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element
+     
     <img src={rider.avatarUrl} alt={rider.name} className={`${cls} shrink-0 rounded-full border border-border object-cover`} />
   ) : (
     <span className={`${cls} inline-flex shrink-0 items-center justify-center rounded-full bg-sunset/10 font-bold text-sunset`}>
