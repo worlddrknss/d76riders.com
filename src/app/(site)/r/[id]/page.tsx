@@ -611,13 +611,12 @@ export default async function RiderProfilePage({
           </div>
         </div>
 
-        {/* Main column: recent activity, then the rider's journal feed. */}
-        <div className="space-y-5">
+        {/* Main column: the activity feed. The journal lives in its own tab. */}
+        <div>
           <ActivityFeed
             items={recentActivities}
             viewAllHref={isOwner ? "/notifications" : undefined}
           />
-          {ridesContent}
         </div>
       </div>
     </div>
@@ -901,8 +900,8 @@ export default async function RiderProfilePage({
   ) : null;
 
   const tabs: ProfileTab[] = [
-    // No separate Journal tab: the journal *is* the Overview's main column now.
-    { id: "overview", label: "Overview", count: rider.journalEntries.length, content: overviewContent },
+    { id: "overview", label: "Overview", content: overviewContent },
+    { id: "journal", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
     { id: "garage", label: "Builds", count: rider.bikes.length, content: garageContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
