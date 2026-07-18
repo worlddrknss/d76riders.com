@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
+import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
@@ -243,7 +243,7 @@ export default async function RiderProfilePage({
     notFound();
   }
 
-  const [hostedEvents, rsvpEvents, recentActivities] = await Promise.all([
+  const [hostedEvents, rsvpEvents, recentActivities, profilePhotos, profileEvents] = await Promise.all([
     prisma.rideEvent.findMany({
       where: { hostId: rider.id },
       select: { id: true },
@@ -257,6 +257,41 @@ export default async function RiderProfilePage({
       orderBy: { createdAt: "desc" },
       take: 8,
       select: { id: true, type: true, summary: true, createdAt: true },
+    }),
+    // Photos tab: everything this rider has shot — their own uploads plus their
+    // bikes' and journal posts' images.
+    prisma.galleryItem.findMany({
+      where: {
+        OR: [
+          { riderId: rider.id },
+          { bike: { riderId: rider.id } },
+          { journalEntry: { authorId: rider.id } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      take: 24,
+      select: { id: true, url: true, caption: true },
+    }),
+    // Events tab: rides they host or are going to.
+    prisma.rideEvent.findMany({
+      where: {
+        OR: [
+          { hostId: rider.id },
+          { rsvps: { some: { riderId: rider.id, status: "GOING" } } },
+        ],
+      },
+      orderBy: { startsAt: "desc" },
+      take: 24,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        startsAt: true,
+        meetLocation: true,
+        distanceMiles: true,
+        difficulty: true,
+        hostId: true,
+      },
     }),
   ]);
 
@@ -899,10 +934,94 @@ export default async function RiderProfilePage({
     </div>
   ) : null;
 
+  // ─── Photos tab ─────────────────────────────────────────────────
+  const photosContent =
+    profilePhotos.length === 0 ? (
+      <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+        <ImageIcon className="mx-auto h-8 w-8 text-muted/50" />
+        <p className="mt-3 text-sm text-muted">
+          {isOwner
+            ? "No photos yet. Add bike photos or journal images and they'll gather here."
+            : `${rider.name} hasn't shared any photos yet.`}
+        </p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {profilePhotos.map((photo) => (
+          <div
+            key={photo.id}
+            className="group relative aspect-square overflow-hidden rounded-xl border border-border bg-canvas"
+          >
+            <img
+              src={mediaUrl(photo.url)}
+              alt={photo.caption ?? ""}
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            />
+            {photo.caption && (
+              <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-asphalt/80 to-transparent p-2 opacity-0 transition group-hover:opacity-100">
+                <p className="truncate text-xs text-white">{photo.caption}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+
+  // ─── Events tab ─────────────────────────────────────────────────
+  const eventsContent =
+    profileEvents.length === 0 ? (
+      <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+        <CalendarDays className="mx-auto h-8 w-8 text-muted/50" />
+        <p className="mt-3 text-sm text-muted">
+          {isOwner ? "No rides yet. Host one or RSVP and it'll show here." : `${rider.name} hasn't joined any rides yet.`}
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-3">
+        {profileEvents.map((ev) => {
+          const hosting = ev.hostId === rider.id;
+          const meta = [
+            ev.meetLocation,
+            ev.distanceMiles ? `${ev.distanceMiles} mi` : null,
+            ev.difficulty ? ev.difficulty.replace(/_/g, " ").toLowerCase() : null,
+          ].filter(Boolean);
+          return (
+            <Link
+              key={ev.id}
+              href={`/events/${ev.slug}`}
+              className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 shadow-soft transition hover:border-sunset/40"
+            >
+              <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-canvas">
+                <span className="text-[0.6rem] font-semibold uppercase tracking-wider text-sunset">
+                  {ev.startsAt.toLocaleDateString("en-US", { month: "short" })}
+                </span>
+                <span className="font-display text-lg leading-none text-ink">{ev.startsAt.getDate()}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="truncate font-semibold text-ink">{ev.title}</h3>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
+                      hosting ? "bg-sunset/10 text-sunset" : "bg-forest/10 text-forest"
+                    }`}
+                  >
+                    {hosting ? "Hosting" : "Going"}
+                  </span>
+                </div>
+                {meta.length > 0 && <p className="mt-0.5 truncate text-xs capitalize text-muted">{meta.join(" · ")}</p>}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
+
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewContent },
     { id: "journal", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
     { id: "garage", label: "Builds", count: rider.bikes.length, content: garageContent },
+    { id: "photos", label: "Photos", count: profilePhotos.length, content: photosContent },
+    { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
     {
