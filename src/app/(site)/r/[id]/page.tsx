@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, MessageSquare, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
+import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, MapPin, MessageSquare, Receipt, Route, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
@@ -44,17 +44,7 @@ import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
 
-const gearSections = [
-  { key: "HELMET", label: "Helmets", icon: HardHat },
-  { key: "GLOVES", label: "Gloves", icon: Package },
-  { key: "JACKET", label: "Jackets", icon: Shirt },
-  { key: "PANTS", label: "Riding Pants", icon: Shirt },
-  { key: "BOOTS", label: "Boots", icon: Footprints },
-  { key: "CAMERA_GEAR", label: "Camera Gear", icon: Camera },
-  { key: "ACCESSORY", label: "Accessories", icon: Package },
-] as const;
-
-// Owner gear editor sections (icon resolved by key inside GearTabbedView).
+// Gear sections (icon resolved by key inside GearTabbedView).
 const ownerGearSections = [
   { key: "HELMET", label: "Helmets", description: "Daily, touring, and backup lids.", iconKey: "HardHat" },
   { key: "GLOVES", label: "Gloves", description: "Summer, winter, and rain setups.", iconKey: "Package" },
@@ -806,69 +796,16 @@ export default async function RiderProfilePage({
 
   // ─── Journal tab (Instagram-style grid) ─────────────────────────
   // ─── Gear tab ───────────────────────────────────────────────────
-  const gearContent = isOwner ? (
+  // Same layout for everyone; only the owner gets the CRUD controls.
+  const gearContent = (
     <GearTabbedView
       sections={ownerGearSections}
       items={rider.gearItems}
-      createAction={createGearItemAction}
-      updateAction={updateGearItemAction}
-      deleteAction={deleteGearItemAction}
+      createAction={isOwner ? createGearItemAction : undefined}
+      updateAction={isOwner ? updateGearItemAction : undefined}
+      deleteAction={isOwner ? deleteGearItemAction : undefined}
+      emptyMessage={isOwner ? "No gear logged yet." : `${rider.name} hasn't added any gear yet.`}
     />
-  ) : (
-    <div className="space-y-5">
-      {rider.gearItems.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
-          <HardHat className="mx-auto h-8 w-8 text-muted/50" />
-          <p className="mt-3 text-sm text-muted">
-            {isOwner ? "No gear logged yet." : `${rider.name} hasn't added any gear yet.`}
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {gearSections.map((section) => {
-            const items = rider.gearItems.filter((item) => item.category === section.key);
-            if (items.length === 0) return null;
-            const Icon = section.icon;
-            return (
-              <article key={section.key} className="flex flex-col rounded-xl border border-border bg-surface shadow-soft">
-                <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sunset/10 text-sunset">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-ink">{section.label}</p>
-                  </div>
-                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-canvas px-1.5 text-xs font-bold text-asphalt">
-                    {items.length}
-                  </span>
-                </div>
-                <div className="flex-1 space-y-2 p-4">
-                  {items.map((item) => (
-                    <div key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2.5">
-                      <p className="text-sm font-semibold text-ink">{item.name}</p>
-                      {(item.brand || item.model) ? (
-                        <p className="text-xs text-muted">{[item.brand, item.model].filter(Boolean).join(" ")}</p>
-                      ) : null}
-                      {(item.size || item.color || item.condition) ? (
-                        <p className="mt-0.5 text-xs text-muted">
-                          {[item.size && `Size ${item.size}`, item.color, item.condition].filter(Boolean).join(" · ")}
-                        </p>
-                      ) : null}
-                      {item.notes ? <p className="mt-1 text-xs italic text-muted">{item.notes}</p> : null}
-                      {item.purchaseUrl ? (
-                        <a href={item.purchaseUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline">
-                          <ExternalLink className="h-3 w-3" /> Buy this
-                        </a>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 
   // ─── Videos tab ─────────────────────────────────────────────────

@@ -43,9 +43,12 @@ type GearSection = {
 type GearTabbedViewProps = {
   sections: GearSection[];
   items: GearItem[];
-  createAction: (formData: FormData) => Promise<void>;
-  updateAction: (itemId: string, formData: FormData) => Promise<void>;
-  deleteAction: (itemId: string) => Promise<void>;
+  // When all three actions are supplied the viewer can edit (owner). Omit them
+  // for the read-only public view — same layout, minus the CRUD controls.
+  createAction?: (formData: FormData) => Promise<void>;
+  updateAction?: (itemId: string, formData: FormData) => Promise<void>;
+  deleteAction?: (itemId: string) => Promise<void>;
+  emptyMessage?: string;
 };
 
 function formatDate(value: Date | null): string {
@@ -128,7 +131,8 @@ function GearItemForm({ item, categoryKey, onSubmit, pending }: {
   );
 }
 
-export function GearTabbedView({ sections, items, createAction, updateAction, deleteAction }: GearTabbedViewProps) {
+export function GearTabbedView({ sections, items, createAction, updateAction, deleteAction, emptyMessage }: GearTabbedViewProps) {
+  const canEdit = Boolean(createAction && updateAction && deleteAction);
   const [editingItem, setEditingItem] = useState<GearItem | null>(null);
   const [createPending, startCreateTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
@@ -136,13 +140,14 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
   const router = useRouter();
 
   function handleCreate(formData: FormData) {
+    if (!createAction) return;
     startCreateTransition(async () => {
       await createAction(formData);
     });
   }
 
   function handleEdit(formData: FormData) {
-    if (!editingItem) return;
+    if (!editingItem || !updateAction) return;
     startEditTransition(async () => {
       await updateAction(editingItem.id, formData);
       setEditingItem(null);
@@ -151,14 +156,28 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
   }
 
   function handleDelete(itemId: string) {
+    if (!deleteAction) return;
     startDeleteTransition(async () => {
       await deleteAction(itemId);
     });
   }
 
+  // Owners see every category (so they can add to empty ones); the public view
+  // only shows categories that actually have gear.
+  const visibleSections = canEdit ? sections : sections.filter((s) => items.some((i) => i.category === s.key));
+
+  if (visibleSections.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
+        <Package className="mx-auto h-8 w-8 text-muted/50" />
+        <p className="mt-3 text-sm text-muted">{emptyMessage ?? "No gear yet."}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {sections.map((section) => {
+      {visibleSections.map((section) => {
         const sectionItems = items.filter((i) => i.category === section.key);
         const Icon = iconMap[section.iconKey] ?? Package;
 
@@ -179,19 +198,21 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
                 <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-canvas px-1.5 text-xs font-bold text-asphalt">
                   {sectionItems.length}
                 </span>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg border border-border bg-canvas text-sunset hover:bg-sunset/10" title={`Add ${section.label.toLowerCase()}`}>
-                      <Plus className="h-3.5 w-3.5" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Add {section.label.replace(/s$/, "")}</DialogTitle>
-                    </DialogHeader>
-                    <GearItemForm categoryKey={section.key} onSubmit={handleCreate} pending={createPending} />
-                  </DialogContent>
-                </Dialog>
+                {canEdit && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg border border-border bg-canvas text-sunset hover:bg-sunset/10" title={`Add ${section.label.toLowerCase()}`}>
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add {section.label.replace(/s$/, "")}</DialogTitle>
+                      </DialogHeader>
+                      <GearItemForm categoryKey={section.key} onSubmit={handleCreate} pending={createPending} />
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </div>
 
@@ -208,14 +229,16 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
                       </div>
                     )}
                     <div className="p-4">
-                    <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
-                      <button type="button" onClick={() => setEditingItem(item)} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-sunset" title="Edit">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button type="button" onClick={() => handleDelete(item.id)} disabled={deletePending} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-red-600" title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    {canEdit && (
+                      <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                        <button type="button" onClick={() => setEditingItem(item)} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-sunset" title="Edit">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(item.id)} disabled={deletePending} className="rounded bg-white/80 p-1.5 text-muted backdrop-blur transition hover:text-red-600" title="Delete">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
 
                     <p className="text-sm font-semibold text-ink">{item.name}</p>
                     {(item.brand || item.model) ? <p className="text-xs text-muted">{[item.brand, item.model].filter(Boolean).join(" ")}</p> : null}
@@ -239,16 +262,18 @@ export function GearTabbedView({ sections, items, createAction, updateAction, de
       })}
 
       {/* Edit dialog */}
-      <Dialog open={editingItem !== null} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit {editingItem?.name}</DialogTitle>
-          </DialogHeader>
-          {editingItem && (
-            <GearItemForm item={editingItem} categoryKey={editingItem.category} onSubmit={handleEdit} pending={editPending} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {canEdit && (
+        <Dialog open={editingItem !== null} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit {editingItem?.name}</DialogTitle>
+            </DialogHeader>
+            {editingItem && (
+              <GearItemForm item={editingItem} categoryKey={editingItem.category} onSubmit={handleEdit} pending={editPending} />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

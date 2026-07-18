@@ -50,13 +50,16 @@ export function PushSettingsCard({
       "serviceWorker" in navigator &&
       "PushManager" in window &&
       Boolean(vapidPublicKey);
-    setSupported(ok);
     if (!ok) return;
+    // Flip supported + subscribed together, off the synchronous effect path.
     navigator.serviceWorker
       .register("/sw.js")
       .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => setSubscribed(Boolean(sub)))
-      .catch(() => {});
+      .then((sub) => {
+        setSupported(true);
+        setSubscribed(Boolean(sub));
+      })
+      .catch(() => setSupported(true));
   }, [vapidPublicKey]);
 
   const enable = useCallback(async () => {

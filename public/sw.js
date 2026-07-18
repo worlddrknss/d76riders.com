@@ -8,7 +8,7 @@ self.addEventListener("push", (event) => {
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
-  } catch (_e) {
+  } catch {
     data = { title: "District 76", body: event.data ? event.data.text() : "" };
   }
 
