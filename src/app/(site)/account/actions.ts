@@ -9,7 +9,7 @@ import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { isValidTimezone } from "@/lib/datetime";
 import { sendVerification } from "@/lib/email-verification";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
-import { hashPassword } from "@/lib/password";
+import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clearUserSession, getCurrentUser } from "@/lib/session";
 import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
@@ -392,6 +392,38 @@ export async function rotateCalendarTokenAction(): Promise<{ error: string | nul
 
 function normalizeEmail(value: FormDataEntryValue | null): string {
   return normalizeText(value).toLowerCase();
+}
+
+/**
+ * Change the account password. Requires the current password (defense against a
+ * hijacked session silently rotating credentials).
+ */
+export async function changePasswordAction(
+  _previousState: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in again.", success: null };
+  }
+
+  const currentPassword = normalizeText(formData.get("currentPassword"));
+  const newPassword = normalizeText(formData.get("newPassword"));
+
+  if (!currentPassword) return { error: "Enter your current password.", success: null };
+  if (newPassword.length < 8) return { error: "New password must be at least 8 characters.", success: null };
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  if (!user?.passwordHash) return { error: "No password is set on this account.", success: null };
+
+  const valid = await verifyPassword(currentPassword, user.passwordHash);
+  if (!valid) return { error: "Current password is incorrect.", success: null };
+
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(newPassword) } });
+  return { error: null, success: "Password updated." };
 }
 
 /**

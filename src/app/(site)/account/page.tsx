@@ -1,14 +1,16 @@
-import { redirect } from "next/navigation";
-
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { Pencil } from "lucide-react";
 
 import { EmailChangeCard } from "@/components/account/notifications-card";
-import { AccountProfileForm } from "@/components/auth/account-profile-form";
+import { DeleteAccountCard, PasswordChangeCard } from "@/components/account/security-cards";
 import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
+
+export const metadata = { title: "Account — D76 Riders" };
 
 export default async function AccountPage() {
   const currentUser = await getCurrentUser();
@@ -19,7 +21,7 @@ export default async function AccountPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, calendarToken: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true, emailOnMention: true, emailOnComment: true, emailOnRsvp: true },
+    select: { handle: true, calendarToken: true },
   });
 
   const calendarPath = rider?.calendarToken ? `/api/riders/${rider.calendarToken}/calendar.ics` : null;
@@ -27,63 +29,47 @@ export default async function AccountPage() {
   // webcal:// makes calendar apps offer to *subscribe* rather than one-time import.
   const webcalUrl = httpsUrl ? httpsUrl.replace(/^https?:/, "webcal:") : null;
 
-  const currentYear = new Date().getFullYear();
-  const yearStartedRiding = rider?.yearsRiding != null
-    ? Math.max(1900, currentYear - rider.yearsRiding)
-    : null;
-
-  function extractHandle(url: string | null): string {
-    if (!url) return "";
-    try {
-      const parsed = new URL(url);
-      return parsed.pathname.replace(/^\/+/, "").replace(/^@/, "");
-    } catch {
-      return url.replace(/^@/, "");
-    }
-  }
-
   return (
     <section className="page-shell">
       <div className="content-wrap space-y-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Account</p>
-            <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Account &amp; Profile</h1>
+            <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Account &amp; security</h1>
           </div>
           <Link href="/settings" className="text-sm font-medium text-sunset hover:underline">
             Notification settings →
           </Link>
         </div>
 
-        <div className="mx-auto max-w-3xl rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-          <h2 className="font-display text-xl font-semibold text-ink">Profile</h2>
-          <p className="mt-1 text-sm text-muted">
-            Changes here update your public profile immediately.
-          </p>
-
-          <div className="mt-6">
-            <AccountProfileForm
-              displayName={currentUser.name ?? ""}
-              username={currentUser.handle ?? ""}
-              avatarUrl={currentUser.avatarUrl ?? currentUser.image ?? ""}
-              bio={rider?.bio ?? ""}
-              location={rider?.location ?? ""}
-              timezone={rider?.timezone ?? null}
-              favoriteRoad={rider?.favoriteRoad ?? ""}
-              yearStartedRiding={yearStartedRiding}
-              youtubeUrl={extractHandle(rider?.youtubeUrl ?? null)}
-              tiktokUrl={extractHandle(rider?.tiktokUrl ?? null)}
-              instagramUrl={extractHandle(rider?.instagramUrl ?? null)}
-              twitterUrl={extractHandle(rider?.twitterUrl ?? null)}
-            />
+        {/* Public profile lives in the Edit Profile modal on the profile itself —
+            this page is only account & security, so it doesn't duplicate those fields. */}
+        {rider?.handle && (
+          <div className="mx-auto flex max-w-3xl items-center justify-between rounded-xl border border-border bg-surface p-5 shadow-soft">
+            <div>
+              <h2 className="font-display text-lg font-semibold text-ink">Public profile</h2>
+              <p className="mt-0.5 text-sm text-muted">Edit your name, photo, bio, and socials from your profile.</p>
+            </div>
+            <Link
+              href={`/r/${rider.handle}`}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-asphalt px-4 py-2 text-sm font-semibold text-white hover:bg-asphalt/85"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit profile
+            </Link>
           </div>
-        </div>
+        )}
 
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl space-y-6">
           <EmailChangeCard email={currentUser.email} emailVerified={Boolean(currentUser.emailVerified)} />
+          <PasswordChangeCard />
         </div>
 
         <CalendarSubscribe webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
+
+        <div className="mx-auto max-w-3xl">
+          <DeleteAccountCard />
+        </div>
       </div>
     </section>
   );

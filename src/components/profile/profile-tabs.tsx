@@ -27,9 +27,20 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
   const searchParams = useSearchParams();
 
   const requested = searchParams.get("tab");
-  const initial = tabs.some((tab) => tab.id === requested) ? requested : tabs[0]?.id;
+  const resolved = tabs.some((tab) => tab.id === requested) ? requested : tabs[0]?.id;
 
-  const [active, setActive] = useState(initial);
+  const [active, setActive] = useState(resolved);
+
+  // Follow the URL when it changes underneath us — e.g. the nav dropdown links
+  // to ?tab=gear while the rider is already on their profile. Adjusted at render
+  // (not an effect) so it stays in step without a flash. Clicks still paint
+  // instantly via select() below; this only reconciles external URL changes.
+  const [seenRequested, setSeenRequested] = useState(requested);
+  if (requested !== seenRequested) {
+    setSeenRequested(requested);
+    setActive(resolved);
+  }
+
   const current = tabs.find((tab) => tab.id === active) ?? tabs[0];
 
   function select(id: string) {
