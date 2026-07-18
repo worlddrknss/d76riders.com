@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import type { TrustLevel } from "@prisma/client";
 import { Trophy } from "lucide-react";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     "Rider progression across the District 76 Riders community — trust levels, miles ridden, and badges earned.",
   alternates: { canonical: "/leaderboard" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Leaderboard — District 76 Riders",
     description: "Trust levels, miles ridden, and badges earned across the community.",
   },

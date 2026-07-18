@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
@@ -24,7 +25,8 @@ export async function generateMetadata(props: {
     title: `${crew.name} | District 76 Riders`,
     description: crew.description,
     alternates: { canonical: `/crews/${slug}` },
-    openGraph: { title: crew.name, description: crew.description, type: "website" },
+    openGraph: {
+    images: OG_IMAGE, title: crew.name, description: crew.description, type: "website" },
   };
 }
 

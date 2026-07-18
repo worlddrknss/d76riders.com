@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { CheckCircle2, FileText } from "lucide-react";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
     "Community guidelines and safety waivers for District 76 Riders: how we ride together across Tennessee.",
   alternates: { canonical: "/policies" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Policies — District 76 Riders",
     description: "How we ride together. The standards every rider accepts.",
   },

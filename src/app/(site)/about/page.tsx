@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { siteImages } from "@/data/images";
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     "District 76 Riders was founded in Clarksville, TN and built for motorcycle riders across Tennessee. No patches, no hierarchy, no drama.",
   alternates: { canonical: "/about" },
   openGraph: {
+    images: OG_IMAGE,
     title: "About — District 76 Riders",
     description: "Founded in Clarksville. Built for Tennessee riders.",
   },

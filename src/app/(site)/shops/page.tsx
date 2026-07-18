@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { MapPin, Phone, Store, ExternalLink } from "lucide-react";
 
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
     "Motorcycle shops, tires, gear, and service around Clarksville and across Tennessee, recommended by District 76 riders, plus the businesses that back the community.",
   alternates: { canonical: "/shops" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Shops & Sponsors | District 76 Riders",
     description:
       "Where riders around here actually go, and the businesses that back us.",

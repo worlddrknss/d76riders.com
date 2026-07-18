@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Image from "next/image";
 import Link from "next/link";
 import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     "Discover the best motorcycle roads in Tennessee. Community-rated scenic routes, twisties, and cruising roads shared by District 76 Riders.",
   alternates: { canonical: "/roads" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Scenic Roads — District 76 Riders",
     description: "Community-rated motorcycle roads and scenic routes across Tennessee.",
   },

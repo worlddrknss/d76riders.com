@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
@@ -30,7 +31,8 @@ export async function generateMetadata(props: {
     title: challenge.name,
     description: challenge.description,
     alternates: { canonical: `/challenges/${slug}` },
-    openGraph: { title: challenge.name, description: challenge.description },
+    openGraph: {
+    images: OG_IMAGE, title: challenge.name, description: challenge.description },
   };
 }
 

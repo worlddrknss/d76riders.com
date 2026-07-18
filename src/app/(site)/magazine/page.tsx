@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
     "The latest news, ride recaps, and announcements from District 76 Riders — your source for Clarksville motorcycle community updates.",
   alternates: { canonical: "/magazine" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Magazine — District 76 Riders",
     description: "Community news, ride recaps, and announcements.",
   },

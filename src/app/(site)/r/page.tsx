@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { Bike, MapPin, UserRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
     "Meet the riders of District 76. Motorcycle riders across Tennessee who show up for good roads and good people.",
   alternates: { canonical: "/r" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Our Riders — District 76 Riders",
     description: "The people behind the handlebars.",
   },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { CheckCircle2, Shield, Users } from "lucide-react";
 import { RegisterForm } from "@/components/auth/register-form";
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
     "Create your free rider profile. Join group rides, connect with motorcycle riders across Tennessee, and be part of a community built by riders, for riders.",
   alternates: { canonical: "/join" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Join — District 76 Riders",
     description: "Create your rider profile and find your next ride.",
   },

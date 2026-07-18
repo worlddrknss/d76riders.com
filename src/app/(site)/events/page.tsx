@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import { CalendarDays, Clock, MapPin, Route, Signal, Ticket, Users } from "lucide-react";
 import Link from "next/link";
 import { siteImages } from "@/data/images";
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders across Tennessee. All skill levels welcome.",
   alternates: { canonical: "/events" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Rides & Events — District 76 Riders",
     description: "Find your next group ride in Tennessee.",
   },

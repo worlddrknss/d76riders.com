@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { Trophy } from "lucide-react";
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     "Time-boxed riding challenges for the District 76 Riders community — miles, rides, and ride leading.",
   alternates: { canonical: "/challenges" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Challenges — District 76 Riders",
     description: "Pick a challenge, ride it out, earn the badge.",
   },

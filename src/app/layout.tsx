@@ -68,14 +68,15 @@ export const metadata: Metadata = {
     title: "District 76 Riders — Founded in Clarksville, Built for Tennessee Riders",
     description:
       "A motorcycle community founded in Clarksville, TN and built for riders across Tennessee. Group rides, scenic roads, and real connections.",
-    images: [{ url: "/images/hero/home.webp", width: 1200, height: 630, alt: "District 76 Riders" }],
+    images: [{ url: "/images/og/image.png", width: 1200, height: 651, alt: "District 76 Riders" }],
   },
   twitter: {
     card: "summary_large_image",
+    site: "@district76riders",
     title: "District 76 Riders",
     description:
       "Founded in Clarksville, TN. Built for motorcycle riders across Tennessee.",
-    images: ["/images/hero/home.webp"],
+    images: ["/images/og/image.png"],
   },
   robots: {
     index: true,

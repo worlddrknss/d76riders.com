@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { Camera, ImageOff } from "lucide-react";
 
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
     "Browse photos from District 76 group rides, meetups, and road adventures across Tennessee.",
   alternates: { canonical: "/gallery" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Gallery — District 76 Riders",
     description: "Photos from rides, meetups, and the road.",
   },

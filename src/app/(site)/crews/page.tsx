@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { Users } from "lucide-react";
 
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     "Find your people — sportbike, touring, beginner, and women riders crews within the District 76 Riders community.",
   alternates: { canonical: "/crews" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Crews — District 76 Riders",
     description: "Sub-groups within the community. Find the riders who ride like you do.",
   },

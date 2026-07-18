@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -25,6 +26,7 @@ export const metadata: Metadata = {
     "District 76 Riders emergency response tools: NFC helmet ID tags, live ride check-in system, encrypted medical data, and rider down quick-alert protocols.",
   alternates: { canonical: "/emergency-response" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Emergency Response — District 76 Riders",
     description:
       "NFC emergency ID tags, live ride check-ins, encrypted medical data, and a culture built around looking out for each other.",

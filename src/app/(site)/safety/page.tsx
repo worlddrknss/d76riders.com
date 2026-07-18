@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import {
   ShieldCheck,
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     "How District 76 Riders ride together: formations, who does what on a ride, pack discipline at intersections, hand signals, what to do if you get separated or break down, and the first minutes at a crash scene.",
   alternates: { canonical: "/safety" },
   openGraph: {
+    images: OG_IMAGE,
     title: "Ride Safety | District 76 Riders",
     description:
       "Formations, ride roles, hand signals, and what to do when a ride goes wrong.",
