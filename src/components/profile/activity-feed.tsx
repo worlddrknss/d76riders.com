@@ -1,5 +1,7 @@
+import type { ComponentType } from "react";
 import Link from "next/link";
 import {
+  AtSign,
   Award,
   Bike,
   CalendarDays,
@@ -7,16 +9,17 @@ import {
   Flag,
   Image as ImageIcon,
   MapPin,
+  MessageCircle,
   PenLine,
   Settings2,
   Sparkles,
   TriangleAlert,
   UserPlus,
   Wrench,
-  type LucideIcon,
 } from "lucide-react";
 
 import type { ActivityType } from "@prisma/client";
+import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 
 export type ActivityFeedItem = {
   id: string;
@@ -27,7 +30,7 @@ export type ActivityFeedItem = {
 
 // Each activity kind gets an icon + accent so the feed reads at a glance — the
 // same visual language as the mockups, in d76's sunset/forest palette.
-const STYLES: Partial<Record<ActivityType, { icon: LucideIcon; tint: string }>> = {
+const STYLES: Partial<Record<ActivityType, { icon: ComponentType<{ className?: string }>; tint: string }>> = {
   ADDED_BIKE: { icon: Bike, tint: "text-sunset bg-sunset/10" },
   ADDED_MODIFICATION: { icon: Settings2, tint: "text-sunset bg-sunset/10" },
   LOGGED_SERVICE: { icon: Wrench, tint: "text-asphalt bg-asphalt/5" },
@@ -44,6 +47,9 @@ const STYLES: Partial<Record<ActivityType, { icon: LucideIcon; tint: string }>> 
   FAVORITED_BUILD: { icon: Sparkles, tint: "text-sunset bg-sunset/10" },
   BADGE_EARNED: { icon: Award, tint: "text-sunset bg-sunset/10" },
   SKILL_VERIFIED: { icon: CheckCircle2, tint: "text-forest bg-forest/10" },
+  TWO_WHEELS_DOWN: { icon: TwoWheelsDownIcon, tint: "text-forest bg-forest/10" },
+  COMMENTED: { icon: MessageCircle, tint: "text-sunset bg-sunset/10" },
+  MENTIONED: { icon: AtSign, tint: "text-sunset bg-sunset/10" },
   JOINED: { icon: Sparkles, tint: "text-sunset bg-sunset/10" },
   HAZARD_REPORTED: { icon: TriangleAlert, tint: "text-sunset bg-sunset/10" },
   RIDER_DOWN: { icon: TriangleAlert, tint: "text-red-600 bg-red-500/10" },

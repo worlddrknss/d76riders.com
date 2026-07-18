@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { MessageCircle, Share2 } from "lucide-react";
 
 import { toggleJournalLikeAction, addJournalCommentAction } from "@/app/(site)/r/journal-actions";
 import { JournalText } from "@/components/ui/journal-text";
+import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 
 type CommentData = {
   id: string;
@@ -72,12 +73,13 @@ export function JournalInteractions({
           type="button"
           onClick={handleLike}
           disabled={likePending || !isAuthenticated}
+          title="Two wheels down — keep it rubber-side down, ride safe"
           className={`inline-flex items-center gap-1.5 text-sm font-medium transition ${
-            isLiked ? "text-red-500" : "text-muted hover:text-red-500"
+            isLiked ? "text-forest" : "text-muted hover:text-forest"
           } disabled:opacity-50`}
         >
-          <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-          {likeCount > 0 ? likeCount : "Like"}
+          <TwoWheelsDownIcon className="h-4 w-4" filled={isLiked} />
+          {likeCount > 0 ? likeCount : "Two down"}
         </button>
 
         <button

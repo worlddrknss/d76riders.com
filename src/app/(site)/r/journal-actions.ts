@@ -10,25 +10,40 @@ import { emailNotifyRiders } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
+// Toggle a "two wheels down" on a journal post — the biker salute that stands in
+// for a like ("keep both wheels down, ride safe"). Giving one notifies the author
+// in-app (no email — reactions shouldn't fill an inbox); taking it back is silent.
 export async function toggleJournalLikeAction(entryId: string): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
-  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true, name: true } });
   if (!rider) return;
 
   const existing = await prisma.like.findUnique({
     where: { riderId_journalEntryId: { riderId: rider.id, journalEntryId: entryId } },
   });
 
+  const entry = await prisma.journalEntry.findUnique({
+    where: { id: entryId },
+    select: { author: { select: { id: true, handle: true } } },
+  });
+
   if (existing) {
     await prisma.like.delete({ where: { id: existing.id } });
   } else {
     await prisma.like.create({ data: { riderId: rider.id, journalEntryId: entryId } });
+    // Notify the author when a fellow rider gives them two wheels down.
+    if (entry && entry.author.id !== rider.id) {
+      await logActivity({
+        riderId: entry.author.id,
+        type: "TWO_WHEELS_DOWN",
+        summary: `${rider.name} gave your post two wheels down`,
+        refId: entryId,
+      });
+    }
   }
 
-  // Revalidate the profile page where journal entries display
-  const entry = await prisma.journalEntry.findUnique({ where: { id: entryId }, select: { author: { select: { handle: true } } } });
   if (entry?.author.handle) {
     revalidatePath(`/r/${entry.author.handle}`);
   }
