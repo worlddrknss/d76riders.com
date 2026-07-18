@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Wrench, Receipt, Camera, Activity, ArrowLeft } from "lucide-react";
+import { Wrench, Receipt, Camera, ArrowLeft } from "lucide-react";
 
 import {
   addBikePhotoAction,
@@ -10,6 +10,8 @@ import {
   deleteModificationAction,
   deleteServiceRecordAction,
 } from "@/app/(site)/garage/mine/actions";
+import { BuildTimeline } from "@/components/garage/build-timeline";
+import { ServiceRecords } from "@/components/garage/service-records";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -43,7 +45,10 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
     where: { id: bikeId, riderId: rider.id },
     include: {
       photos: { orderBy: { createdAt: "desc" } },
-      modifications: { orderBy: { installedAt: "desc" } },
+      modifications: {
+        orderBy: { installedAt: "desc" },
+        include: { photos: { select: { url: true } } },
+      },
       serviceRecords: { orderBy: { servicedAt: "desc" } },
     },
   });
@@ -56,32 +61,17 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
   const serviceSpend = bike.serviceRecords.reduce((sum, item) => sum + (item.cost ?? 0), 0);
   const totalSpend = modificationSpend + serviceSpend;
 
-  const timeline = [
-    ...bike.modifications.map((item) => ({
-      id: `mod-${item.id}`,
-      when: item.installedAt,
-      label: `Modification: ${item.title}`,
-      kind: "modification",
-      notes: item.notes,
-      cost: item.cost,
-    })),
-    ...bike.serviceRecords.map((item) => ({
-      id: `svc-${item.id}`,
-      when: item.servicedAt,
-      label: `Service: ${item.title}`,
-      kind: "service",
-      notes: item.notes,
-      cost: item.cost,
-    })),
-    ...bike.photos.map((item) => ({
-      id: `photo-${item.id}`,
-      when: item.createdAt,
-      label: "Photo uploaded",
-      kind: "photo",
-      notes: item.caption,
-      cost: null,
-    })),
-  ].sort((a, b) => b.when.getTime() - a.when.getTime());
+  // Serialize service records across the client-component boundary (ServiceRecords
+  // filters client-side, so Dates become ISO strings).
+  const serviceItems = bike.serviceRecords.map((item) => ({
+    id: item.id,
+    title: item.title,
+    serviceType: item.serviceType,
+    cost: item.cost,
+    mileage: item.mileage,
+    servicedAt: item.servicedAt.toISOString(),
+    notes: item.notes,
+  }));
 
   return (
     <section className="page-shell">
@@ -150,22 +140,7 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
               <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Modification</button>
             </form>
 
-            <div className="space-y-2">
-              {bike.modifications.map((item) => (
-                <div key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-ink">{item.title}</p>
-                      <p className="text-xs text-muted">{item.category.replaceAll("_", " ")} · {item.installedAt.toLocaleDateString("en-US")}</p>
-                    </div>
-                    <form action={deleteModificationAction.bind(null, item.id)}>
-                      <button type="submit" className="text-xs font-semibold text-red-600 hover:underline">Delete</button>
-                    </form>
-                  </div>
-                </div>
-              ))}
-              {bike.modifications.length === 0 ? <p className="text-sm text-muted">No modifications logged yet.</p> : null}
-            </div>
+            <BuildTimeline items={bike.modifications} deleteAction={deleteModificationAction} />
           </div>
 
           <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
@@ -194,26 +169,11 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
               <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Service</button>
             </form>
 
-            <div className="space-y-2">
-              {bike.serviceRecords.map((item) => (
-                <div key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-ink">{item.title}</p>
-                      <p className="text-xs text-muted">{item.serviceType.replaceAll("_", " ")} · {item.servicedAt.toLocaleDateString("en-US")}</p>
-                    </div>
-                    <form action={deleteServiceRecordAction.bind(null, item.id)}>
-                      <button type="submit" className="text-xs font-semibold text-red-600 hover:underline">Delete</button>
-                    </form>
-                  </div>
-                </div>
-              ))}
-              {bike.serviceRecords.length === 0 ? <p className="text-sm text-muted">No service history yet.</p> : null}
-            </div>
+            <ServiceRecords items={serviceItems} deleteAction={deleteServiceRecordAction} />
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
+        <div>
           <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
               <Camera className="h-4 w-4 text-sunset" />
@@ -240,25 +200,6 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
                   </div>
                 </article>
               ))}
-            </div>
-          </div>
-
-          <div className="space-y-3 rounded-xl border border-border bg-surface p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-              <Activity className="h-4 w-4 text-sunset" />
-              Build Timeline
-            </h2>
-            <div className="space-y-2">
-              {timeline.map((entry) => (
-                <article key={entry.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em] text-sunset">{entry.kind}</p>
-                  <p className="text-sm font-semibold text-ink">{entry.label}</p>
-                  <p className="text-xs text-muted">{entry.when.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</p>
-                  {entry.notes ? <p className="mt-1 text-xs text-muted">{entry.notes}</p> : null}
-                  {entry.cost ? <p className="mt-1 text-xs font-semibold text-asphalt">{formatCurrency(entry.cost)}</p> : null}
-                </article>
-              ))}
-              {timeline.length === 0 ? <p className="text-sm text-muted">No timeline items yet.</p> : null}
             </div>
           </div>
         </div>
