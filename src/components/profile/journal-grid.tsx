@@ -187,10 +187,13 @@ function JournalCard({
 
           {(entry.title || entry.body) && (
             <div className="px-4 pt-3">
-              <p className="line-clamp-3 text-sm text-ink">
-                <Link href={entry.profileUrl} className="font-semibold hover:text-sunset">{entry.authorName}</Link>{" "}
-                {entry.title && <span className="font-semibold text-ink">{entry.title} </span>}
-                <span className="text-muted"><Linkify text={entry.body} /></span>
+              {/* Title on its own line as a heading — running it inline after the
+                  author name (already in the header above) read as one phrase. */}
+              {entry.title && (
+                <h3 className="font-display text-base font-semibold text-ink">{entry.title}</h3>
+              )}
+              <p className="line-clamp-3 text-sm text-muted">
+                <Linkify text={entry.body} />
               </p>
             </div>
           )}
