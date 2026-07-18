@@ -28,6 +28,7 @@ import { BikeCard } from "@/components/garage/bike-card";
 import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
 import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
+import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
 import { createGearItemAction, updateGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
@@ -179,6 +180,7 @@ export default async function RiderProfilePage({
           title: true,
           slug: true,
           startsAt: true,
+          timezone: true,
         },
       },
       followers: {
@@ -289,6 +291,7 @@ export default async function RiderProfilePage({
         title: true,
         slug: true,
         startsAt: true,
+        timezone: true,
         meetLocation: true,
         distanceMiles: true,
         difficulty: true,
@@ -614,7 +617,7 @@ export default async function RiderProfilePage({
                   <li key={event.id}>
                     <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
                       <span className="font-medium text-ink">{event.title}</span>
-                      <span className="ml-2 text-xs text-muted">{event.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                      <span className="ml-2 text-xs text-muted">{formatEventDate(event.startsAt, event.timezone ?? DEFAULT_TIMEZONE)}</span>
                     </Link>
                   </li>
                 ))}
@@ -1021,6 +1024,8 @@ export default async function RiderProfilePage({
       <div className="space-y-3">
         {profileEvents.map((ev) => {
           const hosting = ev.hostId === rider.id;
+          // Format the date chip in the event's own timezone, not the server's.
+          const chip = eventDayMonth(ev.startsAt, ev.timezone ?? DEFAULT_TIMEZONE);
           const meta = [
             ev.meetLocation,
             ev.distanceMiles ? `${ev.distanceMiles} mi` : null,
@@ -1033,10 +1038,8 @@ export default async function RiderProfilePage({
               className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 shadow-soft transition hover:border-sunset/40"
             >
               <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-canvas">
-                <span className="text-[0.6rem] font-semibold uppercase tracking-wider text-sunset">
-                  {ev.startsAt.toLocaleDateString("en-US", { month: "short" })}
-                </span>
-                <span className="font-display text-lg leading-none text-ink">{ev.startsAt.getDate()}</span>
+                <span className="text-[0.6rem] font-semibold uppercase tracking-wider text-sunset">{chip.month}</span>
+                <span className="font-display text-lg leading-none text-ink">{chip.day}</span>
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
