@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NewsPostStatus } from "@prisma/client";
+import { type ActivityType, NewsPostStatus } from "@prisma/client";
 import {
   ArrowRight,
   Bike,
@@ -13,9 +13,6 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import {
-  communityFeed,
-} from "@/data/community";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
@@ -28,6 +25,21 @@ export const metadata: Metadata = {
 };
 
 const statIcons = [Users, Bike, Route, MapPin];
+
+// Only celebratory, public-facing activity belongs on the homepage feed —
+// deliberately excludes internal/organizer/notification noise like check-ins,
+// missing-checkout alerts, RSVPs, mentions, and rider-down incidents.
+const PUBLIC_ACTIVITY_TYPES: ActivityType[] = [
+  "JOINED",
+  "POSTED_JOURNAL",
+  "CREATED_EVENT",
+  "COMPLETED_RIDE",
+  "ADDED_BIKE",
+  "ADDED_MODIFICATION",
+  "BADGE_EARNED",
+  "CHALLENGE_COMPLETED",
+  "UPLOADED_PHOTO",
+];
 
 const exploreFeatures = [
   {
@@ -122,11 +134,11 @@ export default async function Home() {
     [],
   );
 
-  // Real community photos for the "From Our Community" mosaic.
+  // Real community photos for the "From Our Community" mosaic — the latest shots
+  // from anywhere riders share them (event galleries, builds, journals, roads).
   const galleryPhotos = await safeQuery(
     () =>
       prisma.galleryItem.findMany({
-        where: { eventId: { not: null }, riderId: { not: null } },
         orderBy: { createdAt: "desc" },
         take: 5,
         select: { id: true, url: true },
@@ -162,7 +174,17 @@ export default async function Home() {
     safeQuery(() => prisma.bike.count(), 0),
     safeQuery(() => prisma.rideEvent.count(), 0),
     safeQuery(() => prisma.road.count(), 0),
-    safeQuery(() => prisma.activity.findMany({ orderBy: { createdAt: "desc" }, take: 4 }), []),
+    safeQuery(() => prisma.activity.findMany({
+      where: { type: { in: PUBLIC_ACTIVITY_TYPES } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        summary: true,
+        createdAt: true,
+        rider: { select: { name: true, handle: true, avatarUrl: true } },
+      },
+    }), []),
   ]);
 
   const statValues = [
@@ -496,41 +518,68 @@ export default async function Home() {
           <FadeUp>
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
             <div className="mt-5 space-y-4">
-              {(activities.length > 0 ? activities.map((item) => ({ id: item.id, summary: item.summary, when: item.createdAt.toLocaleDateString() })) : communityFeed).map((item) => (
-                <div key={item.id} className="flex items-start gap-3">
-                  <span className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-sunset/15 text-center text-sm font-bold leading-8 text-sunset">
-                    {item.summary.charAt(0)}
-                  </span>
-                  <div>
-                    <p className="text-sm text-asphalt">{item.summary}</p>
-                    <p className="text-xs text-muted">{item.when}</p>
-                  </div>
-                </div>
-              ))}
+              {activities.length === 0 ? (
+                <p className="text-sm text-muted">No community activity yet — it&apos;ll show up here as riders post, ride, and earn badges.</p>
+              ) : (
+                activities.map((item) => {
+                  const name = item.rider?.name ?? "A rider";
+                  // Recast the rider's own-feed phrasing into third person for a
+                  // public feed: "You earned…" → "<name> earned…".
+                  const rest = item.summary.replace(/^You\s+/i, "");
+                  const phrased = rest.charAt(0).toLowerCase() + rest.slice(1);
+                  const avatar = item.rider?.avatarUrl ? mediaUrl(item.rider.avatarUrl) : null;
+                  return (
+                    <div key={item.id} className="flex items-start gap-3">
+                      {avatar ? (
+                        <img src={avatar} alt="" className="mt-0.5 h-8 w-8 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <span className="mt-0.5 h-8 w-8 shrink-0 rounded-full bg-sunset/15 text-center text-sm font-bold leading-8 text-sunset">
+                          {name.charAt(0)}
+                        </span>
+                      )}
+                      <div>
+                        <p className="text-sm text-asphalt">
+                          {item.rider?.handle ? (
+                            <Link href={`/r/${item.rider.handle}`} className="font-semibold text-ink hover:text-sunset">{name}</Link>
+                          ) : (
+                            <span className="font-semibold text-ink">{name}</span>
+                          )}{" "}
+                          {phrased}
+                        </p>
+                        <p className="text-xs text-muted">
+                          {item.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               View All Activity <ArrowRight className="h-4 w-4" />
             </Link>
           </FadeUp>
-          <FadeUp delay={0.15}>
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">From Our Community</h2>
-            <div className="mt-5 grid grid-cols-3 gap-3">
-              <div
-                className="col-span-2 row-span-2 min-h-45 rounded-lg bg-cover bg-center"
-                style={{ backgroundImage: `url(${galleryPhotos[0]?.url ? mediaUrl(galleryPhotos[0].url) : siteImages.galleryLarge})` }}
-              />
-              {[1, 2, 3, 4].map((i) => (
+          {galleryPhotos.length > 0 && (
+            <FadeUp delay={0.15}>
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">From Our Community</h2>
+              <div className="mt-5 grid grid-cols-3 gap-3">
                 <div
-                  key={i}
-                  className="h-21 rounded-lg bg-cover bg-center"
-                  style={{ backgroundImage: `url(${galleryPhotos[i]?.url ? mediaUrl(galleryPhotos[i].url) : siteImages.gallery[(i - 1) % siteImages.gallery.length]})` }}
+                  className="col-span-2 row-span-2 min-h-45 rounded-lg bg-cover bg-center"
+                  style={{ backgroundImage: `url(${mediaUrl(galleryPhotos[0].url)})` }}
                 />
-              ))}
-            </div>
-            <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
-              View Full Gallery <ArrowRight className="h-4 w-4" />
-            </Link>
-          </FadeUp>
+                {galleryPhotos.slice(1, 5).map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="h-21 rounded-lg bg-cover bg-center"
+                    style={{ backgroundImage: `url(${mediaUrl(photo.url)})` }}
+                  />
+                ))}
+              </div>
+              <Link href="/gallery" className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                View Full Gallery <ArrowRight className="h-4 w-4" />
+              </Link>
+            </FadeUp>
+          )}
         </div>
       </section>
 
