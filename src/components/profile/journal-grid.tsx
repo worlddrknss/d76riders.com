@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ImagePlus, Link2, Pencil, Trash2 } from "lucide-react";
 
@@ -76,6 +76,25 @@ function JournalCard({
   const [editPending, startEditTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
   const [mediaType, setMediaType] = useState<"photo" | "video">(entry.videoUrl ? "video" : "photo");
+  // Feed cards clamp the story to three lines; show "See more" only when there's
+  // actually more, measured after layout so the toggle never lies.
+  const [expanded, setExpanded] = useState(false);
+  const [clampable, setClampable] = useState(false);
+  const bodyRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    // A -webkit-line-clamp box reports scrollHeight == clientHeight, so read the
+    // full height with the clamp lifted for one frame, then restore it.
+    const id = requestAnimationFrame(() => {
+      const clamped = el.clientHeight;
+      el.classList.remove("line-clamp-3");
+      const full = el.scrollHeight;
+      el.classList.add("line-clamp-3");
+      setClampable(full > clamped + 2);
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   function handleEdit(formData: FormData) {
     startEditTransition(async () => {
@@ -192,9 +211,18 @@ function JournalCard({
               {entry.title && (
                 <h3 className="font-display text-base font-semibold text-ink">{entry.title}</h3>
               )}
-              <p className="line-clamp-3 text-sm text-muted">
+              <p ref={bodyRef} className={`text-sm text-muted ${expanded ? "" : "line-clamp-3"}`}>
                 <Linkify text={entry.body} />
               </p>
+              {clampable && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((value) => !value)}
+                  className="mt-1 text-xs font-semibold text-sunset hover:underline"
+                >
+                  {expanded ? "See less" : "See more"}
+                </button>
+              )}
             </div>
           )}
 
