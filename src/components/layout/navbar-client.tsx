@@ -379,7 +379,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     </Link>
                     <Link href={`/r/${currentUser.handle}?tab=garage`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Bike className="h-4 w-4 text-slate-300" />
-                      <span>Builds</span>
+                      <span>Garage</span>
                     </Link>
                     <Link href={`/r/${currentUser.handle}?tab=gear`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Wrench className="h-4 w-4 text-slate-300" />
@@ -498,7 +498,7 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >
-                    Builds
+                    Garage
                   </Link>
                   <Link
                     href={`/r/${currentUser.handle}?tab=gear`}

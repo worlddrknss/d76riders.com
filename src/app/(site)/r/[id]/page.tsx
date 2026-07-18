@@ -1028,7 +1028,7 @@ export default async function RiderProfilePage({
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewContent },
     { id: "journal", label: "Journal", count: rider.journalEntries.length, content: journalContent },
-    { id: "garage", label: "Builds", count: rider.bikes.length, content: garageContent },
+    { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
     { id: "photos", label: "Photos", count: profilePhotos.length, content: photosContent },
     { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },

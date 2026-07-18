@@ -3,13 +3,15 @@ import { notFound, redirect } from "next/navigation";
 import { Wrench, Receipt, Camera, ArrowLeft } from "lucide-react";
 
 import {
-  addBikePhotoAction,
-  createModificationAction,
-  createServiceRecordAction,
   deleteBikePhotoAction,
   deleteModificationAction,
   deleteServiceRecordAction,
 } from "@/app/(site)/garage/mine/actions";
+import {
+  AddBikePhotoDialog,
+  AddModificationDialog,
+  AddServiceDialog,
+} from "@/components/garage/build-dialogs";
 import { BuildTimeline } from "@/components/garage/build-timeline";
 import { ServiceRecords } from "@/components/garage/service-records";
 import { mediaUrl } from "@/lib/media-url";
@@ -73,132 +75,96 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
     notes: item.notes,
   }));
 
+  const stats = [
+    { label: "Total Invested", value: formatCurrency(totalSpend), sub: null },
+    { label: "Modifications", value: String(bike.modifications.length), sub: `${formatCurrency(modificationSpend)} spent` },
+    { label: "Service Records", value: String(bike.serviceRecords.length), sub: `${formatCurrency(serviceSpend)} spent` },
+  ];
+
   return (
     <section className="page-shell">
       <div className="content-wrap space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <Link href={`/r/${rider.handle}?tab=garage`} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Builds
-            </Link>
-            <h1 className="mt-2 font-display text-3xl font-semibold text-ink">{bike.name} Build Dashboard</h1>
-            <p className="mt-1 text-sm text-muted">Track modifications, service history, photos, and timeline activity for this bike.</p>
-          </div>
+        <div>
+          <Link
+            href={`/r/${rider.handle}?tab=garage`}
+            className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back to Garage
+          </Link>
+          <h1 className="mt-2 font-display text-3xl font-semibold text-ink">{bike.name}</h1>
+          <p className="mt-1 text-sm text-muted">Modifications, service history, and build photos.</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Total Invested</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-ink">{formatCurrency(totalSpend)}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Modifications</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-ink">{bike.modifications.length}</p>
-            <p className="text-xs text-muted">{formatCurrency(modificationSpend)} spent</p>
-          </div>
-          <div className="rounded-xl border border-border bg-surface p-4">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Service Records</p>
-            <p className="mt-2 font-display text-2xl font-semibold text-ink">{bike.serviceRecords.length}</p>
-            <p className="text-xs text-muted">{formatCurrency(serviceSpend)} spent</p>
-          </div>
+          {stats.map((s) => (
+            <div key={s.label} className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">{s.label}</p>
+              <p className="mt-2 font-display text-2xl font-semibold text-ink">{s.value}</p>
+              {s.sub && <p className="text-xs text-muted">{s.sub}</p>}
+            </div>
+          ))}
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-              <Wrench className="h-4 w-4 text-sunset" />
-              Add Modification
-            </h2>
-            <form action={createModificationAction} className="space-y-3">
-              <input type="hidden" name="bikeId" value={bike.id} />
-              <input name="title" required placeholder="Upgrade title" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <select name="category" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm">
-                  <option value="OTHER">Category</option>
-                  <option value="EXHAUST">Exhaust</option>
-                  <option value="PERFORMANCE">Performance</option>
-                  <option value="ENGINE">Engine</option>
-                  <option value="SUSPENSION">Suspension</option>
-                  <option value="EXTERIOR">Exterior</option>
-                  <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
-                  <option value="LIGHTING">Lighting</option>
-                  <option value="ELECTRICAL">Electrical</option>
-                  <option value="PROTECTION">Protection &amp; Crash</option>
-                  <option value="ERGONOMICS">Ergonomics</option>
-                </select>
-                <input name="cost" type="number" step="0.01" min="0" placeholder="Cost" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input name="mileage" type="number" min="0" placeholder="Mileage" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-                <input name="installedAt" type="date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
-              <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Modification</button>
-            </form>
-
+          {/* Modifications */}
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
+                <Wrench className="h-4 w-4 text-sunset" />
+                Build Timeline
+              </h2>
+              <AddModificationDialog bikeId={bike.id} />
+            </div>
             <BuildTimeline items={bike.modifications} deleteAction={deleteModificationAction} />
           </div>
 
-          <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-              <Receipt className="h-4 w-4 text-sunset" />
-              Add Service Record
-            </h2>
-            <form action={createServiceRecordAction} className="space-y-3">
-              <input type="hidden" name="bikeId" value={bike.id} />
-              <input name="title" required placeholder="Service title" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <select name="serviceType" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm">
-                  <option value="MAINTENANCE">Maintenance</option>
-                  <option value="REPAIR">Repair</option>
-                  <option value="INSPECTION">Inspection</option>
-                  <option value="UPGRADE">Upgrade</option>
-                  <option value="OTHER">Other</option>
-                </select>
-                <input name="cost" type="number" step="0.01" min="0" placeholder="Cost" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input name="mileage" type="number" min="0" placeholder="Mileage" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-                <input name="servicedAt" type="date" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
-              <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Add Service</button>
-            </form>
-
+          {/* Service records */}
+          <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
+                <Receipt className="h-4 w-4 text-sunset" />
+                Service Records
+              </h2>
+              <AddServiceDialog bikeId={bike.id} />
+            </div>
             <ServiceRecords items={serviceItems} deleteAction={deleteServiceRecordAction} />
           </div>
         </div>
 
-        <div>
-          <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
+        {/* Photos */}
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
               <Camera className="h-4 w-4 text-sunset" />
-              Build Photo Gallery
+              Photos
             </h2>
-            <form action={addBikePhotoAction} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <input type="hidden" name="bikeId" value={bike.id} />
-              <div className="space-y-2">
-                <input name="caption" placeholder="Caption (optional)" className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-                <input name="photo" type="file" accept="image/png,image/jpeg,image/webp" required className="w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
-              <button type="submit" className="rounded-lg bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-white">Upload</button>
-            </form>
+            <AddBikePhotoDialog bikeId={bike.id} />
+          </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {bike.photos.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border bg-canvas p-10 text-center text-sm text-muted">
+              No photos yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {bike.photos.map((photo) => (
-                <article key={photo.id} className="overflow-hidden rounded-lg border border-border bg-canvas">
-                  <img src={mediaUrl(photo.url)} alt={photo.caption || bike.name} className="h-32 w-full object-cover" />
-                  <div className="flex items-center justify-between gap-2 px-2 py-2">
-                    <p className="truncate text-xs text-muted">{photo.caption || "No caption"}</p>
-                    <form action={deleteBikePhotoAction.bind(null, photo.id)}>
-                      <button type="submit" className="text-xs font-semibold text-red-600 hover:underline">Delete</button>
-                    </form>
-                  </div>
+                <article key={photo.id} className="group relative overflow-hidden rounded-xl border border-border bg-canvas">
+                  <img src={mediaUrl(photo.url)} alt={photo.caption || bike.name} className="aspect-square w-full object-cover" />
+                  <form action={deleteBikePhotoAction.bind(null, photo.id)} className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100">
+                    <button type="submit" className="rounded-md bg-asphalt/80 px-2 py-1 text-[0.6rem] font-semibold text-white hover:bg-red-600">
+                      Delete
+                    </button>
+                  </form>
+                  {photo.caption && (
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-asphalt/80 to-transparent p-2">
+                      <p className="truncate text-xs text-white">{photo.caption}</p>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
