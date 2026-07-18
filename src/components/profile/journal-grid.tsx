@@ -11,7 +11,7 @@ import { VideoEmbed } from "@/components/ui/video-embed";
 import { JournalText } from "@/components/ui/journal-text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea } from "@/components/ui/mention-textarea";
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -164,7 +164,7 @@ function JournalCard({
           </div>
           <div>
             <label className="text-xs font-semibold uppercase tracking-wide text-muted">Story</label>
-            <Textarea name="body" rows={4} defaultValue={entry.body} className="mt-1" required />
+            <MentionTextarea name="body" rows={4} defaultValue={entry.body} className="mt-1" required />
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted">Media</p>

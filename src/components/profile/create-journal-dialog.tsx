@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createJournalEntryAction, type JournalFormState } from "@/app/(site)/r/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MentionTextarea } from "@/components/ui/mention-textarea";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,7 @@ export function CreateJournalDialog({ open, onOpenChange }: CreateJournalDialogP
             </div>
             <div>
               <label htmlFor="create-body" className="text-xs font-semibold uppercase tracking-wide text-muted">Story</label>
-              <Textarea id="create-body" name="body" rows={4} placeholder="How did the ride go?" className="mt-1" required />
+              <MentionTextarea id="create-body" name="body" rows={4} placeholder="How did the ride go? Use #tags and @mention riders" className="mt-1" required />
             </div>
 
             {/* Media type toggle */}
