@@ -28,4 +28,12 @@ export async function toggleAmbassadorAction(handle: string, makeAmbassador: boo
 
   revalidatePath(`/r/${rider.handle}`);
   revalidatePath("/ambassadors");
+  revalidatePath("/admin/community/ambassadors");
+}
+
+/** Admin-only: grant Ambassador to a rider by handle (from the admin list form). */
+export async function grantAmbassadorByHandleAction(formData: FormData): Promise<void> {
+  const raw = (formData.get("handle")?.toString() ?? "").trim().replace(/^@/, "");
+  if (!raw) return;
+  await toggleAmbassadorAction(raw, true);
 }

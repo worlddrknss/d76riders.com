@@ -56,6 +56,7 @@ const adminNavSections: NavSection[] = [
       { href: "/admin/community/challenges", label: "Challenges", icon: Trophy },
       { href: "/admin/community/sponsors", label: "Shops & Sponsors", icon: Store },
       { href: "/admin/community/featured", label: "Featured Rides", icon: Star },
+      { href: "/admin/community/ambassadors", label: "Ambassadors", icon: Award },
       { href: "/admin/community/referrals", label: "Referrals", icon: Sprout },
     ],
   },

@@ -6,7 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { StoryBar } from "@/components/stories/story-bar";
+import type { StoryGroup } from "@/components/stories/story-viewer";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Riders — Meet the Community",
@@ -63,6 +66,49 @@ export default async function RidersPage() {
     eventSetsByRider.get(rsvp.riderId)?.add(rsvp.eventId);
   }
 
+  // Stories — a story bar for the community. Shown to signed-in riders (so they
+  // can post) and whenever anyone has an active story.
+  const currentUser = await getCurrentUser();
+  const viewer = currentUser
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, avatarUrl: true } })
+    : null;
+
+  const activeStories = await prisma.story.findMany({
+    where: { expiresAt: { gt: new Date() } },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      url: true,
+      caption: true,
+      createdAt: true,
+      rider: { select: { id: true, name: true, handle: true, avatarUrl: true } },
+    },
+  });
+
+  const storyMap = new Map<string, StoryGroup>();
+  for (const s of activeStories) {
+    let group = storyMap.get(s.rider.id);
+    if (!group) {
+      group = {
+        rider: { id: s.rider.id, name: s.rider.name, handle: s.rider.handle, avatarUrl: mediaUrl(s.rider.avatarUrl) },
+        stories: [],
+      };
+      storyMap.set(s.rider.id, group);
+    }
+    group.stories.push({ id: s.id, url: s.url, caption: s.caption, createdAt: s.createdAt.toISOString() });
+  }
+  const storyGroups = [...storyMap.values()].sort((a, b) => {
+    if (viewer) {
+      if (a.rider.id === viewer.id) return -1;
+      if (b.rider.id === viewer.id) return 1;
+    }
+    return (
+      new Date(b.stories[b.stories.length - 1].createdAt).getTime() -
+      new Date(a.stories[a.stories.length - 1].createdAt).getTime()
+    );
+  });
+  const showStoryBar = Boolean(viewer) || storyGroups.length > 0;
+
   return (
     <div>
       <PageHero
@@ -71,6 +117,20 @@ export default async function RidersPage() {
         title="Rider Directory"
         description="Meet riders across Clarksville and surrounding areas. Everyone here is part of the same local road community."
       />
+
+      {/* STORIES */}
+      {showStoryBar && (
+        <section className="w-full border-b border-border bg-canvas">
+          <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+            <StoryBar
+              groups={storyGroups}
+              currentRiderId={viewer?.id ?? null}
+              canPost={Boolean(viewer)}
+              currentAvatarUrl={viewer ? mediaUrl(viewer.avatarUrl) : null}
+            />
+          </div>
+        </section>
+      )}
 
       {/* RIDER GRID */}
       <section className="w-full bg-canvas">

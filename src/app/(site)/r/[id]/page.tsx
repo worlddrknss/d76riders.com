@@ -20,6 +20,7 @@ import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { TrustBadge } from "@/components/reputation/trust-badge";
 import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
+import { SpotlightButton } from "@/components/profile/spotlight-button";
 import { evaluateQuests } from "@/lib/quests";
 import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
 import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
@@ -1217,7 +1218,12 @@ export default async function RiderProfilePage({
                   <Award className="h-3.5 w-3.5" /> Ambassador
                 </span>
               ) : null}
-              {isAdmin ? <AmbassadorToggle handle={rider.handle} isAmbassador={rider.isAmbassador} /> : null}
+              {isAdmin ? (
+                <>
+                  <AmbassadorToggle handle={rider.handle} isAmbassador={rider.isAmbassador} />
+                  <SpotlightButton handle={rider.handle} />
+                </>
+              ) : null}
 
               {/* Socials as icons in the header rather than a sidebar card —
                   they're a handful of links, not a section. */}
