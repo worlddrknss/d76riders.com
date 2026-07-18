@@ -491,6 +491,7 @@ export async function updateNotificationPrefsAction(
       emailOnMention: formData.get("emailOnMention") != null,
       emailOnComment: formData.get("emailOnComment") != null,
       emailOnRsvp: formData.get("emailOnRsvp") != null,
+      emailWeeklyRecap: formData.get("emailWeeklyRecap") != null,
     },
   });
 

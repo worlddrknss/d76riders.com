@@ -15,7 +15,7 @@ export default async function SettingsPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { emailOnMention: true, emailOnComment: true, emailOnRsvp: true },
+    select: { emailOnMention: true, emailOnComment: true, emailOnRsvp: true, emailWeeklyRecap: true },
   });
 
   return (
@@ -37,6 +37,7 @@ export default async function SettingsPage() {
               emailOnMention: rider?.emailOnMention ?? true,
               emailOnComment: rider?.emailOnComment ?? true,
               emailOnRsvp: rider?.emailOnRsvp ?? true,
+              emailWeeklyRecap: rider?.emailWeeklyRecap ?? true,
             }}
           />
         </div>

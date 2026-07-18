@@ -10,12 +10,13 @@ import {
 
 const initial: AccountFormState = { error: null, success: null };
 
-type Prefs = { emailOnMention: boolean; emailOnComment: boolean; emailOnRsvp: boolean };
+type Prefs = { emailOnMention: boolean; emailOnComment: boolean; emailOnRsvp: boolean; emailWeeklyRecap: boolean };
 
 const TOGGLES: { name: keyof Prefs; label: string; hint: string }[] = [
   { name: "emailOnMention", label: "Mentions", hint: "When another rider @mentions you in a journal post." },
   { name: "emailOnComment", label: "Comments", hint: "When someone comments on your journal post." },
   { name: "emailOnRsvp", label: "RSVPs", hint: "When a rider RSVPs to a ride you organize." },
+  { name: "emailWeeklyRecap", label: "Weekly recap", hint: "A Monday summary of your week in riding." },
 ];
 
 /** Change the account email (Account page). Confirms at the new address first. */
