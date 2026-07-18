@@ -2,8 +2,11 @@ import { redirect } from "next/navigation";
 
 import { AccountProfileForm } from "@/components/auth/account-profile-form";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
+import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
 
 export default async function AccountPage() {
   const currentUser = await getCurrentUser();
@@ -14,8 +17,13 @@ export default async function AccountPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true },
+    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, calendarToken: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true },
   });
+
+  const calendarPath = rider?.calendarToken ? `/api/riders/${rider.calendarToken}/calendar.ics` : null;
+  const httpsUrl = calendarPath ? `${SITE_URL}${calendarPath}` : null;
+  // webcal:// makes calendar apps offer to *subscribe* rather than one-time import.
+  const webcalUrl = httpsUrl ? httpsUrl.replace(/^https?:/, "webcal:") : null;
 
   const currentYear = new Date().getFullYear();
   const yearStartedRiding = rider?.yearsRiding != null
@@ -61,6 +69,8 @@ export default async function AccountPage() {
             />
           </div>
         </div>
+
+        <CalendarSubscribe webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
       </div>
     </section>
   );

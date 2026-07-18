@@ -10,6 +10,9 @@ model Rider {
   // Preferred IANA zone. Defaults the timezone of events they create and shows
   // a "your time" hint on events happening in a different zone. Null = unset.
   timezone       String?
+  // Unguessable token in the rider's personal calendar-subscription URL. Null
+  // until they first ask for the link; rotating it revokes old subscriptions.
+  calendarToken  String?  @unique
   bio            String?
   avatarUrl      String?
   coverUrl       String?

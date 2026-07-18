@@ -372,3 +372,19 @@ export async function deleteAccountAction(
 
   return { error: null };
 }
+
+/**
+ * Mint or rotate the rider's calendar-subscription token. Same action serves
+ * "create my link" (first time) and "regenerate" (rotate) — regenerating breaks
+ * any calendar already subscribed to the old URL, which is the point.
+ */
+export async function rotateCalendarTokenAction(): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const token = crypto.randomBytes(24).toString("hex");
+  await prisma.rider.update({ where: { userId }, data: { calendarToken: token } });
+
+  revalidatePath("/account");
+  return { error: null };
+}

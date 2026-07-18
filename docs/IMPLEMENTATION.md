@@ -402,7 +402,12 @@ model EmergencyCardAccess {
       trend, RSVP→attendance, churn among your riders across two 90-day windows). Computations in
       `src/lib/analytics.ts` reuse the trust-scoring definitions so the numbers match a rider's profile.
 - [ ] Notification center: unified notification model with delivery tracking (in-app, email, push)
-- [ ] Calendar sync: generate .ics feeds for Google/Apple/Outlook calendar subscriptions
+- [x] Calendar sync: per-event `.ics` download ("Add to calendar") and a per-rider subscribable feed of
+      their upcoming GOING/WAITLISTED rides, at `/api/events/<slug>/calendar.ics` and
+      `/api/riders/<token>/calendar.ics`. Auth for the feed is an unguessable `Rider.calendarToken` (a
+      calendar app can't send session cookies), rotatable from `/account` to revoke old subscriptions. ICS
+      built in `src/lib/ics.ts` (RFC 5545: CRLF, 75-octet folding, TEXT escaping); times emit as UTC
+      (`DTSTART:…Z`), which every app converts to the viewer's zone — leaning on the Phase-14 timezone work.
 - [ ] PWA enhancements: offline event card, quick check-in action, install prompts
 
 **Notes:**

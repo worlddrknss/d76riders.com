@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BarChart3, CalendarDays, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { EventManageActions } from "@/components/events/event-manage-actions";
@@ -663,6 +663,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   >
                     <SiFacebook className="h-4 w-4" />
                     Facebook event
+                  </a>
+                ) : null}
+                {event.status !== "CANCELLED" ? (
+                  <a
+                    href={`/api/events/${event.slug}/calendar.ics`}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-sunset/50 hover:text-sunset"
+                  >
+                    <CalendarPlus className="h-4 w-4 text-sunset" />
+                    Add to calendar
                   </a>
                 ) : null}
                 <p className="pt-1 text-center text-xs text-muted">
