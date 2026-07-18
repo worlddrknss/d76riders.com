@@ -2,19 +2,12 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Eye, Pencil, Settings, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import {
-  createModificationAction,
-  createServiceRecordAction,
   deleteBikeAction,
-  deleteModificationAction,
-  deleteServiceRecordAction,
   updateBikeAction,
-  updateModificationAction,
-  updateServiceRecordAction,
   setPrimaryBikeAction,
 } from "@/app/(site)/garage/mine/actions";
 import { Button } from "@/components/ui/button";
@@ -81,18 +74,10 @@ const bikeTypes = [
 
 export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimary?: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
-  const [manageOpen, setManageOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [manageTab, setManageTab] = useState<"mods" | "services">("mods");
-  const [editingModId, setEditingModId] = useState<string | null>(null);
-  const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [deletePending, startDeleteTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
-  const [managePending, startManageTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
-  const modificationFormRef = useRef<HTMLFormElement>(null);
-  const serviceFormRef = useRef<HTMLFormElement>(null);
-  const router = useRouter();
   const imageUrl = bike.photos[0]?.url ? mediaUrl(bike.photos[0].url) : null;
 
   const timeline = [
@@ -132,52 +117,6 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
     });
   }
 
-  function handleCreateModification(formData: FormData) {
-    startManageTransition(async () => {
-      await createModificationAction(formData);
-      modificationFormRef.current?.reset();
-      router.refresh();
-    });
-  }
-
-  function handleCreateService(formData: FormData) {
-    startManageTransition(async () => {
-      await createServiceRecordAction(formData);
-      serviceFormRef.current?.reset();
-      router.refresh();
-    });
-  }
-
-  function handleDeleteModification(modificationId: string) {
-    startManageTransition(async () => {
-      await deleteModificationAction(modificationId);
-      router.refresh();
-    });
-  }
-
-  function handleDeleteService(serviceId: string) {
-    startManageTransition(async () => {
-      await deleteServiceRecordAction(serviceId);
-      router.refresh();
-    });
-  }
-
-  function handleUpdateModification(modId: string, formData: FormData) {
-    startManageTransition(async () => {
-      await updateModificationAction(modId, formData);
-      setEditingModId(null);
-      router.refresh();
-    });
-  }
-
-  function handleUpdateService(serviceId: string, formData: FormData) {
-    startManageTransition(async () => {
-      await updateServiceRecordAction(serviceId, formData);
-      setEditingServiceId(null);
-      router.refresh();
-    });
-  }
-
   return (
     <motion.article
       layout
@@ -190,12 +129,13 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
         <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(true)} className="h-8 w-8 bg-white/80 backdrop-blur hover:bg-white" title="View build details">
           <Eye className="h-3.5 w-3.5 text-asphalt" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={() => {
-          setManageTab("mods");
-          setManageOpen(true);
-        }} className="h-8 w-8 bg-white/80 backdrop-blur hover:bg-white" title="Manage modifications and service">
+        <Link
+          href={`/builds/${bike.id}`}
+          title="Open build — modifications & service"
+          className="flex h-8 w-8 items-center justify-center rounded-md bg-white/80 backdrop-blur hover:bg-white"
+        >
           <Settings className="h-3.5 w-3.5 text-asphalt" />
-        </Button>
+        </Link>
         <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} className="h-8 w-8 bg-white/80 backdrop-blur hover:bg-white">
           <Pencil className="h-3.5 w-3.5 text-asphalt" />
         </Button>
@@ -300,181 +240,6 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
         )}
       </div>
 
-      <Dialog open={manageOpen} onOpenChange={setManageOpen}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Manage {bike.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="inline-flex rounded-lg border border-border bg-canvas p-1">
-              <Button
-                type="button"
-                size="sm"
-                variant={manageTab === "mods" ? "accent" : "ghost"}
-                className="h-8 px-3"
-                onClick={() => setManageTab("mods")}
-              >
-                Mods ({bike.modifications.length})
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={manageTab === "services" ? "accent" : "ghost"}
-                className="h-8 px-3"
-                onClick={() => setManageTab("services")}
-              >
-                Service ({bike.serviceRecords.length})
-              </Button>
-            </div>
-
-            {manageTab === "mods" ? (
-            <div className="space-y-3 rounded-xl border border-border bg-canvas p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-asphalt">Add Modification</h3>
-              <form ref={modificationFormRef} action={handleCreateModification} className="space-y-2">
-                <input type="hidden" name="bikeId" value={bike.id} />
-                <Input name="title" required placeholder="Title" />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <select name="category" className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
-                    <option value="OTHER">Category</option>
-                    <option value="EXHAUST">Exhaust</option>
-                    <option value="PERFORMANCE">Performance</option>
-                    <option value="ENGINE">Engine</option>
-                    <option value="SUSPENSION">Suspension</option>
-                    <option value="EXTERIOR">Exterior</option>
-                    <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
-                    <option value="LIGHTING">Lighting</option>
-                    <option value="ELECTRICAL">Electrical</option>
-                    <option value="PROTECTION">Protection &amp; Crash</option>
-                    <option value="ERGONOMICS">Ergonomics</option>
-                  </select>
-                  <Input name="cost" type="number" step="0.01" min="0" placeholder="Cost" />
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Input name="mileage" type="number" min="0" placeholder="Mileage" />
-                  <Input name="installedAt" type="date" />
-                </div>
-                <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
-                <Button type="submit" size="sm" variant="accent" disabled={managePending}>{managePending ? "Saving…" : "Add Mod"}</Button>
-              </form>
-
-              <div className="space-y-2">
-                {bike.modifications.length > 0 ? bike.modifications.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-border bg-surface px-3 py-2">
-                    {editingModId === item.id ? (
-                      <form action={(fd) => handleUpdateModification(item.id, fd)} className="space-y-2">
-                        <Input name="title" defaultValue={item.title} required placeholder="Title" />
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <select name="category" defaultValue={item.category} className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
-                            <option value="EXHAUST">Exhaust</option>
-                            <option value="PERFORMANCE">Performance</option>
-                            <option value="ENGINE">Engine</option>
-                            <option value="SUSPENSION">Suspension</option>
-                            <option value="EXTERIOR">Exterior</option>
-                            <option value="WHEELS_TIRES">Wheels &amp; Tires</option>
-                            <option value="LIGHTING">Lighting</option>
-                            <option value="ELECTRICAL">Electrical</option>
-                            <option value="PROTECTION">Protection &amp; Crash</option>
-                            <option value="ERGONOMICS">Ergonomics</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                          <Input name="cost" type="number" step="0.01" defaultValue={item.cost ?? ""} placeholder="Cost" />
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <Input name="mileage" type="number" defaultValue={item.mileage ?? ""} placeholder="Mileage" />
-                          <Input name="installedAt" type="date" defaultValue={new Date(item.installedAt).toISOString().slice(0, 10)} />
-                        </div>
-                        <textarea name="notes" rows={2} defaultValue={item.notes ?? ""} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
-                        <div className="flex gap-2">
-                          <Button type="submit" size="sm" variant="accent" disabled={managePending}>Save</Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => setEditingModId(null)}>Cancel</Button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-ink">{item.title}</p>
-                          <p className="text-xs text-muted">{item.category.replaceAll("_", " ")} · {new Date(item.installedAt).toLocaleDateString("en-US")}{item.cost ? ` · $${item.cost}` : ""}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingModId(item.id)}><Pencil className="h-3.5 w-3.5" /></Button>
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-600" onClick={() => handleDeleteModification(item.id)} disabled={managePending}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )) : <p className="text-xs text-muted">No modifications yet.</p>}
-              </div>
-            </div>
-            ) : (
-            <div className="space-y-3 rounded-xl border border-border bg-canvas p-4">
-              <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-asphalt">Add Service Record</h3>
-              <form ref={serviceFormRef} action={handleCreateService} className="space-y-2">
-                <input type="hidden" name="bikeId" value={bike.id} />
-                <Input name="title" required placeholder="Service title" />
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <select name="serviceType" className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="REPAIR">Repair</option>
-                    <option value="INSPECTION">Inspection</option>
-                    <option value="UPGRADE">Upgrade</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                  <Input name="cost" type="number" step="0.01" min="0" placeholder="Cost" />
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Input name="mileage" type="number" min="0" placeholder="Mileage" />
-                  <Input name="servicedAt" type="date" />
-                </div>
-                <textarea name="notes" rows={2} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
-                <Button type="submit" size="sm" variant="accent" disabled={managePending}>{managePending ? "Saving…" : "Add Service"}</Button>
-              </form>
-
-              <div className="space-y-2">
-                {bike.serviceRecords.length > 0 ? bike.serviceRecords.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-border bg-surface px-3 py-2">
-                    {editingServiceId === item.id ? (
-                      <form action={(fd) => handleUpdateService(item.id, fd)} className="space-y-2">
-                        <Input name="title" defaultValue={item.title} required placeholder="Service title" />
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <select name="serviceType" defaultValue={item.serviceType} className="flex h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink">
-                            <option value="MAINTENANCE">Maintenance</option>
-                            <option value="REPAIR">Repair</option>
-                            <option value="INSPECTION">Inspection</option>
-                            <option value="UPGRADE">Upgrade</option>
-                            <option value="OTHER">Other</option>
-                          </select>
-                          <Input name="cost" type="number" step="0.01" defaultValue={item.cost ?? ""} placeholder="Cost" />
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                          <Input name="mileage" type="number" defaultValue={item.mileage ?? ""} placeholder="Mileage" />
-                          <Input name="servicedAt" type="date" defaultValue={new Date(item.servicedAt).toISOString().slice(0, 10)} />
-                        </div>
-                        <textarea name="notes" rows={2} defaultValue={item.notes ?? ""} placeholder="Notes" className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink" />
-                        <div className="flex gap-2">
-                          <Button type="submit" size="sm" variant="accent" disabled={managePending}>Save</Button>
-                          <Button type="button" size="sm" variant="outline" onClick={() => setEditingServiceId(null)}>Cancel</Button>
-                        </div>
-                      </form>
-                    ) : (
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-semibold text-ink">{item.title}</p>
-                          <p className="text-xs text-muted">{item.serviceType.replaceAll("_", " ")} · {new Date(item.servicedAt).toLocaleDateString("en-US")}{item.cost ? ` · $${item.cost}` : ""}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingServiceId(item.id)}><Pencil className="h-3.5 w-3.5" /></Button>
-                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-600" onClick={() => handleDeleteService(item.id)} disabled={managePending}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )) : <p className="text-xs text-muted">No service records yet.</p>}
-              </div>
-            </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">

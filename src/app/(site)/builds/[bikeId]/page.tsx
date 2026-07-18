@@ -29,12 +29,12 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
-    redirect("/login?next=/garage/mine");
+    redirect("/login?next=/profile");
   }
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { id: true },
+    select: { id: true, handle: true },
   });
 
   if (!rider) {
@@ -78,16 +78,13 @@ export default async function ManageBuildPage({ params }: { params: Promise<{ bi
       <div className="content-wrap space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Link href="/garage/mine" className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
+            <Link href={`/r/${rider.handle}?tab=garage`} className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
               <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Garage
+              Back to Builds
             </Link>
             <h1 className="mt-2 font-display text-3xl font-semibold text-ink">{bike.name} Build Dashboard</h1>
             <p className="mt-1 text-sm text-muted">Track modifications, service history, photos, and timeline activity for this bike.</p>
           </div>
-          <Link href="/garage/mine/analytics" className="rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt hover:border-asphalt">
-            View Spend Analytics
-          </Link>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
