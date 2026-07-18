@@ -1,0 +1,18 @@
+// Stories — ephemeral ride photos that vanish after 24 hours. A rider posts a
+// quick shot from the road; it shows in the story bar until it expires, when an
+// Inngest cron sweeps the row and its S3 object. No comments, no reactions — just
+// a fleeting "here's where I am."
+
+model Story {
+  id        String   @id @default(cuid())
+  riderId   String
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([riderId, createdAt])
+}

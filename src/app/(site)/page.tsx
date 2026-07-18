@@ -15,10 +15,13 @@ import {
 } from "lucide-react";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
+import { StoryBar } from "@/components/stories/story-bar";
+import type { StoryGroup } from "@/components/stories/story-viewer";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -187,6 +190,55 @@ export default async function Home() {
     }), []),
   ]);
 
+  // Stories — active (unexpired) ride photos, grouped by rider for the story bar.
+  const currentUser = await getCurrentUser();
+  const viewer = currentUser
+    ? await safeQuery(
+        () => prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, avatarUrl: true } }),
+        null,
+      )
+    : null;
+
+  const activeStories = await safeQuery(
+    () =>
+      prisma.story.findMany({
+        where: { expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          url: true,
+          caption: true,
+          createdAt: true,
+          rider: { select: { id: true, name: true, handle: true, avatarUrl: true } },
+        },
+      }),
+    [],
+  );
+
+  const storyMap = new Map<string, StoryGroup>();
+  for (const s of activeStories) {
+    let group = storyMap.get(s.rider.id);
+    if (!group) {
+      group = {
+        rider: { id: s.rider.id, name: s.rider.name, handle: s.rider.handle, avatarUrl: mediaUrl(s.rider.avatarUrl) },
+        stories: [],
+      };
+      storyMap.set(s.rider.id, group);
+    }
+    group.stories.push({ id: s.id, url: s.url, caption: s.caption, createdAt: s.createdAt.toISOString() });
+  }
+  const storyGroups = [...storyMap.values()].sort((a, b) => {
+    // Viewer's own stories first, then most-recently-posted riders.
+    if (viewer) {
+      if (a.rider.id === viewer.id) return -1;
+      if (b.rider.id === viewer.id) return 1;
+    }
+    const at = new Date(a.stories[a.stories.length - 1].createdAt).getTime();
+    const bt = new Date(b.stories[b.stories.length - 1].createdAt).getTime();
+    return bt - at;
+  });
+  const showStoryBar = Boolean(viewer) || storyGroups.length > 0;
+
   const statValues = [
     { label: "Community Members", value: String(userCount), delta: "Live from database" },
     { label: "Registered Bikes", value: String(bikeCount), delta: "Live from database" },
@@ -221,6 +273,20 @@ export default async function Home() {
           </>
         }
       />
+
+      {/* STORIES */}
+      {showStoryBar && (
+        <section className="w-full border-b border-border bg-canvas">
+          <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+            <StoryBar
+              groups={storyGroups}
+              currentRiderId={viewer?.id ?? null}
+              canPost={Boolean(viewer)}
+              currentAvatarUrl={viewer ? mediaUrl(viewer.avatarUrl) : null}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ABOUT */}
       <section className="w-full bg-canvas">

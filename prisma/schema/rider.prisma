@@ -69,6 +69,7 @@ model Rider {
   comments       Comment[]
   likes          Like[]
   saves          Save[]
+  stories        Story[]
   rsvps          Rsvp[]
   galleryItems   GalleryItem[]
   activities     Activity[]
