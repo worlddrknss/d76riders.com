@@ -13,6 +13,7 @@ import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { InviteLink } from "@/components/community/invite-link";
 import { InviteChart } from "@/components/profile/invite-chart";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
+import { ActivityFeed } from "@/components/profile/activity-feed";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
@@ -242,7 +243,7 @@ export default async function RiderProfilePage({
     notFound();
   }
 
-  const [hostedEvents, rsvpEvents] = await Promise.all([
+  const [hostedEvents, rsvpEvents, recentActivities] = await Promise.all([
     prisma.rideEvent.findMany({
       where: { hostId: rider.id },
       select: { id: true },
@@ -250,6 +251,12 @@ export default async function RiderProfilePage({
     prisma.rsvp.findMany({
       where: { riderId: rider.id, status: "GOING" },
       select: { eventId: true },
+    }),
+    prisma.activity.findMany({
+      where: { riderId: rider.id },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+      select: { id: true, type: true, summary: true, createdAt: true },
     }),
   ]);
 
@@ -604,8 +611,14 @@ export default async function RiderProfilePage({
           </div>
         </div>
 
-        {/* Main column: the rider's journal, as the feed. */}
-        <div>{ridesContent}</div>
+        {/* Main column: recent activity, then the rider's journal feed. */}
+        <div className="space-y-5">
+          <ActivityFeed
+            items={recentActivities}
+            viewAllHref={isOwner ? "/notifications" : undefined}
+          />
+          {ridesContent}
+        </div>
       </div>
     </div>
   );
@@ -890,7 +903,7 @@ export default async function RiderProfilePage({
   const tabs: ProfileTab[] = [
     // No separate Journal tab: the journal *is* the Overview's main column now.
     { id: "overview", label: "Overview", count: rider.journalEntries.length, content: overviewContent },
-    { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
+    { id: "garage", label: "Builds", count: rider.bikes.length, content: garageContent },
     { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
     { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
     {
