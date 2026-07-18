@@ -1,0 +1,16 @@
+// Web push — browser push subscriptions and the delivery prefs around them.
+// A rider can have several (phone, laptop). Dead endpoints are pruned on send.
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  riderId   String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+}

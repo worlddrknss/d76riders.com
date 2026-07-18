@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { NotificationPrefsCard } from "@/components/account/notifications-card";
+import { PushSettingsCard } from "@/components/account/push-settings-card";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -15,7 +16,14 @@ export default async function SettingsPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { emailOnMention: true, emailOnComment: true, emailOnRsvp: true, emailWeeklyRecap: true },
+    select: {
+      emailOnMention: true,
+      emailOnComment: true,
+      emailOnRsvp: true,
+      emailWeeklyRecap: true,
+      quietHoursStart: true,
+      quietHoursEnd: true,
+    },
   });
 
   return (
@@ -31,7 +39,12 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <PushSettingsCard
+            vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? null}
+            initialQuietStart={rider?.quietHoursStart ?? null}
+            initialQuietEnd={rider?.quietHoursEnd ?? null}
+          />
           <NotificationPrefsCard
             prefs={{
               emailOnMention: rider?.emailOnMention ?? true,

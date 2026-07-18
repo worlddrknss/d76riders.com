@@ -8,6 +8,7 @@ import { requireUserId } from "@/lib/authz";
 import { commentEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
+import { pushNotifyRider } from "@/lib/push";
 import { getCurrentUser } from "@/lib/session";
 
 // Toggle a "two wheels down" on a journal post — the biker salute that stands in
@@ -40,6 +41,12 @@ export async function toggleJournalLikeAction(entryId: string): Promise<void> {
         type: "TWO_WHEELS_DOWN",
         summary: `${rider.name} gave your post two wheels down`,
         refId: entryId,
+      });
+      await pushNotifyRider(entry.author.id, {
+        title: "Two wheels down",
+        body: `${rider.name} gave your post two wheels down`,
+        url: entry.author.handle ? `/r/${entry.author.handle}` : "/",
+        tag: `twd-${entryId}`,
       });
     }
   }
@@ -114,6 +121,12 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
     await emailNotifyRiders([entry.author.id], "comment", (name) =>
       commentEmail(name, rider.name, url),
     );
+    await pushNotifyRider(entry.author.id, {
+      title: "New comment",
+      body: `${rider.name} commented on your journal post`,
+      url: entry.author.handle ? `/r/${entry.author.handle}` : "/",
+      tag: `comment-${entryId}`,
+    });
   }
 
   if (entry?.author.handle) {
