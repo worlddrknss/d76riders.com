@@ -150,6 +150,25 @@ export function commentEmail(name: string, commenterName: string, url: string) {
   };
 }
 
+export function emergencyAccessEmail(name: string, whenText: string, whereText: string | null, rotateUrl: string) {
+  return {
+    subject: "Your D76 emergency card was viewed",
+    html: emailLayout({
+      preheader: "Someone opened your emergency medical card.",
+      heading: "Your emergency card was viewed",
+      paragraphs: [
+        `Hi ${escapeHtml(name)},`,
+        `Your emergency medical card was opened on <strong>${escapeHtml(whenText)}</strong>${
+          whereText ? ` near <strong>${escapeHtml(whereText)}</strong>` : ""
+        }.`,
+        "If this was a first responder in an emergency, no action is needed. If you don't recognize this access, generate a new link to instantly revoke the old one.",
+      ],
+      cta: { label: "Review & rotate my link", href: rotateUrl },
+      footnote: "You always get this alert — emergency-card access notifications can't be turned off.",
+    }),
+  };
+}
+
 export function rsvpEmail(name: string, riderName: string, eventTitle: string, url: string) {
   return {
     subject: `${riderName} is going to ${eventTitle}`,

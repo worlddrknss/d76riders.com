@@ -2,6 +2,10 @@
 
 import { headers } from "next/headers";
 
+import { absoluteUrl } from "@/lib/absolute-url";
+import { logActivity } from "@/lib/activity";
+import { emergencyAccessEmail } from "@/lib/email-templates";
+import { sendEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { emergencyAccessSchema } from "@/lib/schemas";
 
@@ -37,7 +41,11 @@ export async function logEmergencyAccessAction(
 
   const card = await prisma.emergencyCard.findUnique({
     where: { token },
-    select: { id: true, active: true },
+    select: {
+      id: true,
+      active: true,
+      rider: { select: { id: true, name: true, handle: true, user: { select: { email: true } } } },
+    },
   });
   if (!card || !card.active) return;
 
@@ -59,4 +67,33 @@ export async function logEmergencyAccessAction(
       address,
     },
   });
+
+  // Alert the owner every time — a security signal so they can rotate the link
+  // if the access wasn't a real responder. Best-effort; never blocks the log.
+  try {
+    const whenText = new Date().toLocaleString("en-US", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+    await logActivity({
+      riderId: card.rider.id,
+      type: "EMERGENCY_CARD_VIEWED",
+      summary: address
+        ? `Your emergency card was viewed near ${address}`
+        : "Your emergency card was viewed",
+      metadata: { address, ip },
+    });
+    const to = card.rider.user?.email;
+    if (to) {
+      const message = emergencyAccessEmail(
+        card.rider.name,
+        whenText,
+        address,
+        absoluteUrl(`/r/${card.rider.handle}?tab=emergency`),
+      );
+      await sendEmail({ to, subject: message.subject, html: message.html });
+    }
+  } catch (err) {
+    console.error("[emergency] failed to alert card owner", err);
+  }
 }

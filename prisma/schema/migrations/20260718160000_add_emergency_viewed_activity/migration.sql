@@ -1,0 +1,3 @@
+
+-- AlterEnum
+ALTER TYPE "ActivityType" ADD VALUE 'EMERGENCY_CARD_VIEWED';

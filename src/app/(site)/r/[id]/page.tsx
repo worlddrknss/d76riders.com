@@ -21,6 +21,7 @@ import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { TrustBadge } from "@/components/reputation/trust-badge";
 import { evaluateQuests } from "@/lib/quests";
 import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
+import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
@@ -350,8 +351,25 @@ export default async function RiderProfilePage({
   // Emergency card (owner-only) — decrypt the medical payload for editing.
   const emergencyConfigured = isEmergencyCryptoConfigured();
   let emergencyCard: EmergencyCardData | null = null;
+  let emergencyAccesses: {
+    id: string;
+    createdAt: Date;
+    address: string | null;
+    ip: string | null;
+    userAgent: string | null;
+    lat: number | null;
+    lng: number | null;
+  }[] = [];
   if (isOwner) {
     const cardRow = await prisma.emergencyCard.findUnique({ where: { riderId: rider.id } });
+    if (cardRow) {
+      emergencyAccesses = await prisma.emergencyCardAccess.findMany({
+        where: { cardId: cardRow.id },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        select: { id: true, createdAt: true, address: true, ip: true, userAgent: true, lat: true, lng: true },
+      });
+    }
     if (cardRow && emergencyConfigured) {
       try {
         emergencyCard = {
@@ -1059,8 +1077,11 @@ export default async function RiderProfilePage({
       id: "emergency",
       label: "Emergency",
       content: (
-        <div className="max-w-md">
-          <EmergencyCardManager card={emergencyCard} configured={emergencyConfigured} />
+        <div className="grid gap-5 lg:grid-cols-[22rem_1fr]">
+          <div>
+            <EmergencyCardManager card={emergencyCard} configured={emergencyConfigured} />
+          </div>
+          <EmergencyAccessLog accesses={emergencyAccesses} />
         </div>
       ),
     });
