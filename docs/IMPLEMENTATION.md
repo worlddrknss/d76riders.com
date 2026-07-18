@@ -17,12 +17,13 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 9 | Route Intelligence | ⬜ Not started |
 | 10 | Rider Reputation and Progression | ✅ Done |
 | 11 | Community Growth | ✅ Done |
-| 12 | Media and Storytelling | ⬜ Not started |
+| 12 | Media and Storytelling | ✅ Done |
 | 13 | Admin and Moderation Enhancements | ✅ Done |
 | 14 | Platform Reliability and Insights | 🚧 In progress |
 | 15 | Challenges | ✅ Done |
 
-Remaining, in the order they'd be quickest to build: **14 → 9 → 12**.
+Remaining: **Phase 14** (web-push + offline service worker — the installable PWA manifest is done) and
+**Phase 9** (Route Intelligence — the largest, needs an elevation source + a second routing profile).
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
@@ -372,18 +373,28 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 12: Media and Storytelling
+## Phase 12: Media and Storytelling ✅
 
 **Effort:** Large — builds on existing gallery infrastructure.
 
-**What exists:** GalleryItem model (polymorphic), event galleries, journal entries with photos/videos.
+**What exists:** GalleryItem model (polymorphic), journal entries with photos/videos. **Note:** before this
+phase, events only used `galleryItems[0]` as the cover flyer — there was no browsable event gallery.
 
 **Work:**
 
-- [ ] Auto event recap: generate summary from event photos, route, attendance, and journal entries
-- [ ] Contributor credits: track who uploaded each photo/video, display attribution
-- [ ] Per-event gallery moderation queue: organizers approve/reject photos before they go public
-- [ ] Ride of the month voting: nomination + community vote with monthly reset
+- [x] **Event gallery** — any signed-in rider uploads photos to an event (`event-gallery.tsx` +
+      `events/[slug]/gallery-actions.ts`); attendee photos are `GalleryItem`s with a `riderId`, kept distinct
+      from the organizer's cover flyer (`riderId` null). Browse events → event → gallery.
+- [x] Auto event recap: `EventRecap` card on completed events — riders, miles, photos, route — from attendance
+      + the gallery.
+- [x] Contributor credits: each gallery photo is credited to its uploader (handle link).
+- [x] Gallery moderation: **post-moderation** — the uploader, an event organizer, or an admin/mod can remove
+      any photo, and the polymorphic `Report` → `/admin/triage` flow already covers photos. Pre-approval (hold
+      uploads until an organizer approves) was deliberately skipped: for a small, trust-based community it adds
+      organizer workload and hides fresh photos; it's an easy `approved` flag to add later if abuse appears.
+- [x] Ride of the month voting: `RideOfMonthVote` (one vote per rider per calendar month, community tz);
+      `/ride-of-the-month` with live standings + past winners, linked from the Community nav. Winner computed
+      from votes per period — never stored, so the monthly reset is just a new period string.
 
 ---
 
