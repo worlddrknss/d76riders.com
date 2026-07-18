@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { Footer } from "@/components/layout/footer";
 import { RiderProximityProvider } from "@/components/location/rider-proximity";
 import { prisma } from "@/lib/prisma";
@@ -14,6 +16,13 @@ export default async function SiteLayout({
   // shares one lookup. Signed-out riders get null, and searches fall back to
   // Clarksville.
   const currentUser = await getCurrentUser();
+
+  // Hard email-verification gate: a signed-in but unconfirmed account can't
+  // reach any of the app. The /verify-email pages live outside this layout, so
+  // there's no redirect loop — that's where they land to confirm or resend.
+  if (currentUser && !currentUser.emailVerified) {
+    redirect("/verify-email");
+  }
   const rider = currentUser?.id
     ? await prisma.rider.findUnique({
         where: { userId: currentUser.id },

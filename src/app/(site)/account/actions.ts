@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { isValidTimezone } from "@/lib/datetime";
+import { sendVerification } from "@/lib/email-verification";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
@@ -387,4 +388,80 @@ export async function rotateCalendarTokenAction(): Promise<{ error: string | nul
 
   revalidatePath("/account");
   return { error: null };
+}
+
+function normalizeEmail(value: FormDataEntryValue | null): string {
+  return normalizeText(value).toLowerCase();
+}
+
+/**
+ * Request an email change. We don't switch User.email here — a confirmation link
+ * is sent to the NEW address, and the change only lands when it's clicked (see
+ * consumeVerification). This proves the rider controls the new inbox and keeps
+ * the old address usable until then.
+ */
+export async function requestEmailChangeAction(
+  _previousState: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in again.", success: null };
+  }
+
+  const email = normalizeEmail(formData.get("email"));
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Enter a valid email address.", success: null };
+  }
+
+  const me = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true, rider: { select: { name: true } } },
+  });
+  if (!me) return { error: "Account not found.", success: null };
+
+  if (email === me.email.toLowerCase()) {
+    return { error: "That's already your email address.", success: null };
+  }
+
+  const taken = await prisma.user.findUnique({ where: { email }, select: { id: true } });
+  if (taken) {
+    return { error: "An account with this email already exists.", success: null };
+  }
+
+  await sendVerification(userId, email, me.rider?.name ?? me.name ?? "rider", { isChange: true });
+  return { error: null, success: `Confirmation sent to ${email}. Click the link to finish the change.` };
+}
+
+/**
+ * Update the rider's email-notification opt-outs. Checkboxes only POST when
+ * checked, so a hidden `prefsSubmitted` marker distinguishes "unchecked" from
+ * "form didn't include this field".
+ */
+export async function updateNotificationPrefsAction(
+  _previousState: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in again.", success: null };
+  }
+
+  await prisma.rider.update({
+    where: { userId },
+    data: {
+      emailOnMention: formData.get("emailOnMention") != null,
+      emailOnComment: formData.get("emailOnComment") != null,
+      emailOnRsvp: formData.get("emailOnRsvp") != null,
+    },
+  });
+
+  revalidatePath("/account");
+  return { error: null, success: "Notification preferences saved." };
 }

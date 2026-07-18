@@ -6,9 +6,12 @@ import { Prisma, RideDifficulty } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { absoluteUrl } from "@/lib/absolute-url";
 import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
 import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
+import { rsvpEmail } from "@/lib/email-templates";
+import { emailNotifyRiders } from "@/lib/notify";
 import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -448,6 +451,25 @@ export async function rsvpAction(
 
     return { error: null, status: nextStatus };
   });
+
+  // A newly-confirmed rider (only reached on a fresh RSVP — existing GOING/
+  // WAITLISTED returned early) pings the organizers in-app + by email.
+  if (result.status === "GOING") {
+    const organizerIds = (await organizerRiderIds(event.id)).filter((id) => id !== rider.id);
+    if (organizerIds.length) {
+      const me = await prisma.rider.findUnique({ where: { id: rider.id }, select: { name: true } });
+      const riderName = me?.name ?? "A rider";
+      await logActivityForRiders(organizerIds, {
+        type: "RSVP",
+        summary: `${riderName} is going to ${event.title}`,
+        refId: event.id,
+      });
+      const url = absoluteUrl(`/events/${event.slug}`);
+      await emailNotifyRiders(organizerIds, "rsvp", (name) =>
+        rsvpEmail(name, riderName, event.title, url),
+      );
+    }
+  }
 
   revalidatePath(`/events/${event.slug}`);
   revalidatePath("/events");

@@ -33,6 +33,13 @@ model Rider {
   instagramUrl   String?
   twitterUrl     String?
 
+  // Email notification opt-outs. Each in-app activity has a matching email; a
+  // rider can silence a category here. Default on so the platform is useful out
+  // of the box; the /account settings surface these.
+  emailOnMention Boolean @default(true)
+  emailOnRsvp    Boolean @default(true)
+  emailOnComment Boolean @default(true)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bikes          Bike[]

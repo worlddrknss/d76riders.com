@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AccountNotificationsCard } from "@/components/account/notifications-card";
 import { AccountProfileForm } from "@/components/auth/account-profile-form";
 import { RiderSubNav } from "@/components/layout/rider-sub-nav";
 import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
@@ -17,7 +18,7 @@ export default async function AccountPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, calendarToken: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true },
+    select: { handle: true, bio: true, yearsRiding: true, location: true, timezone: true, calendarToken: true, favoriteRoad: true, youtubeUrl: true, tiktokUrl: true, instagramUrl: true, twitterUrl: true, emailOnMention: true, emailOnComment: true, emailOnRsvp: true },
   });
 
   const calendarPath = rider?.calendarToken ? `/api/riders/${rider.calendarToken}/calendar.ics` : null;
@@ -69,6 +70,16 @@ export default async function AccountPage() {
             />
           </div>
         </div>
+
+        <AccountNotificationsCard
+          email={currentUser.email}
+          emailVerified={Boolean(currentUser.emailVerified)}
+          prefs={{
+            emailOnMention: rider?.emailOnMention ?? true,
+            emailOnComment: rider?.emailOnComment ?? true,
+            emailOnRsvp: rider?.emailOnRsvp ?? true,
+          }}
+        />
 
         <CalendarSubscribe webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
       </div>

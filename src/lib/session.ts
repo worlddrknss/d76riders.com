@@ -11,6 +11,7 @@ export type CurrentUser = {
   id: string;
   name: string | null;
   email: string;
+  emailVerified: Date | null;
   image: string | null;
   handle: string | null;
   avatarUrl: string | null;
@@ -72,6 +73,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
           id: true,
           name: true,
           email: true,
+          emailVerified: true,
           image: true,
           rider: {
             select: {
@@ -103,6 +105,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     id: session.user.id,
     name: session.user.rider?.name ?? session.user.name,
     email: session.user.email,
+    emailVerified: session.user.emailVerified,
     image: session.user.image,
     handle: session.user.rider?.handle ?? null,
     avatarUrl: session.user.rider?.avatarUrl ?? null,

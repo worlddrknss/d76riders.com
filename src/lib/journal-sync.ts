@@ -1,5 +1,8 @@
+import { absoluteUrl } from "@/lib/absolute-url";
 import { logActivityForRiders } from "@/lib/activity";
+import { mentionEmail } from "@/lib/email-templates";
 import { extractHashtags, extractHandles } from "@/lib/journal-tags";
+import { emailNotifyRiders } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -54,5 +57,11 @@ export async function syncJournalTagsAndMentions(params: {
       refId: entryId,
       metadata: { authorHandle: author?.handle ?? null },
     });
+
+    const mentionerName = author?.name ?? "A rider";
+    const url = absoluteUrl(author?.handle ? `/r/${author.handle}` : "/");
+    await emailNotifyRiders(newlyMentioned, "mention", (name) =>
+      mentionEmail(name, mentionerName, url),
+    );
   }
 }

@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
+import { absoluteUrl } from "@/lib/absolute-url";
+import { logActivity } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
+import { commentEmail } from "@/lib/email-templates";
+import { emailNotifyRiders } from "@/lib/notify";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -34,7 +38,7 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
-  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true, name: true } });
   if (!rider) return;
 
   const body = (formData.get("body")?.toString() ?? "").trim();
@@ -48,7 +52,26 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
     },
   });
 
-  const entry = await prisma.journalEntry.findUnique({ where: { id: entryId }, select: { author: { select: { handle: true } } } });
+  const entry = await prisma.journalEntry.findUnique({
+    where: { id: entryId },
+    select: { author: { select: { id: true, handle: true } } },
+  });
+
+  // Notify the post's author — in-app + email — unless they're commenting on
+  // their own post.
+  if (entry && entry.author.id !== rider.id) {
+    await logActivity({
+      riderId: entry.author.id,
+      type: "COMMENTED",
+      summary: `${rider.name} commented on your journal post`,
+      refId: entryId,
+    });
+    const url = absoluteUrl(entry.author.handle ? `/r/${entry.author.handle}` : "/");
+    await emailNotifyRiders([entry.author.id], "comment", (name) =>
+      commentEmail(name, rider.name, url),
+    );
+  }
+
   if (entry?.author.handle) {
     revalidatePath(`/r/${entry.author.handle}`);
   }

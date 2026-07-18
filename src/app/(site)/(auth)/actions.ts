@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { sendVerification } from "@/lib/email-verification";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { recordReferral } from "@/lib/referrals";
@@ -97,6 +98,10 @@ export async function registerAction(
       }
       cookieStore.delete("d76_ref");
     }
+
+    // Welcome + confirmation email. The account is signed in but gated until
+    // they click the link (see the (site) layout). Never blocks registration.
+    await sendVerification(user.id, email, displayName, { welcome: true });
 
     await createUserSession(user.id);
   } catch (error) {
