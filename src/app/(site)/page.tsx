@@ -162,7 +162,7 @@ export default async function Home() {
       {/* HERO */}
       <PageHero
         image={siteImages.hero}
-        video="/images/hero/video.mp4"
+        video="/images/hero/video-v2.mp4"
         variant="home"
         title={<>DISTRICT <span className="text-sunset">76</span></>}
         description="Founded in Clarksville, Tennessee and built for riders across the state. All bikes, all skill levels, no politics. Just rides worth showing up for."
