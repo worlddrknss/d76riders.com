@@ -37,7 +37,7 @@ const exploreFeatures = [
   },
   {
     title: "Garage",
-    href: "/garage",
+    href: "/profile",
     icon: Wrench,
     description: "Browse the machines our members ride, from naked bikes to long-haul adventure rigs.",
   },

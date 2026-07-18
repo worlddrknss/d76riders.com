@@ -1122,7 +1122,7 @@ export default async function RiderProfilePage({
                 not the point of the page. */}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
               <Link
-                href={isOwner ? "/garage/mine" : `/garage/${rider.handle}`}
+                href={`/r/${rider.handle}?tab=garage`}
                 className="hover:text-sunset"
               >
                 <span className="font-semibold text-ink">{rider.bikes.length}</span> bike

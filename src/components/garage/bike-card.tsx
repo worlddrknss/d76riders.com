@@ -228,7 +228,7 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
       </div>
 
       <div className="flex items-center justify-between border-t border-border px-5 py-3">
-        <Link href={`/garage/mine/${bike.id}`} className="text-xs font-semibold uppercase tracking-wide text-sunset hover:underline">
+        <Link href={`/builds/${bike.id}`} className="text-xs font-semibold uppercase tracking-wide text-sunset hover:underline">
           Build Timeline
         </Link>
         {!isPrimary && (

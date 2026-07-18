@@ -664,7 +664,6 @@ export async function toggleRiderFollowAction(targetHandle: string): Promise<voi
   }
 
   revalidatePath(`/r/${target.handle}`);
-  revalidatePath(`/members/${target.handle}`);
 }
 
 export async function toggleEventFollowAction(eventId: string): Promise<void> {

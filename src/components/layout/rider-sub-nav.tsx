@@ -7,8 +7,8 @@ import { Bike, Shield, UserRound, Video } from "lucide-react";
 
 const tabs = [
   { href: (handle: string) => `/r/${handle}`, label: "Profile", icon: UserRound, match: "/r/" },
-  { href: () => "/garage/mine", label: "Garage", icon: Bike, match: "/garage/mine" },
-  { href: () => "/gear/mine", label: "Gear", icon: Shield, match: "/gear" },
+  { href: (handle: string) => `/r/${handle}?tab=garage`, label: "Builds", icon: Bike, match: "/garage" },
+  { href: (handle: string) => `/r/${handle}?tab=gear`, label: "Gear", icon: Shield, match: "/gear" },
   { href: () => "/videos/mine", label: "Videos", icon: Video, match: "/videos" },
 ] as const;
 

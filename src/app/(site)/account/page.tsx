@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { AccountNotificationsCard } from "@/components/account/notifications-card";
+import Link from "next/link";
+
+import { EmailChangeCard } from "@/components/account/notifications-card";
 import { AccountProfileForm } from "@/components/auth/account-profile-form";
-import { RiderSubNav } from "@/components/layout/rider-sub-nav";
 import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -44,12 +45,19 @@ export default async function AccountPage() {
   return (
     <section className="page-shell">
       <div className="content-wrap space-y-6">
-        {rider?.handle && <RiderSubNav handle={rider.handle} />}
+        <div className="mx-auto flex max-w-3xl items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Account</p>
+            <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Account &amp; Profile</h1>
+          </div>
+          <Link href="/settings" className="text-sm font-medium text-sunset hover:underline">
+            Notification settings →
+          </Link>
+        </div>
 
         <div className="mx-auto max-w-3xl rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Account</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Edit Profile</h1>
-          <p className="mt-2 text-sm text-muted">
+          <h2 className="font-display text-xl font-semibold text-ink">Profile</h2>
+          <p className="mt-1 text-sm text-muted">
             Changes here update your public profile immediately.
           </p>
 
@@ -71,15 +79,9 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        <AccountNotificationsCard
-          email={currentUser.email}
-          emailVerified={Boolean(currentUser.emailVerified)}
-          prefs={{
-            emailOnMention: rider?.emailOnMention ?? true,
-            emailOnComment: rider?.emailOnComment ?? true,
-            emailOnRsvp: rider?.emailOnRsvp ?? true,
-          }}
-        />
+        <div className="mx-auto max-w-3xl">
+          <EmailChangeCard email={currentUser.email} emailVerified={Boolean(currentUser.emailVerified)} />
+        </div>
 
         <CalendarSubscribe webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
       </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Wrench, CheckCheck } from "lucide-react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -377,17 +377,25 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                       <UserRound className="h-4 w-4 text-slate-300" />
                       <span>{currentUser.name || "Rider"}</span>
                     </Link>
-                    <Link href="/garage/mine" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                    <Link href={`/r/${currentUser.handle}?tab=garage`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Bike className="h-4 w-4 text-slate-300" />
-                      <span>Garage</span>
+                      <span>Builds</span>
                     </Link>
-                    <Link href="/gear/mine" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                    <Link href={`/r/${currentUser.handle}?tab=gear`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Wrench className="h-4 w-4 text-slate-300" />
                       <span>Gear</span>
                     </Link>
                     <Link href="/events/new" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <CalendarPlus2 className="h-4 w-4 text-slate-300" />
                       <span>Create Event</span>
+                    </Link>
+                    <Link href="/account" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                      <UserCog className="h-4 w-4 text-slate-300" />
+                      <span>Account</span>
+                    </Link>
+                    <Link href="/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                      <Settings className="h-4 w-4 text-slate-300" />
+                      <span>Settings</span>
                     </Link>
                     {isAdministrator ? (
                       <Link href="/admin" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
@@ -486,25 +494,18 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     Profile
                   </Link>
                   <Link
-                    href="/garage/mine"
+                    href={`/r/${currentUser.handle}?tab=garage`}
                     className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >
-                    Garage
+                    Builds
                   </Link>
                   <Link
-                    href="/gear/mine"
+                    href={`/r/${currentUser.handle}?tab=gear`}
                     className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >
                     Gear
-                  </Link>
-                  <Link
-                    href="/videos/mine"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Videos
                   </Link>
                   <Link
                     href="/notifications"
@@ -519,6 +520,20 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     onClick={() => setIsOpen(false)}
                   >
                     Create Event
+                  </Link>
+                  <Link
+                    href="/account"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Account
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Settings
                   </Link>
                   {isAdministrator ? (
                     <Link
