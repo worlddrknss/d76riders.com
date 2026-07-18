@@ -31,6 +31,7 @@ export const navItems: NavItem[] = [
     children: [
       { href: "/crews", label: "Crews" },
       { href: "/challenges", label: "Challenges" },
+      { href: "/ride-of-the-month", label: "Ride of the Month" },
       { href: "/leaderboard", label: "Leaderboard" },
       { href: "/shops", label: "Shops & Sponsors" },
     ],

@@ -1,0 +1,20 @@
+// Ride of the Month — riders vote once per calendar month for their favorite
+// completed ride. Winner = the event with the most votes in a period. Progress
+// is computed from votes, never stored, so a monthly "reset" is just a new
+// period string.
+model RideOfMonthVote {
+  id      String @id @default(cuid())
+  eventId String
+  riderId String
+  // The calendar month the vote counts for, "YYYY-MM" in the community timezone.
+  period  String
+
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([riderId, period])
+  @@index([period])
+  @@index([eventId])
+}

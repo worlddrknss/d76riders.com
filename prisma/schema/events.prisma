@@ -43,6 +43,7 @@ model RideEvent {
   followers    EventFollow[]
   comments     Comment[]
   galleryItems GalleryItem[]
+  romVotes     RideOfMonthVote[]
   incidents    RideIncident[]
   reports      Report[]
   adminIncidents AdminIncident[]

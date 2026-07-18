@@ -21,6 +21,7 @@ import { AttendancePanel } from "@/components/events/attendance-panel";
 import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventGallery } from "@/components/events/event-gallery";
 import { EventOrganizers } from "@/components/events/event-organizers";
+import { EventRecap } from "@/components/events/event-recap";
 import { EventRidersList } from "@/components/events/event-riders-list";
 import { MessageRidersDialog } from "@/components/events/message-riders-dialog";
 import { RouteExportOptions } from "@/components/events/route-export-options";
@@ -774,6 +775,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             isHost={isHost}
           />
         )}
+
+            {/* Post-ride recap — completed events only */}
+            {event.status === "COMPLETED" && (
+              <EventRecap
+                title={event.title}
+                riders={event.checkIns.length}
+                miles={event.distanceMiles}
+                photos={eventPhotos.length}
+                hasRoute={!!event.routeId}
+                coverUrl={event.galleryItems[0]?.url ?? eventPhotos[0]?.url ?? null}
+              />
+            )}
 
             {/* Community photo gallery — attendees contribute, anyone can view */}
             <EventGallery eventId={event.id} photos={eventPhotos} canUpload={Boolean(viewerRider)} />

@@ -84,6 +84,7 @@ model Rider {
   sponsorsSubmitted Sponsor[] @relation("SponsorSubmitter")
   sponsorReviews SponsorReview[]
   rideLogs RideLog[]
+  romVotes RideOfMonthVote[]
   quests         RiderQuest[]
   crews          CrewMember[]
 
