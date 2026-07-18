@@ -268,6 +268,29 @@ export default async function Home() {
     }>,
   );
 
+  // Rider Spotlight — the most recent weekly pick from the spotlight-pick cron.
+  const spotlight = await safeQuery(
+    () =>
+      prisma.spotlight.findFirst({
+        orderBy: { weekStart: "desc" },
+        select: {
+          blurb: true,
+          rider: {
+            select: {
+              name: true,
+              handle: true,
+              avatarUrl: true,
+              bio: true,
+              location: true,
+              ridesCompleted: true,
+              _count: { select: { journalEntries: true, badges: true } },
+            },
+          },
+        },
+      }),
+    null,
+  );
+
   const statValues = [
     { label: "Community Members", value: String(userCount), delta: "Live from database" },
     { label: "Registered Bikes", value: String(bikeCount), delta: "Live from database" },
@@ -606,6 +629,57 @@ export default async function Home() {
           </ScaleIn>
         </div>
       </section>
+
+      {/* RIDER SPOTLIGHT */}
+      {spotlight && (
+        <section className="w-full bg-asphalt text-white">
+          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <FadeUp className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-sunset" />
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight">Rider Spotlight</h2>
+            </FadeUp>
+            <FadeUp delay={0.1}>
+              <div className="mt-6 flex flex-col gap-6 rounded-2xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:items-center sm:p-8">
+                <Link href={`/r/${spotlight.rider.handle}`} className="shrink-0">
+                  {mediaUrl(spotlight.rider.avatarUrl) ? (
+                    <img
+                      src={mediaUrl(spotlight.rider.avatarUrl) ?? ""}
+                      alt={spotlight.rider.name}
+                      className="h-24 w-24 rounded-full border-2 border-sunset object-cover sm:h-28 sm:w-28"
+                    />
+                  ) : (
+                    <span className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-sunset bg-white/10 text-3xl font-bold sm:h-28 sm:w-28">
+                      {spotlight.rider.name.charAt(0)}
+                    </span>
+                  )}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link href={`/r/${spotlight.rider.handle}`} className="font-display text-2xl font-bold hover:text-sunset">
+                    {spotlight.rider.name}
+                  </Link>
+                  {spotlight.rider.location ? (
+                    <p className="mt-0.5 text-sm text-white/60">{spotlight.rider.location}</p>
+                  ) : null}
+                  <p className="mt-3 max-w-2xl text-sm text-white/80">
+                    {spotlight.blurb || spotlight.rider.bio || "Out there logging miles and showing up for the community."}
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-5 text-sm">
+                    <span><span className="font-bold text-sunset">{spotlight.rider.ridesCompleted}</span> <span className="text-white/60">rides</span></span>
+                    <span><span className="font-bold text-sunset">{spotlight.rider._count.journalEntries}</span> <span className="text-white/60">posts</span></span>
+                    <span><span className="font-bold text-sunset">{spotlight.rider._count.badges}</span> <span className="text-white/60">badges</span></span>
+                  </div>
+                  <Link
+                    href={`/r/${spotlight.rider.handle}`}
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#f0844f]"
+                  >
+                    View profile <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </FadeUp>
+          </div>
+        </section>
+      )}
 
       {/* TRENDING */}
       {trending.length > 0 && (

@@ -1,0 +1,17 @@
+// Rider Spotlight — one featured rider per week, chosen by the `spotlight-pick`
+// Inngest cron from the past week's engagement (waves + comments received, posts,
+// rides). Surfaced on the homepage; the history is kept so a rider's profile can
+// show they've been featured.
+
+model Spotlight {
+  id        String   @id @default(cuid())
+  riderId   String
+  // Monday 00:00 (Central) of the featured week — one spotlight per week.
+  weekStart DateTime @unique
+  blurb     String?
+  createdAt DateTime @default(now())
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@index([riderId])
+}

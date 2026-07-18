@@ -47,6 +47,10 @@ model Rider {
   quietHoursStart Int?
   quietHoursEnd   Int?
 
+  // Community ambassador — a recognized club leader. Granted by admins; shows a
+  // badge on the profile and lists the rider on /ambassadors.
+  isAmbassador Boolean @default(false)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bikes          Bike[]
@@ -76,6 +80,7 @@ model Rider {
   likes          Like[]
   saves          Save[]
   stories        Story[]
+  spotlights     Spotlight[]
   pushSubscriptions PushSubscription[]
   rsvps          Rsvp[]
   galleryItems   GalleryItem[]

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
+import { Award, Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
@@ -19,6 +19,7 @@ import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs"
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { TrustBadge } from "@/components/reputation/trust-badge";
+import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
 import { evaluateQuests } from "@/lib/quests";
 import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
 import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
@@ -103,6 +104,7 @@ export default async function RiderProfilePage({
       userId: true,
       handle: true,
       name: true,
+      isAmbassador: true,
       bio: true,
       location: true,
       timezone: true,
@@ -323,6 +325,7 @@ export default async function RiderProfilePage({
   const totalRidesCount = ridesFromEvents + loggedRides;
 
   const isOwner = currentUser?.id === rider.userId;
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
   const avatar = mediaUrl(rider.avatarUrl);
   const cover = mediaUrl(rider.coverUrl);
   const viewer = currentUser
@@ -1192,6 +1195,13 @@ export default async function RiderProfilePage({
               {rider.trust && rider.trust.eventsAttended > 0 ? (
                 <TrustBadge level={rider.trust.level} score={rider.trust.score} />
               ) : null}
+
+              {rider.isAmbassador ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-sunset/10 px-2.5 py-0.5 text-xs font-semibold text-sunset">
+                  <Award className="h-3.5 w-3.5" /> Ambassador
+                </span>
+              ) : null}
+              {isAdmin ? <AmbassadorToggle handle={rider.handle} isAmbassador={rider.isAmbassador} /> : null}
 
               {/* Socials as icons in the header rather than a sidebar card —
                   they're a handful of links, not a section. */}

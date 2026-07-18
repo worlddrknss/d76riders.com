@@ -28,6 +28,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Events", href: "/events" },
       { label: "Garage", href: "/profile" },
       { label: "Riders", href: "/r" },
+      { label: "Ambassadors", href: "/ambassadors" },
       { label: "Magazine", href: "/magazine" },
     ],
   },
