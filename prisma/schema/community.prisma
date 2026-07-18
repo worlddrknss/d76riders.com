@@ -186,6 +186,7 @@ model Sponsor {
   submittedBy Rider?         @relation("SponsorSubmitter", fields: [submittedByRiderId], references: [id], onDelete: SetNull)
   reviewedBy  User?          @relation("SponsorReviewer", fields: [reviewedByUserId], references: [id], onDelete: SetNull)
   events      EventSponsor[]
+  reviews     SponsorReview[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -195,6 +196,26 @@ model Sponsor {
   @@index([status])
   @@index([category])
   @@index([submittedByRiderId])
+}
+
+// A rider's rating + optional written review of a shop/sponsor. One per rider
+// per shop (upserted), so the average is one-rider-one-vote.
+model SponsorReview {
+  id        String @id @default(cuid())
+  sponsorId String
+  riderId   String
+  rating    Int // 1–5 stars
+  body      String?
+
+  sponsor Sponsor @relation(fields: [sponsorId], references: [id], onDelete: Cascade)
+  rider   Rider   @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sponsorId, riderId])
+  @@index([sponsorId])
+  @@index([riderId])
 }
 
 enum SponsorStatus {

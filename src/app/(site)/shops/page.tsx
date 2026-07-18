@@ -3,6 +3,7 @@ import Link from "next/link";
 import { MapPin, Phone, Store, ExternalLink } from "lucide-react";
 
 import { PageHero } from "@/components/layout/page-hero";
+import { Stars } from "@/components/sponsors/shop-reviews";
 import { SubmitSponsorDialog } from "@/components/sponsors/submit-sponsor-dialog";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { siteImages } from "@/data/images";
@@ -56,6 +57,7 @@ export default async function ShopsPage({
     orderBy: [{ tier: { sort: "asc", nulls: "last" } }, { name: "asc" }],
     select: {
       id: true,
+      slug: true,
       name: true,
       description: true,
       logoUrl: true,
@@ -66,6 +68,7 @@ export default async function ShopsPage({
       phone: true,
       lat: true,
       lng: true,
+      reviews: { select: { rating: true } },
     },
   });
 
@@ -201,6 +204,20 @@ export default async function ShopsPage({
                           </span>
                         ) : null}
                       </div>
+
+                      <Link href={`/shops/${shop.slug}`} className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-muted hover:text-sunset">
+                        {shop.reviews.length > 0 ? (
+                          <>
+                            <Stars value={shop.reviews.reduce((s, r) => s + r.rating, 0) / shop.reviews.length} />
+                            <span className="font-semibold text-ink">
+                              {(shop.reviews.reduce((s, r) => s + r.rating, 0) / shop.reviews.length).toFixed(1)}
+                            </span>
+                            <span>({shop.reviews.length})</span>
+                          </>
+                        ) : (
+                          <span className="font-medium text-sunset">Write a review →</span>
+                        )}
+                      </Link>
 
                       {shop.description ? (
                         <p className="mt-2 line-clamp-3 flex-1 text-sm text-muted">
