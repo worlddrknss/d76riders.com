@@ -32,6 +32,26 @@ Effort is judged against what's actually in the codebase now, not against the or
   elevation field and `src/lib/routing.ts` only calls OSRM's plain `driving` profile.
 - **12 — Media.** Largest: moderation queue, voting, and recap generation are three features in a coat.
 
+### Beyond the 15-phase roadmap (shipped 2026-07-18)
+
+A run of UX/feature work outside the original phases, all in production:
+
+- **Notification Center (email)** — see Phase 14 above (verification gate + notification emails + `/settings`).
+- **Profile redesign** — tabbed profile (Overview activity feed · Journal · Garage · Photos · Events · Gear ·
+  Videos · Skills), identity sidebar on Overview + Journal, edit-profile as a modal. `?tab=` deep-links follow
+  URL changes.
+- **Garage / builds / services** — per-bike build page at **`/builds/[bikeId]`** with a Build Timeline +
+  filterable Service Records, add-via-modal, and a read-only view for visitors (costs owner-only). The old
+  in-card "Manage" and "Build Details" modals are gone.
+- **Shop/sponsor reviews** — `SponsorReview` model, star ratings + reviews at `/shops/[slug]`, admin/mod
+  takedown.
+- **Manual ride logging** — `RideLog` model; riders log solo rides (miles/date) that count toward displayed
+  rides/miles totals but **not** the trust score (which stays event-check-in only).
+- **Emergency access transparency** — Emergency tab shows an access audit log; every card view alerts the
+  owner (always-on).
+- **Account/Settings split**, nav rewire, and deletion of the legacy `/garage`, `/gear`, `/videos`,
+  `members/[id]`, and duplicate action/nav files. See the `profile-ia-redesign` memory for the full map.
+
 ### Follow-ups from the 10/11/13 work
 
 - **Write and publish the safety waiver** at `/admin/policies` (type `SAFETY_WAIVER`). It is deliberately not
@@ -401,7 +421,12 @@ model EmergencyCardAccess {
       conversion, punctuality vs a 15-min grace, the named no-shows) and **your rides overall** (turnout
       trend, RSVP→attendance, churn among your riders across two 90-day windows). Computations in
       `src/lib/analytics.ts` reuse the trust-scoring definitions so the numbers match a rider's profile.
-- [ ] Notification center: unified notification model with delivery tracking (in-app, email, push)
+- [~] Notification center: **email channel + verification done** (2026-07-18). Email verification is a
+      hard gate (`EmailVerification` model, `/verify-email`, welcome/confirm on signup, account email-change
+      with confirm-at-new-address). Per-rider opt-in email notifications fire for @mentions, journal comments,
+      and RSVPs (`src/lib/mailer.ts` Gmail SMTP + `src/lib/notify.ts`, prefs on `Rider`, managed at
+      `/settings`). Emergency-card access sends an always-on security alert (email + activity). **Still open:**
+      web-push, and a unified notification/delivery-tracking model (today it rides on the `Activity` feed).
 - [x] Calendar sync: per-event `.ics` download ("Add to calendar") and a per-rider subscribable feed of
       their upcoming GOING/WAITLISTED rides, at `/api/events/<slug>/calendar.ics` and
       `/api/riders/<token>/calendar.ics`. Auth for the feed is an unguessable `Rider.calendarToken` (a
