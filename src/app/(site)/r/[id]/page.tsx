@@ -512,15 +512,10 @@ export default async function RiderProfilePage({
     </div>
   );
 
-  const overviewContent = (
+  // Who-this-rider-is sidebar. Lives on the Journal tab beside the feed; Overview
+  // is just the activity feed.
+  const sidebar = (
     <div className="space-y-5">
-      {/* Full width above the columns: the checklist is temporary, so it gets a
-          strip rather than a slot that displaces the profile itself. */}
-      {isOwner ? <OnboardingQuests quests={quests} /> : null}
-
-      {/* Sidebar of who-this-rider-is, with their journal as the main column. */}
-      <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
-        <div className="space-y-5">
           {reputationPanel}
           {featuredBike && (
             <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
@@ -644,9 +639,15 @@ export default async function RiderProfilePage({
               </p>
             )}
           </div>
-        </div>
+    </div>
+  );
 
-        {/* Main column: the activity feed. The journal lives in its own tab. */}
+  // Overview: identity sidebar beside the activity feed.
+  const overviewContent = (
+    <div className="space-y-5">
+      {isOwner ? <OnboardingQuests quests={quests} /> : null}
+      <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
+        {sidebar}
         <div>
           <ActivityFeed
             items={recentActivities}
@@ -654,6 +655,14 @@ export default async function RiderProfilePage({
           />
         </div>
       </div>
+    </div>
+  );
+
+  // Journal: the same identity sidebar beside the rider's journal feed.
+  const journalContent = (
+    <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
+      {sidebar}
+      <div>{ridesContent}</div>
     </div>
   );
 
@@ -1018,7 +1027,7 @@ export default async function RiderProfilePage({
 
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewContent },
-    { id: "journal", label: "Journal", count: rider.journalEntries.length, content: ridesContent },
+    { id: "journal", label: "Journal", count: rider.journalEntries.length, content: journalContent },
     { id: "garage", label: "Builds", count: rider.bikes.length, content: garageContent },
     { id: "photos", label: "Photos", count: profilePhotos.length, content: photosContent },
     { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
