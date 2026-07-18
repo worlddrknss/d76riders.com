@@ -6,16 +6,19 @@ import {
   Bike,
   CalendarDays,
   MapPin,
+  MessageCircle,
   Newspaper,
   Route,
   Signal,
   Star,
+  TrendingUp,
   Users,
   Wrench,
 } from "lucide-react";
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { StoryBar } from "@/components/stories/story-bar";
+import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 import type { StoryGroup } from "@/components/stories/story-viewer";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
@@ -238,6 +241,32 @@ export default async function Home() {
     return bt - at;
   });
   const showStoryBar = Boolean(viewer) || storyGroups.length > 0;
+
+  // Trending journal posts — top momentum, recomputed by the Inngest cron.
+  const trending = await safeQuery(
+    () =>
+      prisma.journalEntry.findMany({
+        where: { momentum: { gt: 0 } },
+        orderBy: { momentum: "desc" },
+        take: 4,
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          author: { select: { name: true, handle: true, avatarUrl: true } },
+          galleryItems: { orderBy: { createdAt: "asc" }, take: 1, select: { url: true } },
+          _count: { select: { likes: true, comments: true } },
+        },
+      }),
+    [] as Array<{
+      id: string;
+      title: string | null;
+      body: string;
+      author: { name: string; handle: string; avatarUrl: string | null };
+      galleryItems: { url: string }[];
+      _count: { likes: number; comments: number };
+    }>,
+  );
 
   const statValues = [
     { label: "Community Members", value: String(userCount), delta: "Live from database" },
@@ -577,6 +606,66 @@ export default async function Home() {
           </ScaleIn>
         </div>
       </section>
+
+      {/* TRENDING */}
+      {trending.length > 0 && (
+        <section className="w-full bg-canvas">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+            <FadeUp className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-sunset" />
+              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Trending This Week</h2>
+            </FadeUp>
+            <StaggerList className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {trending.map((post) => {
+                const image = post.galleryItems[0]?.url ? mediaUrl(post.galleryItems[0].url) : null;
+                const excerpt = post.title || post.body;
+                const postAvatar = post.author.avatarUrl ? mediaUrl(post.author.avatarUrl) : null;
+                return (
+                  <StaggerItem key={post.id}>
+                    <Link
+                      href={`/r/${post.author.handle}`}
+                      className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift"
+                    >
+                      {image ? (
+                        <div className="aspect-video w-full overflow-hidden bg-asphalt">
+                          <img src={image} alt="" className="h-full w-full object-cover transition group-hover:scale-105" />
+                        </div>
+                      ) : (
+                        <div className="flex aspect-video w-full items-center justify-center bg-asphalt/5 text-muted">
+                          <TrendingUp className="h-8 w-8 opacity-40" />
+                        </div>
+                      )}
+                      <div className="flex flex-1 flex-col p-4">
+                        <p className="line-clamp-2 flex-1 text-sm font-medium text-ink">{excerpt}</p>
+                        <div className="mt-3 flex items-center gap-2">
+                          {postAvatar ? (
+                            <img src={postAvatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+                          ) : (
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sunset/15 text-xs font-bold text-sunset">
+                              {post.author.name.charAt(0)}
+                            </span>
+                          )}
+                          <span className="truncate text-xs text-muted">{post.author.name}</span>
+                          <span className="ml-auto flex items-center gap-2 text-xs text-muted">
+                            <span className="inline-flex items-center gap-1">
+                              <TwoWheelsDownIcon className="h-3.5 w-3.5 text-forest" filled />
+                              {post._count.likes}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              {post._count.comments}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </StaggerItem>
+                );
+              })}
+            </StaggerList>
+          </div>
+        </section>
+      )}
 
       {/* ACTIVITY + GALLERY */}
       <section className="w-full bg-canvas">

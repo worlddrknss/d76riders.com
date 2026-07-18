@@ -7,6 +7,11 @@ model JournalEntry {
   body     String
   videoUrl String?
 
+  // Trending score — recent engagement (two-wheels-down + comments + saves) with
+  // time decay. Recomputed periodically by the `momentum-recompute` Inngest cron;
+  // stale posts decay to 0 so the "Trending" rail stays fresh.
+  momentum Float @default(0)
+
   author       Rider            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   comments     Comment[]
   likes        Like[]
@@ -20,6 +25,7 @@ model JournalEntry {
   updatedAt DateTime @updatedAt
 
   @@index([authorId])
+  @@index([momentum])
 }
 
 // Extracted from the body on save (normalized: lowercase, no leading '#'), so
