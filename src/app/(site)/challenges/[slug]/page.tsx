@@ -6,6 +6,7 @@ import { Trophy } from "lucide-react";
 import { ChallengeJoinButton } from "@/components/challenges/challenge-join-button";
 import { RetireChallengeButton } from "@/components/challenges/retire-challenge-button";
 import { PageHero } from "@/components/layout/page-hero";
+import { ShareMenu } from "@/components/ui/share-menu";
 import { siteImages } from "@/data/images";
 import { challengeStatus, daysLeft, formatProgress, METRIC_LABEL } from "@/lib/challenges";
 import { prisma } from "@/lib/prisma";
@@ -86,18 +87,25 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
             <Link href="/challenges" className="text-xs font-semibold text-muted hover:text-ink">
               ← All challenges
             </Link>
-            {rider ? (
-              <div className="flex items-center gap-3">
-                {challenge.createdByRiderId === rider.id ? (
-                  <RetireChallengeButton slug={challenge.slug} />
-                ) : null}
-                <ChallengeJoinButton slug={challenge.slug} joined={Boolean(mine)} ended={status === "ENDED"} />
-              </div>
-            ) : (
-              <Link href={`/login?next=/challenges/${challenge.slug}`} className="text-xs font-semibold text-sunset">
-                Log in to join
-              </Link>
-            )}
+            <div className="flex items-center gap-3">
+              <ShareMenu
+                path={`/challenges/${challenge.slug}`}
+                title={challenge.name}
+                text={`${challenge.name} — join the D76 Riders challenge!`}
+              />
+              {rider ? (
+                <>
+                  {challenge.createdByRiderId === rider.id ? (
+                    <RetireChallengeButton slug={challenge.slug} />
+                  ) : null}
+                  <ChallengeJoinButton slug={challenge.slug} joined={Boolean(mine)} ended={status === "ENDED"} />
+                </>
+              ) : (
+                <Link href={`/login?next=/challenges/${challenge.slug}`} className="text-xs font-semibold text-sunset">
+                  Log in to join
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Summary */}
