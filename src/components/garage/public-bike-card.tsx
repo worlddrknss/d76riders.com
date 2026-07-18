@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bike } from "lucide-react";
 
 import { mediaUrl } from "@/lib/media-url";
@@ -84,6 +85,13 @@ export function PublicBikeCard({ bike, isPrimary = false }: { bike: PublicBikeDa
           <p className="mt-0.5 font-display text-lg font-bold text-asphalt">{bike._count.serviceRecords}</p>
         </div>
       </div>
+
+      <Link
+        href={`/builds/${bike.id}`}
+        className="block border-t border-border px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-sunset transition hover:bg-sunset/5"
+      >
+        View Build Timeline
+      </Link>
     </article>
   );
 }

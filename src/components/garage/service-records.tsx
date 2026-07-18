@@ -46,10 +46,13 @@ function formatDate(iso: string): string {
 export function ServiceRecords({
   items,
   deleteAction,
+  showCosts = true,
 }: {
   items: ServiceRecordItem[];
   /** Owner-only: bound per row to remove the service record. */
   deleteAction?: (id: string) => Promise<void>;
+  /** Hide per-item cost for non-owner (read-only) views. */
+  showCosts?: boolean;
 }) {
   const [filter, setFilter] = useState<"ALL" | ServiceType>("ALL");
 
@@ -103,7 +106,9 @@ export function ServiceRecords({
                 {[
                   r.mileage != null ? `${r.mileage.toLocaleString("en-US")} mi` : null,
                   formatDate(r.servicedAt),
-                  r.cost != null ? r.cost.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) : null,
+                  showCosts && r.cost != null
+                    ? r.cost.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+                    : null,
                 ]
                   .filter(Boolean)
                   .join(" · ")}

@@ -41,10 +41,13 @@ function currency(value: number | null): string | null {
 export function BuildTimeline({
   items,
   deleteAction,
+  showCosts = true,
 }: {
   items: BuildTimelineItem[];
   /** Owner-only: bound per row to remove the modification. */
   deleteAction?: (id: string) => Promise<void>;
+  /** Hide per-item cost for non-owner (read-only) views. */
+  showCosts?: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -79,7 +82,7 @@ export function BuildTimeline({
                   <h3 className="mt-0.5 font-display text-lg font-semibold text-ink">{item.title}</h3>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                    {currency(item.cost) && (
+                    {showCosts && currency(item.cost) && (
                       <span className="font-semibold text-sunset">{currency(item.cost)}</span>
                     )}
                     {item.mileage != null && (

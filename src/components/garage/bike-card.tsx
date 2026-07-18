@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Eye, Pencil, Settings, Trash2 } from "lucide-react";
+import { Pencil, Settings, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import {
@@ -74,35 +74,10 @@ const bikeTypes = [
 
 export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimary?: boolean }) {
   const [editOpen, setEditOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const [deletePending, startDeleteTransition] = useTransition();
   const [editPending, startEditTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const imageUrl = bike.photos[0]?.url ? mediaUrl(bike.photos[0].url) : null;
-
-  const timeline = [
-    ...bike.photos.map((photo) => ({
-      id: `photo-${photo.id}`,
-      label: "Photo Uploaded",
-      meta: photo.caption || "Build image",
-      when: new Date(photo.createdAt),
-      amount: null as number | null,
-    })),
-    ...bike.modifications.map((item) => ({
-      id: `mod-${item.id}`,
-      label: `Modification: ${item.title}`,
-      meta: item.category.replaceAll("_", " "),
-      when: new Date(item.installedAt),
-      amount: item.cost,
-    })),
-    ...bike.serviceRecords.map((item) => ({
-      id: `svc-${item.id}`,
-      label: `Service: ${item.title}`,
-      meta: item.serviceType.replaceAll("_", " "),
-      when: new Date(item.servicedAt),
-      amount: item.cost,
-    })),
-  ].sort((a, b) => b.when.getTime() - a.when.getTime());
 
   function handleEdit(formData: FormData) {
     startEditTransition(async () => {
@@ -126,9 +101,6 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
       className="group relative overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift"
     >
       <div className="absolute right-3 top-3 z-10 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(true)} className="h-8 w-8 bg-white/80 backdrop-blur hover:bg-white" title="View build details">
-          <Eye className="h-3.5 w-3.5 text-asphalt" />
-        </Button>
         <Link
           href={`/builds/${bike.id}`}
           title="Open build — modifications & service"
@@ -241,69 +213,6 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
       </div>
 
 
-      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{bike.name} Build Details</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted">Gallery</h3>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                {bike.photos.length > 0 ? bike.photos.map((photo) => (
-                  <figure key={photo.id} className="overflow-hidden rounded-lg border border-border bg-canvas">
-                    <img src={mediaUrl(photo.url)} alt={photo.caption || bike.name} className="h-32 w-full object-cover" />
-                    <figcaption className="truncate px-2 py-1 text-xs text-muted">{photo.caption || "No caption"}</figcaption>
-                  </figure>
-                )) : <p className="text-sm text-muted">No gallery photos.</p>}
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted">Timeline</h3>
-              <div className="mt-2 space-y-2">
-                {timeline.length > 0 ? timeline.map((entry) => (
-                  <article key={entry.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                    <p className="text-sm font-semibold text-ink">{entry.label}</p>
-                    <p className="text-xs text-muted">{entry.meta}</p>
-                    <p className="mt-1 text-xs text-muted">{entry.when.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</p>
-                    {entry.amount ? <p className="text-xs font-semibold text-asphalt">${entry.amount.toFixed(2)}</p> : null}
-                  </article>
-                )) : <p className="text-sm text-muted">No timeline entries yet.</p>}
-              </div>
-            </section>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted">Modifications</h3>
-              <div className="mt-2 space-y-2">
-                {bike.modifications.length > 0 ? bike.modifications.map((item) => (
-                  <article key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                    <p className="text-sm font-semibold text-ink">{item.title}</p>
-                    <p className="text-xs text-muted">{item.category.replaceAll("_", " ")} · {new Date(item.installedAt).toLocaleDateString("en-US")}</p>
-                    {item.notes ? <p className="mt-1 text-xs text-muted">{item.notes}</p> : null}
-                  </article>
-                )) : <p className="text-sm text-muted">No modifications.</p>}
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-muted">Service Records</h3>
-              <div className="mt-2 space-y-2">
-                {bike.serviceRecords.length > 0 ? bike.serviceRecords.map((item) => (
-                  <article key={item.id} className="rounded-lg border border-border bg-canvas px-3 py-2">
-                    <p className="text-sm font-semibold text-ink">{item.title}</p>
-                    <p className="text-xs text-muted">{item.serviceType.replaceAll("_", " ")} · {new Date(item.servicedAt).toLocaleDateString("en-US")}</p>
-                    {item.notes ? <p className="mt-1 text-xs text-muted">{item.notes}</p> : null}
-                  </article>
-                )) : <p className="text-sm text-muted">No service records.</p>}
-              </div>
-            </section>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md">
