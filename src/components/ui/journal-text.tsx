@@ -12,7 +12,9 @@ import { tokenizeJournalText } from "@/lib/journal-tags";
 export function JournalText({ text, className }: { text: string; className?: string }) {
   const tokens = tokenizeJournalText(text);
   return (
-    <span className={className}>
+    // whitespace-pre-line keeps the author's line and paragraph breaks — the
+    // composer stores real newlines, so the post should show them.
+    <span className={`whitespace-pre-line ${className ?? ""}`}>
       {tokens.map((t, i) => {
         if (t.kind === "text") return <span key={i}>{t.value}</span>;
         if (t.kind === "url") {
