@@ -82,6 +82,9 @@ model Rider {
   stories        Story[]
   spotlights     Spotlight[]
   pushSubscriptions PushSubscription[]
+  conversationsA Conversation[]  @relation("ConversationRiderA")
+  conversationsB Conversation[]  @relation("ConversationRiderB")
+  sentMessages   DirectMessage[] @relation("DirectMessageSender")
   rsvps          Rsvp[]
   galleryItems   GalleryItem[]
   activities     Activity[]

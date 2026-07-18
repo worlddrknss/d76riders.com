@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -389,6 +389,10 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                       <CalendarPlus2 className="h-4 w-4 text-slate-300" />
                       <span>Create Event</span>
                     </Link>
+                    <Link href="/messages" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                      <MessageSquare className="h-4 w-4 text-slate-300" />
+                      <span>Messages</span>
+                    </Link>
                     <Link href="/saved" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Bookmark className="h-4 w-4 text-slate-300" />
                       <span>Saved</span>
@@ -524,6 +528,13 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     onClick={() => setIsOpen(false)}
                   >
                     Create Event
+                  </Link>
+                  <Link
+                    href="/messages"
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Messages
                   </Link>
                   <Link
                     href="/saved"

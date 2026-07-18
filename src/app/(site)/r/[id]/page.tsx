@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
+import { Award, Bike, BookText, CalendarDays, Camera, DollarSign, ExternalLink, Footprints, HardHat, Image as ImageIcon, MapPin, MessageSquare, Package, Receipt, Route, Shirt, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
@@ -32,6 +32,8 @@ import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
+import { startConversationAction } from "@/app/(site)/messages/actions";
+import { canDm } from "@/lib/dm";
 import { createGearItemAction, updateGearItemAction, deleteGearItemAction } from "@/app/(site)/gear/mine/actions";
 import { deleteVideoAction } from "@/app/(site)/videos/mine/actions";
 import { CreateVideoDialog } from "@/components/videos/create-video-dialog";
@@ -341,6 +343,8 @@ export default async function RiderProfilePage({
       })
     : null;
   const isFollowing = Boolean(viewer?.following.length);
+  // DMs require a mutual follow — both riders following each other.
+  const canMessage = !isOwner && viewer ? await canDm(viewer.id, rider.id) : false;
 
   const profileData = isOwner ? {
     displayName: rider.name,
@@ -1155,18 +1159,30 @@ export default async function RiderProfilePage({
               {isOwner && profileData ? (
                 <ProfileEditButton profile={profileData} />
               ) : currentUser ? (
-                <form action={toggleRiderFollowAction.bind(null, rider.handle)}>
-                  <button
-                    type="submit"
-                    className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition ${
-                      isFollowing
-                        ? "border border-border bg-canvas text-ink hover:border-ink/30"
-                        : "bg-sunset text-white shadow-soft hover:bg-[#cf5a26]"
-                    }`}
-                  >
-                    {isFollowing ? "Following" : "Follow Rider"}
-                  </button>
-                </form>
+                <div className="flex items-center gap-2">
+                  <form action={toggleRiderFollowAction.bind(null, rider.handle)}>
+                    <button
+                      type="submit"
+                      className={`inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold transition ${
+                        isFollowing
+                          ? "border border-border bg-canvas text-ink hover:border-ink/30"
+                          : "bg-sunset text-white shadow-soft hover:bg-[#cf5a26]"
+                      }`}
+                    >
+                      {isFollowing ? "Following" : "Follow Rider"}
+                    </button>
+                  </form>
+                  {canMessage ? (
+                    <form action={startConversationAction.bind(null, rider.handle)}>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-border bg-canvas px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink/30"
+                      >
+                        <MessageSquare className="h-4 w-4" /> Message
+                      </button>
+                    </form>
+                  ) : null}
+                </div>
               ) : null}
             </div>
 
