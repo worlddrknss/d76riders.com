@@ -64,6 +64,9 @@ export default async function ShopDetailPage({ params }: { params: Promise<{ slu
   }));
 
   const myReview = rider ? shop.reviews.find((r) => r.riderId === rider.id) ?? null : null;
+  const canModerate = Boolean(
+    currentUser?.roles.includes("ADMINISTRATOR") || currentUser?.roles.includes("MODERATOR"),
+  );
   const logo = mediaUrl(shop.logoUrl);
 
   return (
@@ -125,6 +128,7 @@ export default async function ShopDetailPage({ params }: { params: Promise<{ slu
           reviews={reviews}
           average={average}
           canReview={Boolean(rider)}
+          canModerate={canModerate}
           myReview={myReview ? { rating: myReview.rating, body: myReview.body } : null}
         />
       </div>

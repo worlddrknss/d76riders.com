@@ -58,3 +58,25 @@ export async function deleteSponsorReviewAction(sponsorId: string): Promise<void
   if (sponsor) revalidatePath(`/shops/${sponsor.slug}`);
   revalidatePath("/shops");
 }
+
+/**
+ * Moderation: remove ANY review by id. Restricted to admins and moderators —
+ * for taking down spam or abusive reviews.
+ */
+export async function moderateDeleteReviewAction(reviewId: string): Promise<void> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) return;
+  const canModerate =
+    currentUser.roles.includes("ADMINISTRATOR") || currentUser.roles.includes("MODERATOR");
+  if (!canModerate) return;
+
+  const review = await prisma.sponsorReview.findUnique({
+    where: { id: reviewId },
+    select: { sponsor: { select: { slug: true } } },
+  });
+  if (!review) return;
+
+  await prisma.sponsorReview.delete({ where: { id: reviewId } }).catch(() => {});
+  revalidatePath(`/shops/${review.sponsor.slug}`);
+  revalidatePath("/shops");
+}

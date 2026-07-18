@@ -3,7 +3,11 @@
 import { useActionState, useState } from "react";
 import { Star } from "lucide-react";
 
-import { submitSponsorReviewAction, type ReviewState } from "@/app/(site)/shops/review-actions";
+import {
+  moderateDeleteReviewAction,
+  submitSponsorReviewAction,
+  type ReviewState,
+} from "@/app/(site)/shops/review-actions";
 
 export type ShopReview = {
   id: string;
@@ -65,12 +69,14 @@ export function ShopReviews({
   reviews,
   average,
   canReview,
+  canModerate = false,
   myReview,
 }: {
   sponsorId: string;
   reviews: ShopReview[];
   average: number;
   canReview: boolean;
+  canModerate?: boolean;
   myReview: { rating: number; body: string | null } | null;
 }) {
   const [state, submit, pending] = useActionState(
@@ -140,7 +146,16 @@ export function ShopReviews({
                 <Stars value={r.rating} />
               </div>
               {r.body && <p className="mt-2 text-sm leading-relaxed text-ink/80">{r.body}</p>}
-              <p className="mt-1 text-xs text-muted">{formatDate(r.createdAt)}</p>
+              <div className="mt-1 flex items-center gap-3">
+                <p className="text-xs text-muted">{formatDate(r.createdAt)}</p>
+                {canModerate && (
+                  <form action={moderateDeleteReviewAction.bind(null, r.id)}>
+                    <button type="submit" className="text-xs font-semibold text-red-600 hover:underline">
+                      Remove (mod)
+                    </button>
+                  </form>
+                )}
+              </div>
             </li>
           ))}
         </ul>
