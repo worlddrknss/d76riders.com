@@ -19,6 +19,7 @@ import {
 import { siteImages } from "@/data/images";
 import { PageHero } from "@/components/layout/page-hero";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
+import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
@@ -72,6 +73,7 @@ export default async function Home() {
       orderBy: { startsAt: "asc" },
       take: 3,
       include: {
+        galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
         rsvps: {
           where: { status: "GOING" },
           include: {
@@ -109,12 +111,25 @@ export default async function Home() {
           title: true,
           excerpt: true,
           startsAt: true,
+          timezone: true,
           meetLocation: true,
           distanceMiles: true,
           crew: { select: { name: true, slug: true } },
           galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
           _count: { select: { rsvps: true } },
         },
+      }),
+    [],
+  );
+
+  // Real community photos for the "From Our Community" mosaic.
+  const galleryPhotos = await safeQuery(
+    () =>
+      prisma.galleryItem.findMany({
+        where: { eventId: { not: null }, riderId: { not: null } },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { id: true, url: true },
       }),
     [],
   );
@@ -328,11 +343,7 @@ export default async function Home() {
 
                     <div className="p-4">
                       <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-sunset">
-                        {event.startsAt.toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {formatEventDate(event.startsAt, event.timezone ?? DEFAULT_TIMEZONE)}
                         {event.crew ? ` · ${event.crew.name}` : ""}
                       </p>
                       <h3 className="mt-1 font-display text-base font-semibold text-ink">{event.title}</h3>
@@ -372,11 +383,11 @@ export default async function Home() {
                 <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div
                   className="relative h-44 bg-cover bg-center"
-                  style={{ backgroundImage: `url(${siteImages.rides[i]})` }}
+                  style={{ backgroundImage: `url(${mediaUrl(ride.galleryItems[0]?.url) || siteImages.rides[i % siteImages.rides.length]})` }}
                 >
                   <div className="absolute left-3 top-3 flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
-                    <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{ride.startsAt.toLocaleString("en-US", { month: "short" }).toUpperCase()}</span>
-                    <span className="font-display text-xl font-bold leading-none">{String(ride.startsAt.getDate()).padStart(2, "0")}</span>
+                    <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{eventDayMonth(ride.startsAt, ride.timezone ?? DEFAULT_TIMEZONE).month}</span>
+                    <span className="font-display text-xl font-bold leading-none">{String(eventDayMonth(ride.startsAt, ride.timezone ?? DEFAULT_TIMEZONE).day).padStart(2, "0")}</span>
                   </div>
                 </div>
                 <div className="p-4">
@@ -506,13 +517,13 @@ export default async function Home() {
             <div className="mt-5 grid grid-cols-3 gap-3">
               <div
                 className="col-span-2 row-span-2 min-h-45 rounded-lg bg-cover bg-center"
-                style={{ backgroundImage: `url(${siteImages.galleryLarge})` }}
+                style={{ backgroundImage: `url(${galleryPhotos[0]?.url ? mediaUrl(galleryPhotos[0].url) : siteImages.galleryLarge})` }}
               />
-              {siteImages.gallery.map((src, i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
                   className="h-21 rounded-lg bg-cover bg-center"
-                  style={{ backgroundImage: `url(${src})` }}
+                  style={{ backgroundImage: `url(${galleryPhotos[i]?.url ? mediaUrl(galleryPhotos[i].url) : siteImages.gallery[(i - 1) % siteImages.gallery.length]})` }}
                 />
               ))}
             </div>
