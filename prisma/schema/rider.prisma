@@ -83,6 +83,7 @@ model Rider {
   challengesSet  Challenge[]  @relation("ChallengeCreator")
   sponsorsSubmitted Sponsor[] @relation("SponsorSubmitter")
   sponsorReviews SponsorReview[]
+  rideLogs RideLog[]
   quests         RiderQuest[]
   crews          CrewMember[]
 

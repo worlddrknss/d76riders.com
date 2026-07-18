@@ -144,3 +144,23 @@ enum SkillLevel {
   PROFICIENT
   MENTOR
 }
+
+// A rider's manually-logged ride taken outside a hosted event (e.g. a solo
+// morning ride). Counts toward their displayed lifetime rides/miles, but NOT
+// toward the trust score — that stays built only on verifiable event check-ins,
+// so self-reported distance can't inflate it.
+model RideLog {
+  id            String   @id @default(cuid())
+  riderId       String
+  title         String?
+  distanceMiles Int
+  riddenAt      DateTime
+  notes         String?
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([riderId])
+  @@index([riddenAt])
+}

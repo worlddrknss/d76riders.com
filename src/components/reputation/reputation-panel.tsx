@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { BadgeTier, SkillLevel, TrustLevel } from "@prisma/client";
 import { Award } from "lucide-react";
 
@@ -18,6 +19,11 @@ export type ReputationPanelProps = {
   } | null;
   badges: { id: string; name: string; icon: string; tier: BadgeTier; description: string }[];
   skills: { id: string; name: string; level: SkillLevel; verified: boolean }[];
+  /** Manually-logged solo rides — added to displayed totals, not to the trust score. */
+  loggedRides?: number;
+  loggedMiles?: number;
+  /** Owner-only action (the Log-a-ride button), rendered in the header. */
+  actionSlot?: ReactNode;
 };
 
 const SKILL_LABEL: Record<SkillLevel, string> = {
@@ -29,12 +35,23 @@ const SKILL_LABEL: Record<SkillLevel, string> = {
 
 const pct = (value: number) => `${Math.round(value * 100)}%`;
 
-export function ReputationPanel({ trust, badges, skills }: ReputationPanelProps) {
+export function ReputationPanel({
+  trust,
+  badges,
+  skills,
+  loggedRides = 0,
+  loggedMiles = 0,
+  actionSlot,
+}: ReputationPanelProps) {
+  // Displayed lifetime totals = verifiable event check-ins + self-logged rides.
+  // (The trust score below is still event-only.)
+  const totalRides = (trust?.eventsAttended ?? 0) + loggedRides;
+  const totalMiles = (trust?.milesRidden ?? 0) + loggedMiles;
+
   // Nothing earned yet — render nothing rather than a card whose only content is
-  // "you have nothing". The onboarding checklist already tells a new rider what
-  // to do; an empty Progression box just pushes real profile content down.
+  // "you have nothing". But an owner with the Log-a-ride action always sees it.
   const hasAnything =
-    (trust !== null && trust.eventsAttended > 0) || badges.length > 0 || skills.length > 0;
+    totalRides > 0 || totalMiles > 0 || badges.length > 0 || skills.length > 0 || actionSlot != null;
 
   if (!hasAnything) return null;
 
@@ -42,9 +59,12 @@ export function ReputationPanel({ trust, badges, skills }: ReputationPanelProps)
     <section className="rounded-xl border border-border bg-surface p-5 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-lg font-semibold text-ink">Progression</h2>
-        <Link href="/leaderboard" className="text-xs font-semibold text-sunset hover:underline">
-          Leaderboard →
-        </Link>
+        <div className="flex items-center gap-3">
+          {actionSlot}
+          <Link href="/leaderboard" className="text-xs font-semibold text-sunset hover:underline">
+            Leaderboard →
+          </Link>
+        </div>
       </div>
 
       {trust ? (
@@ -57,32 +77,37 @@ export function ReputationPanel({ trust, badges, skills }: ReputationPanelProps)
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-border">
             <div className="h-full rounded-full bg-sunset" style={{ width: `${trust.score}%` }} />
           </div>
-
-          <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-muted">Rides</dt>
-              <dd className="font-semibold text-ink">{trust.eventsAttended}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-muted">Miles</dt>
-              <dd className="font-semibold text-ink">{trust.milesRidden.toLocaleString()}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-muted">Attendance</dt>
-              <dd className="font-semibold text-ink">{pct(trust.attendanceRate)}</dd>
-            </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-muted">On time</dt>
-              <dd className="font-semibold text-ink">{pct(trust.punctualityRate)}</dd>
-            </div>
-          </dl>
-
-          {trust.noShows > 0 ? (
-            <p className="mt-2 text-xs text-muted">
-              {trust.noShows} no-show{trust.noShows === 1 ? "" : "s"} counted against attendance.
-            </p>
-          ) : null}
         </>
+      ) : null}
+
+      <dl className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted">Rides</dt>
+          <dd className="font-semibold text-ink">{totalRides.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted">Miles</dt>
+          <dd className="font-semibold text-ink">{totalMiles.toLocaleString()}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted">Attendance</dt>
+          <dd className="font-semibold text-ink">{pct(trust?.attendanceRate ?? 0)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted">On time</dt>
+          <dd className="font-semibold text-ink">{pct(trust?.punctualityRate ?? 0)}</dd>
+        </div>
+      </dl>
+
+      {loggedMiles > 0 ? (
+        <p className="mt-2 text-xs text-muted">
+          Includes {loggedRides.toLocaleString()} self-logged ride{loggedRides === 1 ? "" : "s"} ·{" "}
+          {loggedMiles.toLocaleString()} mi. Trust score counts group rides only.
+        </p>
+      ) : trust && trust.noShows > 0 ? (
+        <p className="mt-2 text-xs text-muted">
+          {trust.noShows} no-show{trust.noShows === 1 ? "" : "s"} counted against attendance.
+        </p>
       ) : null}
 
       <div className="mt-5">

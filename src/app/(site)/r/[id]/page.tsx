@@ -14,6 +14,7 @@ import { InviteLink } from "@/components/community/invite-link";
 import { InviteChart } from "@/components/profile/invite-chart";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ActivityFeed } from "@/components/profile/activity-feed";
+import { LogRideButton } from "@/components/profile/log-ride-button";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
@@ -243,7 +244,7 @@ export default async function RiderProfilePage({
     notFound();
   }
 
-  const [hostedEvents, rsvpEvents, recentActivities, profilePhotos, profileEvents] = await Promise.all([
+  const [hostedEvents, rsvpEvents, recentActivities, profilePhotos, profileEvents, rideLogAgg] = await Promise.all([
     prisma.rideEvent.findMany({
       where: { hostId: rider.id },
       select: { id: true },
@@ -293,7 +294,16 @@ export default async function RiderProfilePage({
         hostId: true,
       },
     }),
+    // Self-logged solo rides — added to the displayed rides/miles totals.
+    prisma.rideLog.aggregate({
+      where: { riderId: rider.id },
+      _count: { _all: true },
+      _sum: { distanceMiles: true },
+    }),
   ]);
+
+  const loggedRides = rideLogAgg._count._all;
+  const loggedMiles = rideLogAgg._sum.distanceMiles ?? 0;
 
   const participatedEventIds = new Set<string>();
   for (const event of hostedEvents) {
@@ -303,6 +313,7 @@ export default async function RiderProfilePage({
     participatedEventIds.add(rsvp.eventId);
   }
   const ridesFromEvents = participatedEventIds.size;
+  const totalRidesCount = ridesFromEvents + loggedRides;
 
   const isOwner = currentUser?.id === rider.userId;
   const avatar = mediaUrl(rider.avatarUrl);
@@ -481,6 +492,9 @@ export default async function RiderProfilePage({
         level: held.level,
         verified: held.verifiedAt !== null,
       }))}
+      loggedRides={loggedRides}
+      loggedMiles={loggedMiles}
+      actionSlot={isOwner ? <LogRideButton /> : undefined}
     />
   );
 
@@ -1138,8 +1152,8 @@ export default async function RiderProfilePage({
                 {rider.bikes.length === 1 ? "" : "s"}
               </Link>
               <span>
-                <span className="font-semibold text-ink">{ridesFromEvents}</span> ride
-                {ridesFromEvents === 1 ? "" : "s"}
+                <span className="font-semibold text-ink">{totalRidesCount}</span> ride
+                {totalRidesCount === 1 ? "" : "s"}
               </span>
               {rider.yearsRiding ? (
                 <span>
