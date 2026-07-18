@@ -618,7 +618,7 @@ export default async function Home() {
       {/* TRENDING */}
       {trending.length > 0 && (
         <section className="w-full bg-canvas">
-          <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
             <FadeUp className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-sunset" />
               <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Trending This Week</h2>
