@@ -39,6 +39,7 @@ model Rider {
   emailOnMention Boolean @default(true)
   emailOnRsvp    Boolean @default(true)
   emailOnComment Boolean @default(true)
+  emailWeeklyRecap Boolean @default(true)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

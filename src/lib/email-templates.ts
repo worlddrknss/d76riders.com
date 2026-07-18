@@ -150,6 +150,42 @@ export function commentEmail(name: string, commenterName: string, url: string) {
   };
 }
 
+export function weeklyRecapEmail(
+  name: string,
+  stats: { rides: number; miles: number; badges: string[]; upcoming: { title: string; when: string }[] },
+  profileUrl: string,
+) {
+  const statLine = (label: string, value: string) =>
+    `<td style="padding:8px 12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#1c1c1c;">${value}</div><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">${label}</div></td>`;
+  const badgesHtml = stats.badges.length
+    ? `<p style="margin:0 0 12px;font-size:14px;color:#222;">New badges: ${stats.badges.map(escapeHtml).join(", ")} 🏅</p>`
+    : "";
+  const upcomingHtml = stats.upcoming.length
+    ? `<p style="margin:0 0 6px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;">Coming up</p>` +
+      stats.upcoming
+        .map((e) => `<p style="margin:0 0 6px;font-size:14px;color:#222;">${escapeHtml(e.title)} · <span style="color:#6b7280;">${escapeHtml(e.when)}</span></p>`)
+        .join("")
+    : "";
+
+  return {
+    subject: "Your week in riding — D76 Riders",
+    html: emailLayout({
+      preheader: "Your riding recap for the week.",
+      heading: `Your week in riding, ${escapeHtml(name)}`,
+      paragraphs: [
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 16px;border:1px solid #e5e7eb;border-radius:12px;"><tr>${statLine(
+          stats.rides === 1 ? "ride" : "rides",
+          String(stats.rides),
+        )}${statLine("miles", stats.miles.toLocaleString())}</tr></table>`,
+        badgesHtml,
+        upcomingHtml,
+      ].filter(Boolean),
+      cta: { label: "View your profile", href: profileUrl },
+      footnote: "You can turn off weekly recaps in your notification settings.",
+    }),
+  };
+}
+
 export function emergencyAccessEmail(name: string, whenText: string, whereText: string | null, rotateUrl: string) {
   return {
     subject: "Your D76 emergency card was viewed",
