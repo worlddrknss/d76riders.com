@@ -19,6 +19,7 @@ import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { EventCheckInButton } from "@/components/events/event-check-in-button";
 import { AttendancePanel } from "@/components/events/attendance-panel";
 import { RiderDownPanel } from "@/components/events/rider-down-panel";
+import { EventGallery } from "@/components/events/event-gallery";
 import { EventOrganizers } from "@/components/events/event-organizers";
 import { EventRidersList } from "@/components/events/event-riders-list";
 import { MessageRidersDialog } from "@/components/events/message-riders-dialog";
@@ -247,6 +248,26 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
     : null;
   const viewerTz = viewerRider?.timezone ?? null;
+
+  // Community gallery: attendee-uploaded photos (riderId set) — distinct from the
+  // organizer's cover flyer (riderId null), so the two never mix.
+  const galleryRows = await prisma.galleryItem.findMany({
+    where: { eventId: event.id, riderId: { not: null } },
+    orderBy: { createdAt: "desc" },
+    take: 60,
+    select: { id: true, url: true, caption: true, riderId: true, rider: { select: { name: true, handle: true } } },
+  });
+  const isStaffViewer = Boolean(
+    currentUser?.roles.includes("ADMINISTRATOR") || currentUser?.roles.includes("MODERATOR"),
+  );
+  const eventPhotos = galleryRows.map((p) => ({
+    id: p.id,
+    url: p.url,
+    caption: p.caption,
+    uploaderName: p.rider?.name ?? null,
+    uploaderHandle: p.rider?.handle ?? null,
+    canDelete: (viewerRider != null && p.riderId === viewerRider.id) || isOrganizer || isStaffViewer,
+  }));
 
   // Audience sizes for the organizer's message dialog. `event.rsvps` only holds
   // GOING, so the other states need their own count.
@@ -753,6 +774,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             isHost={isHost}
           />
         )}
+
+            {/* Community photo gallery — attendees contribute, anyone can view */}
+            <EventGallery eventId={event.id} photos={eventPhotos} canUpload={Boolean(viewerRider)} />
 
             {/* Attendance — organizers, during or after the ride */}
             {isOrganizer && (isActiveEvent || event.status === "COMPLETED") && attendeesForPanel.length > 0 && (
