@@ -12,6 +12,7 @@ import {
   HeartPulse,
   Images,
   LayoutDashboard,
+  LogOut,
   MessageSquare,
   MoreHorizontal,
   Newspaper,
@@ -28,6 +29,8 @@ import {
   Warehouse,
 } from "lucide-react";
 
+import { logoutAction } from "@/app/(site)/(auth)/actions";
+
 type Item = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean; badge?: number; tab?: string };
 
 /**
@@ -41,12 +44,16 @@ export function AppRailNav({
   avatarUrl,
   trustLevel,
   unreadDms,
+  rides,
+  miles,
 }: {
   name: string;
   handle: string;
   avatarUrl: string | null;
   trustLevel: string | null;
   unreadDms: number;
+  rides: number;
+  miles: number;
 }) {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -131,11 +138,13 @@ export function AppRailNav({
           <span className="truncate text-xs text-muted">@{handle}</span>
         </span>
       </Link>
-      {trustLevel && (
-        <div className="px-3.5 pb-3 text-xs">
-          <span className="font-semibold text-forest">{trustLevel.charAt(0) + trustLevel.slice(1).toLowerCase()} rider</span>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3.5 pb-3 text-xs text-muted">
+        <span><b className="font-semibold text-ink">{rides}</b> rides</span>
+        <span><b className="font-semibold text-ink">{miles.toLocaleString()}</b> mi</span>
+        {trustLevel && (
+          <span className="font-semibold text-forest">{trustLevel.charAt(0) + trustLevel.slice(1).toLowerCase()}</span>
+        )}
+      </div>
 
       {/* Compose */}
       <div className="px-3 pb-2.5">
@@ -173,6 +182,14 @@ export function AppRailNav({
 
       <div className="border-t border-border p-2">
         {renderItem({ href: "/settings", label: "Settings", icon: Settings })}
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold text-muted transition hover:bg-canvas"
+          >
+            <LogOut className="h-[18px] w-[18px] text-muted" /> Log out
+          </button>
+        </form>
         <div className="px-3 pb-1 pt-1.5 text-[0.72rem] text-muted">
           <Link href="/about" className="hover:text-[#cf5a26]">About</Link>
           <span className="px-1">·</span>
