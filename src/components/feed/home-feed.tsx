@@ -116,32 +116,33 @@ export async function HomeFeed({
 
   return (
     <div className="w-full bg-canvas">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[15rem_minmax(0,1fr)_18rem] lg:px-8">
+      <div className="grid w-full gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[16rem_minmax(0,1fr)_20rem] lg:px-8 xl:gap-8 xl:px-12">
         <aside className="hidden lg:block">
           <FeedLeftRail viewer={viewer} />
         </aside>
 
-        <main className="mx-auto w-full min-w-0 max-w-2xl space-y-5">
-        <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
+        <main className="mx-auto w-full min-w-0 max-w-2xl space-y-4">
+        {/* Stories — a light bar, not a boxed card */}
+        <div className="px-1">
           <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
         </div>
 
         <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
-        {/* Following vs Discover */}
-        <div className="flex gap-1 rounded-xl border border-border bg-surface p-1 shadow-soft">
+        {/* Following vs Discover — clean underline tabs */}
+        <div className="flex border-b border-border">
           <Link
             href="/"
-            className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold transition ${
-              mode === "following" ? "bg-sunset text-white" : "text-muted hover:text-ink"
+            className={`flex-1 border-b-2 pb-2.5 text-center text-sm font-semibold transition ${
+              mode === "following" ? "border-sunset text-ink" : "border-transparent text-muted hover:text-ink"
             }`}
           >
             Following
           </Link>
           <Link
             href="/?feed=discover"
-            className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold transition ${
-              mode === "discover" ? "bg-sunset text-white" : "text-muted hover:text-ink"
+            className={`flex-1 border-b-2 pb-2.5 text-center text-sm font-semibold transition ${
+              mode === "discover" ? "border-sunset text-ink" : "border-transparent text-muted hover:text-ink"
             }`}
           >
             Discover
