@@ -11,7 +11,7 @@ import { StaggerList, StaggerItem } from "@/components/ui/motion";
 export const metadata: Metadata = {
   title: "Riders — Meet the Community",
   description:
-    "Meet the riders of District 76. Motorcycle riders across Tennessee who show up for good roads and good people.",
+    "Meet the riders of District 76 — all bikes, all skill levels. Motorcycle riders across Tennessee who show up for good roads and good people.",
   alternates: { canonical: "/r" },
   openGraph: {
     images: OG_IMAGE,
