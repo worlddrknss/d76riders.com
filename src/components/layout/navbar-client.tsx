@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings, Plus, Rss, Newspaper } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -155,6 +155,8 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const createRef = useRef<HTMLDivElement>(null);
   const scrolled = useScrolled();
   const isAdministrator = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
@@ -165,6 +167,7 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
     setIsOpen(false);
     setMenuOpen(false);
     setNotifOpen(false);
+    setCreateOpen(false);
   }
 
   // Close dropdown when clicking outside
@@ -178,6 +181,17 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [notifOpen]);
+
+  useEffect(() => {
+    if (!createOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (createRef.current && !createRef.current.contains(e.target as Node)) {
+        setCreateOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [createOpen]);
 
   const userInitials = useMemo(() => {
     if (!currentUser) {
@@ -217,12 +231,12 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
           : "border-b border-white/10 bg-asphalt"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-1.5 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="District 76 home">
+      <div className="flex w-full items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
+        <Link href="/" aria-label="District 76 home" className="shrink-0">
           <img
             src="/images/logo.png"
             alt="District 76 Riders"
-            className={`w-auto transition-all duration-300 ${scrolled ? "h-14" : "h-20"}`}
+            className={`w-auto transition-all duration-300 ${scrolled ? "h-10" : "h-12"}`}
           />
         </Link>
 
@@ -267,16 +281,57 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
         </nav>
         )}
 
+        {/* Center search bar for signed-in riders — matches the app shell */}
+        {currentUser && (
+          <form
+            action="/search"
+            className="mr-auto hidden w-full max-w-md items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.07] px-4 py-2 transition focus-within:border-white/25 lg:flex"
+          >
+            <Search className="h-4 w-4 shrink-0 text-slate-400" />
+            <input
+              name="q"
+              type="search"
+              placeholder="Search riders, roads, events…"
+              className="w-full bg-transparent text-sm text-white placeholder:text-slate-400 focus:outline-none"
+            />
+          </form>
+        )}
+
         <div className="relative flex items-center gap-3">
           {currentUser ? (
             <>
-              <Link
-                href="/search"
-                className="hidden rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:block"
-                aria-label="Search"
-              >
-                <Search className="h-4 w-4" />
-              </Link>
+              <div ref={createRef} className="relative hidden lg:block">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-sunset px-3.5 py-2 text-sm font-bold text-white transition hover:bg-[#cf5a26]"
+                  aria-expanded={createOpen}
+                  aria-label="Create"
+                >
+                  <Plus className="h-4 w-4" /> Create
+                </button>
+                <AnimatePresence>
+                  {createOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-asphalt p-1.5 shadow-xl"
+                    >
+                      <Link href="/feed" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                        <Rss className="h-4 w-4 text-sunset" /> Share a ride
+                      </Link>
+                      <Link href="/events/new" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                        <CalendarPlus2 className="h-4 w-4 text-sunset" /> New event
+                      </Link>
+                      <Link href="/magazine/new" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                        <Newspaper className="h-4 w-4 text-sunset" /> New article
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <div ref={notifRef} className="relative hidden lg:block">
                 <button
                   type="button"
