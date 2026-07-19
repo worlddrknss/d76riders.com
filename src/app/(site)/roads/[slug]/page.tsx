@@ -8,7 +8,8 @@ import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";
 import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
-import { StarRating } from "@/components/roads/star-rating";
+import { RoadQualityCard } from "@/components/roads/road-quality-card";
+import type { RoadFeedbackState } from "@/app/(site)/roads/actions";
 import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { activeHazardWhere } from "@/lib/hazards";
 import { prisma } from "@/lib/prisma";
@@ -75,29 +76,44 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
 
   if (!road) notFound();
 
-  // Fetch community rating aggregate + current user's rating
+  // Route Quality — multi-dimension rating aggregate + the viewer's own rating.
   const ratingAggregate = await prisma.roadRating.aggregate({
     where: { roadId: road.id },
-    _avg: { score: true },
-    _count: { score: true },
+    _avg: { score: true, condition: true, twistiness: true },
+    _count: { _all: true },
   });
 
   let viewerRiderId: string | null = null;
-  let userRating: number | null = null;
+  let mine: { scenery: number; condition: number; twistiness: number } | null = null;
   if (currentUser) {
     const rider = await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } });
     if (rider) {
       viewerRiderId = rider.id;
       const existing = await prisma.roadRating.findUnique({
         where: { roadId_riderId: { roadId: road.id, riderId: rider.id } },
-        select: { score: true },
+        select: { score: true, condition: true, twistiness: true },
       });
-      userRating = existing?.score ?? null;
+      if (existing && existing.condition != null && existing.twistiness != null) {
+        mine = { scenery: existing.score, condition: existing.condition, twistiness: existing.twistiness };
+      }
     }
   }
 
-  const averageRating = ratingAggregate._avg.score ?? road.scenicRating;
-  const totalRatings = ratingAggregate._count.score;
+  const qScenery = ratingAggregate._avg.score ?? road.scenicRating ?? null;
+  const qCondition = ratingAggregate._avg.condition ?? road.conditionRating ?? null;
+  const qTwist = ratingAggregate._avg.twistiness ?? road.twistinessRating ?? null;
+  const qParts = [qScenery, qCondition, qTwist].filter((x): x is number => x != null);
+  const roadFeedback: RoadFeedbackState = {
+    error: null,
+    count: ratingAggregate._count._all,
+    averages: {
+      scenery: qScenery,
+      condition: qCondition,
+      twistiness: qTwist,
+      quality: qParts.length ? qParts.reduce((a, b) => a + b, 0) / qParts.length : null,
+    },
+    mine,
+  };
 
   const coordinates = extractCoordinates(road.route?.geometry);
   const waypoints: PlannerWaypoint[] = (road.route?.waypoints ?? []).map((waypoint) => ({
@@ -158,8 +174,8 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
         slug: road.slug,
         description: road.description,
         distanceMiles: road.distanceMiles,
-        scenicRating: averageRating,
-        totalRatings,
+        scenicRating: roadFeedback.averages.quality,
+        totalRatings: roadFeedback.count,
         imageUrl: road.galleryItems[0]?.url ? mediaUrl(road.galleryItems[0].url) : undefined,
       })} />
       <JsonLd data={breadcrumbJsonLd([
@@ -218,18 +234,16 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 <p className="mt-1.5 text-sm font-medium text-ink">{difficultyLabel(road.difficulty)}</p>
                 <p className="text-xs text-muted">Skill level</p>
               </div>
-              <StarRating
-                roadId={road.id}
-                initialAverage={averageRating}
-                initialTotal={totalRatings}
-                initialUserRating={userRating}
-                isAuthenticated={!!currentUser}
-              />
               <div className="rounded-lg border border-border bg-canvas p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Type</div>
                 <p className="mt-1.5 text-sm font-medium text-ink">Featured Road</p>
                 <p className="text-xs text-muted">Community curated</p>
               </div>
+            </div>
+
+            {/* ROUTE QUALITY — post-ride feedback + blended score */}
+            <div className="mt-4">
+              <RoadQualityCard roadId={road.id} isAuthenticated={!!currentUser} initial={roadFeedback} />
             </div>
 
             {/* FOOTER: Shared by */}

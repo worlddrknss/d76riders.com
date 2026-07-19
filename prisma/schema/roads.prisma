@@ -8,7 +8,12 @@ model Road {
   slug          String          @unique
   distanceMiles Int?
   difficulty    RideDifficulty?
-  scenicRating  Float?
+  // Cached averages of RoadRating dimensions (0-5). scenicRating is legacy but
+  // kept in sync. qualityScore is the blended Route Quality shown on the page.
+  scenicRating     Float?
+  conditionRating  Float?
+  twistinessRating Float?
+  qualityScore     Float?
   description   String?
   imageLabel    String?
 
@@ -28,7 +33,10 @@ model RoadRating {
   id      String @id @default(cuid())
   roadId  String
   riderId String
-  score   Int // 1-5
+  score   Int // Scenery, 1-5 (legacy column name)
+  // Added for Route Quality — road condition/pavement and twistiness, 1-5.
+  condition  Int?
+  twistiness Int?
 
   road  Road  @relation(fields: [roadId], references: [id], onDelete: Cascade)
   rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)

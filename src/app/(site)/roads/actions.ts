@@ -409,3 +409,81 @@ export async function rateRoadAction(roadId: string, score: number): Promise<Rat
 
   return { error: null, averageRating, totalRatings, userRating: score };
 }
+
+export type RoadFeedbackState = {
+  error: string | null;
+  count: number;
+  averages: { scenery: number | null; condition: number | null; twistiness: number | null; quality: number | null };
+  mine: { scenery: number; condition: number; twistiness: number } | null;
+};
+
+function clampScore(v: number): number | null {
+  return Number.isInteger(v) && v >= 1 && v <= 5 ? v : null;
+}
+
+/**
+ * Post-ride Route Quality feedback — rate a road on three dimensions (scenery,
+ * road condition, twistiness). Re-aggregates the cached averages + a blended
+ * qualityScore on the Road. Returns fresh state to the client (no revalidate).
+ */
+export async function submitRoadFeedbackAction(
+  roadId: string,
+  scenery: number,
+  condition: number,
+  twistiness: number,
+): Promise<RoadFeedbackState> {
+  const empty: RoadFeedbackState = {
+    error: "",
+    count: 0,
+    averages: { scenery: null, condition: null, twistiness: null, quality: null },
+    mine: null,
+  };
+
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const s = clampScore(scenery);
+  const c = clampScore(condition);
+  const t = clampScore(twistiness);
+  if (s == null || c == null || t == null) {
+    return { ...empty, error: "Each rating must be 1 to 5." };
+  }
+
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return { ...empty, error: "You need a rider profile to rate roads." };
+
+  await prisma.roadRating.upsert({
+    where: { roadId_riderId: { roadId, riderId: rider.id } },
+    create: { roadId, riderId: rider.id, score: s, condition: c, twistiness: t },
+    update: { score: s, condition: c, twistiness: t },
+  });
+
+  const agg = await prisma.roadRating.aggregate({
+    where: { roadId },
+    _avg: { score: true, condition: true, twistiness: true },
+    _count: { _all: true },
+  });
+
+  const sceneryAvg = agg._avg.score ?? null;
+  const conditionAvg = agg._avg.condition ?? null;
+  const twistinessAvg = agg._avg.twistiness ?? null;
+  const parts = [sceneryAvg, conditionAvg, twistinessAvg].filter((x): x is number => x != null);
+  const quality = parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null;
+
+  await prisma.road.update({
+    where: { id: roadId },
+    data: {
+      scenicRating: sceneryAvg,
+      conditionRating: conditionAvg,
+      twistinessRating: twistinessAvg,
+      qualityScore: quality,
+    },
+  });
+
+  return {
+    error: null,
+    count: agg._count._all,
+    averages: { scenery: sceneryAvg, condition: conditionAvg, twistiness: twistinessAvg, quality },
+    mine: { scenery: s, condition: c, twistiness: t },
+  };
+}
