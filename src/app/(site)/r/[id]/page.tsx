@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Lock, MapPin, MessageSquare, Receipt, Trash2, UserPlus, Video, Wrench } from "lucide-react";
+import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Lock, MapPin, MessageSquare, Receipt, Trash2, Video, Wrench } from "lucide-react";
 
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
@@ -10,20 +10,14 @@ import { AppShell } from "@/components/layout/app-shell";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
-import { InviteLink } from "@/components/community/invite-link";
-import { InviteChart } from "@/components/profile/invite-chart";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ActivityFeed } from "@/components/profile/activity-feed";
-import { LogRideButton } from "@/components/profile/log-ride-button";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { TrustBadge } from "@/components/reputation/trust-badge";
 import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
 import { SpotlightButton } from "@/components/profile/spotlight-button";
 import { evaluateQuests } from "@/lib/quests";
-import { getOrCreateReferralCode, referralStats } from "@/lib/referrals";
-import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
-import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
 import { GarageTabs } from "@/components/garage/garage-tabs";
@@ -31,7 +25,6 @@ import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
 import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
 import { DEFAULT_TIMEZONE, eventDayMonth } from "@/lib/datetime";
-import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
 import { startConversationAction } from "@/app/(site)/messages/actions";
 import { canDm } from "@/lib/dm";
@@ -353,49 +346,6 @@ export default async function RiderProfilePage({
     twitterHandle: rider.twitterUrl?.replace(/^https:\/\/x\.com\//, "") || "",
   } : null;
 
-  // Emergency card (owner-only) — decrypt the medical payload for editing.
-  const emergencyConfigured = isEmergencyCryptoConfigured();
-  let emergencyCard: EmergencyCardData | null = null;
-  let emergencyAccesses: {
-    id: string;
-    createdAt: Date;
-    address: string | null;
-    ip: string | null;
-    userAgent: string | null;
-    lat: number | null;
-    lng: number | null;
-  }[] = [];
-  if (isOwner) {
-    const cardRow = await prisma.emergencyCard.findUnique({ where: { riderId: rider.id } });
-    if (cardRow) {
-      emergencyAccesses = await prisma.emergencyCardAccess.findMany({
-        where: { cardId: cardRow.id },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        select: { id: true, createdAt: true, address: true, ip: true, userAgent: true, lat: true, lng: true },
-      });
-    }
-    if (cardRow && emergencyConfigured) {
-      try {
-        emergencyCard = {
-          token: cardRow.token,
-          active: cardRow.active,
-          showBloodType: cardRow.showBloodType,
-          showAllergies: cardRow.showAllergies,
-          showConditions: cardRow.showConditions,
-          showMedications: cardRow.showMedications,
-          showInsurance: cardRow.showInsurance,
-          payload: decryptEmergencyPayload({
-            encryptedData: cardRow.encryptedData,
-            dekCiphertext: cardRow.dekCiphertext,
-          }),
-        };
-      } catch {
-        emergencyCard = null;
-      }
-    }
-  }
-
   // Owner-only rich bike data — modification/service costs stay private to the owner.
   const ownerBikes = isOwner && currentUser
     ? await prisma.bike.findMany({
@@ -435,7 +385,6 @@ export default async function RiderProfilePage({
     return sum + modSpend + svcSpend;
   }, 0);
 
-  const memberSince = rider.joinedAt.toLocaleDateString("en-US", { month: "long", year: "numeric" });
   // Brand marks come from Simple Icons — lucide deliberately has no brand icons.
   // `color` is each brand's official hex, applied on hover so the row stays calm
   // until you reach for it.
@@ -501,14 +450,6 @@ export default async function RiderProfilePage({
     },
   });
 
-  // Minted on first view of the owner's own Invite tab.
-  const referral = isOwner
-    ? await (async () => {
-        await getOrCreateReferralCode(rider.id);
-        return referralStats(rider.id);
-      })()
-    : null;
-
   // ─── Journal feed — a read-only archive of this rider's posts. Composing
   // and stories moved to the home feed; owners can still edit/delete a post.
   const ridesContent = (
@@ -539,22 +480,14 @@ export default async function RiderProfilePage({
   // Badges grid. Progression, network, and details fold into the stat card.
   const riderStatCard = (
     <div className={cardClass}>
-      <div className="flex items-center justify-between">
-        <h2 className={headingClass}>Rider</h2>
-        {isOwner ? <LogRideButton /> : null}
-      </div>
+      <h2 className={headingClass}>Rider</h2>
       <dl className="mt-2 divide-y divide-border">
         {[
           { label: "Rides", value: totalRidesCount.toLocaleString() },
           { label: "Miles logged", value: loggedMiles.toLocaleString() },
           { label: "Bikes", value: rider.bikes.length.toLocaleString() },
-          ...(rider.yearsRiding != null ? [{ label: "Years riding", value: String(rider.yearsRiding) }] : []),
+          { label: "Years riding", value: rider.yearsRiding != null ? String(rider.yearsRiding) : "—" },
           { label: "Badges", value: rider.badges.length.toLocaleString() },
-          ...(rider.trust ? [{ label: "Trust score", value: `${rider.trust.score}/100` }] : []),
-          { label: "Followers", value: rider.followers.length.toLocaleString() },
-          { label: "Following", value: rider.following.length.toLocaleString() },
-          { label: "Member since", value: memberSince },
-          ...(rider.favoriteRoad ? [{ label: "Favorite road", value: rider.favoriteRoad }] : []),
         ].map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-3 py-2.5 text-sm">
             <dt className="text-muted">{row.label}</dt>
@@ -757,95 +690,6 @@ export default async function RiderProfilePage({
     </div>
   );
 
-  // ─── Invite tab (owner only) ────────────────────────────────────
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
-  // Laid out like the Overview tab: a narrow left panel of who/what, and the
-  // activity as the wide main column. Same grid, same card and heading tokens,
-  // so the two tabs read as one page rather than two.
-  const inviteContent = referral ? (
-    <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
-      <div className="space-y-5">
-        <div className={cardClass}>
-          <h2 className={headingClass}>
-            <UserPlus className="h-4 w-4 text-sunset" />
-            Your invite
-          </h2>
-          <p className="mt-2 text-sm text-muted">
-            Share your link. Anyone who joins through it is credited to you.
-          </p>
-          <div className="mt-4">
-            <InviteLink url={`${siteUrl}/i/${referral.code}`} code={referral.code ?? ""} />
-          </div>
-        </div>
-
-        <div className={cardClass}>
-          <h2 className={headingClass}>So far</h2>
-          {/* Two numbers, side by side, where they also read as the ratio they
-              are: opens, of which joins. */}
-          <div className="mt-3 flex items-baseline gap-x-8 gap-y-2">
-            <p className="flex flex-col">
-              <span className="font-display text-3xl font-bold text-ink">{referral.clicks}</span>
-              <span className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</span>
-            </p>
-            <p className="flex flex-col">
-              <span className="font-display text-3xl font-bold text-sunset">{referral.conversions}</span>
-              <span className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-5">
-        <InviteChart data={referral.series} />
-
-        <div>
-          <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
-          {referral.referrals.length === 0 ? (
-            <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-soft">
-              <UserPlus className="mx-auto h-7 w-7 text-muted/50" />
-              <p className="mt-2 text-sm text-muted">No one has joined through your link yet.</p>
-            </div>
-          ) : (
-            <ul className="mt-3 space-y-2">
-              {referral.referrals.map((entry) => {
-                const referred = entry.referredUser.rider;
-                if (!referred) return null;
-                return (
-                  <li key={referred.handle}>
-                    <Link
-                      href={`/r/${referred.handle}`}
-                      className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3 shadow-soft transition hover:border-sunset/40"
-                    >
-                      {referred.avatarUrl ? (
-                         
-                        <img
-                          src={mediaUrl(referred.avatarUrl)}
-                          alt=""
-                          className="h-9 w-9 rounded-full border border-border object-cover"
-                        />
-                      ) : (
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-canvas text-[0.6rem] font-bold text-muted">
-                          {referred.name.slice(0, 2).toUpperCase()}
-                        </span>
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-ink">{referred.name}</span>
-                        <span className="block truncate text-xs text-muted">@{referred.handle}</span>
-                      </span>
-                      <span className="shrink-0 text-xs text-muted">
-                        {entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  ) : null;
-
   // ─── Photos tab ─────────────────────────────────────────────────
   const photosContent =
     profilePhotos.length === 0 ? (
@@ -985,6 +829,7 @@ export default async function RiderProfilePage({
     </div>
   );
 
+  // Exactly the mock's 5 tabs. Owner-only Emergency + Invite live in Settings.
   const tabs: ProfileTab[] = [
     { id: "overview", label: "Overview", content: overviewMerged },
     { id: "journal", label: "Journal", count: rider.journalEntries.length, content: journalContent },
@@ -992,27 +837,6 @@ export default async function RiderProfilePage({
     { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
     { id: "media", label: "Media", count: profilePhotos.length + rider.videos.length, content: mediaMerged },
   ];
-  if (isOwner) {
-    tabs.push({
-      id: "emergency",
-      label: "Emergency",
-      content: (
-        <div className="grid gap-5 lg:grid-cols-[22rem_1fr]">
-          <div>
-            <EmergencyCardManager card={emergencyCard} configured={emergencyConfigured} />
-          </div>
-          <EmergencyAccessLog accesses={emergencyAccesses} />
-        </div>
-      ),
-    });
-    // Referral link and conversions are personal — owner only.
-    tabs.push({
-      id: "invite",
-      label: "Invite",
-      count: referral?.conversions || null,
-      content: inviteContent,
-    });
-  }
 
   return (
     <AppShell>

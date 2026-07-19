@@ -10,6 +10,8 @@ import { usePathname } from "next/navigation";
 const segments = [
   { href: "/account", label: "Account & Security" },
   { href: "/settings", label: "Notifications" },
+  { href: "/settings/emergency", label: "Emergency" },
+  { href: "/settings/invite", label: "Invite" },
 ];
 
 export function SettingsNav() {
