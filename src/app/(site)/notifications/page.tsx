@@ -1,8 +1,12 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BellRing } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+
+// Engagement notifications carry the journal entry id in refId — link to the post.
+const POST_LINK_TYPES = new Set(["COMMENTED", "TWO_WHEELS_DOWN", "MENTIONED"]);
 
 export default async function NotificationsPage() {
   const currentUser = await getCurrentUser();
@@ -33,8 +37,9 @@ export default async function NotificationsPage() {
         </div>
 
         <div className="space-y-2">
-          {activities.map((item) => (
-            <article key={item.id} className="rounded-xl border border-border bg-surface px-4 py-3">
+          {activities.map((item) => {
+            const href = item.refId && POST_LINK_TYPES.has(item.type) ? `/p/${item.refId}` : null;
+            const inner = (
               <div className="flex items-start gap-3">
                 <BellRing className="mt-0.5 h-4 w-4 text-sunset" />
                 <div>
@@ -43,8 +48,21 @@ export default async function NotificationsPage() {
                   <p className="mt-1 text-xs text-muted">{item.createdAt.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}</p>
                 </div>
               </div>
-            </article>
-          ))}
+            );
+            return href ? (
+              <Link
+                key={item.id}
+                href={href}
+                className="block rounded-xl border border-border bg-surface px-4 py-3 transition hover:border-sunset/40 hover:bg-canvas"
+              >
+                {inner}
+              </Link>
+            ) : (
+              <article key={item.id} className="rounded-xl border border-border bg-surface px-4 py-3">
+                {inner}
+              </article>
+            );
+          })}
           {activities.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-canvas p-10 text-center text-sm text-muted">
               No notifications yet.

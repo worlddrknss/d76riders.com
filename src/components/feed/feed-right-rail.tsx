@@ -85,7 +85,7 @@ export async function FeedRightRail({
           <ul className="space-y-3">
             {trending.map((post) => (
               <li key={post.id}>
-                <Link href={`/r/${post.author.handle}`} className="block">
+                <Link href={`/p/${post.id}`} className="block">
                   <p className="line-clamp-1 text-sm font-medium text-ink hover:text-sunset">{post.title || post.body}</p>
                   <p className="text-xs text-muted">{post.author.name}</p>
                 </Link>

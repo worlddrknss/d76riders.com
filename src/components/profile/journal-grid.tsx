@@ -236,7 +236,7 @@ function JournalCard({
               isSaved={entry.isSaved}
               isAuthenticated={isAuthenticated}
               comments={entry.comments}
-              entryUrl={entry.profileUrl}
+              entryUrl={`/p/${entry.id}`}
             />
           </div>
         </div>

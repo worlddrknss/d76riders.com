@@ -654,7 +654,7 @@ export default async function Home({
                 return (
                   <StaggerItem key={post.id}>
                     <Link
-                      href={`/r/${post.author.handle}`}
+                      href={`/p/${post.id}`}
                       className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift"
                     >
                       {image ? (
