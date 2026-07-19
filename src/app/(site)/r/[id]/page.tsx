@@ -14,7 +14,6 @@ import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ActivityFeed } from "@/components/profile/activity-feed";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
-import { TrustBadge } from "@/components/reputation/trust-badge";
 import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
 import { SpotlightButton } from "@/components/profile/spotlight-button";
 import { evaluateQuests } from "@/lib/quests";
@@ -883,8 +882,13 @@ export default async function RiderProfilePage({
                       {rider.location}
                     </span>
                   )}
-                  {rider.trust && rider.trust.eventsAttended > 0 ? (
-                    <TrustBadge level={rider.trust.level} score={rider.trust.score} />
+                  {rider.trust ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span aria-hidden>·</span>
+                      <span className="font-medium text-forest">
+                        {rider.trust.level.charAt(0) + rider.trust.level.slice(1).toLowerCase()} rider
+                      </span>
+                    </span>
                   ) : null}
                   {rider.isAmbassador ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-sunset/10 px-2.5 py-0.5 text-xs font-semibold text-sunset">

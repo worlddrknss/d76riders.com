@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Wrench, Receipt, Camera, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import {
   deleteBikePhotoAction,
@@ -70,41 +70,57 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
   }));
 
   // Costs are private — only the owner sees spend (mirrors the public bike card).
-  const stats = isOwner
-    ? [
-        { label: "Total Invested", value: formatCurrency(totalSpend), sub: null },
-        { label: "Modifications", value: String(bike.modifications.length), sub: `${formatCurrency(modificationSpend)} spent` },
-        { label: "Service Records", value: String(bike.serviceRecords.length), sub: `${formatCurrency(serviceSpend)} spent` },
-      ]
-    : [
-        { label: "Modifications", value: String(bike.modifications.length), sub: null },
-        { label: "Service Records", value: String(bike.serviceRecords.length), sub: null },
-        { label: "Photos", value: String(bike.photos.length), sub: null },
-      ];
+  const stats = [
+    { value: String(bike.modifications.length), label: "Mods" },
+    { value: String(bike.serviceRecords.length), label: "Services" },
+    ...(isOwner ? [{ value: formatCurrency(totalSpend), label: "Invested" }] : []),
+    { value: bike.currentMileage != null ? bike.currentMileage.toLocaleString("en-US") : "—", label: "Miles" },
+  ];
 
   return (
     <AppShell>
       <div className="space-y-6">
-        <div>
-          <Link
-            href={`/r/${bike.rider.handle}?tab=garage`}
-            className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {isOwner ? "Back to Garage" : `${bike.rider.name}'s Garage`}
-          </Link>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-ink">{bike.name}</h1>
-          <p className="mt-1 text-sm text-muted">
-            {[bike.year, bike.make, bike.model].filter(Boolean).join(" · ") || "Build history"}
-          </p>
+        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+          <div
+            className="h-28"
+            style={{ backgroundImage: "radial-gradient(120% 140% at 80% 0%,rgba(226,102,47,.35),transparent 60%),linear-gradient(150deg,#2b2822,#15130f)" }}
+          />
+          <div className="flex flex-wrap items-start justify-between gap-3 p-5 sm:p-6">
+            <div className="min-w-0">
+              <Link
+                href={`/r/${bike.rider.handle}?tab=garage`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-sunset hover:underline"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {isOwner ? "Garage" : `${bike.rider.name}'s Garage`}
+              </Link>
+              <h1 className="mt-2 font-display text-2xl font-bold uppercase tracking-tight text-ink sm:text-3xl">{bike.name}</h1>
+              <p className="mt-1 text-sm text-muted">
+                {[
+                  bike.year,
+                  bike.type ? bike.type.charAt(0) + bike.type.slice(1).toLowerCase() : null,
+                  [bike.displacement, bike.engineType].filter(Boolean).join(" "),
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "Build history"}
+              </p>
+            </div>
+            {isOwner && (
+              <Link
+                href={`/r/${bike.rider.handle}?tab=garage`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-border bg-canvas px-4 py-2 text-sm font-semibold text-ink transition hover:border-ink/30"
+              >
+                Edit bike
+              </Link>
+            )}
+          </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">{s.label}</p>
-              <p className="mt-2 font-display text-2xl font-semibold text-ink">{s.value}</p>
-              {s.sub && <p className="text-xs text-muted">{s.sub}</p>}
+              <p className="font-display text-2xl font-bold text-ink sm:text-3xl">{s.value}</p>
+              <p className="mt-1 text-xs text-muted">{s.label}</p>
             </div>
           ))}
         </div>
@@ -113,10 +129,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
           {/* Modifications */}
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-                <Wrench className="h-4 w-4 text-sunset" />
-                Build Timeline
-              </h2>
+              <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Build &amp; Mod Timeline</h2>
               {isOwner && <AddModificationDialog bikeId={bike.id} />}
             </div>
             <BuildTimeline
@@ -129,10 +142,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
           {/* Service records */}
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-                <Receipt className="h-4 w-4 text-sunset" />
-                Service Records
-              </h2>
+              <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Service Records</h2>
               <div className="flex items-center gap-3">
                 {isOwner ? (
                   <OdometerControl bikeId={bike.id} currentMileage={bike.currentMileage} />
@@ -154,10 +164,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
         {/* Photos */}
         <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-asphalt">
-              <Camera className="h-4 w-4 text-sunset" />
-              Photos
-            </h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.12em] text-muted">Photos</h2>
             {isOwner && <AddBikePhotoDialog bikeId={bike.id} />}
           </div>
 
