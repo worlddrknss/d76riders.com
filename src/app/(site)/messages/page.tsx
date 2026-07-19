@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -38,8 +39,8 @@ export default async function MessagesPage() {
   });
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-2xl space-y-6">
+    <AppShell>
+      <div className="max-w-2xl space-y-6">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sunset/10 text-sunset">
             <MessageSquare className="h-5 w-5" />
@@ -94,6 +95,6 @@ export default async function MessagesPage() {
           </div>
         )}
       </div>
-    </section>
+    </AppShell>
   );
 }

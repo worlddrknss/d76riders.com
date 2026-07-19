@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { NotificationPrefsCard } from "@/components/account/notifications-card";
 import { PushSettingsCard } from "@/components/account/push-settings-card";
+import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -28,9 +29,9 @@ export default async function SettingsPage() {
   });
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+    <AppShell>
+      <div className="space-y-6">
+        <div className="flex max-w-3xl items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Settings</p>
             <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Notifications</h1>
@@ -40,7 +41,7 @@ export default async function SettingsPage() {
           </Link>
         </div>
 
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="max-w-3xl space-y-6">
           <PushSettingsCard
             vapidPublicKey={process.env.VAPID_PUBLIC_KEY ?? null}
             initialQuietStart={rider?.quietHoursStart ?? null}
@@ -57,6 +58,6 @@ export default async function SettingsPage() {
           />
         </div>
       </div>
-    </section>
+    </AppShell>
   );
 }

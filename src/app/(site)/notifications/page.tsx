@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BellRing } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -28,8 +29,8 @@ export default async function NotificationsPage() {
   });
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-6">
+    <AppShell>
+      <div className="max-w-2xl space-y-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Notifications</p>
           <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Recent Alerts and Activity</h1>
@@ -70,6 +71,6 @@ export default async function NotificationsPage() {
           ) : null}
         </div>
       </div>
-    </section>
+    </AppShell>
   );
 }

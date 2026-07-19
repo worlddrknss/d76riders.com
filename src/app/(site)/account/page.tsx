@@ -5,6 +5,7 @@ import { Pencil } from "lucide-react";
 import { EmailChangeCard } from "@/components/account/notifications-card";
 import { DeleteAccountCard, PasswordChangeCard } from "@/components/account/security-cards";
 import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
+import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -30,9 +31,9 @@ export default async function AccountPage() {
   const webcalUrl = httpsUrl ? httpsUrl.replace(/^https?:/, "webcal:") : null;
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+    <AppShell>
+      <div className="space-y-6">
+        <div className="flex max-w-3xl items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Account</p>
             <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Account &amp; security</h1>
@@ -45,7 +46,7 @@ export default async function AccountPage() {
         {/* Public profile lives in the Edit Profile modal on the profile itself —
             this page is only account & security, so it doesn't duplicate those fields. */}
         {rider?.handle && (
-          <div className="mx-auto flex max-w-3xl items-center justify-between rounded-xl border border-border bg-surface p-5 shadow-soft">
+          <div className="flex max-w-3xl items-center justify-between rounded-xl border border-border bg-surface p-5 shadow-soft">
             <div>
               <h2 className="font-display text-lg font-semibold text-ink">Public profile</h2>
               <p className="mt-0.5 text-sm text-muted">Edit your name, photo, bio, and socials from your profile.</p>
@@ -60,17 +61,17 @@ export default async function AccountPage() {
           </div>
         )}
 
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="max-w-3xl space-y-6">
           <EmailChangeCard email={currentUser.email} emailVerified={Boolean(currentUser.emailVerified)} />
           <PasswordChangeCard />
         </div>
 
         <CalendarSubscribe webcalUrl={webcalUrl} httpsUrl={httpsUrl} />
 
-        <div className="mx-auto max-w-3xl">
+        <div className="max-w-3xl">
           <DeleteAccountCard />
         </div>
       </div>
-    </section>
+    </AppShell>
   );
 }

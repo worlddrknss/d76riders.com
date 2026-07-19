@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Bookmark } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
@@ -79,8 +80,8 @@ export default async function SavedPage() {
   }));
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-2xl space-y-6">
+    <AppShell>
+      <div className="max-w-2xl space-y-6">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-ink/10 text-ink">
             <Bookmark className="h-5 w-5" />
@@ -106,6 +107,6 @@ export default async function SavedPage() {
           <JournalGrid entries={entries} isOwner={false} isAuthenticated layout="feed" />
         )}
       </div>
-    </section>
+    </AppShell>
   );
 }
