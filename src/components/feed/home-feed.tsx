@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Compass, Users } from "lucide-react";
 
+import { FeedLeftRail } from "@/components/feed/feed-left-rail";
+import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { StoryBar } from "@/components/stories/story-bar";
@@ -18,7 +20,7 @@ export async function HomeFeed({
   viewer,
   mode = "following",
 }: {
-  viewer: { id: string; name: string; avatarUrl: string | null };
+  viewer: { id: string; name: string; handle: string; avatarUrl: string | null };
   mode?: "following" | "discover";
 }) {
   const following = await prisma.riderFollow.findMany({
@@ -113,8 +115,13 @@ export async function HomeFeed({
   const viewerAvatar = mediaUrl(viewer.avatarUrl);
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-2xl space-y-5">
+    <div className="w-full bg-canvas">
+      <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[15rem_minmax(0,1fr)_18rem] lg:px-8">
+        <aside className="hidden lg:block">
+          <FeedLeftRail viewer={viewer} />
+        </aside>
+
+        <main className="mx-auto w-full min-w-0 max-w-2xl space-y-5">
         <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
           <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
         </div>
@@ -177,7 +184,12 @@ export async function HomeFeed({
         ) : (
           <JournalGrid entries={feed} isOwner={false} isAuthenticated layout="feed" />
         )}
+        </main>
+
+        <aside className="hidden lg:block">
+          <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
+        </aside>
       </div>
-    </section>
+    </div>
   );
 }

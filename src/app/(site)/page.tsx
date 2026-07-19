@@ -94,7 +94,7 @@ export default async function Home({
         () =>
           prisma.rider.findUnique({
             where: { userId: currentUser.id },
-            select: { id: true, name: true, avatarUrl: true },
+            select: { id: true, name: true, handle: true, avatarUrl: true },
           }),
         null,
       )
