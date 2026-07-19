@@ -552,6 +552,24 @@ export default async function RiderProfilePage({
   // is just the activity feed.
   const sidebar = (
     <div className="space-y-5">
+          {/* Rider stat card — the mock's Overview lead. */}
+          <div className={cardClass}>
+            <h2 className={headingClass}>Rider</h2>
+            <dl className="mt-2 divide-y divide-border">
+              {[
+                { label: "Rides", value: totalRidesCount.toLocaleString() },
+                { label: "Miles logged", value: loggedMiles.toLocaleString() },
+                { label: "Bikes", value: rider.bikes.length.toLocaleString() },
+                ...(rider.yearsRiding != null ? [{ label: "Years riding", value: String(rider.yearsRiding) }] : []),
+                { label: "Badges", value: rider.badges.length.toLocaleString() },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-2.5 text-sm">
+                  <dt className="text-muted">{row.label}</dt>
+                  <dd className="font-semibold text-ink">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
           {reputationPanel}
           {featuredBike && (
             <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
@@ -1130,7 +1148,7 @@ export default async function RiderProfilePage({
                 <h1 className="truncate font-display text-2xl font-bold text-ink sm:text-3xl">
                   {rider.name}
                 </h1>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
                   <span>@{rider.handle}</span>
                   {rider.location && (
                     <span className="inline-flex items-center gap-1">
@@ -1139,7 +1157,22 @@ export default async function RiderProfilePage({
                       {rider.location}
                     </span>
                   )}
-                </p>
+                  {rider.trust && rider.trust.eventsAttended > 0 ? (
+                    <TrustBadge level={rider.trust.level} score={rider.trust.score} />
+                  ) : null}
+                  {rider.isAmbassador ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sunset/10 px-2.5 py-0.5 text-xs font-semibold text-sunset">
+                      <Award className="h-3.5 w-3.5" /> Ambassador
+                    </span>
+                  ) : null}
+                </div>
+                {socialAccounts.length > 0 ? (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {socialAccounts.map((social) => (
+                      <SocialIconLink key={social.label} {...social} riderName={rider.name} />
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               {isOwner && profileData ? (
@@ -1174,52 +1207,14 @@ export default async function RiderProfilePage({
 
             {rider.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>}
 
-            {/* Stats as one quiet line rather than four boxes — they're context,
-                not the point of the page. */}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-              <Link
-                href={`/r/${rider.handle}?tab=garage`}
-                className="hover:text-sunset"
-              >
-                <span className="font-semibold text-ink">{rider.bikes.length}</span> bike
-                {rider.bikes.length === 1 ? "" : "s"}
-              </Link>
-              <span>
-                <span className="font-semibold text-ink">{totalRidesCount}</span> ride
-                {totalRidesCount === 1 ? "" : "s"}
-              </span>
-              {rider.yearsRiding ? (
-                <span>
-                  <span className="font-semibold text-ink">{rider.yearsRiding}</span> year
-                  {rider.yearsRiding === 1 ? "" : "s"} riding
-                </span>
-              ) : null}
-              {rider.trust && rider.trust.eventsAttended > 0 ? (
-                <TrustBadge level={rider.trust.level} score={rider.trust.score} />
-              ) : null}
-
-              {rider.isAmbassador ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-sunset/10 px-2.5 py-0.5 text-xs font-semibold text-sunset">
-                  <Award className="h-3.5 w-3.5" /> Ambassador
-                </span>
-              ) : null}
-              {isAdmin ? (
-                <>
-                  <AmbassadorToggle handle={rider.handle} isAmbassador={rider.isAmbassador} />
-                  <SpotlightButton handle={rider.handle} />
-                </>
-              ) : null}
-
-              {/* Socials as icons in the header rather than a sidebar card —
-                  they're a handful of links, not a section. */}
-              {socialAccounts.length > 0 ? (
-                <span className="flex items-center gap-1.5">
-                  {socialAccounts.map((social) => (
-                    <SocialIconLink key={social.label} {...social} riderName={rider.name} />
-                  ))}
-                </span>
-              ) : null}
-            </div>
+            {/* Admin moderation controls — de-emphasized, admin-only. */}
+            {isAdmin ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                <span className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Admin</span>
+                <AmbassadorToggle handle={rider.handle} isAmbassador={rider.isAmbassador} />
+                <SpotlightButton handle={rider.handle} />
+              </div>
+            ) : null}
           </div>
 
         </div>
