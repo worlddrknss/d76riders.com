@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, MapPin, MessageSquare, Receipt, Route, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
+import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Lock, MapPin, MessageSquare, Receipt, Trash2, UserPlus, Video, Wrench } from "lucide-react";
 
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
@@ -16,7 +16,6 @@ import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ActivityFeed } from "@/components/profile/activity-feed";
 import { LogRideButton } from "@/components/profile/log-ride-button";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
-import { ReputationPanel } from "@/components/reputation/reputation-panel";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { TrustBadge } from "@/components/reputation/trust-badge";
 import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
@@ -31,7 +30,7 @@ import { GarageTabs } from "@/components/garage/garage-tabs";
 import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
 import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
-import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
+import { DEFAULT_TIMEZONE, eventDayMonth } from "@/lib/datetime";
 import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
 import { startConversationAction } from "@/app/(site)/messages/actions";
@@ -227,7 +226,8 @@ export default async function RiderProfilePage({
         orderBy: { awardedAt: "desc" },
         select: {
           id: true,
-          badge: { select: { name: true, icon: true, tier: true, description: true } },
+          awardedAt: true,
+          badge: { select: { id: true, name: true, icon: true, tier: true, description: true } },
         },
       },
       skills: {
@@ -474,14 +474,17 @@ export default async function RiderProfilePage({
   const cardClass = "rounded-xl border border-border bg-surface p-5 shadow-soft";
   const headingClass = "flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt";
 
-  const featuredBike = rider.bikes.find((b) => b.id === rider.primaryBikeId) ?? rider.bikes[0] ?? null;
-  const featuredBikePhoto = featuredBike?.photos[0]?.url ? mediaUrl(featuredBike.photos[0].url) : null;
-  const hasPeople =
-    rider.followers.length > 0 || rider.following.length > 0 || rider.followedEvents.length > 0;
-
   // ─── Overview tab ───────────────────────────────────────────────
   // Onboarding is the owner's own checklist — never shown to visitors.
   const quests = isOwner ? await evaluateQuests(rider.id) : [];
+
+  // All active badges, so the Overview grid can show earned + locked tiles.
+  const allBadges = await prisma.badge.findMany({
+    where: { active: true },
+    orderBy: [{ tier: "asc" }, { name: "asc" }],
+    select: { id: true, name: true, tier: true },
+  });
+  const earnedBadgeMap = new Map(rider.badges.map((held) => [held.badge.id, held.awardedAt]));
 
   // Skill tracks live on the profile rather than a standalone page: they describe
   // this rider, so they belong with everything else that does.
@@ -505,22 +508,6 @@ export default async function RiderProfilePage({
         return referralStats(rider.id);
       })()
     : null;
-
-  const reputationPanel = (
-    <ReputationPanel
-      trust={rider.trust}
-      badges={rider.badges.map((held) => ({ id: held.id, ...held.badge }))}
-      skills={rider.skills.map((held) => ({
-        id: held.id,
-        name: held.skill.name,
-        level: held.level,
-        verified: held.verifiedAt !== null,
-      }))}
-      loggedRides={loggedRides}
-      loggedMiles={loggedMiles}
-      actionSlot={isOwner ? <LogRideButton /> : undefined}
-    />
-  );
 
   // ─── Journal feed — a read-only archive of this rider's posts. Composing
   // and stories moved to the home feed; owners can still edit/delete a post.
@@ -548,177 +535,92 @@ export default async function RiderProfilePage({
     </div>
   );
 
-  // Who-this-rider-is sidebar. Lives on the Journal tab beside the feed; Overview
-  // is just the activity feed.
-  const sidebar = (
-    <div className="space-y-5">
-          {/* Rider stat card — the mock's Overview lead. */}
-          <div className={cardClass}>
-            <h2 className={headingClass}>Rider</h2>
-            <dl className="mt-2 divide-y divide-border">
-              {[
-                { label: "Rides", value: totalRidesCount.toLocaleString() },
-                { label: "Miles logged", value: loggedMiles.toLocaleString() },
-                { label: "Bikes", value: rider.bikes.length.toLocaleString() },
-                ...(rider.yearsRiding != null ? [{ label: "Years riding", value: String(rider.yearsRiding) }] : []),
-                { label: "Badges", value: rider.badges.length.toLocaleString() },
-              ].map((row) => (
-                <div key={row.label} className="flex items-center justify-between py-2.5 text-sm">
-                  <dt className="text-muted">{row.label}</dt>
-                  <dd className="font-semibold text-ink">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          {reputationPanel}
-          {featuredBike && (
-            <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-              <div className="relative h-44 w-full bg-linear-to-br from-asphalt to-sunset/40">
-                {featuredBikePhoto ? (
-                  <img src={featuredBikePhoto} alt={featuredBike.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-white/70">
-                    <Bike className="h-12 w-12" />
-                  </div>
-                )}
-                {featuredBike.id === rider.primaryBikeId && (
-                  <span className="absolute left-3 top-3 rounded-full bg-sunset px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-soft">
-                    Current Ride
-                  </span>
-                )}
-              </div>
-              <div className="p-4">
-                <p className="text-[0.6rem] font-semibold uppercase tracking-widest text-sunset">Featured Bike</p>
-                <h3 className="mt-0.5 font-display text-base font-semibold text-ink">
-                  {featuredBike.name || `${featuredBike.make} ${featuredBike.model ?? ""}`.trim()}
-                </h3>
-                <p className="text-xs text-muted">
-                  {[featuredBike.year, featuredBike.make, featuredBike.model].filter(Boolean).join(" · ")}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className={cardClass}>
-            <h2 className={headingClass}>Details</h2>
-            <dl className="mt-3 space-y-3">
-              {rider.favoriteRoad && (
-                <div className="flex items-start gap-3">
-                  <Route className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                  <div>
-                    <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Favorite Road</dt>
-                    <dd className="text-sm font-medium text-asphalt">{rider.favoriteRoad}</dd>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-start gap-3">
-                <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                <div>
-                  <dt className="text-[0.6rem] font-semibold uppercase tracking-widest text-muted">Member Since</dt>
-                  <dd className="text-sm font-medium text-asphalt">{memberSince}</dd>
-                </div>
-              </div>
-            </dl>
-          </div>
-
-          {/* Socials moved into the header as icons — see socialAccounts above. */}
-
-          <div className={cardClass}>
-            <div className="flex items-center justify-between">
-              <h2 className={headingClass}><CalendarDays className="h-3.5 w-3.5 text-sunset" />Events</h2>
-              {isOwner && <Link href="/events/new" className="text-xs font-semibold text-sunset hover:underline">+ New</Link>}
-            </div>
-            {rider.events.length === 0 ? (
-              <p className="mt-3 text-xs text-muted">No events yet.</p>
-            ) : (
-              <ul className="mt-3 space-y-2">
-                {rider.events.map((event) => (
-                  <li key={event.id}>
-                    <Link href={`/events/${event.slug}`} className="block rounded-lg bg-canvas px-3 py-2 text-sm transition hover:bg-sunset/5">
-                      <span className="font-medium text-ink">{event.title}</span>
-                      <span className="ml-2 text-xs text-muted">{formatEventDate(event.startsAt, event.timezone ?? DEFAULT_TIMEZONE)}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className={cardClass}>
-            <h2 className={headingClass}><Users className="h-3.5 w-3.5 text-sunset" />People</h2>
-            {hasPeople ? (
-              <div className="mt-3 space-y-3">
-                {rider.followers.length > 0 && (
-                  <div>
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Followers</p>
-                    <div className="mt-2 space-y-1.5">
-                      {rider.followers.map((entry) => (
-                        <Link key={entry.follower.handle} href={`/r/${entry.follower.handle}`} className="block text-sm text-ink hover:text-sunset">
-                          {entry.follower.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {rider.following.length > 0 && (
-                  <div>
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Following</p>
-                    <div className="mt-2 space-y-1.5">
-                      {rider.following.map((entry) => (
-                        <Link key={entry.following.handle} href={`/r/${entry.following.handle}`} className="block text-sm text-ink hover:text-sunset">
-                          {entry.following.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {rider.followedEvents.length > 0 && (
-                  <div>
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-muted">Tracked Events</p>
-                    <div className="mt-2 space-y-1.5">
-                      {rider.followedEvents.map((entry) => (
-                        <Link key={entry.event.slug} href={`/events/${entry.event.slug}`} className="block text-sm text-ink hover:text-sunset">
-                          {entry.event.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="mt-3 text-xs text-muted">
-                {isOwner
-                  ? "Follow riders and track events to build your network."
-                  : `${rider.name} hasn't connected with anyone yet.`}
-              </p>
-            )}
-          </div>
-    </div>
-  );
-
-  // Overview: identity sidebar beside the activity feed.
-  const overviewContent = (
-    <div className="space-y-5">
-      {isOwner ? <OnboardingQuests quests={quests} /> : null}
-      <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
-        {sidebar}
-        <div>
-          <ActivityFeed
-            items={recentActivities}
-            viewAllHref={isOwner ? "/notifications" : undefined}
-          />
-        </div>
+  // Overview — the mock's clean layout: RIDER stat card + Recent Activity, then a
+  // Badges grid. Progression, network, and details fold into the stat card.
+  const riderStatCard = (
+    <div className={cardClass}>
+      <div className="flex items-center justify-between">
+        <h2 className={headingClass}>Rider</h2>
+        {isOwner ? <LogRideButton /> : null}
       </div>
+      <dl className="mt-2 divide-y divide-border">
+        {[
+          { label: "Rides", value: totalRidesCount.toLocaleString() },
+          { label: "Miles logged", value: loggedMiles.toLocaleString() },
+          { label: "Bikes", value: rider.bikes.length.toLocaleString() },
+          ...(rider.yearsRiding != null ? [{ label: "Years riding", value: String(rider.yearsRiding) }] : []),
+          { label: "Badges", value: rider.badges.length.toLocaleString() },
+          ...(rider.trust ? [{ label: "Trust score", value: `${rider.trust.score}/100` }] : []),
+          { label: "Followers", value: rider.followers.length.toLocaleString() },
+          { label: "Following", value: rider.following.length.toLocaleString() },
+          { label: "Member since", value: memberSince },
+          ...(rider.favoriteRoad ? [{ label: "Favorite road", value: rider.favoriteRoad }] : []),
+        ].map((row) => (
+          <div key={row.label} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+            <dt className="text-muted">{row.label}</dt>
+            <dd className="text-right font-semibold text-ink">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
     </div>
   );
 
-  // Journal: the same identity sidebar beside the rider's journal feed.
-  const journalContent = (
-    <div className="grid gap-5 lg:grid-cols-[21rem_1fr] xl:grid-cols-[23rem_1fr]">
-      {sidebar}
-      <div>{ridesContent}</div>
+  const badgesGrid = (
+    <div className={cardClass}>
+      <div className="flex items-center justify-between">
+        <h2 className={headingClass}>Badges</h2>
+        <span className="text-xs font-medium normal-case tracking-normal text-muted">
+          {rider.badges.length} of {allBadges.length} earned
+        </span>
+      </div>
+      {allBadges.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">No badges available yet.</p>
+      ) : (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {allBadges.map((b) => {
+            const awardedAt = earnedBadgeMap.get(b.id);
+            const earned = earnedBadgeMap.has(b.id);
+            const tier = b.tier.charAt(0) + b.tier.slice(1).toLowerCase();
+            return (
+              <div
+                key={b.id}
+                className={`flex items-center gap-3 rounded-xl border p-3 ${earned ? "border-border bg-surface" : "border-dashed border-border opacity-60"}`}
+              >
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${earned ? "bg-sunset/12 text-sunset" : "bg-canvas text-muted"}`}>
+                  {earned ? <Award className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-ink">{b.name}</p>
+                  <p className="text-xs text-muted">
+                    {tier}
+                    {earned
+                      ? awardedAt
+                        ? ` · ${awardedAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                        : ""
+                      : " · Locked"}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
+
+  const overviewContent = (
+    <div className="space-y-6">
+      {isOwner ? <OnboardingQuests quests={quests} /> : null}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,22rem)_1fr]">
+        {riderStatCard}
+        <ActivityFeed items={recentActivities} viewAllHref={isOwner ? "/notifications" : undefined} />
+      </div>
+      {badgesGrid}
+    </div>
+  );
+
+  // Journal — the rider's posts, full width (no identity sidebar).
+  const journalContent = ridesContent;
 
   // ─── Garage tab ─────────────────────────────────────────────────
   const garageContent = isOwner ? (
