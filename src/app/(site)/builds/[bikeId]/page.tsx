@@ -51,6 +51,9 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
   const currentUser = await getCurrentUser();
   const isOwner = Boolean(currentUser && currentUser.id === bike.rider.userId);
 
+  // Cover strip uses the bike's newest photo; falls back to the branded gradient.
+  const coverUrl = bike.photos[0]?.url ? mediaUrl(bike.photos[0].url) : null;
+
   const modificationSpend = bike.modifications.reduce((sum, item) => sum + (item.cost ?? 0), 0);
   const serviceSpend = bike.serviceRecords.reduce((sum, item) => sum + (item.cost ?? 0), 0);
   const totalSpend = modificationSpend + serviceSpend;
@@ -81,10 +84,17 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
     <AppShell>
       <div className="space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-          <div
-            className="h-28"
-            style={{ backgroundImage: "radial-gradient(120% 140% at 80% 0%,rgba(226,102,47,.35),transparent 60%),linear-gradient(150deg,#2b2822,#15130f)" }}
-          />
+          {coverUrl ? (
+            <div className="relative h-40 sm:h-52">
+              <img src={coverUrl} alt={bike.name} className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/25 to-transparent" />
+            </div>
+          ) : (
+            <div
+              className="h-28"
+              style={{ backgroundImage: "radial-gradient(120% 140% at 80% 0%,rgba(226,102,47,.35),transparent 60%),linear-gradient(150deg,#2b2822,#15130f)" }}
+            />
+          )}
           <div className="flex flex-wrap items-start justify-between gap-3 p-5 sm:p-6">
             <div className="min-w-0">
               <Link
