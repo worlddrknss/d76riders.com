@@ -5,6 +5,8 @@ import { Bike, CalendarDays, Route, Search as SearchIcon, UserRound } from "luci
 import { DEFAULT_TIMEZONE, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -51,8 +53,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const total = riders.length + posts.length + events.length + roads.length;
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-3xl space-y-6">
+    <AppShell>
+      <PageHeader icon={SearchIcon} title="Search" subtitle="Riders, roads, events, and posts" />
+      <div className="max-w-3xl space-y-6">
         <form action="/search" className="flex items-center gap-2">
           <div className="relative flex-1">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -131,7 +134,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
           </div>
         )}
       </div>
-    </section>
+    </AppShell>
   );
 }
 

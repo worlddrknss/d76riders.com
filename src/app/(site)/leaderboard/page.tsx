@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 import type { TrustLevel } from "@prisma/client";
 import { Trophy } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { BadgeChip } from "@/components/reputation/badge-chip";
 import { TrustBadge } from "@/components/reputation/trust-badge";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -80,16 +80,15 @@ export default async function LeaderboardPage(props: {
     });
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.leaderboard}
-        eyebrow="Progression"
+    <AppShell>
+      <PageHeader
+        icon={Trophy}
         title="Rider Standings"
-        description="Trust is earned by showing up when you said you would, arriving on time, and keeping your safety waiver current. It is not a popularity score."
+        subtitle="Trust is earned by showing up when you said you would, arriving on time, and keeping your safety waiver current. It is not a popularity score."
       />
 
       <section className="page-shell">
-        <div className="content-wrap space-y-6">
+        <div className="space-y-6">
           <nav className="flex flex-wrap gap-2" aria-label="Leaderboard sort">
             {SORTS.map((option) => (
               <Link
@@ -173,6 +172,6 @@ export default async function LeaderboardPage(props: {
           )}
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

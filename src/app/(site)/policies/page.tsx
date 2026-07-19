@@ -3,9 +3,9 @@ import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { CheckCircle2, FileText } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -49,16 +49,15 @@ export default async function PoliciesPage() {
   });
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.policies}
-        eyebrow="Governance"
-        title="How We Ride Together"
-        description="The standards every rider agrees to. Required policies must be accepted before you ride with the group."
-      />
+    <AppShell>
+      <div className="max-w-4xl">
+        <PageHeader
+          icon={FileText}
+          title="How We Ride Together"
+          subtitle="The standards every rider agrees to. Required policies must be accepted before you ride with the group."
+        />
 
-      <section className="page-shell">
-        <div className="content-wrap space-y-6">
+        <div className="space-y-6">
           {policies.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <FileText className="mx-auto h-8 w-8 text-muted/50" />
@@ -116,7 +115,7 @@ export default async function PoliciesPage() {
             </StaggerList>
           )}
         </div>
-      </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

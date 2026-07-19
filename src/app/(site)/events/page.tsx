@@ -4,7 +4,8 @@ import { CalendarDays, Clock, MapPin, Route, Signal, Ticket, Users } from "lucid
 import Link from "next/link";
 import { siteImages } from "@/data/images";
 import { mediaUrl } from "@/lib/media-url";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { eventDayMonth, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";
 import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
@@ -54,17 +55,15 @@ export default async function EventsPage() {
   });
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.events}
-        eyebrow="Events"
-        title="Upcoming Events"
-        description="Group rides with clear route expectations, meetup points, and pace guidance. Reserve your spot and roll out with the crew."
+    <AppShell>
+      <PageHeader
+        icon={CalendarDays}
+        title="Events"
+        subtitle="Group rides with clear route expectations, meetup points, and pace guidance. Reserve your spot and roll out with the crew."
       />
 
       {/* UPCOMING RIDES LIST */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section className="mb-8">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <CalendarDays className="h-5 w-5 text-sunset" />
@@ -155,12 +154,10 @@ export default async function EventsPage() {
               );
             })}
           </StaggerList>
-        </div>
       </section>
 
       {/* FEATURED ROADS CTA */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section>
           <article
             className="relative overflow-hidden rounded-xl border border-border shadow-soft"
             style={{ backgroundImage: `url(${siteImages.ctaRoad})`, backgroundSize: "cover", backgroundPosition: "center" }}
@@ -181,8 +178,7 @@ export default async function EventsPage() {
               </Link>
             </div>
           </article>
-        </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

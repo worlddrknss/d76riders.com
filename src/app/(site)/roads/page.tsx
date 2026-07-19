@@ -6,9 +6,9 @@ import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
 
 import { CreateRoadDialog } from "@/components/roads/create-road-dialog";
 import { RoadFilters } from "@/components/roads/road-filters";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
@@ -64,17 +64,15 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
   });
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.roads}
-        eyebrow="Featured Roads"
-        title="Rider-Curated Roads"
-        description="Discover the best roads in Tennessee. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
-        actions={currentUser ? <CreateRoadDialog /> : undefined}
+    <AppShell>
+      <PageHeader
+        icon={RouteIcon}
+        title="Roads"
+        subtitle="Discover the best roads in Tennessee. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
+        action={currentUser ? <CreateRoadDialog /> : undefined}
       />
 
-      <section className="page-shell">
-        <div className="content-wrap space-y-6">
+      <div className="space-y-6">
           <RoadFilters />
 
           {roads.length === 0 ? (
@@ -102,8 +100,7 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
               ))}
             </StaggerList>
           )}
-        </div>
-      </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

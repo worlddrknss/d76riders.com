@@ -7,6 +7,8 @@ import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { periodForDate, periodLabel } from "@/lib/ride-of-month";
 import { getCurrentUser } from "@/lib/session";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -83,19 +85,13 @@ export default async function RideOfMonthPage() {
     .filter((w) => w.event);
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap max-w-3xl space-y-8">
-        <header>
-          <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-sunset">
-            <Trophy className="h-4 w-4" />
-            Ride of the Month
-          </p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-ink">{periodLabel(period)}</h1>
-          <p className="mt-2 text-sm text-muted">
-            Vote for your favorite ride from this month. One vote per rider — change it anytime before the month ends.
-          </p>
-        </header>
-
+    <AppShell>
+      <PageHeader
+        icon={Trophy}
+        title={`Ride of the Month — ${periodLabel(period)}`}
+        subtitle="Vote for your favorite ride from this month. One vote per rider — change it anytime before the month ends."
+      />
+      <div className="max-w-3xl space-y-8">
         {ballot.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border bg-canvas p-12 text-center text-sm text-muted">
             No completed rides this month yet. Once a ride wraps up, it lands on the ballot here.
@@ -162,6 +158,6 @@ export default async function RideOfMonthPage() {
           </div>
         )}
       </div>
-    </section>
+    </AppShell>
   );
 }

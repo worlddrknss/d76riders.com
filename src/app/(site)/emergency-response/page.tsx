@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ShieldCheck,
   Heart,
+  HeartPulse,
   Radio,
   Smartphone,
   Lock,
@@ -16,9 +17,9 @@ import {
   MapPin,
 } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 
 export const metadata: Metadata = {
   title: "Emergency Response — NFC ID, Check-Ins & Rider Down Protocol",
@@ -119,13 +120,13 @@ const emergencyFields = [
 
 export default function SafetyPage() {
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.safety}
-        eyebrow="Emergency Response"
-        title="Every Ride. Every Rider. Protected."
-        description="Safety isn't a feature we bolt on. It's the foundation."
-      />
+    <AppShell>
+      <div className="max-w-4xl">
+        <PageHeader
+          icon={HeartPulse}
+          title="Every Ride. Every Rider. Protected."
+          subtitle="Safety isn't a feature we bolt on. It's the foundation."
+        />
 
       {/* STATUS BANNER */}
       <section className="w-full border-b border-sunset/20 bg-sunset/5">
@@ -303,6 +304,7 @@ export default function SafetyPage() {
           </FadeUp>
         </div>
       </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import {
+  Shield,
   ShieldCheck,
   ArrowUpDown,
   Users,
@@ -11,9 +12,9 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 
 export const metadata: Metadata = {
   title: "Ride Safety: Group Riding, Formations & What To Do When It Goes Wrong",
@@ -144,13 +145,13 @@ const preRide = [
 
 export default function SafetyPage() {
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.safety}
-        eyebrow="Ride Safety"
-        title="Ride Smart. Ride Together."
-        description="Riding in a group is most of the fun and all of the responsibility. This is how we do it, and what we expect from each other on the road."
-      />
+    <AppShell>
+      <div className="max-w-4xl">
+        <PageHeader
+          icon={Shield}
+          title="Ride Smart. Ride Together."
+          subtitle="Riding in a group is most of the fun and all of the responsibility. This is how we do it, and what we expect from each other on the road."
+        />
 
       {/* FORMATIONS */}
       <section className="w-full bg-canvas">
@@ -418,6 +419,7 @@ export default function SafetyPage() {
           </FadeUp>
         </div>
       </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -1,6 +1,8 @@
-import { ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
 import Link from "next/link";
 
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { formatEventDate, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";
 import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
 import { prisma } from "@/lib/prisma";
@@ -96,29 +98,29 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
   ];
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-8">
-        {/* HEADER */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <nav aria-label="Breadcrumb" className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
-              <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
-              <ChevronRight className="h-3 w-3 text-border" />
-              <Link href="/events" className="text-muted transition hover:text-sunset">Events</Link>
-              <ChevronRight className="h-3 w-3 text-border" />
-              <span className="text-asphalt">All Events</span>
-            </nav>
-            <h1 className="font-display text-3xl font-semibold text-ink">All Events</h1>
-            <p className="mt-1 text-sm text-muted">{totalCount} event{totalCount !== 1 ? "s" : ""} found</p>
-          </div>
+    <AppShell>
+      <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
+        <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
+        <ChevronRight className="h-3 w-3 text-border" />
+        <Link href="/events" className="text-muted transition hover:text-sunset">Events</Link>
+        <ChevronRight className="h-3 w-3 text-border" />
+        <span className="text-asphalt">All Events</span>
+      </nav>
+      <PageHeader
+        icon={CalendarDays}
+        title="All Events"
+        subtitle={`${totalCount} event${totalCount !== 1 ? "s" : ""} found`}
+        action={
           <Link
             href="/events/new"
             className="rounded-md bg-sunset px-5 py-2.5 text-sm font-semibold uppercase tracking-wide text-white hover:bg-[#cf5a26]"
           >
             Create Event
           </Link>
-        </div>
+        }
+      />
 
+      <div className="space-y-8">
         {/* SEARCH + FILTERS */}
         <form method="GET" action="/events/all" className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-50 flex-1">
@@ -260,6 +262,6 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
           </nav>
         ) : null}
       </div>
-    </section>
+    </AppShell>
   );
 }

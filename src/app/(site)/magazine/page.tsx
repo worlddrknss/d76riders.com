@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MessageSquare } from "lucide-react";
+import { ArrowRight, CalendarDays, MessageSquare, Newspaper } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { siteImages } from "@/data/images";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -57,16 +58,15 @@ export default async function NewsPage() {
   const recent = articles.slice(0, 3);
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.gallery}
-        eyebrow="Magazine"
+    <AppShell>
+      <PageHeader
+        icon={Newspaper}
         title="District 76 News"
-        description="Ride reports, gear talk, and stories from the road. Notes from riders who actually log the miles."
+        subtitle="Ride reports, gear talk, and stories from the road. Notes from riders who actually log the miles."
       />
 
       <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
+        <div className="grid w-full gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
           {/* ARTICLE GRID */}
           <div>
             {currentUser ? (
@@ -157,6 +157,6 @@ export default async function NewsPage() {
           </aside>
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

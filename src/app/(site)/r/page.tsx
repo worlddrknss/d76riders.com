@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
-import { Bike, MapPin, UserRound } from "lucide-react";
+import { Bike, MapPin, Users, UserRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { siteImages } from "@/data/images";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 
 export const metadata: Metadata = {
@@ -64,18 +65,16 @@ export default async function RidersPage() {
   }
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.members}
-        eyebrow="Riders"
+    <AppShell>
+      <PageHeader
+        icon={Users}
         title="Rider Directory"
-        description="Meet riders across Clarksville and surrounding areas. Everyone here is part of the same local road community."
+        subtitle="Meet riders across Clarksville and surrounding areas. Everyone here is part of the same local road community."
       />
 
       {/* RIDER GRID */}
-      <section className="w-full bg-canvas">
-        <StaggerList className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-16 sm:px-6 md:grid-cols-2 lg:grid-cols-3 lg:px-8">
-          {riders.map((rider) => {
+      <StaggerList className="grid w-full gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {riders.map((rider) => {
             const avatar = mediaUrl(rider.avatarUrl);
             const cover = mediaUrl(rider.coverUrl) || siteImages.hero;
             const bikeLabel = (() => {
@@ -128,19 +127,14 @@ export default async function RidersPage() {
               </StaggerItem>
             );
           })}
-        </StaggerList>
-      </section>
+      </StaggerList>
 
       {/* TRUST STRIP */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid gap-4 rounded-2xl border border-border bg-surface p-6 text-sm text-muted shadow-soft sm:grid-cols-3 sm:p-8">
-            <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Rider-first community structure</p>
-            <p className="flex items-center gap-2"><Bike className="h-4 w-4 text-sunset" />Bike diversity, one shared culture</p>
-            <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />Clarksville-centered riding network</p>
-          </div>
-        </div>
-      </section>
-    </div>
+      <div className="mt-8 grid gap-4 rounded-2xl border border-border bg-surface p-6 text-sm text-muted shadow-soft sm:grid-cols-3 sm:p-8">
+        <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Rider-first community structure</p>
+        <p className="flex items-center gap-2"><Bike className="h-4 w-4 text-sunset" />Bike diversity, one shared culture</p>
+        <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />Clarksville-centered riding network</p>
+      </div>
+    </AppShell>
   );
 }

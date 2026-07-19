@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
-import { Trophy } from "lucide-react";
+import { Flag, Trophy } from "lucide-react";
 
 import { CreateChallengeDialog } from "@/components/challenges/create-challenge-dialog";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 import { challengeStatus, daysLeft, formatProgress } from "@/lib/challenges";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -68,18 +68,16 @@ export default async function ChallengesPage() {
   ];
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.challenges}
-        eyebrow="Progression"
+    <AppShell>
+      <PageHeader
+        icon={Flag}
         title="Challenges"
-        description="Pick one, ride it out, earn the badge. Only rides inside the challenge window count — that's the point of the deadline."
-        actions={rider ? <CreateChallengeDialog crews={myCrews} /> : undefined}
+        subtitle="Pick one, ride it out, earn the badge. Only rides inside the challenge window count — that's the point of the deadline."
+        action={rider ? <CreateChallengeDialog crews={myCrews} /> : undefined}
       />
 
-      <section className="page-shell">
-        <div className="content-wrap space-y-8">
-          {challenges.length === 0 ? (
+      <div className="space-y-8">
+        {challenges.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <Trophy className="mx-auto h-8 w-8 text-muted/50" />
               <p className="mt-3 text-sm text-muted">No challenges running yet.</p>
@@ -155,8 +153,7 @@ export default async function ChallengesPage() {
               );
             })
           )}
-        </div>
-      </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

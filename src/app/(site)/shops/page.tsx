@@ -3,11 +3,11 @@ import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
 import { MapPin, Phone, Store, ExternalLink } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { Stars } from "@/components/sponsors/shop-reviews";
 import { SubmitSponsorDialog } from "@/components/sponsors/submit-sponsor-dialog";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
-import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import {
@@ -95,18 +95,15 @@ export default async function ShopsPage({
     );
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.sponsors}
-        eyebrow="Community"
+    <AppShell>
+      <PageHeader
+        icon={Store}
         title="Shops & Sponsors"
-        description="Where riders around here actually go for tires, service, and gear, and the local businesses that back this community. Recommended by riders, not by whoever paid the most."
-        actions={currentUser ? <SubmitSponsorDialog /> : undefined}
+        subtitle="Where riders around here actually go for tires, service, and gear, and the local businesses that back this community. Recommended by riders, not by whoever paid the most."
+        action={currentUser ? <SubmitSponsorDialog /> : undefined}
       />
 
-      <section className="page-shell">
-        <div className="content-wrap">
-          {available.length > 0 ? (
+      {available.length > 0 ? (
             <div className="mb-6 flex flex-wrap gap-1.5">
               <Link
                 href="/shops"
@@ -274,10 +271,8 @@ export default async function ShopsPage({
                   </div>
                 </StaggerItem>
               ))}
-            </StaggerList>
-          )}
-        </div>
-      </section>
-    </div>
+        </StaggerList>
+      )}
+    </AppShell>
   );
 }

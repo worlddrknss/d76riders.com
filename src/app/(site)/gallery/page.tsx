@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
-import { Camera, ImageOff } from "lucide-react";
+import { Camera, ImageOff, Images } from "lucide-react";
 
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
-import { siteImages } from "@/data/images";
 
 export const dynamic = "force-dynamic";
 
@@ -66,16 +66,15 @@ export default async function GalleryPage() {
     .filter((x): x is NonNullable<typeof x> => x != null);
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.gallery}
-        eyebrow="Gallery"
+    <AppShell>
+      <PageHeader
+        icon={Images}
         title="District 76 Moments"
-        description="Rides, road stops, and the people who make the Clarksville motorcycle community worth showing up for."
+        subtitle="Rides, road stops, and the people who make the Clarksville motorcycle community worth showing up for."
       />
 
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="w-full px-4 py-16 sm:px-6 lg:px-8">
           {galleries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <ImageOff className="mx-auto h-8 w-8 text-muted/50" />
@@ -127,7 +126,7 @@ export default async function GalleryPage() {
       </section>
 
       <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="w-full px-4 pb-16 sm:px-6 lg:px-8">
           <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-soft sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sunset">Rode with us?</p>
             <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-asphalt sm:text-3xl">Share Your Ride Shots</h2>
@@ -140,6 +139,6 @@ export default async function GalleryPage() {
           </div>
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

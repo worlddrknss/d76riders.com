@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import { siteImages } from "@/data/images";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { FadeUp, ScaleIn } from "@/components/ui/motion";
 
 export const metadata: Metadata = {
@@ -20,13 +21,13 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.about}
-        eyebrow="Community Over Club"
-        title="Motorcycles Bring People Together"
-        description="Everything else is optional."
-      />
+    <AppShell>
+      <div className="max-w-4xl">
+        <PageHeader
+          icon={Info}
+          title="Motorcycles Bring People Together"
+          subtitle="Everything else is optional."
+        />
 
       {/* BELIEF */}
       <section className="w-full bg-canvas">
@@ -214,6 +215,7 @@ export default function AboutPage() {
           </ScaleIn>
         </div>
       </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }
