@@ -1007,20 +1007,48 @@ export default async function RiderProfilePage({
       </div>
     );
 
+  // Consolidated tabs: Gear folds into Garage, Photos + Videos into Media, and
+  // Skills into Overview — same content, far fewer top-level tabs.
+  const sectionHeader = (title: string) => (
+    <h3 className="font-display text-lg font-bold uppercase tracking-tight text-ink">{title}</h3>
+  );
+  const overviewMerged = (
+    <div className="space-y-6">
+      {overviewContent}
+      <div className="space-y-4">
+        {sectionHeader("Riding Skills")}
+        {skillsContent}
+      </div>
+    </div>
+  );
+  const garageMerged = (
+    <div className="space-y-6">
+      {garageContent}
+      <div className="space-y-4">
+        {sectionHeader("Gear Locker")}
+        {gearContent}
+      </div>
+    </div>
+  );
+  const mediaMerged = (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        {sectionHeader("Photos")}
+        {photosContent}
+      </div>
+      <div className="space-y-4">
+        {sectionHeader("Videos")}
+        {videosContent}
+      </div>
+    </div>
+  );
+
   const tabs: ProfileTab[] = [
-    { id: "overview", label: "Overview", content: overviewContent },
+    { id: "overview", label: "Overview", content: overviewMerged },
     { id: "journal", label: "Journal", count: rider.journalEntries.length, content: journalContent },
-    { id: "garage", label: "Garage", count: rider.bikes.length, content: garageContent },
-    { id: "photos", label: "Photos", count: profilePhotos.length, content: photosContent },
+    { id: "garage", label: "Garage", count: rider.bikes.length, content: garageMerged },
     { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
-    { id: "gear", label: "Gear", count: rider.gearItems.length, content: gearContent },
-    { id: "videos", label: "Videos", count: rider.videos.length, content: videosContent },
-    {
-      id: "skills",
-      label: "Skills",
-      count: rider.skills.length || null,
-      content: skillsContent,
-    },
+    { id: "media", label: "Media", count: profilePhotos.length + rider.videos.length, content: mediaMerged },
   ];
   if (isOwner) {
     tabs.push({
