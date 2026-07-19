@@ -23,7 +23,7 @@ export function organizationJsonLd() {
     url: siteUrl,
     logo: `${siteUrl}/images/hero/home.webp`,
     description:
-      "Motorcycle riding community based in Clarksville, Tennessee. Group rides, scenic roads, and rider connections.",
+      "All bikes, all riders, one community. A motorcycle riding community founded in Clarksville, Tennessee — group rides, scenic roads, builds, and rider connections.",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Clarksville",
