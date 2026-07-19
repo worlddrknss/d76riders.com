@@ -16,8 +16,10 @@ import {
   Wrench,
 } from "lucide-react";
 import { siteImages } from "@/data/images";
+import { HomeFeed } from "@/components/feed/home-feed";
 import { PageHero } from "@/components/layout/page-hero";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
+import { getCurrentUser } from "@/lib/session";
 import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
@@ -81,6 +83,22 @@ async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
 }
 
 export default async function Home() {
+  // Logged-in riders get their following feed as home; visitors get the landing.
+  const currentUser = await getCurrentUser();
+  const viewer = currentUser
+    ? await safeQuery(
+        () =>
+          prisma.rider.findUnique({
+            where: { userId: currentUser.id },
+            select: { id: true, name: true, avatarUrl: true },
+          }),
+        null,
+      )
+    : null;
+  if (viewer) {
+    return <HomeFeed viewer={viewer} />;
+  }
+
   const now = new Date();
   const upcomingEvents = await safeQuery(
     () => prisma.rideEvent.findMany({

@@ -54,6 +54,7 @@ export async function toggleJournalLikeAction(entryId: string): Promise<void> {
   if (entry?.author.handle) {
     revalidatePath(`/r/${entry.author.handle}`);
   }
+  revalidatePath("/");
 }
 
 // Toggle a private save (bookmark) on a journal post. Never public, no count on
@@ -82,6 +83,7 @@ export async function toggleJournalSaveAction(entryId: string): Promise<void> {
   if (entry?.author.handle) {
     revalidatePath(`/r/${entry.author.handle}`);
   }
+  revalidatePath("/");
   revalidatePath("/saved");
 }
 
@@ -132,6 +134,7 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
   if (entry?.author.handle) {
     revalidatePath(`/r/${entry.author.handle}`);
   }
+  revalidatePath("/");
 }
 
 export async function deleteJournalCommentAction(commentId: string): Promise<void> {
@@ -149,4 +152,5 @@ export async function deleteJournalCommentAction(commentId: string): Promise<voi
   if (comment.journalEntry?.author.handle) {
     revalidatePath(`/r/${comment.journalEntry.author.handle}`);
   }
+  revalidatePath("/");
 }

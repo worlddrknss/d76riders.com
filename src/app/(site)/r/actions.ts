@@ -113,6 +113,7 @@ export async function createJournalEntryAction(
   await syncJournalTagsAndMentions({ entryId: created.id, body, authorId: rider.id });
 
   revalidatePath("/r", "layout");
+  revalidatePath("/");
   revalidatePath(`/r/${rider.handle}`);
 
   return { error: null, success: "Ride history entry published." };
@@ -193,6 +194,7 @@ export async function updateJournalEntryAction(entryId: string, formData: FormDa
   await syncJournalTagsAndMentions({ entryId: entry.id, body, authorId: entry.author.id });
 
   revalidatePath("/r", "layout");
+  revalidatePath("/");
 }
 
 export async function deleteJournalEntryAction(entryId: string): Promise<void> {
@@ -218,6 +220,7 @@ export async function deleteJournalEntryAction(entryId: string): Promise<void> {
   await deleteFilesByUrls(urls);
 
   revalidatePath("/r", "layout");
+  revalidatePath("/");
 }
 
 export type { ReportFormState } from "@/app/(site)/report/actions";
