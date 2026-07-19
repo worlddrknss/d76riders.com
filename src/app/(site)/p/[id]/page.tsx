@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { mediaUrl } from "@/lib/media-url";
@@ -83,8 +84,8 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   };
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-2xl">
+    <AppShell>
+      <div className="mx-auto max-w-2xl">
         <JournalGrid
           entries={[gridEntry]}
           isOwner={Boolean(viewer && viewer.id === entry.authorId)}
@@ -92,6 +93,6 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           layout="feed"
         />
       </div>
-    </section>
+    </AppShell>
   );
 }

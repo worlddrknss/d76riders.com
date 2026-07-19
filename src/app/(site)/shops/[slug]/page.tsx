@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink, MapPin, Phone } from "lucide-react";
 
 import { ShopReviews, Stars, type ShopReview } from "@/components/sponsors/shop-reviews";
+import { AppShell } from "@/components/layout/app-shell";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -70,8 +71,8 @@ export default async function ShopDetailPage({ params }: { params: Promise<{ slu
   const logo = mediaUrl(shop.logoUrl);
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap max-w-3xl space-y-6">
+    <AppShell>
+      <div className="space-y-6">
         <Link href="/shops" className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-sunset hover:underline">
           <ArrowLeft className="h-3.5 w-3.5" />
           Shops &amp; Sponsors
@@ -132,6 +133,6 @@ export default async function ShopDetailPage({ params }: { params: Promise<{ slu
           myReview={myReview ? { rating: myReview.rating, body: myReview.body } : null}
         />
       </div>
-    </section>
+    </AppShell>
   );
 }

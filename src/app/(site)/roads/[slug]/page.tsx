@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, Clock, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";
 import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
@@ -175,7 +176,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
         : { lat: 36.5298, lng: -87.3595 };
 
   return (
-    <section className="page-shell">
+    <AppShell>
       <JsonLd data={roadJsonLd({
         name: road.name,
         slug: road.slug,
@@ -190,7 +191,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
         { name: "Roads", href: "/roads" },
         { name: road.name, href: `/roads/${road.slug}` },
       ])} />
-      <div className="content-wrap space-y-6">
+      <div className="space-y-6">
         {/* BREADCRUMB */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
           <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
@@ -343,6 +344,6 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
           </div>
         ) : null}
       </div>
-    </section>
+    </AppShell>
   );
 }

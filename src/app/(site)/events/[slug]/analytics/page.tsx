@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { getEventAnalytics, getOrganizerAnalytics } from "@/lib/analytics";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -69,8 +70,8 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
   ];
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-6">
+    <AppShell>
+      <div className="space-y-6">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
           <Link href="/events" className="text-muted transition hover:text-sunset">Events</Link>
           <ChevronRight className="h-3 w-3 text-border" />
@@ -247,6 +248,6 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
           </div>
         </section>
       </div>
-    </section>
+    </AppShell>
   );
 }

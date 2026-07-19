@@ -27,6 +27,7 @@ import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
 import { PublicBikeCard } from "@/components/garage/public-bike-card";
 import { BikeCard } from "@/components/garage/bike-card";
+import { GarageTabs } from "@/components/garage/garage-tabs";
 import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
 import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
@@ -1021,15 +1022,36 @@ export default async function RiderProfilePage({
       </div>
     </div>
   );
-  const garageMerged = (
-    <div className="space-y-6">
-      {garageContent}
-      <div className="space-y-4">
-        {sectionHeader("Gear Locker")}
-        {gearContent}
+  // Service sub-tab: the owner's service history across all their bikes.
+  const serviceContent =
+    isOwner && totalServices > 0 ? (
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
+        {ownerBikes
+          .flatMap((b) =>
+            b.serviceRecords.map((r) => ({
+              ...r,
+              bikeName: b.name || [b.make, b.model].filter(Boolean).join(" ") || "Bike",
+            })),
+          )
+          .sort((a, z) => z.servicedAt.getTime() - a.servicedAt.getTime())
+          .map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 text-sm last:border-b-0">
+              <div className="min-w-0">
+                <span className="font-medium text-ink">{r.title}</span>
+                <span className="block text-xs text-muted">
+                  {r.bikeName}
+                  {r.mileage != null ? ` · ${r.mileage.toLocaleString()} mi` : ""}
+                </span>
+              </div>
+              <span className="shrink-0 text-xs text-muted">
+                {r.servicedAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </span>
+            </div>
+          ))}
       </div>
-    </div>
-  );
+    ) : undefined;
+
+  const garageMerged = <GarageTabs bikes={garageContent} gear={gearContent} service={serviceContent} />;
   const mediaMerged = (
     <div className="space-y-6">
       <div className="space-y-4">

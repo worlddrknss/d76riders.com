@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
 
 import { CrewMembershipButton } from "@/components/crews/crew-membership-button";
+import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -77,7 +78,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
   const past = crew.events.filter((event) => event.startsAt < now || event.status === "COMPLETED");
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6">
+    <AppShell>
       <Link href="/crews" className="text-xs font-semibold text-muted hover:text-ink">
         ← All crews
       </Link>
@@ -188,6 +189,6 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
           </ul>
         </section>
       ) : null}
-    </div>
+    </AppShell>
   );
 }

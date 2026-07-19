@@ -2,13 +2,13 @@ import Link from "next/link";
 import { OG_IMAGE } from "@/lib/og";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Flag, Trophy } from "lucide-react";
 
 import { ChallengeJoinButton } from "@/components/challenges/challenge-join-button";
 import { RetireChallengeButton } from "@/components/challenges/retire-challenge-button";
-import { PageHero } from "@/components/layout/page-hero";
+import { AppShell } from "@/components/layout/app-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { ShareMenu } from "@/components/ui/share-menu";
-import { siteImages } from "@/data/images";
 import { challengeStatus, daysLeft, formatProgress, METRIC_LABEL } from "@/lib/challenges";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -75,16 +75,10 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
   const window = `${challenge.startsAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${challenge.endsAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
   return (
-    <div>
-      <PageHero
-        image={siteImages.pageHeroes.challenges}
-        eyebrow={challenge.crew ? `${challenge.crew.name} crew` : "Challenge"}
-        title={challenge.name}
-        description={challenge.description}
-      />
+    <AppShell>
+      <PageHeader icon={Flag} title={challenge.name} subtitle={challenge.description ?? undefined} />
 
-      <section className="page-shell">
-        <div className="content-wrap space-y-6">
+      <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Link href="/challenges" className="text-xs font-semibold text-muted hover:text-ink">
               ← All challenges
@@ -240,8 +234,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
               </ol>
             )}
           </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </AppShell>
   );
 }

@@ -13,6 +13,7 @@ import {
   AddServiceDialog,
 } from "@/components/garage/build-dialogs";
 import { BuildTimeline } from "@/components/garage/build-timeline";
+import { AppShell } from "@/components/layout/app-shell";
 import { ServiceRecords } from "@/components/garage/service-records";
 import { OdometerControl } from "@/components/garage/odometer-control";
 import { mediaUrl } from "@/lib/media-url";
@@ -82,8 +83,8 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
       ];
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap space-y-6">
+    <AppShell>
+      <div className="space-y-6">
         <div>
           <Link
             href={`/r/${bike.rider.handle}?tab=garage`}
@@ -187,6 +188,6 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
           )}
         </div>
       </div>
-    </section>
+    </AppShell>
   );
 }

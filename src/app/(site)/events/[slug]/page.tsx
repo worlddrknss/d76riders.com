@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { EventManageActions } from "@/components/events/event-manage-actions";
 import {
   formatEventDate,
@@ -414,7 +415,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   ) : null;
 
   return (
-    <section className="page-shell">
+    <AppShell>
       <JsonLd data={eventJsonLd({
         title: event.title,
         slug: event.slug,
@@ -430,7 +431,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ])} />
 
       {event.crew || event.sponsors.length > 0 ? (
-        <div className="content-wrap">
+        <div className="mb-6">
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft">
             {event.crew ? (
               <Link
@@ -476,7 +477,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
         </div>
       ) : null}
-      <div className="content-wrap space-y-6">
+      <div className="space-y-6">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
           <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
@@ -840,6 +841,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
         </div>
       </div>
-    </section>
+    </AppShell>
   );
 }

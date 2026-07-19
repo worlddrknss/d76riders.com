@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ChevronRight, Quote, UserRound } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { deleteNewsPostAction } from "@/app/(site)/magazine/[id]/actions";
+import { AppShell } from "@/components/layout/app-shell";
 import { siteImages } from "@/data/images";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -110,7 +111,7 @@ export default async function NewsArticlePage({
   const isAdmin = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
 
   return (
-    <div>
+    <AppShell>
       {/* HEADER */}
       <section className="relative w-full overflow-hidden bg-asphalt">
         <div className="route-lines absolute inset-0 opacity-30" aria-hidden="true" />
@@ -244,6 +245,6 @@ export default async function NewsArticlePage({
           </aside>
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

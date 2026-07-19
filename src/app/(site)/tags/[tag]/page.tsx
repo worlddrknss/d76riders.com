@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Hash } from "lucide-react";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { mediaUrl } from "@/lib/media-url";
 import { normalizeTag } from "@/lib/journal-tags";
@@ -79,8 +80,8 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
   }));
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap mx-auto max-w-2xl space-y-6">
+    <AppShell>
+      <div className="mx-auto max-w-2xl space-y-6">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sunset/10 text-sunset">
             <Hash className="h-5 w-5" />
@@ -111,6 +112,6 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
           />
         )}
       </div>
-    </section>
+    </AppShell>
   );
 }
