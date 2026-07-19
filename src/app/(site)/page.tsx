@@ -618,7 +618,7 @@ export default async function Home({
 
       {/* ACTIVITY + GALLERY */}
       <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
           <FadeUp>
             <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
             <div className="mt-5 space-y-4">
