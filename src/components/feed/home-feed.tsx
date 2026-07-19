@@ -2,11 +2,12 @@ import Link from "next/link";
 import { Compass, Users } from "lucide-react";
 
 import { FeedLeftRail } from "@/components/feed/feed-left-rail";
+import { FeedList } from "@/components/feed/feed-list";
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
-import { JournalGrid } from "@/components/profile/journal-grid";
 import { StoryBar } from "@/components/stories/story-bar";
 import type { StoryGroup } from "@/components/stories/story-viewer";
+import { FEED_PAGE_SIZE, getFeedEntries } from "@/lib/feed";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
@@ -30,54 +31,7 @@ export async function HomeFeed({
   // "Following" = riders you follow + yourself. "Discover" = everyone else, so
   // it surfaces riders you're not following yet.
   const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
-  const where =
-    mode === "discover" ? { authorId: { notIn: knownIds } } : { authorId: { in: knownIds } };
-
-  const entries = await prisma.journalEntry.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 30,
-    select: {
-      id: true,
-      title: true,
-      body: true,
-      videoUrl: true,
-      createdAt: true,
-      author: { select: { name: true, handle: true, avatarUrl: true } },
-      galleryItems: { orderBy: { createdAt: "asc" }, take: 1, select: { url: true } },
-      _count: { select: { likes: true, comments: true } },
-      likes: { select: { riderId: true } },
-      saves: { select: { riderId: true } },
-      comments: {
-        orderBy: { createdAt: "asc" },
-        take: 10,
-        select: { id: true, body: true, createdAt: true, author: { select: { name: true, handle: true } } },
-      },
-    },
-  });
-
-  const feed = entries.map((entry) => ({
-    id: entry.id,
-    title: entry.title,
-    body: entry.body,
-    imageUrl: entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null,
-    videoUrl: entry.videoUrl,
-    dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-    likeCount: entry._count.likes,
-    commentCount: entry._count.comments,
-    isLiked: entry.likes.some((l) => l.riderId === viewer.id),
-    isSaved: entry.saves.some((s) => s.riderId === viewer.id),
-    comments: entry.comments.map((c) => ({
-      id: c.id,
-      body: c.body,
-      authorName: c.author.name,
-      authorHandle: c.author.handle,
-      createdAt: c.createdAt.toISOString(),
-    })),
-    authorName: entry.author.name,
-    authorAvatarUrl: mediaUrl(entry.author.avatarUrl),
-    profileUrl: `/r/${entry.author.handle}`,
-  }));
+  const feed = await getFeedEntries({ viewerId: viewer.id, knownIds, mode, take: FEED_PAGE_SIZE });
 
   // Stories bar — community stories + the viewer's own add bubble.
   const activeStories = await prisma.story.findMany({
@@ -183,7 +137,7 @@ export async function HomeFeed({
             )}
           </div>
         ) : (
-          <JournalGrid entries={feed} isOwner={false} isAuthenticated layout="feed" />
+          <FeedList key={mode} initial={feed} mode={mode} pageSize={FEED_PAGE_SIZE} />
         )}
         </main>
 
