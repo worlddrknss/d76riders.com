@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings, Plus, Rss, Newspaper } from "lucide-react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings, Plus, Rss, Newspaper, Route } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -322,8 +322,16 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
                       <Link href="/feed" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
                         <Rss className="h-4 w-4 text-sunset" /> Share a ride
                       </Link>
+                      {currentUser ? (
+                        <Link href={`/r/${currentUser.handle}?log=ride`} className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                          <Bike className="h-4 w-4 text-sunset" /> Log a ride
+                        </Link>
+                      ) : null}
                       <Link href="/events/new" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
                         <CalendarPlus2 className="h-4 w-4 text-sunset" /> New event
+                      </Link>
+                      <Link href="/roads?new=1" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
+                        <Route className="h-4 w-4 text-sunset" /> New road
                       </Link>
                       <Link href="/magazine/new" className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10">
                         <Newspaper className="h-4 w-4 text-sunset" /> New article

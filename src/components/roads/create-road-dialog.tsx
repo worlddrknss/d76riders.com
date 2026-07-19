@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import { createRoadAction, type RoadFormState } from "@/app/(site)/roads/actions";
@@ -18,7 +19,9 @@ import { Textarea } from "@/components/ui/textarea";
 const initialState: RoadFormState = { error: null, success: null };
 
 export function CreateRoadDialog() {
-  const [open, setOpen] = useState(false);
+  const params = useSearchParams();
+  // Opens automatically when reached via the top-bar "+ Create → New road".
+  const [open, setOpen] = useState(() => params.get("new") === "1");
   const [state, formAction] = useActionState<RoadFormState, FormData>(createRoadAction, initialState);
 
   return (

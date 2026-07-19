@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 
 import { logRideAction } from "@/app/(site)/r/ride-actions";
@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/dialog";
 
 export function LogRideButton() {
-  const [open, setOpen] = useState(false);
+  const params = useSearchParams();
+  // Opens automatically when reached via the top-bar "+ Create → Log a ride".
+  const [open, setOpen] = useState(() => params.get("log") === "ride");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);

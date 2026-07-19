@@ -12,6 +12,7 @@ import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
 import { OnboardingQuests } from "@/components/community/onboarding-quests";
 import { ActivityFeed } from "@/components/profile/activity-feed";
+import { LogRideButton } from "@/components/profile/log-ride-button";
 import { ProfileTabs, type ProfileTab } from "@/components/profile/profile-tabs";
 import { SkillTrackCard } from "@/components/reputation/skill-track-card";
 import { AmbassadorToggle } from "@/components/profile/ambassador-toggle";
@@ -479,7 +480,10 @@ export default async function RiderProfilePage({
   // Badges grid. Progression, network, and details fold into the stat card.
   const riderStatCard = (
     <div className={cardClass}>
-      <h2 className={headingClass}>Rider</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className={headingClass}>Rider</h2>
+        {isOwner ? <LogRideButton /> : null}
+      </div>
       <dl className="mt-2 divide-y divide-border">
         {[
           { label: "Rides", value: totalRidesCount.toLocaleString() },
