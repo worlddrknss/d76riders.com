@@ -94,8 +94,9 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
     prisma.rider.findUnique({
       where: { id: viewer.id },
       select: {
-        ridesCompleted: true,
-        _count: { select: { journalEntries: true, badges: true } },
+        // "Rides" = group rides actually attended (checked in), not the legacy
+        // seed-only ridesCompleted counter.
+        _count: { select: { journalEntries: true, badges: true, eventCheckIns: true } },
         trust: { select: { level: true, milesRidden: true } },
         badges: { orderBy: { awardedAt: "desc" }, take: 4, select: { badge: { select: { name: true } } } },
       },
@@ -340,7 +341,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
               <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
                 <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
                   <div>
-                    <p className="font-display text-2xl font-bold text-ink">{statsRider.ridesCompleted}</p>
+                    <p className="font-display text-2xl font-bold text-ink">{statsRider._count.eventCheckIns}</p>
                     <p className="text-xs text-muted">Rides</p>
                   </div>
                   <div>
