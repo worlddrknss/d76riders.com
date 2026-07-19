@@ -20,5 +20,11 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    // Long-press the home-screen icon → jump straight to these.
+    shortcuts: [
+      { name: "Events", short_name: "Events", url: "/events", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
+      { name: "Messages", short_name: "Messages", url: "/messages", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
+      { name: "Search", short_name: "Search", url: "/search", icons: [{ src: "/icon-192.png", sizes: "192x192" }] },
+    ],
   };
 }

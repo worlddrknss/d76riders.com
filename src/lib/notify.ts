@@ -2,12 +2,13 @@ import { sendEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 
 /** Which per-rider opt-out flag gates each notification category. */
-type NotifyCategory = "mention" | "comment" | "rsvp";
+type NotifyCategory = "mention" | "comment" | "rsvp" | "event";
 
-const PREF_FIELD: Record<NotifyCategory, "emailOnMention" | "emailOnComment" | "emailOnRsvp"> = {
+const PREF_FIELD: Record<NotifyCategory, "emailOnMention" | "emailOnComment" | "emailOnRsvp" | "emailOnEventMessage"> = {
   mention: "emailOnMention",
   comment: "emailOnComment",
   rsvp: "emailOnRsvp",
+  event: "emailOnEventMessage",
 };
 
 type BuiltEmail = { subject: string; html: string };

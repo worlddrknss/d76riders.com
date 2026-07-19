@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { ChevronRight, Clock, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";
@@ -11,6 +11,7 @@ import { RoadManageActions } from "@/components/roads/road-manage-actions";
 import { RoadQualityCard } from "@/components/roads/road-quality-card";
 import { RouteStops } from "@/components/routes/route-stops";
 import { elevationDifficulty } from "@/lib/elevation";
+import { communityRideWindow } from "@/lib/ride-patterns";
 import type { RoadFeedbackState } from "@/app/(site)/roads/actions";
 import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { activeHazardWhere } from "@/lib/hazards";
@@ -119,6 +120,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
 
   const elevationGainFt = road.route?.elevationGainFt ?? null;
   const climb = elevationDifficulty(road.distanceMiles, elevationGainFt);
+  const rideWindow = await communityRideWindow();
 
   const coordinates = extractCoordinates(road.route?.geometry);
   const waypoints: PlannerWaypoint[] = (road.route?.waypoints ?? []).map((waypoint) => ({
@@ -257,6 +259,20 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
             <div className="mt-4">
               <RoadQualityCard roadId={road.id} isAuthenticated={!!currentUser} initial={roadFeedback} />
             </div>
+
+            {rideWindow && (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-canvas p-4">
+                <Clock className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-sunset">Best time to ride</p>
+                  <p className="mt-1 text-sm text-ink">
+                    District 76 rides peak in <strong>{rideWindow.season}</strong>, usually{" "}
+                    <strong>{rideWindow.day}s</strong> around <strong>{rideWindow.timeLabel}</strong>.
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted">Based on the community&apos;s ride schedule.</p>
+                </div>
+              </div>
+            )}
 
             {/* FOOTER: Shared by */}
             <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-border pt-5 text-sm text-muted">

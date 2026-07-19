@@ -10,7 +10,7 @@ import { absoluteUrl } from "@/lib/absolute-url";
 import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
 import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
-import { rsvpEmail } from "@/lib/email-templates";
+import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
 import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
@@ -353,6 +353,11 @@ export async function messageEventRidersAction(
     summary: `${sender.name} — ${event.title}: ${body}`,
     refId: event.id,
   });
+
+  // Also email the audience, gated by each rider's emailOnEventMessage opt-out.
+  await emailNotifyRiders(recipients, "event", (name) =>
+    eventMessageEmail(name, sender.name, event.title, body, absoluteUrl(`/events/${event.slug}`)),
+  );
 
   revalidatePath(`/events/${event.slug}`);
   revalidatePath("/notifications");

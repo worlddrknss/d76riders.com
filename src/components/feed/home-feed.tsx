@@ -6,6 +6,7 @@ import { FeedList } from "@/components/feed/feed-list";
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { StoryBar } from "@/components/stories/story-bar";
 import type { StoryGroup } from "@/components/stories/story-viewer";
 import { FEED_PAGE_SIZE, getFeedEntries } from "@/lib/feed";
@@ -130,6 +131,7 @@ export async function HomeFeed({
         </aside>
 
         <main className="w-full min-w-0 space-y-4">
+          <InstallPrompt />
           <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
           {/* Stories — a light bar under the composer */}

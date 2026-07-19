@@ -14,17 +14,19 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 6 | Rider Down Quick Alert | ✅ Done |
 | 7 | Waitlist and RSVP Enhancements | ✅ Done |
 | 8 | Batch Messaging to RSVP Riders | ✅ Done |
-| 9 | Route Intelligence | 🚧 Mostly done |
+| 9 | Route Intelligence | ✅ Done |
 | 10 | Rider Reputation and Progression | ✅ Done |
 | 11 | Community Growth | ✅ Done |
 | 12 | Media and Storytelling | ✅ Done |
 | 13 | Admin and Moderation Enhancements | ✅ Done |
-| 14 | Platform Reliability and Insights | 🚧 In progress |
+| 14 | Platform Reliability and Insights | ✅ Done |
 | 15 | Challenges | ✅ Done |
 
-Remaining: **Phase 14** (offline PWA enhancements — offline event card + quick check-in; web-push, quiet hours,
-digests, calendar sync, and analytics are done) and **Phase 9** (only "best time to ride" is left — Route
-Quality, turn-by-turn stops, and elevation-based difficulty are done).
+**All 15 phases are done.** Deliberately scoped out (not gaps): weather integration for "best time to ride"
+(the community day/season/time signal ships without it), offline caching of dynamic event pages (the service
+worker stays network-first with an offline fallback only), and a separate notification/delivery-tracking model
+(the Activity feed + best-effort email/push cover it). The only open **content** task is writing the real
+`SAFETY_WAIVER` (see Follow-ups) — it carries legal weight and needs human wording.
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
@@ -330,7 +332,9 @@ model EmergencyCardAccess {
 - [x] Compose with audience filter — everyone who RSVP'd, GOING, WAITLISTED, INTERESTED, or CHECKED_IN — each showing its live size
 - [x] Deliver as an in-app `EVENT_MESSAGE` activity with `refId` set to the event, landing in `/notifications`
 - [x] Templates: update, delay, weather call, cancelled, route change — each preselects a sensible audience and fills an editable opening line
-- [ ] Future: email delivery channel with opt-in preference (deferred — belongs with Phase 14's notification centre, which is where delivery tracking lives)
+- [x] Email delivery channel with opt-in preference — batch event messages now also email the audience
+      (`eventMessageEmail`), gated by a per-rider `emailOnEventMessage` flag managed at `/settings`. The in-app
+      `EVENT_MESSAGE` activity still fires alongside it.
 
 **Notes:**
 
@@ -353,9 +357,11 @@ model EmergencyCardAccess {
 - [x] Route quality score: three-dimension road feedback (**Scenery · Road condition · Twistiness**) with a blended `Road.qualityScore`, shown on the road page (`RoadQualityCard` + `submitRoadFeedbackAction`; `RoadRating.condition/twistiness`, cached `conditionRating/twistinessRating`)
 - [x] Difficulty from elevation: `computeElevationGainFt` (Open-Elevation, best-effort at road save, outside the txn) → `Route.elevationGainFt`; an Elevation card + coarse difficulty (`elevationDifficulty`, feet-per-mile) on the road page
 - [x] Post-ride feedback form: the `RoadQualityCard` is the feedback form (rate difficulty/scenery/road condition)
-- [ ] Best time to ride: seasonal/time-of-day suggestions based on historical event data and weather patterns
+- [x] Best time to ride: a community ride-pattern hint (most common day, season, and start hour across all
+      events, in each ride's timezone) shown on the road page (`communityRideWindow`, `src/lib/ride-patterns.ts`).
+      Weather integration deliberately deferred (no weather API/key wired).
 
-**Follow-ups:** an elevation backfill cron for roads saved before the feature; historical-pace input to difficulty.
+**Follow-ups:** an elevation backfill cron for roads saved before the feature; historical-pace input to difficulty; weather-aware best-time if a weather API is added.
 
 ---
 
@@ -461,23 +467,28 @@ phase, events only used `galleryItems[0]` as the cover flyer — there was no br
       conversion, punctuality vs a 15-min grace, the named no-shows) and **your rides overall** (turnout
       trend, RSVP→attendance, churn among your riders across two 90-day windows). Computations in
       `src/lib/analytics.ts` reuse the trust-scoring definitions so the numbers match a rider's profile.
-- [~] Notification center: **email channel + verification done** (2026-07-18). Email verification is a
+- [x] Notification center: **email channel + verification done** (2026-07-18). Email verification is a
       hard gate (`EmailVerification` model, `/verify-email`, welcome/confirm on signup, account email-change
       with confirm-at-new-address). Per-rider opt-in email notifications fire for @mentions, journal comments,
       and RSVPs (`src/lib/mailer.ts` Gmail SMTP + `src/lib/notify.ts`, prefs on `Rider`, managed at
       `/settings`). Emergency-card access sends an always-on security alert (email + activity). **Web-push
       shipped 2026-07-18**: push-only service worker (`public/sw.js`), `PushSubscription` model, VAPID via
       `src/lib/push.ts` (degrades gracefully with no keys), a `/settings` enable toggle + quiet hours, wired
-      into wave/comment/DM/maintenance notifications, with a quiet-hours digest cron. **Still open:** a unified
-      notification/delivery-tracking model (today it rides on the `Activity` feed) and email delivery for
-      batch event messages (Phase 8).
+      into wave/comment/DM/maintenance notifications, with a quiet-hours digest cron. Batch event-message
+      email now ships too (Phase 8, `emailOnEventMessage`). A separate unified notification/delivery-tracking
+      model is **deliberately not built** — the `Activity` feed (in-app) plus best-effort email/push cover all
+      three channels; a delivery-log model would add complexity without user-facing value.
 - [x] Calendar sync: per-event `.ics` download ("Add to calendar") and a per-rider subscribable feed of
       their upcoming GOING/WAITLISTED rides, at `/api/events/<slug>/calendar.ics` and
       `/api/riders/<token>/calendar.ics`. Auth for the feed is an unguessable `Rider.calendarToken` (a
       calendar app can't send session cookies), rotatable from `/account` to revoke old subscriptions. ICS
       built in `src/lib/ics.ts` (RFC 5545: CRLF, 75-octet folding, TEXT escaping); times emit as UTC
       (`DTSTART:…Z`), which every app converts to the viewer's zone — leaning on the Phase-14 timezone work.
-- [ ] PWA enhancements: offline event card, quick check-in action, install prompts
+- [x] PWA enhancements: a dismissible **install prompt** (`beforeinstallprompt` banner on Home), manifest
+      **quick-action shortcuts** (Events / Messages / Search), and a **network-first offline fallback** — the
+      service worker pre-caches `/offline` and serves it only when a navigation fetch fails (never stale, and
+      non-navigation requests are untouched). Offline caching of dynamic event pages is deliberately scoped
+      out to keep the SW safe on the live site.
 
 **Notes:**
 

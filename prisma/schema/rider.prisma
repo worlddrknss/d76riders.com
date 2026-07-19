@@ -39,6 +39,7 @@ model Rider {
   emailOnMention Boolean @default(true)
   emailOnRsvp    Boolean @default(true)
   emailOnComment Boolean @default(true)
+  emailOnEventMessage Boolean @default(true)
   emailWeeklyRecap Boolean @default(true)
 
   // Quiet hours (Central time, 0-23). When set and the current hour falls in the

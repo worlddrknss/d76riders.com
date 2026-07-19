@@ -219,3 +219,20 @@ export function rsvpEmail(name: string, riderName: string, eventTitle: string, u
     }),
   };
 }
+
+export function eventMessageEmail(name: string, senderName: string, eventTitle: string, body: string, url: string) {
+  return {
+    subject: `${eventTitle}: message from ${senderName}`,
+    html: emailLayout({
+      preheader: `${senderName} sent an update about ${eventTitle}.`,
+      heading: `Update for ${escapeHtml(eventTitle)}`,
+      paragraphs: [
+        `Hi ${escapeHtml(name)},`,
+        `<strong>${escapeHtml(senderName)}</strong> sent a message to riders of <strong>${escapeHtml(eventTitle)}</strong>:`,
+        `<em>${escapeHtml(body)}</em>`,
+      ],
+      cta: { label: "Open the ride", href: url },
+      footnote: "You're getting this because you're on this ride. Manage email alerts in Settings.",
+    }),
+  };
+}

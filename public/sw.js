@@ -39,7 +39,32 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// Activate immediately so a freshly registered SW can receive pushes without a
-// reload; it controls nothing (no fetch handler) so this is safe.
-self.addEventListener("install", () => self.skipWaiting());
-self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+const OFFLINE_URL = "/offline";
+const OFFLINE_CACHE = "d76-offline-v1";
+
+// Pre-cache the offline fallback page so it's available with no connection.
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(OFFLINE_CACHE)
+      .then((cache) => cache.add(OFFLINE_URL))
+      .catch(() => {}),
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// Network-FIRST for page navigations only: always try the network, and fall back
+// to the cached offline page solely when the fetch fails. Never serves stale
+// content, and non-navigation requests are left entirely to the browser.
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode !== "navigate") return;
+  event.respondWith(
+    fetch(event.request).catch(() =>
+      caches.match(OFFLINE_URL).then((cached) => cached || new Response("Offline", { status: 503 })),
+    ),
+  );
+});
