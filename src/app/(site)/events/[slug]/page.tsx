@@ -30,6 +30,7 @@ import { ShareEvent } from "@/components/events/share-event";
 import { Linkify } from "@/components/ui/linkify";
 import { toggleEventFollowAction } from "@/app/(site)/garage/mine/actions";
 import { RouteMap } from "@/components/routes/route-map";
+import { LiveRideMap } from "@/components/events/live-ride-map";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -323,6 +324,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? event.checkIns.find((c) => c.riderId === viewerRider.id)
     : null;
   const canCheckIn = isActiveEvent && currentRsvp === "GOING" && currentUser;
+
+  // Live ride map — on ride day, participants (organizer / GOING / checked-in)
+  // see everyone sharing; only currently-checked-in riders can broadcast.
+  const canSeeLive = Boolean(currentUser && (isOrganizer || currentRsvp === "GOING" || viewerCheckIn));
+  const showLiveMap = isActiveEvent && canSeeLive && coordinates.length >= 2;
+  const canShareLive = Boolean(viewerCheckIn && !viewerCheckIn.checkOutAt);
 
   // Build attendee list for organizer attendance panel
   const attendeesForPanel = isOrganizer
@@ -730,8 +737,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="font-display text-xl font-semibold text-asphalt">Official Route</h2>
-                <p className="mt-1 text-sm text-muted">Saved route attached to this event.</p>
+                <h2 className="font-display text-xl font-semibold text-asphalt">
+                  {showLiveMap ? "Live Ride" : "Official Route"}
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  {showLiveMap
+                    ? "Riders sharing their location during the ride."
+                    : "Saved route attached to this event."}
+                </p>
               </div>
               <RouteExportOptions
                 coordinates={coordinates}
@@ -740,7 +753,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               />
             </div>
             <div className="mt-4">
-              <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
+              {showLiveMap ? (
+                <LiveRideMap
+                  eventId={event.id}
+                  coordinates={coordinates}
+                  waypoints={waypoints}
+                  canShare={canShareLive}
+                  className="h-120 w-full"
+                />
+              ) : (
+                <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
+              )}
             </div>
           </div>
         ) : event.meetLat != null && event.meetLng != null ? (

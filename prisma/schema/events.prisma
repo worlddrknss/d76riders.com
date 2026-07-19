@@ -46,6 +46,7 @@ model RideEvent {
   organizers   EventOrganizer[]
   rsvps        Rsvp[]
   checkIns     EventCheckIn[]
+  liveLocations LiveLocation[]
   followers    EventFollow[]
   comments     Comment[]
   galleryItems GalleryItem[]
@@ -141,6 +142,24 @@ enum CheckInMethod {
   QR
   NFC
   MANUAL
+}
+
+// A rider's latest live position during an event ride. Ephemeral: upserted while
+// sharing (foreground only on mobile web), stale after a few minutes, cleared on
+// stop / check-out. Visible only to the ride's participants + organizers.
+model LiveLocation {
+  id        String   @id @default(cuid())
+  eventId   String
+  riderId   String
+  lat       Float
+  lng       Float
+  updatedAt DateTime @updatedAt @default(now())
+
+  event RideEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rider Rider     @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, riderId])
+  @@index([eventId, updatedAt])
 }
 
 // Rider Down / safety incidents raised by organizers during a ride.

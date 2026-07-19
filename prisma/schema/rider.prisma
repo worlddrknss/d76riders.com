@@ -66,6 +66,7 @@ model Rider {
   followedEvents EventFollow[]
   organizedEvents EventOrganizer[]
   eventCheckIns  EventCheckIn[]
+  liveLocations  LiveLocation[]
   events         RideEvent[]
   emergencyCard  EmergencyCard?
   incidents          RideIncident[] @relation("IncidentSubject")
