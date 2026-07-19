@@ -14,7 +14,7 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 6 | Rider Down Quick Alert | ✅ Done |
 | 7 | Waitlist and RSVP Enhancements | ✅ Done |
 | 8 | Batch Messaging to RSVP Riders | ✅ Done |
-| 9 | Route Intelligence | ⬜ Not started |
+| 9 | Route Intelligence | 🚧 Mostly done |
 | 10 | Rider Reputation and Progression | ✅ Done |
 | 11 | Community Growth | ✅ Done |
 | 12 | Media and Storytelling | ✅ Done |
@@ -22,18 +22,19 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 14 | Platform Reliability and Insights | 🚧 In progress |
 | 15 | Challenges | ✅ Done |
 
-Remaining: **Phase 14** (offline service worker / PWA enhancements — web-push and the installable PWA manifest
-are done) and **Phase 9** (Route Intelligence — the largest, needs an elevation source + a second routing profile).
+Remaining: **Phase 14** (offline PWA enhancements — offline event card + quick check-in; web-push, quiet hours,
+digests, calendar sync, and analytics are done) and **Phase 9** (only "best time to ride" is left — Route
+Quality, turn-by-turn stops, and elevation-based difficulty are done).
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
-- **5 — Hazard Reporting.** One model and an activity type, but new map-overlay UI and a TTL story.
-- **14 — Reliability.** Mostly greenfield: there is no service worker or manifest today.
-- **9 — Route Intelligence.** Needs an elevation source and a second routing profile; `Route` has no
-  elevation field and `src/lib/routing.ts` only calls OSRM's plain `driving` profile.
-- **12 — Media.** Largest: moderation queue, voting, and recap generation are three features in a coat.
+- **14 — Reliability.** Push (VAPID web-push service worker + quiet hours + digest), notification centre,
+  calendar sync, and organizer analytics are done; only offline PWA (offline event card, quick check-in) remains.
+- **9 — Route Intelligence.** Route Quality (three-dimension road feedback + blended score), turn-by-turn
+  stops, and elevation-derived difficulty (Open-Elevation at save time, `Route.elevationGainFt`) are done;
+  only "best time to ride" remains.
 
-### Beyond the 15-phase roadmap (shipped 2026-07-18)
+### Beyond the 15-phase roadmap (shipped 2026-07-18 → 07-19)
 
 A run of UX/feature work outside the original phases, all in production:
 
@@ -60,9 +61,24 @@ A run of UX/feature work outside the original phases, all in production:
   **Direct Messages** gated on a mutual follow (near-real-time polling + push).
 - **Following feed** — logged-in Home is a feed of journal posts from riders you follow (+ your own), story
   bar and composer on top; logged-out Home stays the marketing landing (`src/components/feed/home-feed.tsx`).
-- **Maintenance reminders** — an optional "remind me again in N months" set when logging a service
-  (`ServiceRecord.remindAt/remindedAt`), pushed by the `maintenance-reminders` Inngest cron; a due badge shows
-  on the service record. Date-based for now (bikes have no current-mileage field yet).
+- **Maintenance reminders** — set "remind me again in N months and/or N miles" when logging a service
+  (`ServiceRecord.remindAt` / `remindMileage`), pushed by the `maintenance-reminders` Inngest cron. Bikes now
+  track a `currentMileage` odometer (inline update + bumped by a higher service reading); the due badge fires
+  by date **or** mileage, whichever comes first.
+- **Home feed redesign** — logged-in Home mirrors the profile (`content-wrap` width, `CoverPhoto` header,
+  single left sidebar of nav + Spotlight/Trending/Upcoming/Suggested widgets) with **For You · Following ·
+  Discover · Mine** tabs and infinite scroll. FB-style story tiles under the composer. The profile **Journal
+  tab is now a read-only archive** (composing/stories live on Home).
+- **Global search + For You** — `/search` across riders, journal posts, events, and roads (navbar search
+  icon); a momentum-ranked **For You** feed as the default Home tab.
+- **Post permalinks** — every journal post has a page at **`/p/[id]`** (full post + reactions + comments +
+  OpenGraph); Trending, the share button, and engagement notifications all link to it instead of the profile.
+- **DM + notification polish** — Messages unread badge, "Seen" read receipts, photo attachments in DMs, and a
+  notification bell/list where wave/comment/mention alerts deep-link to the post.
+- **Live ride map** (events) — on ride day the event route map becomes a live map for participants: checked-in
+  riders broadcast location (`LiveLocation`, browser geolocation + Wake Lock, 15s polling), everyone sharing
+  shows as a moving avatar marker. Visibility server-gated to organizer / GOING / checked-in. Foreground-only
+  on mobile web (browsers suspend background geolocation).
 
 ### Follow-ups from the 10/11/13 work
 
@@ -325,7 +341,7 @@ model EmergencyCardAccess {
 
 ---
 
-## Phase 9: Route Intelligence
+## Phase 9: Route Intelligence 🚧
 
 **Effort:** Large — extends existing route/road infrastructure with analytics and suggestions.
 
@@ -333,11 +349,13 @@ model EmergencyCardAccess {
 
 **Work:**
 
-- [ ] Turn-by-turn page: render route with ordered stops, fuel stations, regroup points
-- [ ] Route quality score: aggregate from road ratings + rider feedback post-ride
-- [ ] Difficulty prediction: compute from distance, elevation (from an open elevation source, e.g. Open-Elevation / OpenTopoData), and historical pace data
+- [x] Turn-by-turn stops: ordered, color-coded waypoint list beneath the map on the road page (`RouteStops`, uses `Waypoint.order` + `KIND_META`)
+- [x] Route quality score: three-dimension road feedback (**Scenery · Road condition · Twistiness**) with a blended `Road.qualityScore`, shown on the road page (`RoadQualityCard` + `submitRoadFeedbackAction`; `RoadRating.condition/twistiness`, cached `conditionRating/twistinessRating`)
+- [x] Difficulty from elevation: `computeElevationGainFt` (Open-Elevation, best-effort at road save, outside the txn) → `Route.elevationGainFt`; an Elevation card + coarse difficulty (`elevationDifficulty`, feet-per-mile) on the road page
+- [x] Post-ride feedback form: the `RoadQualityCard` is the feedback form (rate difficulty/scenery/road condition)
 - [ ] Best time to ride: seasonal/time-of-day suggestions based on historical event data and weather patterns
-- [ ] Post-ride feedback form: rate route difficulty, scenery, road conditions
+
+**Follow-ups:** an elevation backfill cron for roads saved before the feature; historical-pace input to difficulty.
 
 ---
 
