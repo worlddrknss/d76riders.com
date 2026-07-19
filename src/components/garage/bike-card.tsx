@@ -132,86 +132,62 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
         </AlertDialog>
       </div>
 
-      <div className="bg-asphalt px-5 py-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-display text-lg font-bold uppercase tracking-tight text-white">{bike.name}</h3>
-          {isPrimary && (
-            <span className="rounded-full bg-sunset/20 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-sunset">Current</span>
-          )}
-        </div>
-        <p className="text-xs font-semibold uppercase tracking-widest text-sunset">Powered by {bike.make}</p>
-      </div>
-
-      <div className="flex items-center justify-center bg-canvas">
+      {/* Photo */}
+      <div className="relative">
         {imageUrl ? (
-          <img src={imageUrl} alt={bike.photos[0]?.caption || bike.name} className="h-48 w-full object-cover" />
+          <img src={imageUrl} alt={bike.photos[0]?.caption || bike.name} className="h-44 w-full object-cover" />
         ) : (
-          <div className="flex h-48 w-full items-center justify-center text-muted">
-            <svg className="h-20 w-20 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="flex h-44 w-full items-center justify-center bg-canvas text-muted">
+            <svg className="h-16 w-16 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M12 6.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM4.5 19.5a3.5 3.5 0 107 0 3.5 3.5 0 00-7 0zM12.5 19.5a3.5 3.5 0 107 0 3.5 3.5 0 00-7 0z" />
             </svg>
           </div>
         )}
-      </div>
-
-      <div className="grid grid-cols-3 divide-x divide-border border-t border-border px-2 py-4">
-        <div className="text-center">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Year</p>
-          <p className="mt-0.5 font-display text-sm font-bold text-asphalt">{bike.year ?? "—"}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Type</p>
-          <p className="mt-0.5 font-display text-sm font-bold text-asphalt">{bike.type ? bike.type.charAt(0) + bike.type.slice(1).toLowerCase() : "—"}</p>
-        </div>
-        <div className="text-center">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Make</p>
-          <p className="mt-0.5 font-display text-sm font-bold text-asphalt">{bike.make}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 border-t border-border">
-        <div className="border-b border-r border-border px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Engine Type</p>
-          <p className="mt-0.5 text-sm font-medium text-asphalt">{bike.engineType || "—"}</p>
-        </div>
-        <div className="border-b border-border px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Model</p>
-          <p className="mt-0.5 text-sm font-medium text-asphalt">{bike.model || "—"}</p>
-        </div>
-        <div className="border-r border-border px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Displacement</p>
-          <p className="mt-0.5 text-sm font-medium text-asphalt">{bike.displacement || "—"}</p>
-        </div>
-        <div className="px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Bike Name</p>
-          <p className="mt-0.5 text-sm font-medium text-sunset">{bike.name}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 border-t border-border">
-        <div className="border-r border-border px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Mods</p>
-          <p className="mt-0.5 font-display text-lg font-bold text-asphalt">{bike.modifications.length}</p>
-        </div>
-        <div className="px-5 py-3">
-          <p className="text-[0.6rem] font-bold uppercase tracking-widest text-muted">Services</p>
-          <p className="mt-0.5 font-display text-lg font-bold text-asphalt">{bike.serviceRecords.length}</p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-border px-5 py-3">
-        <Link href={`/builds/${bike.id}`} className="text-xs font-semibold uppercase tracking-wide text-sunset hover:underline">
-          Build Timeline
-        </Link>
-        {!isPrimary && (
-          <form action={setPrimaryBikeAction.bind(null, bike.id)}>
-            <button type="submit" className="text-xs font-semibold text-muted transition hover:text-sunset">
-              Set as Current Ride
-            </button>
-          </form>
+        {isPrimary && (
+          <span className="absolute left-3 top-3 rounded-full bg-sunset px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow-soft">Current</span>
         )}
       </div>
 
+      {/* Body — clean: title, specs, latest service, links */}
+      <div className="p-4">
+        <h3 className="font-display text-lg font-bold text-ink">{bike.name}</h3>
+        <p className="mt-0.5 text-xs text-muted">
+          {[
+            bike.type ? bike.type.charAt(0) + bike.type.slice(1).toLowerCase() : null,
+            bike.displacement,
+            bike.year,
+          ]
+            .filter(Boolean)
+            .join(" · ") || bike.make}
+        </p>
+
+        {bike.serviceRecords[0] ? (
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3 text-sm">
+            <span className="min-w-0 truncate font-medium text-ink">{bike.serviceRecords[0].title}</span>
+            <span className="shrink-0 text-xs text-muted">
+              {bike.serviceRecords[0].mileage != null
+                ? `${bike.serviceRecords[0].mileage.toLocaleString()} mi`
+                : new Date(bike.serviceRecords[0].servicedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-border pt-3">
+          <Link href={`/builds/${bike.id}`} className="text-xs font-bold text-[#cf5a26] hover:underline">
+            Build &amp; mods →
+          </Link>
+          <Link href={`/builds/${bike.id}`} className="text-xs font-bold text-[#cf5a26] hover:underline">
+            Service log →
+          </Link>
+          {!isPrimary && (
+            <form action={setPrimaryBikeAction.bind(null, bike.id)} className="ml-auto">
+              <button type="submit" className="text-xs font-semibold text-muted transition hover:text-sunset">
+                Set current
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
 
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
