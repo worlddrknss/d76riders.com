@@ -25,10 +25,11 @@ export async function loadFeedAction(mode: FeedMode, offset: number): Promise<Jo
   });
   const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
 
+  const safeMode: FeedMode = mode === "discover" || mode === "mine" ? mode : "following";
   return getFeedEntries({
     viewerId: viewer.id,
     knownIds,
-    mode: mode === "discover" ? "discover" : "following",
+    mode: safeMode,
     skip: Math.max(0, offset),
     take: FEED_PAGE_SIZE,
   });

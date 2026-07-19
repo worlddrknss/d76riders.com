@@ -3,12 +3,12 @@ import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
 export const FEED_PAGE_SIZE = 20;
-export type FeedMode = "following" | "discover";
+export type FeedMode = "following" | "discover" | "mine";
 
 /**
  * A page of feed entries for the home feed. "following" = riders you follow +
  * yourself, newest first. "discover" = riders you don't follow, ranked by
- * momentum (trending) then recency.
+ * momentum (trending) then recency. "mine" = only your own posts, newest first.
  */
 export async function getFeedEntries({
   viewerId,
@@ -24,7 +24,11 @@ export async function getFeedEntries({
   take?: number;
 }): Promise<JournalGridEntry[]> {
   const where =
-    mode === "discover" ? { authorId: { notIn: knownIds } } : { authorId: { in: knownIds } };
+    mode === "mine"
+      ? { authorId: viewerId }
+      : mode === "discover"
+        ? { authorId: { notIn: knownIds } }
+        : { authorId: { in: knownIds } };
   const orderBy =
     mode === "discover"
       ? [{ momentum: "desc" as const }, { createdAt: "desc" as const }]

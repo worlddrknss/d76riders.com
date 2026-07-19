@@ -94,14 +94,15 @@ export default async function Home({
         () =>
           prisma.rider.findUnique({
             where: { userId: currentUser.id },
-            select: { id: true, name: true, handle: true, avatarUrl: true },
+            select: { id: true, name: true, handle: true, avatarUrl: true, coverUrl: true },
           }),
         null,
       )
     : null;
   if (viewer) {
     const { feed } = await searchParams;
-    return <HomeFeed viewer={viewer} mode={feed === "discover" ? "discover" : "following"} />;
+    const mode = feed === "discover" || feed === "mine" ? feed : "following";
+    return <HomeFeed viewer={viewer} mode={mode} />;
   }
 
   const now = new Date();

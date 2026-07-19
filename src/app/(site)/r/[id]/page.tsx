@@ -3,10 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, MapPin, MessageSquare, Receipt, Route, Trash2, UserPlus, Users, Video, Wrench } from "lucide-react";
 
-import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { JournalGrid } from "@/components/profile/journal-grid";
-import { StoryBar } from "@/components/stories/story-bar";
-import type { StoryGroup } from "@/components/stories/story-viewer";
 import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
 
 import { CoverPhoto } from "@/components/profile/cover-photo";
@@ -523,63 +520,17 @@ export default async function RiderProfilePage({
     />
   );
 
-  // ─── Stories — a story bar at the top of the owner's own journal feed
-  // (their "dashboard"). Community stories + their own add bubble.
-  const storyGroups: StoryGroup[] = [];
-  if (isOwner && viewer) {
-    const activeStories = await prisma.story.findMany({
-      where: { expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        url: true,
-        caption: true,
-        createdAt: true,
-        rider: { select: { id: true, name: true, handle: true, avatarUrl: true } },
-      },
-    });
-    const storyMap = new Map<string, StoryGroup>();
-    for (const s of activeStories) {
-      let group = storyMap.get(s.rider.id);
-      if (!group) {
-        group = {
-          rider: { id: s.rider.id, name: s.rider.name, handle: s.rider.handle, avatarUrl: mediaUrl(s.rider.avatarUrl) },
-          stories: [],
-        };
-        storyMap.set(s.rider.id, group);
-      }
-      group.stories.push({ id: s.id, url: s.url, caption: s.caption, createdAt: s.createdAt.toISOString() });
-    }
-    storyGroups.push(
-      ...[...storyMap.values()].sort((a, b) => {
-        if (a.rider.id === viewer.id) return -1;
-        if (b.rider.id === viewer.id) return 1;
-        return (
-          new Date(b.stories[b.stories.length - 1].createdAt).getTime() -
-          new Date(a.stories[a.stories.length - 1].createdAt).getTime()
-        );
-      }),
-    );
-  }
-
-  // ─── Journal feed (rendered as the Overview main column) ────────
+  // ─── Journal feed — a read-only archive of this rider's posts. Composing
+  // and stories moved to the home feed; owners can still edit/delete a post.
   const ridesContent = (
     <div>
-      {isOwner && (
-        <div className="mb-5">
-          <StoryBar groups={storyGroups} currentRiderId={rider.id} canPost currentAvatarUrl={avatar} />
-        </div>
-      )}
-      {isOwner && (
-        <JournalComposerBar avatarUrl={avatar} firstName={rider.name.split(" ")[0]} />
-      )}
-      <div className={isOwner ? "mt-6" : ""}>
+      <div>
         {journalForGrid.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-canvas p-12 text-center">
             <BookText className="mx-auto h-8 w-8 text-muted/50" />
             <p className="mt-3 text-sm text-muted">
               {isOwner
-                ? "No ride journal entries yet. Use the box above to share your first ride story."
+                ? "No ride journal entries yet. Post from your home feed to fill this in."
                 : `${rider.name} hasn't shared any ride journal entries yet.`}
             </p>
           </div>

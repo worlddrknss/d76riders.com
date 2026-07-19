@@ -61,7 +61,7 @@ export async function FeedRightRail({
   ]);
 
   return (
-    <div className="sticky top-24 space-y-4">
+    <div className="space-y-4">
       {spotlight && (
         <Card title="Rider Spotlight" icon={Star}>
           <Link href={`/r/${spotlight.rider.handle}`} className="flex items-center gap-3">

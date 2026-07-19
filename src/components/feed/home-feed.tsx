@@ -21,8 +21,8 @@ export async function HomeFeed({
   viewer,
   mode = "following",
 }: {
-  viewer: { id: string; name: string; handle: string; avatarUrl: string | null };
-  mode?: "following" | "discover";
+  viewer: { id: string; name: string; handle: string; avatarUrl: string | null; coverUrl: string | null };
+  mode?: "following" | "discover" | "mine";
 }) {
   const following = await prisma.riderFollow.findMany({
     where: { followerId: viewer.id },
@@ -67,83 +67,105 @@ export async function HomeFeed({
   });
 
   const viewerAvatar = mediaUrl(viewer.avatarUrl);
+  const viewerCover = mediaUrl(viewer.coverUrl);
+
+  const TABS: { mode: "following" | "discover" | "mine"; label: string; href: string }[] = [
+    { mode: "following", label: "Following", href: "/" },
+    { mode: "discover", label: "Discover", href: "/?feed=discover" },
+    { mode: "mine", label: "Mine", href: "/?feed=mine" },
+  ];
 
   return (
-    <div className="w-full bg-canvas">
-      <div className="grid w-full gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[16rem_minmax(0,1fr)_20rem] lg:px-8 xl:gap-8 xl:px-12">
-        <aside className="hidden lg:block">
-          <FeedLeftRail viewer={viewer} />
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      {/* Cover + avatar header — mirrors the profile so Home and Profile feel continuous */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+        <div className="h-32 w-full bg-asphalt sm:h-44">
+          {viewerCover ? <img src={viewerCover} alt="" className="h-full w-full object-cover" /> : null}
+        </div>
+        <div className="flex items-end gap-4 px-5 pb-4">
+          <div className="-mt-10 shrink-0 sm:-mt-12">
+            {viewerAvatar ? (
+              <img src={viewerAvatar} alt={viewer.name} className="h-20 w-20 rounded-full border-4 border-surface object-cover sm:h-24 sm:w-24" />
+            ) : (
+              <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-surface bg-sunset/15 text-2xl font-bold text-sunset sm:h-24 sm:w-24">
+                {viewer.name.charAt(0)}
+              </span>
+            )}
+          </div>
+          <div className="min-w-0 pb-1">
+            <h1 className="truncate font-display text-xl font-bold text-ink">{viewer.name}</h1>
+            <p className="text-sm text-muted">@{viewer.handle}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
+        {/* Single left sidebar: quick nav + discovery widgets */}
+        <aside className="hidden space-y-4 lg:block">
+          <FeedLeftRail handle={viewer.handle} />
+          <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
         </aside>
 
         <main className="w-full min-w-0 space-y-4">
-        <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
+          <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
-        {/* Stories — a light bar under the composer */}
-        <div className="px-1">
-          <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
-        </div>
-
-        {/* Following vs Discover — clean underline tabs */}
-        <div className="flex border-b border-border">
-          <Link
-            href="/"
-            className={`flex-1 border-b-2 pb-2.5 text-center text-sm font-semibold transition ${
-              mode === "following" ? "border-sunset text-ink" : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            Following
-          </Link>
-          <Link
-            href="/?feed=discover"
-            className={`flex-1 border-b-2 pb-2.5 text-center text-sm font-semibold transition ${
-              mode === "discover" ? "border-sunset text-ink" : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            Discover
-          </Link>
-        </div>
-
-        {feed.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-canvas p-10 text-center">
-            {mode === "discover" ? (
-              <>
-                <Compass className="mx-auto h-8 w-8 text-muted/50" />
-                <p className="mt-3 text-sm font-medium text-ink">Nothing new to discover right now</p>
-                <p className="mt-1 text-sm text-muted">
-                  You&apos;re following everyone who&apos;s posted. Check back as more riders join and share.
-                </p>
-                <Link
-                  href="/?feed=following"
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
-                >
-                  Back to your feed
-                </Link>
-              </>
-            ) : (
-              <>
-                <Users className="mx-auto h-8 w-8 text-muted/50" />
-                <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
-                <p className="mt-1 text-sm text-muted">
-                  Follow riders and their ride journals show up here. Post your own above, or see what the
-                  community is sharing.
-                </p>
-                <Link
-                  href="/?feed=discover"
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
-                >
-                  <Compass className="h-4 w-4" /> Discover riders
-                </Link>
-              </>
-            )}
+          {/* Stories — a light bar under the composer */}
+          <div className="px-1">
+            <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
           </div>
-        ) : (
-          <FeedList key={mode} initial={feed} mode={mode} pageSize={FEED_PAGE_SIZE} />
-        )}
-        </main>
 
-        <aside className="hidden lg:block">
-          <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
-        </aside>
+          {/* Following · Discover · Mine */}
+          <div className="flex border-b border-border">
+            {TABS.map((t) => (
+              <Link
+                key={t.mode}
+                href={t.href}
+                className={`flex-1 border-b-2 pb-2.5 text-center text-sm font-semibold transition ${
+                  mode === t.mode ? "border-sunset text-ink" : "border-transparent text-muted hover:text-ink"
+                }`}
+              >
+                {t.label}
+              </Link>
+            ))}
+          </div>
+
+          {feed.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-canvas p-10 text-center">
+              {mode === "discover" ? (
+                <>
+                  <Compass className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm font-medium text-ink">Nothing new to discover right now</p>
+                  <p className="mt-1 text-sm text-muted">
+                    You&apos;re following everyone who&apos;s posted. Check back as more riders join and share.
+                  </p>
+                </>
+              ) : mode === "mine" ? (
+                <>
+                  <Users className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm font-medium text-ink">You haven&apos;t posted yet</p>
+                  <p className="mt-1 text-sm text-muted">Use the box above to share your first ride.</p>
+                </>
+              ) : (
+                <>
+                  <Users className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
+                  <p className="mt-1 text-sm text-muted">
+                    Follow riders and their ride journals show up here. Post your own above, or see what the
+                    community is sharing.
+                  </p>
+                  <Link
+                    href="/?feed=discover"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
+                  >
+                    <Compass className="h-4 w-4" /> Discover riders
+                  </Link>
+                </>
+              )}
+            </div>
+          ) : (
+            <FeedList key={mode} initial={feed} mode={mode} pageSize={FEED_PAGE_SIZE} />
+          )}
+        </main>
       </div>
     </div>
   );
