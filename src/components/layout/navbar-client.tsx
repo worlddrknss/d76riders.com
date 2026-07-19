@@ -226,6 +226,9 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
           />
         </Link>
 
+        {/* Logged-in riders navigate via the persistent app rail, so the top nav
+            collapses to brand + search + alerts + account for them. */}
+        {!currentUser && (
         <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main navigation">
           {navItems.map((item) => {
             if ("href" in item) {
@@ -262,6 +265,7 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
             );
           })}
         </nav>
+        )}
 
         <div className="relative flex items-center gap-3">
           {currentUser ? (
@@ -399,7 +403,7 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
                       <Bike className="h-4 w-4 text-slate-300" />
                       <span>Garage</span>
                     </Link>
-                    <Link href={`/r/${currentUser.handle}?tab=gear`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                    <Link href={`/r/${currentUser.handle}?tab=garage`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Wrench className="h-4 w-4 text-slate-300" />
                       <span>Gear</span>
                     </Link>
@@ -532,7 +536,7 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
                     Garage
                   </Link>
                   <Link
-                    href={`/r/${currentUser.handle}?tab=gear`}
+                    href={`/r/${currentUser.handle}?tab=garage`}
                     className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >

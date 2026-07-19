@@ -4,6 +4,7 @@ import { Pencil } from "lucide-react";
 
 import { EmailChangeCard } from "@/components/account/notifications-card";
 import { DeleteAccountCard, PasswordChangeCard } from "@/components/account/security-cards";
+import { SettingsNav } from "@/components/account/settings-nav";
 import { CalendarSubscribe } from "@/components/profile/calendar-subscribe";
 import { AppShell } from "@/components/layout/app-shell";
 import { prisma } from "@/lib/prisma";
@@ -33,14 +34,9 @@ export default async function AccountPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="flex max-w-3xl items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Account</p>
-            <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Account &amp; security</h1>
-          </div>
-          <Link href="/settings" className="text-sm font-medium text-sunset hover:underline">
-            Notification settings →
-          </Link>
+        <div className="max-w-3xl space-y-4">
+          <h1 className="font-display text-3xl font-semibold text-ink">Settings</h1>
+          <SettingsNav />
         </div>
 
         {/* Public profile lives in the Edit Profile modal on the profile itself —
