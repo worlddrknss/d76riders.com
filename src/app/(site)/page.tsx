@@ -4,23 +4,20 @@ import { type ActivityType, NewsPostStatus } from "@prisma/client";
 import {
   ArrowRight,
   Bike,
-  CalendarDays,
   MapPin,
   MessageCircle,
-  Newspaper,
   Route,
   Signal,
   Star,
   TrendingUp,
   Users,
-  Wrench,
 } from "lucide-react";
 import { siteImages } from "@/data/images";
+import { FeatureShowcase } from "@/components/home/feature-showcase";
 import { HomeFeed } from "@/components/feed/home-feed";
-import { PageHero } from "@/components/layout/page-hero";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 import { getCurrentUser } from "@/lib/session";
-import { FadeUp, StaggerList, StaggerItem, ScaleIn } from "@/components/ui/motion";
+import { FadeUp, StaggerList, StaggerItem } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
@@ -44,33 +41,6 @@ const PUBLIC_ACTIVITY_TYPES: ActivityType[] = [
   "BADGE_EARNED",
   "CHALLENGE_COMPLETED",
   "UPLOADED_PHOTO",
-];
-
-const exploreFeatures = [
-  {
-    title: "Riders",
-    href: "/r",
-    icon: Users,
-    description: "Meet the people behind the engines. Find riders near you and see who shares your roads.",
-  },
-  {
-    title: "Garage",
-    href: "/profile",
-    icon: Wrench,
-    description: "Browse the machines our members ride, from naked bikes to long-haul adventure rigs.",
-  },
-  {
-    title: "Events",
-    href: "/events",
-    icon: CalendarDays,
-    description: "Weekly group rides with clear routes, meetup points, and pace guidance for every level.",
-  },
-  {
-    title: "Magazine",
-    href: "/magazine",
-    icon: Newspaper,
-    description: "Ride reports, gear talk, and stories from riders who actually log the miles.",
-  },
 ];
 
 async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
@@ -271,91 +241,74 @@ export default async function Home({
     { label: "Featured Roads", value: String(roadCount), delta: "Live from database" },
   ];
 
+  const heroStats = [
+    { value: userCount > 0 ? `${userCount}+` : "New", label: "Community members" },
+    { value: String(eventCount), label: "Group rides" },
+    { value: String(roadCount), label: "Featured roads" },
+    { value: "100%", label: "Two wheels down" },
+  ];
+
   return (
     <div>
-      {/* HERO */}
-      <PageHero
-        image={siteImages.hero}
-        video="/images/hero/video-v2.mp4"
-        variant="home"
-        title={<>DISTRICT <span className="text-sunset">76</span></>}
-        description="Founded in Clarksville, Tennessee and built for riders across the state. All bikes, all skill levels, no politics. Just rides worth showing up for."
-        actions={
-          <>
-            <Link
-              href="/join"
-              className="group inline-flex items-center gap-2 rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-[#cf5a26]"
-            >
-              Join District 76
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <Link
-              href="/events"
-              className="inline-flex items-center rounded-md border border-white/30 bg-black/20 px-5 py-3 text-sm font-medium text-white/90 backdrop-blur transition hover:border-white/45 hover:bg-black/30 hover:text-white"
-            >
-              View Upcoming Rides
-            </Link>
-          </>
-        }
-      />
-
-      {/* ABOUT */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
-          <FadeUp>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">About District 76</p>
-            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
-              All Bikes. All Riders.
-            </h2>
-            <p className="mt-4 max-w-lg text-muted">
-              Founded in Clarksville and open to everyone on two wheels across Tennessee. No patches, no ranks, no brand requirements. Show up, ride, be cool.
-            </p>
-            <Link href="/about" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
-              Learn More <ArrowRight className="h-4 w-4" />
-            </Link>
-          </FadeUp>
-          <FadeUp delay={0.15}>
-            <div
-              className="h-64 w-full rounded-xl bg-cover bg-center shadow-lift sm:h-80"
-              style={{ backgroundImage: `url(${siteImages.aboutTown})` }}
-              role="img"
-              aria-label="Aerial view of Clarksville, Tennessee"
-            />
-          </FadeUp>
+      {/* HERO — full-screen looping video, left-aligned marketing copy + live stats */}
+      <section className="relative w-full overflow-hidden">
+        <div className="relative min-h-[calc(100svh-5.5rem)] w-full">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster={siteImages.hero}
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source src="/images/hero/video-v2.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-asphalt/60" aria-hidden="true" />
+          <div className="relative mx-auto flex min-h-[calc(100svh-5.5rem)] w-full max-w-7xl items-center px-4 py-24 sm:px-6 lg:px-8">
+            <FadeUp className="max-w-2xl text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">
+                Clarksville, Tennessee · a community, never a club
+              </p>
+              <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
+                All bikes.<br />All riders.<br />
+                <span className="text-sunset">One community.</span>
+              </h1>
+              <p className="mt-5 max-w-xl text-lg text-slate-200">
+                District 76 is where riders share the road and everything around it. Post your rides, plan
+                the next one, log your build, and always know who is out there with you. No patches, no
+                politics, no brand requirements.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/join"
+                  className="group inline-flex items-center gap-2 rounded-md bg-sunset px-6 py-3 text-sm font-semibold text-white shadow-soft transition hover:bg-[#cf5a26]"
+                >
+                  Join District 76
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <Link
+                  href="/events"
+                  className="inline-flex items-center rounded-md border border-white/30 bg-black/20 px-5 py-3 text-sm font-medium text-white/90 backdrop-blur transition hover:border-white/45 hover:bg-black/30 hover:text-white"
+                >
+                  View Upcoming Rides
+                </Link>
+              </div>
+              <div className="mt-10 flex flex-wrap gap-x-9 gap-y-5">
+                {heroStats.map((s) => (
+                  <div key={s.label}>
+                    <p className="font-display text-3xl font-black leading-none text-white">{s.value}</p>
+                    <p className="mt-1 text-xs font-semibold text-white/60">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            </FadeUp>
+          </div>
         </div>
       </section>
 
-      {/* EXPLORE FEATURES */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
-            <h2 className="font-display text-2xl font-bold uppercase tracking-tight text-asphalt sm:text-3xl">
-              Explore <span className="text-sunset">District 76</span>
-            </h2>
-            <p className="mt-2 text-sm text-muted">Your gateway to the core of our riding community.</p>
-          </FadeUp>
-          <StaggerList className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {exploreFeatures.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <StaggerItem key={feature.title}>
-                  <Link
-                    href={feature.href}
-                    className="group block rounded-xl border border-border bg-surface p-6 shadow-soft transition hover:border-sunset"
-                  >
-                    <Icon className="h-8 w-8 text-sunset" />
-                    <h3 className="mt-4 font-display text-lg font-bold uppercase tracking-tight text-asphalt">{feature.title}</h3>
-                    <p className="mt-2 text-sm text-muted">{feature.description}</p>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-sunset">
-                      Explore <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </span>
-                  </Link>
-                </StaggerItem>
-              );
-            })}
-          </StaggerList>
-        </div>
-      </section>
+      {/* FEATURE SHOWCASE — feed, events, garage, roads, and the safety/recognition bento */}
+      <FeatureShowcase />
 
       {/* EMERGENCY RESPONSE */}
       <section className="w-full bg-asphalt text-white">
@@ -566,139 +519,102 @@ export default async function Home({
         </div>
       </section>
 
-      {/* STATS */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-          <ScaleIn>
-            <div className="grid grid-cols-2 gap-6 rounded-2xl border border-border bg-surface p-6 shadow-soft md:grid-cols-4">
+      {/* PROOF — live stats + rider spotlight + trending, one dark band */}
+      <section className="w-full bg-asphalt text-white">
+        <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+          <FadeUp className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Live from the community</p>
+            <h2 className="mt-2 font-display text-3xl font-bold uppercase tracking-tight sm:text-4xl">
+              Real riders, real miles
+            </h2>
+          </FadeUp>
+
+          <div className="mt-9 grid grid-cols-2 gap-6 sm:grid-cols-4">
             {statValues.map((stat, i) => {
               const Icon = statIcons[i] ?? Users;
               return (
                 <div key={stat.label} className="flex items-center gap-3">
                   <Icon className="h-7 w-7 shrink-0 text-sunset" />
                   <div>
-                    <p className="font-display text-2xl font-bold text-asphalt">{stat.value}</p>
-                    <p className="text-xs text-muted">{stat.label}</p>
-                    <p className="text-[0.65rem] font-semibold text-forest">{stat.delta}</p>
+                    <p className="font-display text-2xl font-black text-white">{stat.value}</p>
+                    <p className="text-xs text-white/60">{stat.label}</p>
+                    <p className="text-[0.6rem] font-semibold uppercase tracking-wide text-forest">{stat.delta}</p>
                   </div>
                 </div>
               );
             })}
           </div>
-          </ScaleIn>
+
+          {(spotlight || trending.length > 0) && (
+            <div className="mt-9 grid gap-5 lg:grid-cols-2">
+              {/* Rider Spotlight */}
+              {spotlight && (
+                <FadeUp className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <Link href={`/r/${spotlight.rider.handle}`} className="shrink-0">
+                    {mediaUrl(spotlight.rider.avatarUrl) ? (
+                      <img
+                        src={mediaUrl(spotlight.rider.avatarUrl) ?? ""}
+                        alt={spotlight.rider.name}
+                        className="h-16 w-16 rounded-full border-2 border-sunset object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-sunset bg-white/10 text-2xl font-bold">
+                        {spotlight.rider.name.charAt(0)}
+                      </span>
+                    )}
+                  </Link>
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sunset">
+                      <Star className="h-3.5 w-3.5 fill-current" /> Rider Spotlight
+                    </p>
+                    <Link
+                      href={`/r/${spotlight.rider.handle}`}
+                      className="font-display text-xl font-bold hover:text-sunset"
+                    >
+                      {spotlight.rider.name}
+                    </Link>
+                    <p className="truncate text-sm text-white/60">
+                      {spotlight.rider.location
+                        ? `${spotlight.rider.location} · featured this week`
+                        : "Featured this week"}
+                    </p>
+                  </div>
+                </FadeUp>
+              )}
+
+              {/* Trending this week */}
+              {trending.length > 0 && (
+                <FadeUp delay={0.1} className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                  <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-sunset">
+                    <TrendingUp className="h-3.5 w-3.5" /> Trending this week
+                  </p>
+                  <div className="mt-1">
+                    {trending.slice(0, 3).map((post) => (
+                      <Link
+                        key={post.id}
+                        href={`/p/${post.id}`}
+                        className="flex items-center justify-between gap-3 border-t border-white/10 py-2.5 text-sm transition hover:text-sunset"
+                      >
+                        <span className="truncate text-white">{post.title || post.body}</span>
+                        <span className="flex shrink-0 items-center gap-2 text-xs text-white/50">
+                          <span className="inline-flex items-center gap-1">
+                            <TwoWheelsDownIcon className="h-3.5 w-3.5 text-forest" filled />
+                            {post._count.likes}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            {post._count.comments}
+                          </span>
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </FadeUp>
+              )}
+            </div>
+          )}
         </div>
       </section>
-
-      {/* RIDER SPOTLIGHT */}
-      {spotlight && (
-        <section className="w-full bg-asphalt text-white">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <FadeUp className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-sunset" />
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight">Rider Spotlight</h2>
-            </FadeUp>
-            <FadeUp delay={0.1}>
-              <div className="mt-6 flex flex-col gap-6 rounded-2xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:items-center sm:p-8">
-                <Link href={`/r/${spotlight.rider.handle}`} className="shrink-0">
-                  {mediaUrl(spotlight.rider.avatarUrl) ? (
-                    <img
-                      src={mediaUrl(spotlight.rider.avatarUrl) ?? ""}
-                      alt={spotlight.rider.name}
-                      className="h-24 w-24 rounded-full border-2 border-sunset object-cover sm:h-28 sm:w-28"
-                    />
-                  ) : (
-                    <span className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-sunset bg-white/10 text-3xl font-bold sm:h-28 sm:w-28">
-                      {spotlight.rider.name.charAt(0)}
-                    </span>
-                  )}
-                </Link>
-                <div className="min-w-0 flex-1">
-                  <Link href={`/r/${spotlight.rider.handle}`} className="font-display text-2xl font-bold hover:text-sunset">
-                    {spotlight.rider.name}
-                  </Link>
-                  {spotlight.rider.location ? (
-                    <p className="mt-0.5 text-sm text-white/60">{spotlight.rider.location}</p>
-                  ) : null}
-                  <p className="mt-3 max-w-2xl text-sm text-white/80">
-                    {spotlight.blurb || spotlight.rider.bio || "Out there logging miles and showing up for the community."}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-5 text-sm">
-                    <span><span className="font-bold text-sunset">{spotlight.rider.ridesCompleted}</span> <span className="text-white/60">rides</span></span>
-                    <span><span className="font-bold text-sunset">{spotlight.rider._count.journalEntries}</span> <span className="text-white/60">posts</span></span>
-                    <span><span className="font-bold text-sunset">{spotlight.rider._count.badges}</span> <span className="text-white/60">badges</span></span>
-                  </div>
-                  <Link
-                    href={`/r/${spotlight.rider.handle}`}
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-sunset hover:text-[#f0844f]"
-                  >
-                    View profile <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            </FadeUp>
-          </div>
-        </section>
-      )}
-
-      {/* TRENDING */}
-      {trending.length > 0 && (
-        <section className="w-full bg-canvas">
-          <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <FadeUp className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-sunset" />
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Trending This Week</h2>
-            </FadeUp>
-            <StaggerList className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {trending.map((post) => {
-                const image = post.galleryItems[0]?.url ? mediaUrl(post.galleryItems[0].url) : null;
-                const excerpt = post.title || post.body;
-                const postAvatar = post.author.avatarUrl ? mediaUrl(post.author.avatarUrl) : null;
-                return (
-                  <StaggerItem key={post.id}>
-                    <Link
-                      href={`/p/${post.id}`}
-                      className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift"
-                    >
-                      {image ? (
-                        <div className="aspect-video w-full overflow-hidden bg-asphalt">
-                          <img src={image} alt="" className="h-full w-full object-cover transition group-hover:scale-105" />
-                        </div>
-                      ) : (
-                        <div className="flex aspect-video w-full items-center justify-center bg-asphalt/5 text-muted">
-                          <TrendingUp className="h-8 w-8 opacity-40" />
-                        </div>
-                      )}
-                      <div className="flex flex-1 flex-col p-4">
-                        <p className="line-clamp-2 flex-1 text-sm font-medium text-ink">{excerpt}</p>
-                        <div className="mt-3 flex items-center gap-2">
-                          {postAvatar ? (
-                            <img src={postAvatar} alt="" className="h-6 w-6 rounded-full object-cover" />
-                          ) : (
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sunset/15 text-xs font-bold text-sunset">
-                              {post.author.name.charAt(0)}
-                            </span>
-                          )}
-                          <span className="truncate text-xs text-muted">{post.author.name}</span>
-                          <span className="ml-auto flex items-center gap-2 text-xs text-muted">
-                            <span className="inline-flex items-center gap-1">
-                              <TwoWheelsDownIcon className="h-3.5 w-3.5 text-forest" filled />
-                              {post._count.likes}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <MessageCircle className="h-3.5 w-3.5" />
-                              {post._count.comments}
-                            </span>
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  </StaggerItem>
-                );
-              })}
-            </StaggerList>
-          </div>
-        </section>
-      )}
 
       {/* ACTIVITY + GALLERY */}
       <section className="w-full bg-canvas">
