@@ -32,7 +32,7 @@ export default async function MessagesPage() {
       messages: {
         orderBy: { createdAt: "desc" },
         take: 1,
-        select: { body: true, senderId: true, readAt: true },
+        select: { body: true, senderId: true, readAt: true, imageUrl: true },
       },
     },
   });
@@ -82,7 +82,9 @@ export default async function MessagesPage() {
                       {other.name}
                     </p>
                     <p className={`truncate text-sm ${unread ? "text-ink" : "text-muted"}`}>
-                      {last ? `${last.senderId === me.id ? "You: " : ""}${last.body}` : "No messages yet"}
+                      {last
+                        ? `${last.senderId === me.id ? "You: " : ""}${last.body || (last.imageUrl ? "📷 Photo" : "")}`
+                        : "No messages yet"}
                     </p>
                   </div>
                   {unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-sunset" />}

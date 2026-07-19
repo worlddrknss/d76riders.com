@@ -34,12 +34,14 @@ export async function scanOrphanedImagesAction(): Promise<OrphanScanResult> {
   // 2. Collect all image URLs referenced in the database
   const referencedUrls = new Set<string>();
 
-  const [users, riders, galleryItems, newsPosts, gearItems] = await Promise.all([
+  const [users, riders, galleryItems, newsPosts, gearItems, stories, dmImages] = await Promise.all([
     prisma.user.findMany({ select: { image: true } }),
     prisma.rider.findMany({ select: { avatarUrl: true, coverUrl: true } }),
     prisma.galleryItem.findMany({ select: { url: true } }),
     prisma.newsPost.findMany({ select: { coverImageUrl: true } }),
     prisma.gearItem.findMany({ select: { imageUrl: true } }),
+    prisma.story.findMany({ select: { url: true } }),
+    prisma.directMessage.findMany({ where: { imageUrl: { not: null } }, select: { imageUrl: true } }),
   ]);
 
   for (const u of users) { if (u.image) referencedUrls.add(u.image); }
@@ -50,6 +52,8 @@ export async function scanOrphanedImagesAction(): Promise<OrphanScanResult> {
   for (const g of galleryItems) { if (g.url) referencedUrls.add(g.url); }
   for (const n of newsPosts) { if (n.coverImageUrl) referencedUrls.add(n.coverImageUrl); }
   for (const g of gearItems) { if (g.imageUrl) referencedUrls.add(g.imageUrl); }
+  for (const s of stories) { if (s.url) referencedUrls.add(s.url); }
+  for (const d of dmImages) { if (d.imageUrl) referencedUrls.add(d.imageUrl); }
 
   // 3. Convert URLs to S3 keys
   const referencedKeys = new Set<string>();

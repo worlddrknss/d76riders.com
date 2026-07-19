@@ -24,6 +24,7 @@ model DirectMessage {
   conversationId String
   senderId       String
   body           String
+  imageUrl       String?
   createdAt      DateTime  @default(now())
   readAt         DateTime?
 

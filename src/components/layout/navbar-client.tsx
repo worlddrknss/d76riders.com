@@ -17,11 +17,13 @@ type ActivityItem = {
   type: string;
   createdAt: string;
   readAt: string | null;
+  href: string | null;
 };
 
 type NavbarClientProps = {
   currentUser: CurrentUser | null;
   notificationCount: number;
+  dmUnreadCount: number;
   recentActivities: ActivityItem[];
 };
 
@@ -147,7 +149,7 @@ function NavDropdown({
   );
 }
 
-export function NavbarClient({ currentUser, notificationCount, recentActivities }: NavbarClientProps) {
+export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, recentActivities }: NavbarClientProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -314,22 +316,31 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                             No notifications yet.
                           </div>
                         ) : (
-                          recentActivities.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex items-start gap-3 border-b border-white/5 px-4 py-3 last:border-0"
-                            >
-                              <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-semibold text-white">{item.summary}</p>
-                                <p className="mt-0.5 text-[0.65rem] uppercase tracking-wide text-slate-400">{item.type}</p>
-                                <p className="mt-0.5 text-xs text-slate-500">{timeAgo(item.createdAt)}</p>
+                          recentActivities.map((item) => {
+                            const body = (
+                              <>
+                                <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-sunset" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-semibold text-white">{item.summary}</p>
+                                  <p className="mt-0.5 text-[0.65rem] uppercase tracking-wide text-slate-400">{item.type}</p>
+                                  <p className="mt-0.5 text-xs text-slate-500">{timeAgo(item.createdAt)}</p>
+                                </div>
+                                {!item.readAt && (
+                                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                                )}
+                              </>
+                            );
+                            const cls = "flex items-start gap-3 border-b border-white/5 px-4 py-3 last:border-0";
+                            return item.href ? (
+                              <Link key={item.id} href={item.href} onClick={() => setNotifOpen(false)} className={`${cls} transition hover:bg-white/5`}>
+                                {body}
+                              </Link>
+                            ) : (
+                              <div key={item.id} className={cls}>
+                                {body}
                               </div>
-                              {!item.readAt && (
-                                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
-                              )}
-                            </div>
-                          ))
+                            );
+                          })
                         )}
                       </div>
 
@@ -392,6 +403,11 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                     <Link href="/messages" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <MessageSquare className="h-4 w-4 text-slate-300" />
                       <span>Messages</span>
+                      {dmUnreadCount > 0 && (
+                        <span className="ml-auto rounded-full bg-sunset px-1.5 py-0.5 text-[0.65rem] font-bold text-white">
+                          {dmUnreadCount > 99 ? "99+" : dmUnreadCount}
+                        </span>
+                      )}
                     </Link>
                     <Link href="/saved" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Bookmark className="h-4 w-4 text-slate-300" />
@@ -531,10 +547,15 @@ export function NavbarClient({ currentUser, notificationCount, recentActivities 
                   </Link>
                   <Link
                     href="/messages"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
                     onClick={() => setIsOpen(false)}
                   >
                     Messages
+                    {dmUnreadCount > 0 && (
+                      <span className="rounded-full bg-sunset px-1.5 py-0.5 text-[0.65rem] font-bold text-white">
+                        {dmUnreadCount > 99 ? "99+" : dmUnreadCount}
+                      </span>
+                    )}
                   </Link>
                   <Link
                     href="/saved"

@@ -1,15 +1,26 @@
 "use server";
 
+import crypto from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
 import { canDm, getOrCreateConversation, otherParticipant } from "@/lib/dm";
+import { validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
 import { pushNotifyRider } from "@/lib/push";
+import { isS3Configured, uploadFile } from "@/lib/s3";
 import { getCurrentUser } from "@/lib/session";
 
-export type MessageDTO = { id: string; body: string; senderId: string; createdAt: string };
+export type MessageDTO = {
+  id: string;
+  body: string;
+  senderId: string;
+  createdAt: string;
+  readAt: string | null;
+  imageUrl: string | null;
+};
 
 async function viewerRider(): Promise<{ id: string; name: string } | null> {
   const currentUser = await getCurrentUser();
@@ -31,13 +42,21 @@ export async function startConversationAction(otherHandle: string): Promise<void
   redirect(`/messages/${conversationId}`);
 }
 
-/** Send a message. Re-checks the mutual-follow gate and pushes the recipient. */
-export async function sendMessageAction(conversationId: string, body: string): Promise<MessageDTO | null> {
+/**
+ * Send a message (text and/or a photo). Re-checks the mutual-follow gate, scans
+ * and stores any image, and pushes the recipient.
+ */
+export async function sendMessageAction(
+  conversationId: string,
+  formData: FormData,
+): Promise<MessageDTO | null> {
   const me = await viewerRider();
   if (!me) return null;
 
-  const text = body.trim();
-  if (!text || text.length > 4000) return null;
+  const text = (formData.get("body")?.toString() ?? "").trim();
+  const photo = formData.get("photo");
+  const hasPhoto = photo instanceof File && photo.size > 0;
+  if ((!text && !hasPhoto) || text.length > 4000) return null;
 
   const convo = await prisma.conversation.findUnique({
     where: { id: conversationId },
@@ -48,9 +67,21 @@ export async function sendMessageAction(conversationId: string, body: string): P
   const otherId = otherParticipant(convo, me.id);
   if (!otherId || !(await canDm(me.id, otherId))) return null;
 
+  let imageUrl: string | null = null;
+  if (hasPhoto) {
+    if (!isS3Configured()) return null;
+    try {
+      const secure = await validateAndScanImageUpload(photo, "dm-photo");
+      const key = `dm/${conversationId}/${crypto.randomUUID()}.${secure.ext}`;
+      imageUrl = await uploadFile(key, secure.buffer, secure.contentType);
+    } catch {
+      return null;
+    }
+  }
+
   const message = await prisma.directMessage.create({
-    data: { conversationId, senderId: me.id, body: text },
-    select: { id: true, body: true, senderId: true, createdAt: true },
+    data: { conversationId, senderId: me.id, body: text, imageUrl },
+    select: { id: true, body: true, senderId: true, createdAt: true, readAt: true, imageUrl: true },
   });
   await prisma.conversation.update({
     where: { id: conversationId },
@@ -59,13 +90,13 @@ export async function sendMessageAction(conversationId: string, body: string): P
 
   await pushNotifyRider(otherId, {
     title: `${me.name} messaged you`,
-    body: text.slice(0, 120),
+    body: text ? text.slice(0, 120) : "Sent a photo",
     url: `/messages/${conversationId}`,
     tag: `dm-${conversationId}`,
   });
 
   revalidatePath("/messages");
-  return { ...message, createdAt: message.createdAt.toISOString() };
+  return { ...message, createdAt: message.createdAt.toISOString(), readAt: null };
 }
 
 /**
@@ -90,7 +121,7 @@ export async function fetchMessagesAction(
     where: { conversationId, ...(after ? { createdAt: { gt: after } } : {}) },
     orderBy: { createdAt: "asc" },
     take: 200,
-    select: { id: true, body: true, senderId: true, createdAt: true },
+    select: { id: true, body: true, senderId: true, createdAt: true, readAt: true, imageUrl: true },
   });
 
   // Mark the other rider's delivered messages as read.
@@ -99,5 +130,9 @@ export async function fetchMessagesAction(
     data: { readAt: new Date() },
   });
 
-  return messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }));
+  return messages.map((m) => ({
+    ...m,
+    createdAt: m.createdAt.toISOString(),
+    readAt: m.readAt?.toISOString() ?? null,
+  }));
 }

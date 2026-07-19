@@ -34,7 +34,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
       messages: {
         orderBy: { createdAt: "asc" },
         take: 200,
-        select: { id: true, body: true, senderId: true, createdAt: true },
+        select: { id: true, body: true, senderId: true, createdAt: true, readAt: true, imageUrl: true },
       },
     },
   });
@@ -42,7 +42,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
 
   const other = convo.riderAId === me.id ? convo.riderB : convo.riderA;
   const avatar = mediaUrl(other.avatarUrl);
-  const initialMessages = convo.messages.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }));
+  const initialMessages = convo.messages.map((m) => ({
+    ...m,
+    createdAt: m.createdAt.toISOString(),
+    readAt: m.readAt?.toISOString() ?? null,
+  }));
 
   // Opening the thread clears the unread state.
   await prisma.directMessage.updateMany({
