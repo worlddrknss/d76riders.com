@@ -9,6 +9,7 @@ import { HazardMap } from "@/components/hazards/hazard-map";
 import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
 import { RoadQualityCard } from "@/components/roads/road-quality-card";
+import { RouteStops } from "@/components/routes/route-stops";
 import type { RoadFeedbackState } from "@/app/(site)/roads/actions";
 import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { activeHazardWhere } from "@/lib/hazards";
@@ -297,6 +298,12 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 className="h-120 w-full"
               />
             </div>
+
+            {waypoints.length > 0 && (
+              <div className="mt-5 border-t border-border pt-4">
+                <RouteStops waypoints={waypoints} />
+              </div>
+            )}
 
             <div className="mt-5 border-t border-border pt-4">
               <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
