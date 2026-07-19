@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Compass, Users } from "lucide-react";
+import { Compass, MapPin, Users } from "lucide-react";
 
 import { FeedLeftRail } from "@/components/feed/feed-left-rail";
 import { FeedList } from "@/components/feed/feed-list";
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
+import { CoverPhoto } from "@/components/profile/cover-photo";
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { StoryBar } from "@/components/stories/story-bar";
 import type { StoryGroup } from "@/components/stories/story-viewer";
@@ -21,7 +22,15 @@ export async function HomeFeed({
   viewer,
   mode = "following",
 }: {
-  viewer: { id: string; name: string; handle: string; avatarUrl: string | null; coverUrl: string | null };
+  viewer: {
+    id: string;
+    name: string;
+    handle: string;
+    avatarUrl: string | null;
+    coverUrl: string | null;
+    coverPosition: number;
+    location: string | null;
+  };
   mode?: "following" | "discover" | "mine";
 }) {
   const following = await prisma.riderFollow.findMany({
@@ -76,25 +85,38 @@ export async function HomeFeed({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* Cover + avatar header — mirrors the profile so Home and Profile feel continuous */}
+    <section className="page-shell">
+      <div className="content-wrap">
+      {/* Cover + avatar header — same CoverPhoto + layout as the profile so Home
+          and Profile feel like one continuous space. */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-        <div className="h-32 w-full bg-asphalt sm:h-44">
-          {viewerCover ? <img src={viewerCover} alt="" className="h-full w-full object-cover" /> : null}
-        </div>
-        <div className="flex items-end gap-4 px-5 pb-4">
-          <div className="-mt-10 shrink-0 sm:-mt-12">
+        <CoverPhoto url={viewerCover || null} name={viewer.name} position={viewer.coverPosition} canReposition={false} />
+        <div className="relative px-5 pb-5 sm:px-8">
+          <div className="absolute -top-12 left-5 sm:-top-16 sm:left-8">
             {viewerAvatar ? (
-              <img src={viewerAvatar} alt={viewer.name} className="h-20 w-20 rounded-full border-4 border-surface object-cover sm:h-24 sm:w-24" />
+              <img
+                src={viewerAvatar}
+                alt={viewer.name}
+                className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
+              />
             ) : (
-              <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-surface bg-sunset/15 text-2xl font-bold text-sunset sm:h-24 sm:w-24">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
                 {viewer.name.charAt(0)}
-              </span>
+              </div>
             )}
           </div>
-          <div className="min-w-0 pb-1">
-            <h1 className="truncate font-display text-xl font-bold text-ink">{viewer.name}</h1>
-            <p className="text-sm text-muted">@{viewer.handle}</p>
+          <div className="pt-14 sm:pl-36 sm:pt-4">
+            <h1 className="truncate font-display text-2xl font-bold text-ink sm:text-3xl">{viewer.name}</h1>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
+              <span>@{viewer.handle}</span>
+              {viewer.location && (
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden>·</span>
+                  <MapPin className="h-3 w-3 text-sunset" />
+                  {viewer.location}
+                </span>
+              )}
+            </p>
           </div>
         </div>
       </div>
@@ -167,6 +189,7 @@ export async function HomeFeed({
           )}
         </main>
       </div>
-    </div>
+      </div>
+    </section>
   );
 }
