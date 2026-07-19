@@ -11,8 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { FeedLeftRail } from "@/components/feed/feed-left-rail";
-import { FeedRightRail } from "@/components/feed/feed-right-rail";
+import { AppShell } from "@/components/layout/app-shell";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { DEFAULT_TIMEZONE, formatEventDate, formatEventTimeShort, isSameDayInTz } from "@/lib/datetime";
@@ -172,11 +171,10 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
     : "You're all caught up. Time to plan the next one.";
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap">
-        {/* Cover + avatar header — matches the feed and profile so the whole app
-            feels like one continuous space. */}
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+    <AppShell>
+      {/* Cover + avatar header — matches the profile so the whole app feels like
+          one continuous space. */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <CoverPhoto url={viewerCover || null} name={viewer.name} position={viewer.coverPosition} canReposition={false} />
           <div className="relative px-5 pb-5 sm:px-8">
             <div className="absolute -top-12 left-5 sm:-top-16 sm:left-8">
@@ -208,14 +206,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-          {/* Left sidebar: quick nav + discovery widgets */}
-          <aside className="hidden space-y-4 lg:block">
-            <FeedLeftRail handle={viewer.handle} />
-            <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
-          </aside>
-
-          <main className="w-full min-w-0 space-y-6">
+        <div className="mt-6 space-y-6">
             {/* Greeting */}
             <div>
               <h2 className="font-display text-2xl font-bold text-ink">Welcome back, {firstName}</h2>
@@ -393,7 +384,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
               </div>
               {feed.length > 0 ? (
                 <div className="mt-4">
-                  <JournalGrid entries={feed} isOwner={false} isAuthenticated layout="feed" />
+                  <JournalGrid entries={feed} isOwner={false} isAuthenticated layout="grid" />
                 </div>
               ) : (
                 <div className="mt-4 rounded-2xl border border-dashed border-border bg-canvas p-8 text-center">
@@ -452,9 +443,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
                 </div>
               </div>
             )}
-          </main>
         </div>
-      </div>
-    </section>
+    </AppShell>
   );
 }

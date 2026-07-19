@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Compass, MapPin, Users } from "lucide-react";
 
-import { FeedLeftRail } from "@/components/feed/feed-left-rail";
+import { AppShell } from "@/components/layout/app-shell";
 import { FeedList } from "@/components/feed/feed-list";
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { CoverPhoto } from "@/components/profile/cover-photo";
@@ -87,10 +87,9 @@ export async function HomeFeed({
   ];
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap">
-      {/* Cover + avatar header — same CoverPhoto + layout as the profile so Home
-          and Profile feel like one continuous space. */}
+    <AppShell>
+      {/* Cover + avatar header — same CoverPhoto + layout as the profile so the
+          feed and profile feel like one continuous space. */}
       <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
         <CoverPhoto url={viewerCover || null} name={viewer.name} position={viewer.coverPosition} canReposition={false} />
         <div className="relative px-5 pb-5 sm:px-8">
@@ -123,13 +122,7 @@ export async function HomeFeed({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
-        {/* Single left sidebar: quick nav + discovery widgets */}
-        <aside className="hidden space-y-4 lg:block">
-          <FeedLeftRail handle={viewer.handle} />
-          <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
-        </aside>
-
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="w-full min-w-0 space-y-4">
           <InstallPrompt />
           <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
@@ -196,8 +189,12 @@ export async function HomeFeed({
             <FeedList key={mode} initial={feed} mode={mode} pageSize={FEED_PAGE_SIZE} />
           )}
         </main>
+
+        {/* Right context column — discovery widgets fill the width */}
+        <aside className="hidden space-y-4 lg:block">
+          <FeedRightRail viewerId={viewer.id} knownIds={knownIds} />
+        </aside>
       </div>
-      </div>
-    </section>
+    </AppShell>
   );
 }
