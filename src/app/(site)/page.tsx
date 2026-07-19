@@ -267,10 +267,7 @@ export default async function Home({
           <div className="absolute inset-0 bg-asphalt/60" aria-hidden="true" />
           <div className="relative mx-auto flex min-h-[calc(100svh-5.5rem)] w-full max-w-7xl items-center px-4 py-24 sm:px-6 lg:px-8">
             <FadeUp className="max-w-2xl text-white">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">
-                Clarksville, Tennessee · a community, never a club
-              </p>
-              <h1 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
+              <h1 className="font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
                 All bikes.<br />All riders.<br />
                 <span className="text-sunset">One community.</span>
               </h1>
