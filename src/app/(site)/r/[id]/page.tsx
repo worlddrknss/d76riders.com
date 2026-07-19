@@ -6,6 +6,7 @@ import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Ma
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
 
+import { AppShell } from "@/components/layout/app-shell";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
@@ -1044,8 +1045,8 @@ export default async function RiderProfilePage({
   }
 
   return (
-    <section className="page-shell">
-      <div className="content-wrap">
+    <AppShell>
+      <div>
         {/* PROFILE HEADER — cover with the avatar straddling its lower edge,
             identity on the left, actions on the right, then the tab row. */}
         <div className="overflow-hidden rounded-t-2xl border border-b-0 border-border bg-surface shadow-soft">
@@ -1177,6 +1178,6 @@ export default async function RiderProfilePage({
             card above is only rounded at the top), with panel content below it. */}
         <ProfileTabs tabs={tabs} />
       </div>
-    </section>
+    </AppShell>
   );
 }
