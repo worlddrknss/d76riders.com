@@ -6,6 +6,9 @@ model Route {
   name          String
   description   String?
   distanceMiles Float?
+  // Total climb in feet, estimated from an open elevation source at save time
+  // (best-effort; null when unavailable). Powers difficulty-from-elevation.
+  elevationGainFt Int?
   // Mapbox GeoJSON LineString geometry for the full route.
   geometry      Json?
   ksuLat        Float?

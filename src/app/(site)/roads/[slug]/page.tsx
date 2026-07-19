@@ -10,6 +10,7 @@ import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
 import { RoadQualityCard } from "@/components/roads/road-quality-card";
 import { RouteStops } from "@/components/routes/route-stops";
+import { elevationDifficulty } from "@/lib/elevation";
 import type { RoadFeedbackState } from "@/app/(site)/roads/actions";
 import { JsonLd, roadJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { activeHazardWhere } from "@/lib/hazards";
@@ -115,6 +116,9 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
     },
     mine,
   };
+
+  const elevationGainFt = road.route?.elevationGainFt ?? null;
+  const climb = elevationDifficulty(road.distanceMiles, elevationGainFt);
 
   const coordinates = extractCoordinates(road.route?.geometry);
   const waypoints: PlannerWaypoint[] = (road.route?.waypoints ?? []).map((waypoint) => ({
@@ -240,6 +244,13 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 <p className="mt-1.5 text-sm font-medium text-ink">Featured Road</p>
                 <p className="text-xs text-muted">Community curated</p>
               </div>
+              {elevationGainFt != null && (
+                <div className="rounded-lg border border-border bg-canvas p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Elevation</div>
+                  <p className="mt-1.5 text-sm font-medium text-ink">{elevationGainFt.toLocaleString("en-US")} ft climb</p>
+                  <p className="text-xs text-muted">{climb ? climb.label : "Total gain"}</p>
+                </div>
+              )}
             </div>
 
             {/* ROUTE QUALITY — post-ride feedback + blended score */}

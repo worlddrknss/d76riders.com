@@ -6,6 +6,7 @@ import { RideDifficulty } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
+import { computeElevationGainFt } from "@/lib/elevation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -105,6 +106,9 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
     ? distanceMilesFromGeometry(routeGeometry.coordinates)
     : null;
   const resolvedDistanceMiles = derivedRouteDistanceMiles ?? routeDistanceMiles;
+  const elevationGainFt = routeGeometry?.coordinates.length
+    ? await computeElevationGainFt(routeGeometry.coordinates as [number, number][])
+    : null;
 
   let coverImageUrl: string | null = null;
   if (coverImage instanceof File && coverImage.size > 0) {
@@ -135,6 +139,7 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
           name: routeName || `${name} Route`,
           description: routeDescription || null,
           distanceMiles: resolvedDistanceMiles,
+          elevationGainFt,
           geometry: routeGeometry,
           ksuLat,
           ksuLng,
@@ -250,6 +255,9 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
     ? distanceMilesFromGeometry(routeGeometry.coordinates)
     : null;
   const resolvedDistanceMiles = derivedRouteDistanceMiles ?? routeDistanceMiles;
+  const elevationGainFt = routeGeometry?.coordinates.length
+    ? await computeElevationGainFt(routeGeometry.coordinates as [number, number][])
+    : null;
   const previousImageUrls = road.galleryItems.map((item) => item.url);
   let nextCoverImageUrl: string | null = road.galleryItems[0]?.url ?? null;
 
@@ -287,6 +295,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
             name: routeName || `${name} Route`,
             description: routeDescription || null,
             distanceMiles: resolvedDistanceMiles,
+          elevationGainFt,
             geometry: routeGeometry,
             ksuLat,
             ksuLng,
@@ -310,6 +319,7 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
             name: routeName || `${name} Route`,
             description: routeDescription || null,
             distanceMiles: resolvedDistanceMiles,
+          elevationGainFt,
             geometry: routeGeometry,
             ksuLat,
             ksuLng,
