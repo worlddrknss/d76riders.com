@@ -16,7 +16,6 @@ import {
   MessageSquare,
   MoreHorizontal,
   Newspaper,
-  Plus,
   Route,
   Rss,
   Settings,
@@ -144,16 +143,6 @@ export function AppRailNav({
         {trustLevel && (
           <span className="font-semibold text-forest">{trustLevel.charAt(0) + trustLevel.slice(1).toLowerCase()}</span>
         )}
-      </div>
-
-      {/* Compose */}
-      <div className="px-3 pb-2.5">
-        <Link
-          href="/feed"
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-sunset px-3 py-2.5 text-sm font-bold text-white shadow-soft transition hover:bg-[#cf5a26]"
-        >
-          <Plus className="h-4 w-4" /> Share a ride
-        </Link>
       </div>
 
       <div className="border-t border-border p-2">
