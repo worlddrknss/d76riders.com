@@ -122,12 +122,12 @@ export async function HomeFeed({
         </aside>
 
         <main className="w-full min-w-0 space-y-4">
-        {/* Stories — a light bar, not a boxed card */}
+        <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
+
+        {/* Stories — a light bar under the composer */}
         <div className="px-1">
           <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
         </div>
-
-        <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
         {/* Following vs Discover — clean underline tabs */}
         <div className="flex border-b border-border">
