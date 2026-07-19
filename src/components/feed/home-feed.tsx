@@ -121,7 +121,7 @@ export async function HomeFeed({
           <FeedLeftRail viewer={viewer} />
         </aside>
 
-        <main className="mx-auto w-full min-w-0 max-w-2xl space-y-4">
+        <main className="w-full min-w-0 space-y-4">
         {/* Stories — a light bar, not a boxed card */}
         <div className="px-1">
           <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
