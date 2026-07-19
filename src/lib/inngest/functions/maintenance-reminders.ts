@@ -16,17 +16,29 @@ export const maintenanceReminders = inngest.createFunction(
   },
   async ({ step }) => {
     const pushed = await step.run("send-due", async () => {
-      const due = await prisma.serviceRecord.findMany({
-        where: { remindAt: { lte: new Date() }, remindedAt: null },
-        take: 500,
-        select: {
-          id: true,
-          title: true,
-          riderId: true,
-          bike: { select: { name: true } },
-          rider: { select: { handle: true } },
-        },
-      });
+      const now = new Date();
+      const select = {
+        id: true,
+        title: true,
+        riderId: true,
+        remindMileage: true,
+        bike: { select: { name: true, currentMileage: true } },
+        rider: { select: { handle: true } },
+      } as const;
+
+      // Date-due, plus mileage candidates filtered in JS (can't compare two
+      // columns in a Prisma where).
+      const [dateDue, mileageCandidates] = await Promise.all([
+        prisma.serviceRecord.findMany({ where: { remindAt: { lte: now }, remindedAt: null }, take: 500, select }),
+        prisma.serviceRecord.findMany({ where: { remindMileage: { not: null }, remindedAt: null }, take: 500, select }),
+      ]);
+      const mileageDue = mileageCandidates.filter(
+        (r) => r.bike.currentMileage != null && r.remindMileage != null && r.bike.currentMileage >= r.remindMileage,
+      );
+
+      const dueMap = new Map<string, (typeof dateDue)[number]>();
+      for (const r of [...dateDue, ...mileageDue]) dueMap.set(r.id, r);
+      const due = [...dueMap.values()];
       if (due.length === 0) return 0;
 
       const byRider = new Map<string, { handle: string; items: { title: string; bike: string }[] }>();

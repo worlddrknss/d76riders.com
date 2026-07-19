@@ -403,7 +403,10 @@ export async function createServiceRecordAction(formData: FormData): Promise<voi
     redirect("/garage/mine");
   }
 
-  const bike = await prisma.bike.findFirst({ where: { id: bikeId, riderId: rider.id }, select: { id: true } });
+  const bike = await prisma.bike.findFirst({
+    where: { id: bikeId, riderId: rider.id },
+    select: { id: true, currentMileage: true },
+  });
   if (!bike) {
     redirect("/garage/mine");
   }
@@ -424,6 +427,13 @@ export async function createServiceRecordAction(formData: FormData): Promise<voi
     remindAt.setMonth(remindAt.getMonth() + remindMonths);
   }
 
+  // Optional "...again in N miles" — needs a base odometer (this service's
+  // mileage, else the bike's current odometer).
+  const remindMiles = toOptionalInt(normalizeText(formData.get("remindMiles")));
+  const baseMileage = mileage ?? bike.currentMileage;
+  const remindMileage =
+    remindMiles && remindMiles > 0 && baseMileage != null ? baseMileage + remindMiles : null;
+
   const record = await prisma.serviceRecord.create({
     data: {
       riderId: rider.id,
@@ -435,14 +445,35 @@ export async function createServiceRecordAction(formData: FormData): Promise<voi
       servicedAt: safeServicedAt,
       notes: notes || null,
       remindAt,
+      remindMileage,
     },
     select: { id: true },
   });
+
+  // Keep the bike's odometer current if this service reports a higher reading.
+  if (mileage != null && (bike.currentMileage == null || mileage > bike.currentMileage)) {
+    await prisma.bike.update({ where: { id: bikeId }, data: { currentMileage: mileage } });
+  }
 
   await logActivity(rider.id, "LOGGED_SERVICE", `Logged service ${title}`, record.id);
 
   revalidatePath("/garage/mine");
   revalidatePath(`/garage/mine/${bikeId}`);
+  revalidatePath(`/builds/${bikeId}`);
+}
+
+/** Update a bike's current odometer (drives mileage-based maintenance reminders). */
+export async function updateBikeMileageAction(bikeId: string, formData: FormData): Promise<void> {
+  const rider = await requireCurrentRider();
+  const mileage = toOptionalInt(normalizeText(formData.get("mileage")));
+
+  const bike = await prisma.bike.findFirst({ where: { id: bikeId, riderId: rider.id }, select: { id: true } });
+  if (bike && mileage != null && mileage >= 0) {
+    await prisma.bike.update({ where: { id: bike.id }, data: { currentMileage: mileage } });
+  }
+
+  revalidatePath(`/builds/${bikeId}`);
+  revalidatePath("/garage/mine");
 }
 
 export async function deleteServiceRecordAction(serviceRecordId: string): Promise<void> {

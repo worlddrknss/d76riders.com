@@ -16,17 +16,23 @@ import { prisma } from "@/lib/prisma";
  */
 export async function HomeFeed({
   viewer,
+  mode = "following",
 }: {
   viewer: { id: string; name: string; avatarUrl: string | null };
+  mode?: "following" | "discover";
 }) {
   const following = await prisma.riderFollow.findMany({
     where: { followerId: viewer.id },
     select: { followingId: true },
   });
-  const authorIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
+  // "Following" = riders you follow + yourself. "Discover" = everyone else, so
+  // it surfaces riders you're not following yet.
+  const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
+  const where =
+    mode === "discover" ? { authorId: { notIn: knownIds } } : { authorId: { in: knownIds } };
 
   const entries = await prisma.journalEntry.findMany({
-    where: { authorId: { in: authorIds } },
+    where,
     orderBy: { createdAt: "desc" },
     take: 30,
     select: {
@@ -115,19 +121,58 @@ export async function HomeFeed({
 
         <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
+        {/* Following vs Discover */}
+        <div className="flex gap-1 rounded-xl border border-border bg-surface p-1 shadow-soft">
+          <Link
+            href="/"
+            className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold transition ${
+              mode === "following" ? "bg-sunset text-white" : "text-muted hover:text-ink"
+            }`}
+          >
+            Following
+          </Link>
+          <Link
+            href="/?feed=discover"
+            className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-semibold transition ${
+              mode === "discover" ? "bg-sunset text-white" : "text-muted hover:text-ink"
+            }`}
+          >
+            Discover
+          </Link>
+        </div>
+
         {feed.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-canvas p-10 text-center">
-            <Users className="mx-auto h-8 w-8 text-muted/50" />
-            <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
-            <p className="mt-1 text-sm text-muted">
-              Follow riders and their ride journals show up here. Post your own above to get things rolling.
-            </p>
-            <Link
-              href="/r"
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
-            >
-              <Compass className="h-4 w-4" /> Find riders to follow
-            </Link>
+            {mode === "discover" ? (
+              <>
+                <Compass className="mx-auto h-8 w-8 text-muted/50" />
+                <p className="mt-3 text-sm font-medium text-ink">Nothing new to discover right now</p>
+                <p className="mt-1 text-sm text-muted">
+                  You&apos;re following everyone who&apos;s posted. Check back as more riders join and share.
+                </p>
+                <Link
+                  href="/?feed=following"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
+                >
+                  Back to your feed
+                </Link>
+              </>
+            ) : (
+              <>
+                <Users className="mx-auto h-8 w-8 text-muted/50" />
+                <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
+                <p className="mt-1 text-sm text-muted">
+                  Follow riders and their ride journals show up here. Post your own above, or see what the
+                  community is sharing.
+                </p>
+                <Link
+                  href="/?feed=discover"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
+                >
+                  <Compass className="h-4 w-4" /> Discover riders
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <JournalGrid entries={feed} isOwner={false} isAuthenticated layout="feed" />

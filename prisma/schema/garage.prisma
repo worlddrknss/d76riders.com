@@ -7,6 +7,10 @@ model Bike {
   make         String
   model        String?
   year         Int?
+  // Current odometer, kept up to date via the "update mileage" control and by
+  // logging a service with a higher mileage. Powers mileage-based maintenance
+  // reminders (ServiceRecord.remindMileage).
+  currentMileage Int?
   type         BikeType?
   engineType   String?
   enginePower  String?
@@ -60,11 +64,13 @@ model ServiceRecord {
   servicedAt  DateTime @default(now())
   notes       String?
 
-  // Optional "do this again" reminder set when logging. remindAt is when it's
-  // next due; remindedAt is stamped once the maintenance-reminders cron has
-  // pushed it, so it only fires once.
-  remindAt   DateTime?
-  remindedAt DateTime?
+  // Optional "do this again" reminder set when logging. remindAt is a date and
+  // remindMileage is an odometer target — either can trigger the reminder, and
+  // remindedAt is stamped once the maintenance-reminders cron has pushed it, so
+  // it only fires once.
+  remindAt     DateTime?
+  remindMileage Int?
+  remindedAt   DateTime?
 
   rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
   bike  Bike  @relation(fields: [bikeId], references: [id], onDelete: Cascade)

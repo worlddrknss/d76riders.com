@@ -14,6 +14,7 @@ import {
 } from "@/components/garage/build-dialogs";
 import { BuildTimeline } from "@/components/garage/build-timeline";
 import { ServiceRecords } from "@/components/garage/service-records";
+import { OdometerControl } from "@/components/garage/odometer-control";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -64,6 +65,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
     servicedAt: item.servicedAt.toISOString(),
     notes: item.notes,
     remindAt: item.remindAt ? item.remindAt.toISOString() : null,
+    remindMileage: item.remindMileage,
   }));
 
   // Costs are private — only the owner sees spend (mirrors the public bike card).
@@ -130,12 +132,20 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
                 <Receipt className="h-4 w-4 text-sunset" />
                 Service Records
               </h2>
-              {isOwner && <AddServiceDialog bikeId={bike.id} />}
+              <div className="flex items-center gap-3">
+                {isOwner ? (
+                  <OdometerControl bikeId={bike.id} currentMileage={bike.currentMileage} />
+                ) : bike.currentMileage != null ? (
+                  <span className="text-sm text-muted">{bike.currentMileage.toLocaleString("en-US")} mi</span>
+                ) : null}
+                {isOwner && <AddServiceDialog bikeId={bike.id} />}
+              </div>
             </div>
             <ServiceRecords
               items={serviceItems}
               deleteAction={isOwner ? deleteServiceRecordAction : undefined}
               showCosts={isOwner}
+              currentMileage={bike.currentMileage}
             />
           </div>
         </div>

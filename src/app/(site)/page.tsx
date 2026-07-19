@@ -82,7 +82,11 @@ async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ feed?: string }>;
+}) {
   // Logged-in riders get their following feed as home; visitors get the landing.
   const currentUser = await getCurrentUser();
   const viewer = currentUser
@@ -96,7 +100,8 @@ export default async function Home() {
       )
     : null;
   if (viewer) {
-    return <HomeFeed viewer={viewer} />;
+    const { feed } = await searchParams;
+    return <HomeFeed viewer={viewer} mode={feed === "discover" ? "discover" : "following"} />;
   }
 
   const now = new Date();

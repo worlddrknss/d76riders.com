@@ -13,7 +13,8 @@ export type ServiceRecordItem = {
   mileage: number | null;
   servicedAt: string; // ISO — serialized for the client boundary
   notes: string | null;
-  remindAt?: string | null; // ISO — optional "do this again" reminder
+  remindAt?: string | null; // ISO — optional "do this again" reminder (date)
+  remindMileage?: number | null; // optional odometer target for the reminder
 };
 
 const TYPE_LABEL: Record<ServiceType, string> = {
@@ -48,12 +49,15 @@ export function ServiceRecords({
   items,
   deleteAction,
   showCosts = true,
+  currentMileage = null,
 }: {
   items: ServiceRecordItem[];
   /** Owner-only: bound per row to remove the service record. */
   deleteAction?: (id: string) => Promise<void>;
   /** Hide per-item cost for non-owner (read-only) views. */
   showCosts?: boolean;
+  /** The bike's current odometer — decides whether a mileage reminder is due. */
+  currentMileage?: number | null;
 }) {
   const [filter, setFilter] = useState<"ALL" | ServiceType>("ALL");
 
@@ -102,16 +106,28 @@ export function ServiceRecords({
                 <span className={`rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${TYPE_TINT[r.serviceType]}`}>
                   {TYPE_LABEL[r.serviceType]}
                 </span>
-                {r.remindAt && (
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
-                      new Date(r.remindAt) <= new Date() ? "bg-red-500/10 text-red-600" : "bg-asphalt/5 text-muted"
-                    }`}
-                  >
-                    <Bell className="h-3 w-3" />
-                    {new Date(r.remindAt) <= new Date() ? "Due now" : `Due ${formatDate(r.remindAt)}`}
-                  </span>
-                )}
+                {(() => {
+                  if (!r.remindAt && r.remindMileage == null) return null;
+                  const dateDue = r.remindAt ? new Date(r.remindAt) <= new Date() : false;
+                  const mileageDue =
+                    r.remindMileage != null && currentMileage != null && currentMileage >= r.remindMileage;
+                  const due = dateDue || mileageDue;
+                  const label = due
+                    ? "Due now"
+                    : r.remindAt
+                      ? `Due ${formatDate(r.remindAt)}`
+                      : `Due at ${r.remindMileage!.toLocaleString("en-US")} mi`;
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
+                        due ? "bg-red-500/10 text-red-600" : "bg-asphalt/5 text-muted"
+                      }`}
+                    >
+                      <Bell className="h-3 w-3" />
+                      {label}
+                    </span>
+                  );
+                })()}
               </div>
               <p className="mt-0.5 text-xs text-muted">
                 {[

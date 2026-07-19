@@ -151,12 +151,18 @@ export function AddServiceDialog({ bikeId }: { bikeId: string }) {
               <Input name="servicedAt" type="date" />
             </div>
             <Textarea name="notes" rows={3} placeholder="Notes (optional)" />
-            <select name="remindMonths" defaultValue="" className={selectClass}>
-              <option value="">No reminder</option>
-              <option value="3">Remind me to do this again in 3 months</option>
-              <option value="6">Remind me to do this again in 6 months</option>
-              <option value="12">Remind me to do this again in 12 months</option>
-            </select>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <select name="remindMonths" defaultValue="" className={selectClass}>
+                <option value="">No time reminder</option>
+                <option value="3">Remind me in 3 months</option>
+                <option value="6">Remind me in 6 months</option>
+                <option value="12">Remind me in 12 months</option>
+              </select>
+              <Input name="remindMiles" type="number" min="0" placeholder="…or in N miles" />
+            </div>
+            <p className="text-xs text-muted">
+              Mileage reminders need this service&apos;s mileage (or your bike&apos;s current odometer) set.
+            </p>
             <div className="flex justify-end gap-2 pt-1">
               <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>Cancel</Button>
               <Button type="submit" variant="accent" size="sm" disabled={pending}>
