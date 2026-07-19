@@ -31,7 +31,7 @@ export async function HomeFeed({
     coverPosition: number;
     location: string | null;
   };
-  mode?: "following" | "discover" | "mine";
+  mode?: "foryou" | "following" | "discover" | "mine";
 }) {
   const following = await prisma.riderFollow.findMany({
     where: { followerId: viewer.id },
@@ -78,8 +78,9 @@ export async function HomeFeed({
   const viewerAvatar = mediaUrl(viewer.avatarUrl);
   const viewerCover = mediaUrl(viewer.coverUrl);
 
-  const TABS: { mode: "following" | "discover" | "mine"; label: string; href: string }[] = [
-    { mode: "following", label: "Following", href: "/" },
+  const TABS: { mode: "foryou" | "following" | "discover" | "mine"; label: string; href: string }[] = [
+    { mode: "foryou", label: "For You", href: "/" },
+    { mode: "following", label: "Following", href: "/?feed=following" },
     { mode: "discover", label: "Discover", href: "/?feed=discover" },
     { mode: "mine", label: "Mine", href: "/?feed=mine" },
   ];
@@ -167,20 +168,25 @@ export async function HomeFeed({
                   <p className="mt-3 text-sm font-medium text-ink">You haven&apos;t posted yet</p>
                   <p className="mt-1 text-sm text-muted">Use the box above to share your first ride.</p>
                 </>
-              ) : (
+              ) : mode === "following" ? (
                 <>
                   <Users className="mx-auto h-8 w-8 text-muted/50" />
                   <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
                   <p className="mt-1 text-sm text-muted">
-                    Follow riders and their ride journals show up here. Post your own above, or see what the
-                    community is sharing.
+                    Follow riders and their ride journals show up here. Post your own above, or check For You.
                   </p>
                   <Link
-                    href="/?feed=discover"
+                    href="/"
                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
                   >
-                    <Compass className="h-4 w-4" /> Discover riders
+                    <Compass className="h-4 w-4" /> See For You
                   </Link>
+                </>
+              ) : (
+                <>
+                  <Users className="mx-auto h-8 w-8 text-muted/50" />
+                  <p className="mt-3 text-sm font-medium text-ink">No posts yet</p>
+                  <p className="mt-1 text-sm text-muted">Be the first — share a ride using the box above.</p>
                 </>
               )}
             </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
+import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -266,6 +266,13 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
         <div className="relative flex items-center gap-3">
           {currentUser ? (
             <>
+              <Link
+                href="/search"
+                className="hidden rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:block"
+                aria-label="Search"
+              >
+                <Search className="h-4 w-4" />
+              </Link>
               <div ref={notifRef} className="relative hidden lg:block">
                 <button
                   type="button"

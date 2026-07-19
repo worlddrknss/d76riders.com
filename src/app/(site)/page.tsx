@@ -101,7 +101,8 @@ export default async function Home({
     : null;
   if (viewer) {
     const { feed } = await searchParams;
-    const mode = feed === "discover" || feed === "mine" ? feed : "following";
+    const mode =
+      feed === "discover" || feed === "mine" || feed === "following" ? feed : "foryou";
     return <HomeFeed viewer={viewer} mode={mode} />;
   }
 

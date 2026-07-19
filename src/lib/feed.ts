@@ -3,12 +3,13 @@ import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
 export const FEED_PAGE_SIZE = 20;
-export type FeedMode = "following" | "discover" | "mine";
+export type FeedMode = "foryou" | "following" | "discover" | "mine";
 
 /**
- * A page of feed entries for the home feed. "following" = riders you follow +
+ * A page of feed entries for the home feed. "foryou" = the whole community,
+ * ranked by momentum (trending) then recency. "following" = riders you follow +
  * yourself, newest first. "discover" = riders you don't follow, ranked by
- * momentum (trending) then recency. "mine" = only your own posts, newest first.
+ * momentum then recency. "mine" = only your own posts, newest first.
  */
 export async function getFeedEntries({
   viewerId,
@@ -28,9 +29,11 @@ export async function getFeedEntries({
       ? { authorId: viewerId }
       : mode === "discover"
         ? { authorId: { notIn: knownIds } }
-        : { authorId: { in: knownIds } };
+        : mode === "foryou"
+          ? {}
+          : { authorId: { in: knownIds } };
   const orderBy =
-    mode === "discover"
+    mode === "discover" || mode === "foryou"
       ? [{ momentum: "desc" as const }, { createdAt: "desc" as const }]
       : [{ createdAt: "desc" as const }];
 
