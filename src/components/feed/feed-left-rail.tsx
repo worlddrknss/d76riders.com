@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { Award, Bike, BookText, Bookmark, CalendarDays, MessageSquare, Users } from "lucide-react";
+import { Award, Bike, BookText, Bookmark, CalendarDays, LayoutDashboard, MessageSquare, Rss, Users } from "lucide-react";
 
-/** Quick-nav card for the home feed's left sidebar. */
+/** Quick-nav card for the home / feed left sidebar. */
 export function FeedLeftRail({ handle }: { handle: string }) {
   const links = [
+    { href: "/", label: "Home", icon: LayoutDashboard },
+    { href: "/feed", label: "Feed", icon: Rss },
     { href: `/r/${handle}`, label: "My Profile", icon: Bike },
     { href: `/r/${handle}?tab=garage`, label: "My Garage", icon: Bike },
     { href: "/messages", label: "Messages", icon: MessageSquare },

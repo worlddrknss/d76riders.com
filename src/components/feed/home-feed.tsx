@@ -80,10 +80,10 @@ export async function HomeFeed({
   const viewerCover = mediaUrl(viewer.coverUrl);
 
   const TABS: { mode: "foryou" | "following" | "discover" | "mine"; label: string; href: string }[] = [
-    { mode: "foryou", label: "For You", href: "/" },
-    { mode: "following", label: "Following", href: "/?feed=following" },
-    { mode: "discover", label: "Discover", href: "/?feed=discover" },
-    { mode: "mine", label: "Mine", href: "/?feed=mine" },
+    { mode: "foryou", label: "For You", href: "/feed" },
+    { mode: "following", label: "Following", href: "/feed?feed=following" },
+    { mode: "discover", label: "Discover", href: "/feed?feed=discover" },
+    { mode: "mine", label: "Mine", href: "/feed?feed=mine" },
   ];
 
   return (
@@ -178,7 +178,7 @@ export async function HomeFeed({
                     Follow riders and their ride journals show up here. Post your own above, or check For You.
                   </p>
                   <Link
-                    href="/"
+                    href="/feed"
                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
                   >
                     <Compass className="h-4 w-4" /> See For You

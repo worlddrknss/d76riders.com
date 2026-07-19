@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { siteImages } from "@/data/images";
 import { FeatureShowcase } from "@/components/home/feature-showcase";
-import { HomeFeed } from "@/components/feed/home-feed";
+import { RiderDashboard } from "@/components/feed/rider-dashboard";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 import { getCurrentUser } from "@/lib/session";
 import { FadeUp, StaggerList, StaggerItem } from "@/components/ui/motion";
@@ -52,12 +52,8 @@ async function safeQuery<T>(query: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ feed?: string }>;
-}) {
-  // Logged-in riders get their following feed as home; visitors get the landing.
+export default async function Home() {
+  // Logged-in riders get their rider dashboard as home; visitors get the landing.
   const currentUser = await getCurrentUser();
   const viewer = currentUser
     ? await safeQuery(
@@ -70,10 +66,7 @@ export default async function Home({
       )
     : null;
   if (viewer) {
-    const { feed } = await searchParams;
-    const mode =
-      feed === "discover" || feed === "mine" || feed === "following" ? feed : "foryou";
-    return <HomeFeed viewer={viewer} mode={mode} />;
+    return <RiderDashboard viewer={viewer} />;
   }
 
   const now = new Date();
