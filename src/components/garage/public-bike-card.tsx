@@ -50,7 +50,7 @@ export function PublicBikeCard({ bike, isPrimary = false }: { bike: PublicBikeDa
           <span><strong className="font-semibold text-ink">{bike._count.modifications}</strong> mods</span>
           <span><strong className="font-semibold text-ink">{bike._count.serviceRecords}</strong> services</span>
           <Link href={`/builds/${bike.id}`} className="ml-auto font-bold text-[#cf5a26] hover:underline">
-            Build &amp; mods →
+            View build →
           </Link>
         </div>
       </div>

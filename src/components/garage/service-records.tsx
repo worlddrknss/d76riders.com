@@ -1,7 +1,4 @@
-"use client";
-
-import { useState } from "react";
-import { Bell, CheckCircle2, Wrench } from "lucide-react";
+import { Wrench } from "lucide-react";
 
 import type { ServiceType } from "@prisma/client";
 
@@ -17,54 +14,27 @@ export type ServiceRecordItem = {
   remindMileage?: number | null; // optional odometer target for the reminder
 };
 
-const TYPE_LABEL: Record<ServiceType, string> = {
-  MAINTENANCE: "Maintenance",
-  REPAIR: "Repair",
-  INSPECTION: "Inspection",
-  UPGRADE: "Upgrade",
-  OTHER: "Other",
-};
-
-const TYPE_TINT: Record<ServiceType, string> = {
-  MAINTENANCE: "bg-forest/10 text-forest",
-  REPAIR: "bg-sunset/10 text-sunset",
-  INSPECTION: "bg-asphalt/5 text-asphalt",
-  UPGRADE: "bg-sunset/10 text-sunset",
-  OTHER: "bg-asphalt/5 text-muted",
-};
-
-const FILTERS: { key: "ALL" | ServiceType; label: string }[] = [
-  { key: "ALL", label: "All" },
-  { key: "MAINTENANCE", label: "Maintenance" },
-  { key: "REPAIR", label: "Repair" },
-  { key: "INSPECTION", label: "Inspection" },
-  { key: "UPGRADE", label: "Upgrade" },
-];
-
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+/**
+ * Compact service log (matches the mock): one row per record with the title and
+ * mileage on the left, the serviced date on the right. Owners get a Delete on
+ * hover; cost/notes/reminders live behind the edit flow.
+ */
 export function ServiceRecords({
   items,
   deleteAction,
-  showCosts = true,
-  currentMileage = null,
 }: {
   items: ServiceRecordItem[];
   /** Owner-only: bound per row to remove the service record. */
   deleteAction?: (id: string) => Promise<void>;
   /** Hide per-item cost for non-owner (read-only) views. */
   showCosts?: boolean;
-  /** The bike's current odometer — decides whether a mileage reminder is due. */
+  /** The bike's current odometer — kept for API compatibility. */
   currentMileage?: number | null;
 }) {
-  const [filter, setFilter] = useState<"ALL" | ServiceType>("ALL");
-
-  const shown = filter === "ALL" ? items : items.filter((r) => r.serviceType === filter);
-  // Only offer filter chips that actually have records behind them.
-  const available = FILTERS.filter((f) => f.key === "ALL" || items.some((r) => r.serviceType === f.key));
-
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-canvas p-10 text-center">
@@ -75,83 +45,30 @@ export function ServiceRecords({
   }
 
   return (
-    <div>
-      <div className="mb-4 flex flex-wrap gap-2">
-        {available.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFilter(f.key)}
-            className={`rounded-full px-3 py-1 text-sm font-medium transition ${
-              filter === f.key
-                ? "bg-sunset text-white"
-                : "border border-border bg-surface text-muted hover:text-ink"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      <ul className="space-y-2">
-        {shown.map((r) => (
-          <li
-            key={r.id}
-            className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft"
-          >
-            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-forest" />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-semibold text-ink">{r.title}</h3>
-                <span className={`rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${TYPE_TINT[r.serviceType]}`}>
-                  {TYPE_LABEL[r.serviceType]}
-                </span>
-                {(() => {
-                  if (!r.remindAt && r.remindMileage == null) return null;
-                  const dateDue = r.remindAt ? new Date(r.remindAt) <= new Date() : false;
-                  const mileageDue =
-                    r.remindMileage != null && currentMileage != null && currentMileage >= r.remindMileage;
-                  const due = dateDue || mileageDue;
-                  const label = due
-                    ? "Due now"
-                    : r.remindAt
-                      ? `Due ${formatDate(r.remindAt)}`
-                      : `Due at ${r.remindMileage!.toLocaleString("en-US")} mi`;
-                  return (
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
-                        due ? "bg-red-500/10 text-red-600" : "bg-asphalt/5 text-muted"
-                      }`}
-                    >
-                      <Bell className="h-3 w-3" />
-                      {label}
-                    </span>
-                  );
-                })()}
-              </div>
-              <p className="mt-0.5 text-xs text-muted">
-                {[
-                  r.mileage != null ? `${r.mileage.toLocaleString("en-US")} mi` : null,
-                  formatDate(r.servicedAt),
-                  showCosts && r.cost != null
-                    ? r.cost.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              {r.notes && <p className="mt-1.5 text-sm leading-relaxed text-ink/80">{r.notes}</p>}
-              {deleteAction && (
-                <form action={deleteAction.bind(null, r.id)} className="mt-2">
-                  <button type="submit" className="text-xs font-semibold text-red-600 hover:underline">
-                    Delete
-                  </button>
-                </form>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className="divide-y divide-border">
+      {items.map((r) => (
+        <li key={r.id} className="group flex items-center justify-between gap-3 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-ink">{r.title}</p>
+            {r.mileage != null && (
+              <p className="text-xs text-muted">{r.mileage.toLocaleString("en-US")} mi</p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="text-xs text-muted">{formatDate(r.servicedAt)}</span>
+            {deleteAction && (
+              <form action={deleteAction.bind(null, r.id)}>
+                <button
+                  type="submit"
+                  className="text-xs font-semibold text-red-600 opacity-0 transition hover:underline group-hover:opacity-100"
+                >
+                  Delete
+                </button>
+              </form>
+            )}
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

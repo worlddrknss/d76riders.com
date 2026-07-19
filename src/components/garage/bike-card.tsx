@@ -174,10 +174,7 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
 
         <div className="mt-3 flex flex-wrap items-center gap-4 border-t border-border pt-3">
           <Link href={`/builds/${bike.id}`} className="text-xs font-bold text-[#cf5a26] hover:underline">
-            Build &amp; mods →
-          </Link>
-          <Link href={`/builds/${bike.id}`} className="text-xs font-bold text-[#cf5a26] hover:underline">
-            Service log →
+            View build →
           </Link>
           {!isPrimary && (
             <form action={setPrimaryBikeAction.bind(null, bike.id)} className="ml-auto">

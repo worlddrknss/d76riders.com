@@ -780,13 +780,23 @@ export default async function RiderProfilePage({
   const sectionHeader = (title: string) => (
     <h3 className="font-display text-lg font-bold uppercase tracking-tight text-ink">{title}</h3>
   );
+  const skillsCard = (
+    <div className={cardClass}>
+      <div className="flex items-center justify-between">
+        <h2 className={headingClass}>Riding Skills</h2>
+        {skillTracks.length > 0 && (
+          <span className="text-xs font-medium normal-case tracking-normal text-muted">
+            {skillTracks.filter((t) => t.riderSkills[0]?.level).length} of {skillTracks.length} set
+          </span>
+        )}
+      </div>
+      <div className="mt-4">{skillsContent}</div>
+    </div>
+  );
   const overviewMerged = (
     <div className="space-y-6">
       {overviewContent}
-      <div className="space-y-4">
-        {sectionHeader("Riding Skills")}
-        {skillsContent}
-      </div>
+      {skillsCard}
     </div>
   );
   // Service sub-tab: the owner's service history across all their bikes.
