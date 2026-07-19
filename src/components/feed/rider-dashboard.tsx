@@ -62,7 +62,7 @@ function DashCard({
 export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
   const now = new Date();
 
-  const [following, nextRsvp, serviceRecords, unreadNotifs, unreadDms, statsRider, roads] = await Promise.all([
+  const [following, nextRsvp, serviceRecords, unreadNotifs, unreadDms, statsRider, roads, hostedEvents, goingRsvps, rideLogAgg] = await Promise.all([
     prisma.riderFollow.findMany({ where: { followerId: viewer.id }, select: { followingId: true } }),
     prisma.rsvp.findFirst({
       where: { riderId: viewer.id, status: "GOING", event: { startsAt: { gte: now } } },
@@ -94,10 +94,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
     prisma.rider.findUnique({
       where: { id: viewer.id },
       select: {
-        // "Rides" = group rides actually attended (checked in), not the legacy
-        // seed-only ridesCompleted counter.
-        _count: { select: { journalEntries: true, badges: true, eventCheckIns: true } },
-        trust: { select: { level: true, milesRidden: true } },
+        _count: { select: { journalEntries: true, badges: true } },
         badges: { orderBy: { awardedAt: "desc" }, take: 4, select: { badge: { select: { name: true } } } },
       },
     }),
@@ -114,7 +111,20 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
         galleryItems: { take: 1, orderBy: { createdAt: "asc" }, select: { url: true } },
       },
     }),
+    // Rides/Miles mirror the rider profile: events hosted or RSVP'd (GOING) plus
+    // self-logged solo rides and their miles.
+    prisma.rideEvent.findMany({ where: { hostId: viewer.id }, select: { id: true } }),
+    prisma.rsvp.findMany({ where: { riderId: viewer.id, status: "GOING" }, select: { eventId: true } }),
+    prisma.rideLog.aggregate({ where: { riderId: viewer.id }, _count: { _all: true }, _sum: { distanceMiles: true } }),
   ]);
+
+  // Same definition the profile uses, so both surfaces show the same numbers.
+  const participatedEventIds = new Set<string>([
+    ...hostedEvents.map((e) => e.id),
+    ...goingRsvps.map((r) => r.eventId),
+  ]);
+  const totalRides = participatedEventIds.size + rideLogAgg._count._all;
+  const loggedMiles = rideLogAgg._sum.distanceMiles ?? 0;
 
   // Maintenance currently due: reminder date passed, or odometer reached the mark.
   const dueServices = serviceRecords.filter((s) => {
@@ -339,9 +349,9 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
             {/* Stats + recent badges */}
             {statsRider && (
               <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <div className="grid grid-cols-3 gap-4 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <div>
-                    <p className="font-display text-2xl font-bold text-ink">{statsRider._count.eventCheckIns}</p>
+                    <p className="font-display text-2xl font-bold text-ink">{totalRides}</p>
                     <p className="text-xs text-muted">Rides</p>
                   </div>
                   <div>
@@ -352,14 +362,10 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
                     <p className="font-display text-2xl font-bold text-ink">{statsRider._count.badges}</p>
                     <p className="text-xs text-muted">Badges</p>
                   </div>
-                  {statsRider.trust && (
-                    <div>
-                      <p className="font-display text-2xl font-bold text-ink">
-                        {statsRider.trust.milesRidden.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-muted">Miles</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="font-display text-2xl font-bold text-ink">{loggedMiles.toLocaleString()}</p>
+                    <p className="text-xs text-muted">Miles</p>
+                  </div>
                 </div>
                 {statsRider.badges.length > 0 && (
                   <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
