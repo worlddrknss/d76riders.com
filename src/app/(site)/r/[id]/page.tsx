@@ -251,7 +251,7 @@ export default async function RiderProfilePage({
     prisma.activity.findMany({
       where: { riderId: rider.id },
       orderBy: { createdAt: "desc" },
-      take: 25,
+      take: 5,
       select: { id: true, type: true, summary: true, createdAt: true },
     }),
     // Photos tab: everything this rider has shot — their own uploads plus their
