@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Wrench } from "lucide-react";
+import { Bell, CheckCircle2, Wrench } from "lucide-react";
 
 import type { ServiceType } from "@prisma/client";
 
@@ -13,6 +13,7 @@ export type ServiceRecordItem = {
   mileage: number | null;
   servicedAt: string; // ISO — serialized for the client boundary
   notes: string | null;
+  remindAt?: string | null; // ISO — optional "do this again" reminder
 };
 
 const TYPE_LABEL: Record<ServiceType, string> = {
@@ -101,6 +102,16 @@ export function ServiceRecords({
                 <span className={`rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${TYPE_TINT[r.serviceType]}`}>
                   {TYPE_LABEL[r.serviceType]}
                 </span>
+                {r.remindAt && (
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${
+                      new Date(r.remindAt) <= new Date() ? "bg-red-500/10 text-red-600" : "bg-asphalt/5 text-muted"
+                    }`}
+                  >
+                    <Bell className="h-3 w-3" />
+                    {new Date(r.remindAt) <= new Date() ? "Due now" : `Due ${formatDate(r.remindAt)}`}
+                  </span>
+                )}
               </div>
               <p className="mt-0.5 text-xs text-muted">
                 {[

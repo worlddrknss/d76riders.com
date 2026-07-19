@@ -63,6 +63,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
     mileage: item.mileage,
     servicedAt: item.servicedAt.toISOString(),
     notes: item.notes,
+    remindAt: item.remindAt ? item.remindAt.toISOString() : null,
   }));
 
   // Costs are private — only the owner sees spend (mirrors the public bike card).

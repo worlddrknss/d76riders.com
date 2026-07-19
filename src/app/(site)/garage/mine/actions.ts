@@ -414,6 +414,15 @@ export async function createServiceRecordAction(formData: FormData): Promise<voi
   const cost = costInput ? Number.parseFloat(costInput) : null;
   const mileage = toOptionalInt(mileageInput);
   const servicedAt = servicedAtInput ? new Date(servicedAtInput) : new Date();
+  const safeServicedAt = Number.isNaN(servicedAt.getTime()) ? new Date() : servicedAt;
+
+  // Optional "remind me to do this again in N months" set at log time.
+  const remindMonths = toOptionalInt(normalizeText(formData.get("remindMonths")));
+  let remindAt: Date | null = null;
+  if (remindMonths && remindMonths > 0 && remindMonths <= 60) {
+    remindAt = new Date(safeServicedAt);
+    remindAt.setMonth(remindAt.getMonth() + remindMonths);
+  }
 
   const record = await prisma.serviceRecord.create({
     data: {
@@ -423,8 +432,9 @@ export async function createServiceRecordAction(formData: FormData): Promise<voi
       serviceType,
       cost: Number.isFinite(cost ?? NaN) ? cost : null,
       mileage,
-      servicedAt: Number.isNaN(servicedAt.getTime()) ? new Date() : servicedAt,
+      servicedAt: safeServicedAt,
       notes: notes || null,
+      remindAt,
     },
     select: { id: true },
   });

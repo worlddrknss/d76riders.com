@@ -22,8 +22,8 @@ Organized from quickest to implement, based on existing infrastructure and depen
 | 14 | Platform Reliability and Insights | 🚧 In progress |
 | 15 | Challenges | ✅ Done |
 
-Remaining: **Phase 14** (web-push + offline service worker — the installable PWA manifest is done) and
-**Phase 9** (Route Intelligence — the largest, needs an elevation source + a second routing profile).
+Remaining: **Phase 14** (offline service worker / PWA enhancements — web-push and the installable PWA manifest
+are done) and **Phase 9** (Route Intelligence — the largest, needs an elevation source + a second routing profile).
 
 Effort is judged against what's actually in the codebase now, not against the original ordering — Phases 10/11/13 left substrate behind that changes the picture:
 
@@ -52,6 +52,17 @@ A run of UX/feature work outside the original phases, all in production:
   owner (always-on).
 - **Account/Settings split**, nav rewire, and deletion of the legacy `/garage`, `/gear`, `/videos`,
   `members/[id]`, and duplicate action/nav files. See the `profile-ia-redesign` memory for the full map.
+- **Self-hosted Inngest** wired (`src/lib/inngest/**`, served at `/api/inngest`) — crons for weekly recap,
+  story expiry, momentum recompute, quiet-hours digest, weekly Rider Spotlight, and maintenance reminders.
+- **Social engagement layer** — "Two Wheels Down" reaction (rebranded journal like, notifies + pushes the
+  author), private **Saves**, 24h **Stories** (expiry cron), **momentum/Trending** rail, **Rider Spotlight**
+  (weekly cron + admin manual pick), **Ambassadors** (profile badge, `/ambassadors`, admin list), and 1:1
+  **Direct Messages** gated on a mutual follow (near-real-time polling + push).
+- **Following feed** — logged-in Home is a feed of journal posts from riders you follow (+ your own), story
+  bar and composer on top; logged-out Home stays the marketing landing (`src/components/feed/home-feed.tsx`).
+- **Maintenance reminders** — an optional "remind me again in N months" set when logging a service
+  (`ServiceRecord.remindAt/remindedAt`), pushed by the `maintenance-reminders` Inngest cron; a due badge shows
+  on the service record. Date-based for now (bikes have no current-mileage field yet).
 
 ### Follow-ups from the 10/11/13 work
 
@@ -436,8 +447,12 @@ phase, events only used `galleryItems[0]` as the cover flyer — there was no br
       hard gate (`EmailVerification` model, `/verify-email`, welcome/confirm on signup, account email-change
       with confirm-at-new-address). Per-rider opt-in email notifications fire for @mentions, journal comments,
       and RSVPs (`src/lib/mailer.ts` Gmail SMTP + `src/lib/notify.ts`, prefs on `Rider`, managed at
-      `/settings`). Emergency-card access sends an always-on security alert (email + activity). **Still open:**
-      web-push, and a unified notification/delivery-tracking model (today it rides on the `Activity` feed).
+      `/settings`). Emergency-card access sends an always-on security alert (email + activity). **Web-push
+      shipped 2026-07-18**: push-only service worker (`public/sw.js`), `PushSubscription` model, VAPID via
+      `src/lib/push.ts` (degrades gracefully with no keys), a `/settings` enable toggle + quiet hours, wired
+      into wave/comment/DM/maintenance notifications, with a quiet-hours digest cron. **Still open:** a unified
+      notification/delivery-tracking model (today it rides on the `Activity` feed) and email delivery for
+      batch event messages (Phase 8).
 - [x] Calendar sync: per-event `.ics` download ("Add to calendar") and a per-rider subscribable feed of
       their upcoming GOING/WAITLISTED rides, at `/api/events/<slug>/calendar.ics` and
       `/api/riders/<token>/calendar.ics`. Auth for the feed is an unguessable `Rider.calendarToken` (a
