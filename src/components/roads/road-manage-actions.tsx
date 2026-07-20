@@ -117,15 +117,10 @@ export function RoadManageActions({ road }: { road: RoadData }) {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="edit-road-scenic" className="text-xs font-semibold uppercase tracking-wide text-muted">Scenic Rating</label>
-                <Input id="edit-road-scenic" name="scenicRating" type="number" step="0.1" min={0} max={5} defaultValue={road.scenicRating ?? undefined} className="mt-1" />
-              </div>
-              <div>
-                <label htmlFor="edit-road-img" className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</label>
-                <Input id="edit-road-img" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
-              </div>
+            <div>
+              <label htmlFor="edit-road-img" className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</label>
+              <Input id="edit-road-img" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+              <p className="mt-1 text-xs text-muted">Quality scores come from rider feedback, not set here.</p>
             </div>
 
             <div>

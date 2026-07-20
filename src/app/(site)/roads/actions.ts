@@ -32,12 +32,6 @@ function toOptionalFloat(value: string): number | null {
 }
 
 // Scenic rating is a 0–5 scale; reject anything outside it rather than trust input.
-function toOptionalRating(value: string): number | null {
-  const parsed = toOptionalFloat(value);
-  if (parsed === null) return null;
-  return parsed >= 0 && parsed <= 5 ? parsed : null;
-}
-
 const allowedRoadDifficulties = new Set<string>(Object.values(RideDifficulty));
 
 function toOptionalDifficulty(value: string): RideDifficulty | null {
@@ -77,7 +71,6 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
   const name = normalizeText(formData.get("name"));
   const description = normalizeText(formData.get("description"));
   const difficultyInput = normalizeText(formData.get("difficulty"));
-  const scenicRating = toOptionalRating(normalizeText(formData.get("scenicRating")));
   const routeName = normalizeText(formData.get("routeName"));
   const routeDescription = normalizeText(formData.get("routeDescription"));
   const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
@@ -168,7 +161,6 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
         slug,
         distanceMiles: resolvedDistanceMiles ? Math.round(resolvedDistanceMiles) : null,
         difficulty,
-        scenicRating,
         description: description || null,
         imageLabel: coverImageUrl ? `${name} cover image` : null,
         galleryItems: coverImageUrl
@@ -230,7 +222,6 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
   const name = normalizeText(formData.get("name"));
   const description = normalizeText(formData.get("description"));
   const difficultyInput = normalizeText(formData.get("difficulty"));
-  const scenicRating = toOptionalRating(normalizeText(formData.get("scenicRating")));
   const routeName = normalizeText(formData.get("routeName"));
   const routeDescription = normalizeText(formData.get("routeDescription"));
   const routeDistanceMiles = toOptionalFloat(normalizeText(formData.get("routeDistanceMiles")));
@@ -347,7 +338,6 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
         name,
         description: description || null,
         difficulty,
-        scenicRating,
         distanceMiles: resolvedDistanceMiles ? Math.round(resolvedDistanceMiles) : road.distanceMiles,
         routeId,
       },

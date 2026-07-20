@@ -27,7 +27,8 @@ export async function reportHazardAction(
   if (!rider) return { error: "No rider profile found.", success: null };
 
   const parsed = hazardReportSchema.safeParse({
-    roadId: formData.get("roadId")?.toString() ?? "",
+    roadId: formData.get("roadId")?.toString() || undefined,
+    routeId: formData.get("routeId")?.toString() || undefined,
     type: formData.get("type")?.toString() ?? "",
     lat: Number(formData.get("lat")),
     lng: Number(formData.get("lng")),
@@ -36,19 +37,51 @@ export async function reportHazardAction(
   if (!parsed.success) {
     return { error: "Pick a hazard type and drop it on the map.", success: null };
   }
-  const { roadId, type, lat, lng, description } = parsed.data;
+  const { roadId, routeId, type, lat, lng, description } = parsed.data;
 
-  const road = await prisma.road.findUnique({
-    where: { id: roadId },
-    select: { id: true, slug: true, routeId: true, name: true, riderId: true },
-  });
-  if (!road) return { error: "That road no longer exists.", success: null };
+  // Resolve the target — a featured road, or an event's route. Both write the
+  // same HazardReport (roadId and/or routeId), and both notify the curator/host.
+  let target:
+    | { roadId: string; routeId: string | null; curatorRiderId: string; label: string; revalidate: string; activity: { refId: string; metadata: Record<string, string> } | null }
+    | null = null;
+
+  if (roadId) {
+    const road = await prisma.road.findUnique({
+      where: { id: roadId },
+      select: { id: true, slug: true, routeId: true, name: true, riderId: true },
+    });
+    if (!road) return { error: "That road no longer exists.", success: null };
+    target = {
+      roadId: road.id,
+      routeId: road.routeId,
+      curatorRiderId: road.riderId,
+      label: road.name,
+      revalidate: `/roads/${road.slug}`,
+      activity: { refId: road.id, metadata: { roadSlug: road.slug, hazardType: type } },
+    };
+  } else if (routeId) {
+    const route = await prisma.route.findUnique({
+      where: { id: routeId },
+      select: { id: true, event: { select: { slug: true, title: true, hostId: true } } },
+    });
+    if (!route?.event) return { error: "That route no longer exists.", success: null };
+    target = {
+      roadId: "",
+      routeId: route.id,
+      curatorRiderId: route.event.hostId,
+      label: route.event.title,
+      revalidate: `/events/${route.event.slug}`,
+      activity: { refId: route.id, metadata: { eventSlug: route.event.slug, hazardType: type } },
+    };
+  }
+
+  if (!target) return { error: "Nothing to attach this hazard to.", success: null };
 
   await prisma.hazardReport.create({
     data: {
       riderId: rider.id,
-      roadId: road.id,
-      routeId: road.routeId,
+      roadId: target.roadId || null,
+      routeId: target.routeId,
       type,
       lat,
       lng,
@@ -57,18 +90,18 @@ export async function reportHazardAction(
     },
   });
 
-  // Tell the rider who curated the road, unless they are the one reporting it.
-  if (road.riderId !== rider.id) {
+  // Tell the road curator / event host, unless they are the one reporting it.
+  if (target.curatorRiderId !== rider.id && target.activity) {
     await logActivity({
-      riderId: road.riderId,
+      riderId: target.curatorRiderId,
       type: "HAZARD_REPORTED",
-      summary: `${HAZARD_META[type].label} reported on ${road.name}`,
-      refId: road.id,
-      metadata: { roadSlug: road.slug, hazardType: type },
+      summary: `${HAZARD_META[type].label} reported on ${target.label}`,
+      refId: target.activity.refId,
+      metadata: target.activity.metadata,
     });
   }
 
-  revalidatePath(`/roads/${road.slug}`);
+  revalidatePath(target.revalidate);
   return { error: null, success: `${HAZARD_META[type].label} reported. Thanks for the heads up.` };
 }
 
@@ -85,14 +118,24 @@ export async function clearHazardAction(hazardId: string): Promise<HazardFormSta
 
   const hazard = await prisma.hazardReport.findUnique({
     where: { id: hazardId },
-    select: { id: true, riderId: true, clearedAt: true, road: { select: { slug: true, riderId: true } } },
+    select: {
+      id: true,
+      riderId: true,
+      clearedAt: true,
+      road: { select: { slug: true, riderId: true } },
+      route: { select: { event: { select: { slug: true, hostId: true } } } },
+    },
   });
   if (!hazard) return { error: "That hazard no longer exists.", success: null };
   if (hazard.clearedAt) return { error: null, success: "Already cleared." };
 
   const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR");
-  const canClear = hazard.riderId === rider.id || hazard.road?.riderId === rider.id || isAdmin;
-  if (!canClear) return { error: "Only the reporter or the road owner can clear this.", success: null };
+  const canClear =
+    hazard.riderId === rider.id ||
+    hazard.road?.riderId === rider.id ||
+    hazard.route?.event?.hostId === rider.id ||
+    isAdmin;
+  if (!canClear) return { error: "Only the reporter or the road/event owner can clear this.", success: null };
 
   await prisma.hazardReport.update({
     where: { id: hazard.id },
@@ -100,5 +143,6 @@ export async function clearHazardAction(hazardId: string): Promise<HazardFormSta
   });
 
   if (hazard.road?.slug) revalidatePath(`/roads/${hazard.road.slug}`);
+  if (hazard.route?.event?.slug) revalidatePath(`/events/${hazard.route.event.slug}`);
   return { error: null, success: "Marked cleared." };
 }

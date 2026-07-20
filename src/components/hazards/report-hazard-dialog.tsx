@@ -14,7 +14,10 @@ import type { HazardType } from "@prisma/client";
 const initialState: HazardFormState = { error: null, success: null };
 
 type ReportHazardDialogProps = {
-  roadId: string;
+  // Exactly one of these identifies what the hazard hangs off: a featured road,
+  // or an event's route.
+  roadId?: string;
+  routeId?: string;
   coordinates: [number, number][];
   hazards: HazardPin[];
   // A sensible starting pin when the rider hasn't tapped yet — the route's KSU
@@ -22,7 +25,7 @@ type ReportHazardDialogProps = {
   defaultPoint: { lat: number; lng: number };
 };
 
-export function ReportHazardDialog({ roadId, coordinates, hazards, defaultPoint }: ReportHazardDialogProps) {
+export function ReportHazardDialog({ roadId, routeId, coordinates, hazards, defaultPoint }: ReportHazardDialogProps) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<HazardType>("DEBRIS");
   const [point, setPoint] = useState<{ lat: number; lng: number }>(defaultPoint);
@@ -54,7 +57,8 @@ export function ReportHazardDialog({ roadId, coordinates, hazards, defaultPoint 
             </div>
           ) : (
           <form action={formAction} className="mt-4 space-y-4">
-            <input type="hidden" name="roadId" value={roadId} />
+            {roadId ? <input type="hidden" name="roadId" value={roadId} /> : null}
+            {routeId ? <input type="hidden" name="routeId" value={routeId} /> : null}
             <input type="hidden" name="type" value={type} />
             <input type="hidden" name="lat" value={point.lat} />
             <input type="hidden" name="lng" value={point.lng} />

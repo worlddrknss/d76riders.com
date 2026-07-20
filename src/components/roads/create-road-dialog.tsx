@@ -53,15 +53,10 @@ export function CreateRoadDialog() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="create-road-scenic" className="text-xs font-semibold uppercase tracking-wide text-muted">Scenic Rating</label>
-                <Input id="create-road-scenic" name="scenicRating" type="number" step="0.1" min={0} max={5} className="mt-1" />
-              </div>
-              <div>
-                <label htmlFor="create-road-img" className="text-xs font-semibold uppercase tracking-wide text-muted">Road Image</label>
-                <Input id="create-road-img" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
-              </div>
+            <div>
+              <label htmlFor="create-road-img" className="text-xs font-semibold uppercase tracking-wide text-muted">Road Image</label>
+              <Input id="create-road-img" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="mt-1" />
+              <p className="mt-1 text-xs text-muted">Quality scores come from rider feedback once the road is shared.</p>
             </div>
 
             <div>

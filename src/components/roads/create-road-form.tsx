@@ -32,15 +32,10 @@ export function CreateRoadForm() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor="scenicRating" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Scenic Rating</label>
-          <input id="scenicRating" name="scenicRating" type="number" step="0.1" min={0} max={5} className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink" />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor="coverImage" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Road Image</label>
-          <input id="coverImage" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-asphalt file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
-        </div>
+      <div className="space-y-1.5">
+        <label htmlFor="coverImage" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Road Image</label>
+        <input id="coverImage" name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-asphalt file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white" />
+        <p className="text-xs text-muted">Quality scores come from rider feedback once the road is shared.</p>
       </div>
 
       <div className="space-y-1.5">

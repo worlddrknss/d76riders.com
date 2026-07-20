@@ -33,7 +33,10 @@ import { toggleEventFollowAction } from "@/app/(site)/garage/mine/actions";
 import { RouteMap } from "@/components/routes/route-map";
 import { RouteStops } from "@/components/routes/route-stops";
 import { LiveRideMap } from "@/components/events/live-ride-map";
+import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
+import { HazardList } from "@/components/hazards/hazard-list";
 import { elevationDifficulty } from "@/lib/elevation";
+import { activeHazardWhere } from "@/lib/hazards";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -271,6 +274,43 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const isStaffViewer = Boolean(
     currentUser?.roles.includes("ADMINISTRATOR") || currentUser?.roles.includes("MODERATOR"),
   );
+
+  // Rider-flagged hazards on this event's route — same model as featured roads,
+  // just keyed by routeId. Gated on the route having geometry to drop pins on.
+  const hasRouteGeometry = coordinates.length >= 2;
+  const eventHazards =
+    hasRouteGeometry && event.routeId
+      ? await prisma.hazardReport.findMany({
+          where: { routeId: event.routeId, ...activeHazardWhere() },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            type: true,
+            lat: true,
+            lng: true,
+            description: true,
+            createdAt: true,
+            riderId: true,
+            rider: { select: { name: true, handle: true } },
+          },
+        })
+      : [];
+  const eventHazardPins = eventHazards.map((h) => ({ id: h.id, type: h.type, lat: h.lat, lng: h.lng }));
+  const eventHazardListItems = eventHazards.map((h) => ({
+    id: h.id,
+    type: h.type,
+    description: h.description,
+    createdAt: h.createdAt.toISOString(),
+    reporterName: h.rider.name,
+    reporterHandle: h.rider.handle,
+    canClear: isStaffViewer || isHost || isOwner || h.riderId === viewerRider?.id,
+  }));
+  const hazardDefaultPoint =
+    event.route?.ksuLat != null && event.route?.ksuLng != null
+      ? { lat: event.route.ksuLat, lng: event.route.ksuLng }
+      : coordinates.length > 0
+        ? { lat: coordinates[Math.floor(coordinates.length / 2)][1], lng: coordinates[Math.floor(coordinates.length / 2)][0] }
+        : { lat: event.meetLat ?? 0, lng: event.meetLng ?? 0 };
   const eventPhotos = galleryRows.map((p) => ({
     id: p.id,
     url: p.url,
@@ -790,6 +830,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   )}
                 </div>
                 {waypoints.length > 0 && <RouteStops waypoints={waypoints} />}
+              </div>
+            )}
+
+            {event.routeId && (
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+                    Hazards on this route
+                  </h3>
+                  {currentUser ? (
+                    <ReportHazardDialog
+                      routeId={event.routeId}
+                      coordinates={coordinates}
+                      hazards={eventHazardPins}
+                      defaultPoint={hazardDefaultPoint}
+                    />
+                  ) : null}
+                </div>
+                <div className="mt-3">
+                  <HazardList hazards={eventHazardListItems} />
+                </div>
               </div>
             )}
           </div>

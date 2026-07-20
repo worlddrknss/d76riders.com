@@ -121,13 +121,20 @@ export const routeGeometrySchema = z.object({
 });
 
 // ---------- Hazard reports ----------
-export const hazardReportSchema = z.object({
-  roadId: z.string().min(1),
-  type: z.enum(["DEBRIS", "POLICE", "ROADWORK", "WEATHER", "ANIMAL", "ACCIDENT", "OTHER"]),
-  lat: z.number().min(-90).max(90),
-  lng: z.number().min(-180).max(180),
-  description: z.string().max(280).optional(),
-});
+export const hazardReportSchema = z
+  .object({
+    // A hazard hangs off a road (featured road) or a route (event). Exactly one
+    // is supplied by the reporting surface.
+    roadId: z.string().min(1).optional(),
+    routeId: z.string().min(1).optional(),
+    type: z.enum(["DEBRIS", "POLICE", "ROADWORK", "WEATHER", "ANIMAL", "ACCIDENT", "OTHER"]),
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+    description: z.string().max(280).optional(),
+  })
+  .refine((d) => Boolean(d.roadId) || Boolean(d.routeId), {
+    message: "A hazard must reference a road or a route.",
+  });
 
 // ---------- Auth ----------
 export const registerSchema = z.object({
