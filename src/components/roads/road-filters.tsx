@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { useTransition } from "react";
 
-export function RoadFilters() {
+export function RoadFilters({ canSortNear = false }: { canSortNear?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -53,6 +53,7 @@ export function RoadFilters() {
         className="rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-sunset focus:outline-none"
       >
         <option value="scenic">Highest Rated</option>
+        {canSortNear && <option value="near">Nearest</option>}
         <option value="newest">Newest</option>
         <option value="distance">Longest</option>
       </select>

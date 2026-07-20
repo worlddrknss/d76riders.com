@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { isValidTimezone } from "@/lib/datetime";
 import { sendVerification } from "@/lib/email-verification";
+import { geocodePlace } from "@/lib/geocode";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
@@ -169,10 +170,25 @@ export async function updateAccountProfileAction(
         select: {
           avatarUrl: true,
           coverUrl: true,
+          location: true,
         },
       },
     },
   });
+
+  // Keep coordinates in sync with the location text so "near me" stays accurate.
+  // Only re-geocode when the location actually changed (best-effort — a failed
+  // lookup leaves existing coords untouched); clearing location clears coords.
+  let locationCoords: { latitude: number | null; longitude: number | null } | undefined;
+  const previousLocation = existingProfile?.rider?.location ?? "";
+  if (location !== previousLocation) {
+    if (!location) {
+      locationCoords = { latitude: null, longitude: null };
+    } else {
+      const geo = await geocodePlace(location);
+      if (geo) locationCoords = { latitude: geo.lat, longitude: geo.lng };
+    }
+  }
 
   // Partial avatar update — only change the stored URL when it actually changed.
   //   • new file uploaded        → new S3 URL
@@ -254,6 +270,7 @@ export async function updateAccountProfileAction(
           coverUrl: nextCoverUrl !== undefined ? nextCoverUrl : undefined,
           bio: bio || null,
           location: location || null,
+          ...locationCoords,
           timezone,
           favoriteRoad: favoriteRoad || null,
           yearsRiding,
