@@ -99,11 +99,14 @@ export async function registerAction(
       cookieStore.delete("d76_ref");
     }
 
-    // Welcome + confirmation email. The account is signed in but gated until
-    // they click the link (see the (site) layout). Never blocks registration.
-    await sendVerification(user.id, email, displayName, { welcome: true });
-
+    // Sign in first so a slow/unreachable mail server can never leave the account
+    // created-but-not-logged-in (the cause of a stuck "Creating account…").
     await createUserSession(user.id);
+
+    // Welcome + confirmation email. The account is signed in but gated until
+    // they click the link (see the (site) layout). sendVerification never throws,
+    // and the transport is timeout-bounded, so this can't hang registration.
+    await sendVerification(user.id, email, displayName, { welcome: true });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       const target = Array.isArray(error.meta?.target)
