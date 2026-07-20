@@ -34,6 +34,7 @@ model User {
   reviewedSponsors Sponsor[] @relation("SponsorReviewer")
 
   emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -101,6 +102,18 @@ model EmailVerification {
   id        String   @id @default(cuid())
   userId    String
   email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
   token     String   @unique
   expires   DateTime
   createdAt DateTime @default(now())

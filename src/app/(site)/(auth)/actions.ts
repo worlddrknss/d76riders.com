@@ -8,6 +8,7 @@ import { isValidTimezone } from "@/lib/datetime";
 import { sendVerification } from "@/lib/email-verification";
 import { geocodePlace } from "@/lib/geocode";
 import { hashPassword, verifyPassword } from "@/lib/password";
+import { requestPasswordReset, resetPassword } from "@/lib/password-reset";
 import { prisma } from "@/lib/prisma";
 import { recordReferral } from "@/lib/referrals";
 import { clearUserSession, createUserSession } from "@/lib/session";
@@ -185,4 +186,51 @@ export async function loginAction(
 export async function logoutAction(): Promise<void> {
   await clearUserSession();
   redirect("/login");
+}
+
+export type ResetRequestState = { error: string | null; sent: boolean };
+
+// Always reports the same "if an account exists, we sent a link" outcome so the
+// form can't be used to probe which emails have accounts.
+export async function requestPasswordResetAction(
+  _previousState: ResetRequestState,
+  formData: FormData,
+): Promise<ResetRequestState> {
+  const email = normalizeEmail(formData.get("email"));
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Enter a valid email address.", sent: false };
+  }
+  await requestPasswordReset(email);
+  return { error: null, sent: true };
+}
+
+export type ResetPasswordState = { error: string | null };
+
+export async function resetPasswordAction(
+  _previousState: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  const token = normalizeText(formData.get("token"));
+  const password = normalizeText(formData.get("password"));
+
+  if (!token) {
+    return { error: "This reset link is invalid." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+
+  const result = await resetPassword(token, password);
+  if (!result.ok) {
+    return {
+      error:
+        result.reason === "expired"
+          ? "This reset link has expired. Request a new one."
+          : "This reset link is invalid or already used. Request a new one.",
+    };
+  }
+
+  // Sign in with the new password so the rider lands straight in the app.
+  await createUserSession(result.userId);
+  redirect("/");
 }

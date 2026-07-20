@@ -120,6 +120,23 @@ export function verifyEmail(name: string, verifyUrl: string, isChange: boolean) 
   };
 }
 
+export function passwordResetEmail(name: string, resetUrl: string) {
+  return {
+    subject: "Reset your D76 Riders password",
+    html: emailLayout({
+      preheader: "Reset your password with the link inside.",
+      heading: "Reset your password",
+      paragraphs: [
+        `Hi ${escapeHtml(name)},`,
+        "We got a request to reset your D76 Riders password. Click below to choose a new one.",
+        "If you didn't ask for this, you can ignore this email — your password won't change.",
+      ],
+      cta: { label: "Reset password", href: resetUrl },
+      footnote: "This link expires in 1 hour and can only be used once.",
+    }),
+  };
+}
+
 export function mentionEmail(name: string, mentionerName: string, url: string) {
   return {
     subject: `${mentionerName} mentioned you on D76 Riders`,
