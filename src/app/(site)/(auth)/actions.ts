@@ -4,7 +4,9 @@ import { Prisma } from "@prisma/client";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { isValidTimezone } from "@/lib/datetime";
 import { sendVerification } from "@/lib/email-verification";
+import { geocodePlace } from "@/lib/geocode";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { recordReferral } from "@/lib/referrals";
@@ -38,6 +40,8 @@ export async function registerAction(
   const username = normalizeUsername(formData.get("username"));
   const email = normalizeEmail(formData.get("email"));
   const password = normalizeText(formData.get("password"));
+  const location = normalizeText(formData.get("location"));
+  const timezone = normalizeText(formData.get("timezone"));
 
   if (!username) {
     return { error: "Username is required." };
@@ -62,8 +66,19 @@ export async function registerAction(
     return { error: "Password must be at least 8 characters." };
   }
 
+  if (location.length < 2 || location.length > 120) {
+    return { error: "Enter your location (city and state)." };
+  }
+
+  if (!isValidTimezone(timezone)) {
+    return { error: "Pick your timezone." };
+  }
+
   const passwordHash = await hashPassword(password);
   const displayName = displayNameInput || username;
+  // Best-effort geocode so "near me" works from day one; a miss just leaves
+  // coordinates null and the rider still gets their typed location + timezone.
+  const geocoded = await geocodePlace(location);
 
   try {
     const user = await prisma.user.create({
@@ -75,6 +90,10 @@ export async function registerAction(
           create: {
             handle: username,
             name: displayName,
+            location,
+            timezone,
+            latitude: geocoded?.lat ?? null,
+            longitude: geocoded?.lng ?? null,
           },
         },
         roles: {

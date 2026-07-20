@@ -5,6 +5,7 @@ import { useActionState } from "react";
 
 import { type AuthFormState, registerAction } from "@/app/(site)/(auth)/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
+import { US_TIMEZONES } from "@/lib/datetime";
 
 const initialAuthFormState: AuthFormState = {
   error: null,
@@ -64,6 +65,43 @@ export function RegisterForm({ referralCode }: { referralCode?: string }) {
           autoComplete="email"
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
         />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="location" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Location
+          </label>
+          <input
+            id="location"
+            name="location"
+            type="text"
+            required
+            autoComplete="address-level2"
+            placeholder="City, State"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          />
+          <p className="text-xs text-muted">Helps surface rides and roads near you.</p>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="timezone" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Timezone
+          </label>
+          <select
+            id="timezone"
+            name="timezone"
+            required
+            defaultValue="America/Chicago"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          >
+            {US_TIMEZONES.map((tz) => (
+              <option key={tz.value} value={tz.value}>
+                {tz.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted">So ride times show in your zone.</p>
+        </div>
       </div>
 
       <div className="space-y-1.5">

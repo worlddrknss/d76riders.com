@@ -7,6 +7,11 @@ model Rider {
   handle         String   @unique
   name           String
   location       String?
+  // Geocoded from `location` (best-effort, at signup or profile edit). Powers
+  // "near me" sorting on events and roads. Null when location is unset or
+  // couldn't be geocoded.
+  latitude       Float?
+  longitude      Float?
   // Preferred IANA zone. Defaults the timezone of events they create and shows
   // a "your time" hint on events happening in a different zone. Null = unset.
   timezone       String?
