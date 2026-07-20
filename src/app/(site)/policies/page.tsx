@@ -12,7 +12,7 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata: Metadata = {
   title: "Policies",
   description:
-    "Community guidelines and safety waivers for District 76 Riders: how we ride together across Tennessee.",
+    "Community guidelines and safety waivers for District 76 Riders: how we ride together.",
   alternates: { canonical: "/policies" },
   openGraph: {
     images: OG_IMAGE,

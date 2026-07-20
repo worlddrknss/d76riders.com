@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Gallery — Ride Photos & Community Moments",
   description:
-    "Browse photos from District 76 group rides, meetups, and road adventures across Tennessee.",
+    "Browse photos from District 76 group rides, meetups, and road adventures.",
   alternates: { canonical: "/gallery" },
   openGraph: {
     images: OG_IMAGE,

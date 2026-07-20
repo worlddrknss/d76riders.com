@@ -16,12 +16,12 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata: Metadata = {
   title: "Scenic Motorcycle Roads",
   description:
-    "Discover the best motorcycle roads in Tennessee. Community-rated scenic routes, twisties, and cruising roads shared by District 76 Riders.",
+    "Discover the best motorcycle roads in Tennessee and beyond. Community-rated scenic routes, twisties, and cruising roads shared by District 76 Riders.",
   alternates: { canonical: "/roads" },
   openGraph: {
     images: OG_IMAGE,
     title: "Scenic Roads — District 76 Riders",
-    description: "Community-rated motorcycle roads and scenic routes across Tennessee.",
+    description: "Community-rated motorcycle roads and scenic routes in Tennessee and beyond.",
   },
 };
 
@@ -74,7 +74,7 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
       <PageHeader
         icon={RouteIcon}
         title="Roads"
-        subtitle="Discover the best roads in Tennessee. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
+        subtitle="Discover the best roads in Tennessee and beyond. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
         action={currentUser ? <CreateRoadDialog /> : undefined}
       />
 

@@ -15,12 +15,12 @@ import { getCurrentUser } from "@/lib/session";
 export const metadata: Metadata = {
   title: "Upcoming Rides & Events",
   description:
-    "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders across Tennessee. All skill levels welcome.",
+    "Browse upcoming group rides, meetups, and motorcycle events organized by District 76 Riders in Tennessee and beyond. All skill levels welcome.",
   alternates: { canonical: "/events" },
   openGraph: {
     images: OG_IMAGE,
     title: "Rides & Events — District 76 Riders",
-    description: "Find your next group ride in Tennessee.",
+    description: "Find your next group ride in Tennessee and beyond.",
   },
 };
 

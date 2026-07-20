@@ -12,7 +12,7 @@ import { PageHero } from "@/components/layout/page-hero";
 export const metadata: Metadata = {
   title: "Join District 76 Riders",
   description:
-    "Create your free rider profile. Join group rides, connect with motorcycle riders across Tennessee, and be part of a community built by riders, for riders.",
+    "Create your free rider profile. Join group rides, connect with riders wherever you ride, and be part of a community built by riders, for riders.",
   alternates: { canonical: "/join" },
   openGraph: {
     images: OG_IMAGE,
