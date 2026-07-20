@@ -90,7 +90,7 @@ export function RoadQualityCard({
 
       <div className="mt-3 divide-y divide-border">
         <StarRow label="Scenery" avg={state.averages.scenery} value={scenery} onChange={setScenery} disabled={!isAuthenticated || pending} />
-        <StarRow label="Road condition" avg={state.averages.condition} value={condition} onChange={setCondition} disabled={!isAuthenticated || pending} />
+        <StarRow label="Pavement" avg={state.averages.condition} value={condition} onChange={setCondition} disabled={!isAuthenticated || pending} />
         <StarRow label="Twistiness" avg={state.averages.twistiness} value={twistiness} onChange={setTwistiness} disabled={!isAuthenticated || pending} />
       </div>
 

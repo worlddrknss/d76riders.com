@@ -3,6 +3,18 @@ import { Bell, Bookmark, MessageCircle, Star } from "lucide-react";
 
 import { FadeUp } from "@/components/ui/motion";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
+import { KIND_META } from "@/lib/map";
+import type { WaypointKind } from "@/lib/routing";
+
+/** Real top-rated road for the "Know before you go" vignette (null → mock). */
+export type ShowcaseRoad = {
+  name: string;
+  quality: number;
+  scenery: number | null;
+  pavement: number | null;
+  twistiness: number | null;
+  stops: { kind: WaypointKind; label: string | null }[];
+};
 
 /**
  * The logged-out feature showcase — the marketing heart of the landing page.
@@ -70,7 +82,7 @@ function Stop({ color, children }: { color: string; children: ReactNode }) {
   );
 }
 
-export function FeatureShowcase() {
+export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) {
   return (
     <>
       {/* INTRO + THE FEED */}
@@ -296,26 +308,51 @@ export function FeatureShowcase() {
               aria-hidden="true"
             >
               <div className="flex items-center justify-between">
-                <div className="font-display text-lg font-bold">Cumberland Loop</div>
+                <div className="font-display text-lg font-bold">{topRoad ? topRoad.name : "Cumberland Loop"}</div>
                 <div className="text-right">
                   <div className="font-display text-2xl font-black">
-                    4.6<span className="text-sm font-normal text-[#a89f92]">/5</span>
+                    {topRoad ? topRoad.quality.toFixed(1) : "4.6"}
+                    <span className="text-sm font-normal text-[#a89f92]">/5</span>
                   </div>
                   <div className="text-xs font-bold uppercase tracking-wider text-[#a89f92]">Route quality</div>
                 </div>
               </div>
               <div className="mt-3 space-y-3">
-                <Meter label="Scenery" pct={94} value="4.7" />
-                <Meter label="Pavement" pct={84} value="4.2" />
-                <Meter label="Twistiness" pct={96} value="4.8" />
+                {topRoad ? (
+                  [
+                    { label: "Scenery", v: topRoad.scenery },
+                    { label: "Pavement", v: topRoad.pavement },
+                    { label: "Twistiness", v: topRoad.twistiness },
+                  ]
+                    .filter((m) => m.v != null)
+                    .map((m) => <Meter key={m.label} label={m.label} pct={(m.v as number) * 20} value={(m.v as number).toFixed(1)} />)
+                ) : (
+                  <>
+                    <Meter label="Scenery" pct={94} value="4.7" />
+                    <Meter label="Pavement" pct={84} value="4.2" />
+                    <Meter label="Twistiness" pct={96} value="4.8" />
+                  </>
+                )}
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Stop color="#3f8a4f">Start</Stop>
-                <Stop color="#e8703a">KSU</Stop>
-                <Stop color="#2563eb">Fuel · 42mi</Stop>
-                <Stop color="#0891b2">Rest</Stop>
-                <Stop color="#b91c1c">End</Stop>
-              </div>
+              {topRoad ? (
+                topRoad.stops.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {topRoad.stops.map((s, i) => (
+                      <Stop key={i} color={KIND_META[s.kind].color}>
+                        {s.label || KIND_META[s.kind].label}
+                      </Stop>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Stop color="#3f8a4f">Start</Stop>
+                  <Stop color="#e8703a">KSU</Stop>
+                  <Stop color="#2563eb">Fuel · 42mi</Stop>
+                  <Stop color="#0891b2">Rest</Stop>
+                  <Stop color="#b91c1c">End</Stop>
+                </div>
+              )}
             </div>
           </FadeUp>
 

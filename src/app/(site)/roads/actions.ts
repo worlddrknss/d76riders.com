@@ -376,50 +376,6 @@ export async function updateRoadAction(roadId: string, formData: FormData): Prom
 
 // ─── Community Rating ────────────────────────────────────────────────────────
 
-export type RateRoadState = {
-  error: string | null;
-  averageRating: number | null;
-  totalRatings: number;
-  userRating: number | null;
-};
-
-export async function rateRoadAction(roadId: string, score: number): Promise<RateRoadState> {
-  const currentUser = await getCurrentUser();
-  const userId = requireUserId(currentUser?.id);
-
-  if (!Number.isInteger(score) || score < 1 || score > 5) {
-    return { error: "Rating must be between 1 and 5.", averageRating: null, totalRatings: 0, userRating: null };
-  }
-
-  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
-  if (!rider) {
-    return { error: "You need a rider profile to rate roads.", averageRating: null, totalRatings: 0, userRating: null };
-  }
-
-  await prisma.roadRating.upsert({
-    where: { roadId_riderId: { roadId, riderId: rider.id } },
-    create: { roadId, riderId: rider.id, score },
-    update: { score },
-  });
-
-  // Recompute average and update the cached field on Road
-  const aggregate = await prisma.roadRating.aggregate({
-    where: { roadId },
-    _avg: { score: true },
-    _count: { score: true },
-  });
-
-  const averageRating = aggregate._avg.score ?? null;
-  const totalRatings = aggregate._count.score;
-
-  await prisma.road.update({
-    where: { id: roadId },
-    data: { scenicRating: averageRating },
-  });
-
-  return { error: null, averageRating, totalRatings, userRating: score };
-}
-
 export type RoadFeedbackState = {
   error: string | null;
   count: number;

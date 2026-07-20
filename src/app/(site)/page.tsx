@@ -20,6 +20,7 @@ import { getCurrentUser } from "@/lib/session";
 import { FadeUp, StaggerList, StaggerItem } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
+import type { WaypointKind } from "@/lib/routing";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -160,6 +161,35 @@ export default async function Home() {
     [],
   );
 
+  // The single best-rated road powers the "Know before you go" showcase vignette
+  // with real data instead of a hardcoded sample. Null on a fresh DB → the
+  // component falls back to its illustrative mock.
+  const showcaseRoadRow = await safeQuery(
+    () => prisma.road.findFirst({
+      where: { qualityScore: { not: null } },
+      orderBy: [{ qualityScore: "desc" }],
+      select: {
+        name: true,
+        qualityScore: true,
+        scenicRating: true,
+        conditionRating: true,
+        twistinessRating: true,
+        route: { select: { waypoints: { orderBy: { order: "asc" }, select: { id: true, label: true, type: true } } } },
+      },
+    }),
+    null,
+  );
+  const showcaseRoad = showcaseRoadRow
+    ? {
+        name: showcaseRoadRow.name,
+        quality: showcaseRoadRow.qualityScore ?? showcaseRoadRow.scenicRating ?? 0,
+        scenery: showcaseRoadRow.scenicRating,
+        pavement: showcaseRoadRow.conditionRating,
+        twistiness: showcaseRoadRow.twistinessRating,
+        stops: (showcaseRoadRow.route?.waypoints ?? []).map((w) => ({ kind: w.type as WaypointKind, label: w.label })),
+      }
+    : null;
+
   const [userCount, bikeCount, eventCount, roadCount, activities] = await Promise.all([
     safeQuery(() => prisma.user.count(), 0),
     safeQuery(() => prisma.bike.count(), 0),
@@ -298,7 +328,7 @@ export default async function Home() {
       </section>
 
       {/* FEATURE SHOWCASE — feed, events, garage, roads, and the safety/recognition bento */}
-      <FeatureShowcase />
+      <FeatureShowcase topRoad={showcaseRoad} />
 
       {/* EMERGENCY RESPONSE */}
       <section className="w-full bg-asphalt text-white">

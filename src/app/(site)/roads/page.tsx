@@ -41,7 +41,13 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
     ? [{ createdAt: "desc" as const }]
     : sort === "distance"
       ? [{ distanceMiles: "desc" as const }]
-      : [{ scenicRating: "desc" as const }, { createdAt: "desc" as const }];
+      // Default: blended Route Quality first (roads without any rating sink to the
+      // bottom), with the legacy scenic score and recency as tie-breakers.
+      : [
+          { qualityScore: { sort: "desc" as const, nulls: "last" as const } },
+          { scenicRating: "desc" as const },
+          { createdAt: "desc" as const },
+        ];
 
   const where: Record<string, unknown> = {};
   if (q) {
@@ -91,8 +97,20 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
                       <span className="inline-flex items-center gap-1"><RouteIcon className="h-3.5 w-3.5 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} miles` : "Distance TBD"}</span>
                       <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{difficultyLabel(road.difficulty)}</span>
-                      <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-sunset" />{road.scenicRating ? road.scenicRating.toFixed(1) : "N/A"}</span>
+                      {(() => {
+                        const quality = road.qualityScore ?? road.scenicRating;
+                        return (
+                          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-sunset" />{quality != null ? `${quality.toFixed(1)} quality` : "Unrated"}</span>
+                        );
+                      })()}
                     </div>
+                    {(road.scenicRating != null || road.conditionRating != null || road.twistinessRating != null) && (
+                      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[0.7rem] text-muted">
+                        {road.scenicRating != null && <span><span className="text-ink/60">Scenery</span> <b className="font-semibold text-ink">{road.scenicRating.toFixed(1)}</b></span>}
+                        {road.conditionRating != null && <span><span className="text-ink/60">Pavement</span> <b className="font-semibold text-ink">{road.conditionRating.toFixed(1)}</b></span>}
+                        {road.twistinessRating != null && <span><span className="text-ink/60">Twistiness</span> <b className="font-semibold text-ink">{road.twistinessRating.toFixed(1)}</b></span>}
+                      </div>
+                    )}
                     <p className="mt-3 text-xs text-muted inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />Shared by {road.rider.name} (@{road.rider.handle})</p>
                   </div>
                 </Link>

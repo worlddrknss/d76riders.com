@@ -31,7 +31,9 @@ import { ShareEvent } from "@/components/events/share-event";
 import { Linkify } from "@/components/ui/linkify";
 import { toggleEventFollowAction } from "@/app/(site)/garage/mine/actions";
 import { RouteMap } from "@/components/routes/route-map";
+import { RouteStops } from "@/components/routes/route-stops";
 import { LiveRideMap } from "@/components/events/live-ride-map";
+import { elevationDifficulty } from "@/lib/elevation";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -237,6 +239,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     label: waypoint.label ?? undefined,
     kind: waypoint.type as WaypointKind,
   }));
+
+  // Same difficulty-from-elevation read as the road detail page, when the event's
+  // route carries a climb estimate.
+  const eventElevationGainFt = event.route?.elevationGainFt ?? null;
+  const eventClimb = elevationDifficulty(event.distanceMiles, eventElevationGainFt);
 
   const isOwner = currentUser?.id === event.host.userId;
   const isOrganizer = currentUser
@@ -766,6 +773,25 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 <RouteMap coordinates={coordinates} waypoints={waypoints} className="h-120 w-full" />
               )}
             </div>
+
+            {(eventClimb || waypoints.length > 0) && (
+              <div className="mt-5 grid gap-5 border-t border-border pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+                <div className="space-y-4">
+                  {eventClimb && (
+                    <div className="rounded-lg border border-border bg-canvas p-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset">
+                        <Signal className="h-3.5 w-3.5" />Difficulty
+                      </div>
+                      <p className="mt-1.5 text-sm font-medium text-ink">{eventClimb.label}</p>
+                      <p className="text-xs text-muted">
+                        {eventElevationGainFt!.toLocaleString("en-US")} ft climb over {event.distanceMiles} mi
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {waypoints.length > 0 && <RouteStops waypoints={waypoints} />}
+              </div>
+            )}
           </div>
         ) : event.meetLat != null && event.meetLng != null ? (
           // No saved route — show the meetup on a map anyway, so every event has
