@@ -19,13 +19,14 @@ const WEIGHT_VOLUME = 20;
 // Rides attended at which the volume component maxes out.
 const VOLUME_SATURATION = 12;
 
-// A level needs both a score and real ride count behind it — otherwise a rider
-// with one perfect ride would outrank a veteran with a single no-show.
-const LEVELS: { level: TrustLevel; minScore: number; minEvents: number }[] = [
-  { level: "VETERAN", minScore: 85, minEvents: 10 },
-  { level: "TRUSTED", minScore: 70, minEvents: 5 },
-  { level: "ESTABLISHED", minScore: 45, minEvents: 2 },
-  { level: "NEW", minScore: 0, minEvents: 0 },
+// A level needs both a score and a real ride count behind it — otherwise a rider
+// with one perfect ride would outrank a veteran with a single no-show. The ride
+// count spans group check-ins and self-logged rides (see totalRides).
+const LEVELS: { level: TrustLevel; minScore: number; minRides: number }[] = [
+  { level: "VETERAN", minScore: 85, minRides: 10 },
+  { level: "TRUSTED", minScore: 70, minRides: 5 },
+  { level: "ESTABLISHED", minScore: 45, minRides: 2 },
+  { level: "NEW", minScore: 0, minRides: 0 },
 ];
 
 export type TrustSignals = {
@@ -41,9 +42,9 @@ export type TrustSignals = {
   level: TrustLevel;
 };
 
-function levelFor(score: number, eventsAttended: number): TrustLevel {
+function levelFor(score: number, totalRides: number): TrustLevel {
   for (const tier of LEVELS) {
-    if (score >= tier.minScore && eventsAttended >= tier.minEvents) {
+    if (score >= tier.minScore && totalRides >= tier.minRides) {
       return tier.level;
     }
   }
@@ -61,7 +62,7 @@ function levelFor(score: number, eventsAttended: number): TrustLevel {
 export async function computeTrustSignals(riderId: string, db: Db = prisma): Promise<TrustSignals> {
   const now = new Date();
 
-  const [checkIns, committedRsvps, safetyWaivers] = await Promise.all([
+  const [checkIns, committedRsvps, rideLogs, safetyWaivers] = await Promise.all([
     db.eventCheckIn.findMany({
       where: { riderId, event: { startsAt: { lte: now } } },
       select: {
@@ -71,6 +72,15 @@ export async function computeTrustSignals(riderId: string, db: Db = prisma): Pro
     }),
     db.rsvp.count({
       where: { riderId, status: "GOING", event: { startsAt: { lte: now } } },
+    }),
+    // Self-logged rides count as real riding: they feed mileage, the volume
+    // component, and the level's ride-count gate. They deliberately do NOT touch
+    // attendance/punctuality — those stay group-ride commitment signals, so the
+    // higher tiers still require showing up to organized rides, not just logging.
+    db.rideLog.aggregate({
+      where: { riderId, riddenAt: { lte: now } },
+      _count: { _all: true },
+      _sum: { distanceMiles: true },
     }),
     // Ties into Phase 13: accepting the current safety waiver is a trust signal.
     // The rider's acknowledgment must match the waiver's current version, which
@@ -85,7 +95,15 @@ export async function computeTrustSignals(riderId: string, db: Db = prisma): Pro
   ]);
 
   const eventsAttended = checkIns.length;
-  const milesRidden = checkIns.reduce((sum, ci) => sum + (ci.event.distanceMiles ?? 0), 0);
+  const ridesLogged = rideLogs._count._all;
+  const loggedMiles = rideLogs._sum.distanceMiles ?? 0;
+  const eventMiles = checkIns.reduce((sum, ci) => sum + (ci.event.distanceMiles ?? 0), 0);
+  const milesRidden = eventMiles + loggedMiles;
+
+  // Total rides across group check-ins and self-logged rides — drives the volume
+  // score and the level gate, so real riding outside organized events still
+  // moves you up.
+  const totalRides = eventsAttended + ridesLogged;
 
   const onTimeCheckIns = checkIns.filter((ci) => {
     const deadline = new Date(ci.event.startsAt.getTime() + PUNCTUALITY_GRACE_MINUTES * 60 * 1000);
@@ -108,14 +126,14 @@ export async function computeTrustSignals(riderId: string, db: Db = prisma): Pro
 
   // A rider with no history sits at 0 rather than inheriting a full attendance
   // score from an empty denominator.
-  const hasHistory = eventsAttended > 0 || eventsCommitted > 0;
+  const hasHistory = eventsAttended > 0 || eventsCommitted > 0 || ridesLogged > 0;
 
   const score = hasHistory
     ? Math.round(
         attendanceRate * WEIGHT_ATTENDANCE +
           punctualityRate * WEIGHT_PUNCTUALITY +
           (safetyAcked ? WEIGHT_SAFETY : 0) +
-          Math.min(1, eventsAttended / VOLUME_SATURATION) * WEIGHT_VOLUME,
+          Math.min(1, totalRides / VOLUME_SATURATION) * WEIGHT_VOLUME,
       )
     : 0;
 
@@ -129,7 +147,7 @@ export async function computeTrustSignals(riderId: string, db: Db = prisma): Pro
     punctualityRate,
     safetyAcked,
     score,
-    level: levelFor(score, eventsAttended),
+    level: levelFor(score, totalRides),
   };
 }
 
