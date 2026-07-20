@@ -589,15 +589,25 @@ export default async function RiderProfilePage({
   // ─── Garage tab ─────────────────────────────────────────────────
   const garageContent = isOwner ? (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Personal Garage</span>
-          <span className="inline-flex items-center gap-1"><Bike className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{ownerBikes.length}</strong> bikes</span>
-          <span className="inline-flex items-center gap-1"><Wrench className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{totalMods}</strong> mods</span>
-          <span className="inline-flex items-center gap-1"><Receipt className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{totalServices}</strong> services</span>
-          <span className="inline-flex items-center gap-1"><DollarSign className="h-3.5 w-3.5 text-sunset" /><strong className="font-semibold text-ink">{formatCurrency(totalSpend)}</strong> invested</span>
+      <div className={cardClass}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className={headingClass}>Personal Garage</h2>
+          <CreateBikeDialog />
         </div>
-        <CreateBikeDialog />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { value: String(ownerBikes.length), label: "Bikes", icon: Bike },
+            { value: String(totalMods), label: "Mods", icon: Wrench },
+            { value: String(totalServices), label: "Services", icon: Receipt },
+            { value: formatCurrency(totalSpend), label: "Invested", icon: DollarSign },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl border border-border bg-canvas p-4">
+              <s.icon className="h-4 w-4 text-sunset" />
+              <p className="mt-2 font-display text-2xl font-bold leading-none text-ink">{s.value}</p>
+              <p className="mt-1.5 text-xs text-muted">{s.label}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {ownerBikes.length === 0 ? (
