@@ -136,7 +136,8 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
   // Depends on the queries above: feed needs knownIds; ride status needs the event id.
   const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
   const [feed, checkIn, liveCount] = await Promise.all([
-    getFeedEntries({ viewerId: viewer.id, knownIds, mode: "following", take: 3 }),
+    // 4 keeps the 2-up peek grid even (two full rows); 3 left a hole.
+    getFeedEntries({ viewerId: viewer.id, knownIds, mode: "following", take: 4 }),
     nextRsvp
       ? prisma.eventCheckIn.findUnique({
           where: { eventId_riderId: { eventId: nextRsvp.event.id, riderId: viewer.id } },
