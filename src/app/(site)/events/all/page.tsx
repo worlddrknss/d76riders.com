@@ -1,19 +1,25 @@
 import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Route, Search, Signal, Users } from "lucide-react";
 import Link from "next/link";
+import { Prisma } from "@prisma/client";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { formatEventDate, formatEventTimeShort, startOfTodayUtc } from "@/lib/datetime";
 import { PUBLIC_EVENT_STATUSES } from "@/lib/events";
+import { haversineMiles } from "@/lib/routing";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 const PAGE_SIZE = 12;
+// Nearest-first loads matches into memory to sort by distance, so cap the pool.
+const NEAR_POOL = 300;
 
 type SearchParams = {
   q?: string;
   difficulty?: string;
   time?: string; // "upcoming" | "past" | "all"
+  location?: string;
+  sort?: string; // "date" (default) | "near"
   page?: string;
 };
 
@@ -22,14 +28,23 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
   const query = params.q?.trim() || "";
   const difficulty = params.difficulty || "";
   const timeFilter = params.time || "upcoming";
+  const location = params.location?.trim() || "";
   const page = Math.max(1, parseInt(params.page || "1", 10));
 
   // "Today or later" in the viewer's zone is the upcoming/past boundary, so a
   // ride happening today counts as upcoming until the day is out.
   const currentUser = await getCurrentUser();
-  const viewerTz = currentUser
-    ? (await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { timezone: true } }))?.timezone ?? null
+  const viewer = currentUser
+    ? await prisma.rider.findUnique({
+        where: { userId: currentUser.id },
+        select: { timezone: true, latitude: true, longitude: true },
+      })
     : null;
+  const viewerTz = viewer?.timezone ?? null;
+  const viewerPoint: [number, number] | null =
+    viewer?.latitude != null && viewer?.longitude != null ? [viewer.longitude, viewer.latitude] : null;
+  // Nearest-first is only offered when we know where the viewer is.
+  const sort = params.sort === "near" && viewerPoint ? "near" : "date";
   const todayStart = startOfTodayUtc(viewerTz);
 
   // Build where clause
@@ -50,35 +65,87 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
     where.difficulty = difficulty;
   }
 
+  if (location) {
+    where.meetLocation = location;
+  }
+
   if (timeFilter === "upcoming") {
     where.startsAt = { gte: todayStart };
   } else if (timeFilter === "past") {
     where.startsAt = { lt: todayStart };
   }
 
-  const [events, totalCount] = await Promise.all([
-    prisma.rideEvent.findMany({
+  const eventInclude = {
+    // GOING only — every RSVP row would count riders who said NOT_GOING.
+    _count: { select: { rsvps: { where: { status: "GOING" as const } } } },
+  } satisfies Prisma.RideEventInclude;
+
+  // Each rendered item carries its distance from the viewer (null unless we're
+  // sorting nearest and both ends have coordinates).
+  type EventRow = Prisma.RideEventGetPayload<{ include: typeof eventInclude }>;
+  let items: { event: EventRow; distance: number | null }[];
+  let totalCount: number;
+
+  if (sort === "near" && viewerPoint) {
+    // Distance sort can't run in SQL, so pull a bounded pool, rank in memory,
+    // and paginate the ranked list. Events without coordinates sort last.
+    const pool = await prisma.rideEvent.findMany({
       where,
       orderBy: { startsAt: timeFilter === "past" ? "desc" : "asc" },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-      include: {
-        // GOING only — every RSVP row would count riders who said NOT_GOING.
-        _count: { select: { rsvps: { where: { status: "GOING" } } } },
-      },
-    }),
-    prisma.rideEvent.count({ where }),
-  ]);
+      take: NEAR_POOL,
+      include: eventInclude,
+    });
+    const ranked = pool
+      .map((event) => ({
+        event,
+        distance:
+          event.meetLat != null && event.meetLng != null
+            ? haversineMiles(viewerPoint, [event.meetLng, event.meetLat])
+            : null,
+      }))
+      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+    totalCount = ranked.length;
+    items = ranked.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  } else {
+    const [events, count] = await Promise.all([
+      prisma.rideEvent.findMany({
+        where,
+        orderBy: { startsAt: timeFilter === "past" ? "desc" : "asc" },
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+        include: eventInclude,
+      }),
+      prisma.rideEvent.count({ where }),
+    ]);
+    items = events.map((event) => ({ event, distance: null }));
+    totalCount = count;
+  }
+
+  // Distinct meetup locations that actually have public events, for the dropdown.
+  const locationGroups = await prisma.rideEvent.groupBy({
+    by: ["meetLocation"],
+    where: { status: { in: PUBLIC_EVENT_STATUSES }, meetLocation: { not: null } },
+    orderBy: { meetLocation: "asc" },
+  });
+  const locationOptions = [
+    { value: "", label: "All locations" },
+    ...locationGroups
+      .map((g) => g.meetLocation)
+      .filter((l): l is string => Boolean(l))
+      .map((l) => ({ value: l, label: l })),
+  ];
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   // Build URL helper for pagination/filters
   function buildUrl(overrides: Partial<SearchParams>): string {
-    const merged = { q: query, difficulty, time: timeFilter, page: String(page), ...overrides };
+    const merged = { q: query, difficulty, time: timeFilter, location, sort, page: String(page), ...overrides };
     const sp = new URLSearchParams();
     if (merged.q) sp.set("q", merged.q);
     if (merged.difficulty) sp.set("difficulty", merged.difficulty);
     if (merged.time && merged.time !== "upcoming") sp.set("time", merged.time);
+    if (merged.location) sp.set("location", merged.location);
+    if (merged.sort && merged.sort !== "date") sp.set("sort", merged.sort);
     if (merged.page && merged.page !== "1") sp.set("page", merged.page);
     const qs = sp.toString();
     return `/events/all${qs ? `?${qs}` : ""}`;
@@ -154,6 +221,30 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
             ))}
           </select>
 
+          {locationOptions.length > 1 ? (
+            <select
+              name="location"
+              defaultValue={location}
+              className="max-w-48 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-sunset focus:outline-none focus:ring-1 focus:ring-sunset"
+            >
+              {locationOptions.map((l) => (
+                <option key={l.value} value={l.value}>{l.label}</option>
+              ))}
+            </select>
+          ) : null}
+
+          {viewerPoint ? (
+            <select
+              name="sort"
+              defaultValue={sort}
+              aria-label="Sort events"
+              className="rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-ink focus:border-sunset focus:outline-none focus:ring-1 focus:ring-sunset"
+            >
+              <option value="date">Sort: Date</option>
+              <option value="near">Sort: Nearest</option>
+            </select>
+          ) : null}
+
           <button
             type="submit"
             className="rounded-lg bg-asphalt px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-asphalt/80"
@@ -163,13 +254,13 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
         </form>
 
         {/* EVENT GRID */}
-        {events.length === 0 ? (
+        {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center text-sm text-muted shadow-soft">
             No events match your search. Try different filters or create a new event.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {events.map((event) => {
+            {items.map(({ event, distance }) => {
               const isPast = event.startsAt < todayStart;
               return (
                 <Link
@@ -207,6 +298,9 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                       ) : null}
                       {event.difficulty ? (
                         <span className="inline-flex items-center gap-1"><Signal className="h-3 w-3 text-sunset" />{event.difficulty.replaceAll("_", " ")}</span>
+                      ) : null}
+                      {distance != null ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-sunset"><MapPin className="h-3 w-3" />{Math.round(distance)} mi away</span>
                       ) : null}
                     </div>
                   </div>
