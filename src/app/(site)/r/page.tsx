@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Bike, MapPin, Users, UserRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
-import { siteImages } from "@/data/images";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
@@ -69,14 +68,16 @@ export default async function RidersPage() {
       <PageHeader
         icon={Users}
         title="Rider Directory"
-        subtitle="Meet riders across Clarksville and surrounding areas. Everyone here is part of the same local road community."
+        subtitle="Founded in Clarksville, TN and open to riders wherever the road goes. All bikes, all riders, one community."
       />
 
       {/* RIDER GRID */}
       <StaggerList className="grid w-full gap-6 md:grid-cols-2 lg:grid-cols-3">
         {riders.map((rider) => {
             const avatar = mediaUrl(rider.avatarUrl);
-            const cover = mediaUrl(rider.coverUrl) || siteImages.hero;
+            // No stock fallback — borrowing a hero shot reads as someone else's
+            // bike. Riders without a cover get a plain dark fill instead.
+            const cover = mediaUrl(rider.coverUrl);
             const bikeLabel = (() => {
               const primary = rider.primaryBikeId ? rider.bikes.find((b) => b.id === rider.primaryBikeId) : null;
               const displayBike = primary || rider.bikes[0];
@@ -88,10 +89,12 @@ export default async function RidersPage() {
               <StaggerItem key={rider.handle}>
                 <article className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
                 <div className="relative h-28 bg-asphalt">
-                  <div
-                    className="h-full w-full bg-cover bg-center opacity-60"
-                    style={{ backgroundImage: `url(${cover})` }}
-                  />
+                  {cover && (
+                    <div
+                      className="h-full w-full bg-cover bg-center opacity-60"
+                      style={{ backgroundImage: `url(${cover})` }}
+                    />
+                  )}
                   {avatar ? (
                     <img
                       src={avatar}
@@ -133,7 +136,7 @@ export default async function RidersPage() {
       <div className="mt-8 grid gap-4 rounded-2xl border border-border bg-surface p-6 text-sm text-muted shadow-soft sm:grid-cols-3 sm:p-8">
         <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Rider-first community structure</p>
         <p className="flex items-center gap-2"><Bike className="h-4 w-4 text-sunset" />Bike diversity, one shared culture</p>
-        <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />Clarksville-centered riding network</p>
+        <p className="flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />Founded in Clarksville, riding everywhere</p>
       </div>
     </AppShell>
   );

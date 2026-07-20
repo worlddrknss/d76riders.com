@@ -5,9 +5,9 @@ export function CtaBanner() {
     <section className="grid gap-6 rounded-[2rem] border border-border bg-surface p-8 shadow-lift sm:p-10 lg:grid-cols-[1.2fr_0.8fr]">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Join District 76</p>
-        <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">Clarksville&apos;s rider community is open to you.</h2>
+        <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">All bikes, all riders, one community.</h2>
         <p className="mt-3 max-w-3xl text-muted">
-          Whether you are on your first season or your twentieth, District 76 is where local riders find routes, friendships, and a better riding week.
+          Whether you are on your first season or your twentieth, District 76 is where riders find routes, friendships, and a better riding week. Founded in Clarksville, TN — open to riders wherever the road goes.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/join" className="rounded-full bg-asphalt px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800">

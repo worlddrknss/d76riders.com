@@ -34,7 +34,7 @@ export default async function JoinPage(props: {
         image={siteImages.pageHeroes.join}
         eyebrow="Join District 76"
         title="Ride With a Local Crew That Actually Rides"
-        description="District 76 is for riders in and around Clarksville who want consistent routes, strong community standards, and people they can count on."
+        description="Founded in Clarksville, TN and open to riders anywhere — for anyone who wants consistent routes, strong community standards, and people they can count on."
       />
 
       <section className="w-full bg-canvas">
