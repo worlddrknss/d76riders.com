@@ -6,6 +6,7 @@ import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Lo
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYoutube, SiYoutubeHex } from "@icons-pack/react-simple-icons";
 
+import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { AppShell } from "@/components/layout/app-shell";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { SocialIconLink } from "@/components/profile/social-icon-link";
@@ -331,6 +332,23 @@ export default async function RiderProfilePage({
   // DMs require a mutual follow — both riders following each other.
   const canMessage = !isOwner && viewer ? await canDm(viewer.id, rider.id) : false;
 
+  // The Journal tab carries the same right rail as the feed. It needs the
+  // viewer's full follow set so "Riders to Follow" skips people they already
+  // follow — `viewer.following` above is scoped to this profile only.
+  const viewerKnownIds = viewer
+    ? [
+        ...new Set([
+          ...(
+            await prisma.riderFollow.findMany({
+              where: { followerId: viewer.id },
+              select: { followingId: true },
+            })
+          ).map((f) => f.followingId),
+          viewer.id,
+        ]),
+      ]
+    : [];
+
   const profileData = isOwner ? {
     displayName: rider.name,
     username: rider.handle,
@@ -555,8 +573,18 @@ export default async function RiderProfilePage({
     </div>
   );
 
-  // Journal — the rider's posts, full width (no identity sidebar).
-  const journalContent = ridesContent;
+  // Journal — the rider's posts beside the same contextual rail as the feed, so
+  // the two reading surfaces match. Logged-out visitors get the posts full width.
+  const journalContent = viewer ? (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="min-w-0">{ridesContent}</div>
+      <aside className="hidden space-y-4 lg:block">
+        <FeedRightRail viewerId={viewer.id} knownIds={viewerKnownIds} />
+      </aside>
+    </div>
+  ) : (
+    ridesContent
+  );
 
   // ─── Garage tab ─────────────────────────────────────────────────
   const garageContent = isOwner ? (
