@@ -6,6 +6,7 @@ import { logActivity } from "@/lib/activity";
 import { requireUserId } from "@/lib/authz";
 import { HAZARD_META, hazardExpiresAt } from "@/lib/hazards";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 import { hazardReportSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
 
@@ -25,6 +26,11 @@ export async function reportHazardAction(
 
   const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
   if (!rider) return { error: "No rider profile found.", success: null };
+
+  const throttle = await rateLimit(`hazard:${rider.id}`, { limit: 30, windowSeconds: 3600 });
+  if (!throttle.allowed) {
+    return { error: "You're reporting hazards very quickly. Take a breather and try again shortly.", success: null };
+  }
 
   const parsed = hazardReportSchema.safeParse({
     roadId: formData.get("roadId")?.toString() || undefined,

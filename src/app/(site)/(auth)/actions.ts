@@ -10,6 +10,7 @@ import { geocodePlace } from "@/lib/geocode";
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { requestPasswordReset, resetPassword } from "@/lib/password-reset";
 import { prisma } from "@/lib/prisma";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { recordReferral } from "@/lib/referrals";
 import { clearUserSession, createUserSession } from "@/lib/session";
 
@@ -37,6 +38,13 @@ export async function registerAction(
   _previousState: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  // Cap account/email-verification spam per IP (each signup triggers a send).
+  const ip = await clientIp();
+  const signupOk = await rateLimit(`register:ip:${ip}`, { limit: 5, windowSeconds: 3600 });
+  if (!signupOk.allowed) {
+    return { error: "Too many sign-ups from this network. Please try again later." };
+  }
+
   const displayNameInput = normalizeText(formData.get("name"));
   const username = normalizeUsername(formData.get("username"));
   const email = normalizeEmail(formData.get("email"));
@@ -161,6 +169,16 @@ export async function loginAction(
     return { error: "Email and password are required." };
   }
 
+  // Throttle brute-force / credential-stuffing: per-IP and per-account.
+  const ip = await clientIp();
+  const [ipOk, emailOk] = await Promise.all([
+    rateLimit(`login:ip:${ip}`, { limit: 20, windowSeconds: 900 }),
+    rateLimit(`login:email:${email}`, { limit: 8, windowSeconds: 900 }),
+  ]);
+  if (!ipOk.allowed || !emailOk.allowed) {
+    return { error: "Too many attempts. Please wait a few minutes and try again." };
+  }
+
   const user = await prisma.user.findUnique({
     where: { email },
     select: {
@@ -200,7 +218,17 @@ export async function requestPasswordResetAction(
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "Enter a valid email address.", sent: false };
   }
-  await requestPasswordReset(email);
+
+  // Throttle reset-link spam (each request emails the owner). Report the same
+  // generic "sent" outcome even when throttled, to preserve non-enumeration.
+  const ip = await clientIp();
+  const [ipOk, emailOk] = await Promise.all([
+    rateLimit(`pwreset:ip:${ip}`, { limit: 5, windowSeconds: 3600 }),
+    rateLimit(`pwreset:email:${email}`, { limit: 3, windowSeconds: 3600 }),
+  ]);
+  if (ipOk.allowed && emailOk.allowed) {
+    await requestPasswordReset(email);
+  }
   return { error: null, sent: true };
 }
 

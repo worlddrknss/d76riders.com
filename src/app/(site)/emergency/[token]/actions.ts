@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activity";
 import { emergencyAccessEmail } from "@/lib/email-templates";
 import { sendEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 import { emergencyAccessSchema } from "@/lib/schemas";
 
 async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
@@ -68,8 +69,12 @@ export async function logEmergencyAccessAction(
     },
   });
 
-  // Alert the owner every time — a security signal so they can rotate the link
-  // if the access wasn't a real responder. Best-effort; never blocks the log.
+  // Alert the owner — a security signal so they can rotate the link if the
+  // access wasn't a real responder. The access itself is always logged above;
+  // the alert (activity + email) is throttled per card so a leaked token can't
+  // be used to flood the owner's inbox/feed. Best-effort; never blocks the log.
+  const alertOk = await rateLimit(`emergency-alert:${card.id}`, { limit: 4, windowSeconds: 3600 });
+  if (!alertOk.allowed) return;
   try {
     const whenText = new Date().toLocaleString("en-US", {
       dateStyle: "medium",

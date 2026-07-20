@@ -1,4 +1,16 @@
-// Security domain — malware scan audit log for uploaded files.
+// Security domain — malware scan audit log for uploaded files, and the
+// fixed-window counters that back rate limiting.
+
+// One row per (action, identifier) fixed window. Shared across pods so the
+// limit holds under horizontal scaling; stale rows are harmless and reset on
+// next use. See src/lib/rate-limit.ts.
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+
+  @@index([windowStart])
+}
 
 enum MalwareScanResult {
   CLEAN
