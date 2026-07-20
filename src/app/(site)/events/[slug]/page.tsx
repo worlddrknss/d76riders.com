@@ -814,8 +814,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               )}
             </div>
 
-            {(eventClimb || waypoints.length > 0) && (
-              <div className="mt-5 grid gap-5 border-t border-border pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+            {(eventClimb || waypoints.length > 0 || event.routeId) && (
+              <div className="mt-5 grid gap-x-8 gap-y-6 border-t border-border pt-4 md:grid-cols-2">
+                {/* Left: difficulty + turn-by-turn stops */}
                 <div className="space-y-4">
                   {eventClimb && (
                     <div className="rounded-lg border border-border bg-canvas p-4">
@@ -828,29 +829,30 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       </p>
                     </div>
                   )}
+                  {waypoints.length > 0 && <RouteStops waypoints={waypoints} />}
                 </div>
-                {waypoints.length > 0 && <RouteStops waypoints={waypoints} />}
-              </div>
-            )}
 
-            {event.routeId && (
-              <div className="mt-5 border-t border-border pt-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
-                    Hazards on this route
-                  </h3>
-                  {currentUser ? (
-                    <ReportHazardDialog
-                      routeId={event.routeId}
-                      coordinates={coordinates}
-                      hazards={eventHazardPins}
-                      defaultPoint={hazardDefaultPoint}
-                    />
-                  ) : null}
-                </div>
-                <div className="mt-3">
-                  <HazardList hazards={eventHazardListItems} />
-                </div>
+                {/* Right: rider-flagged hazards */}
+                {event.routeId && (
+                  <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+                        Hazards on this route
+                      </h3>
+                      {currentUser ? (
+                        <ReportHazardDialog
+                          routeId={event.routeId}
+                          coordinates={coordinates}
+                          hazards={eventHazardPins}
+                          defaultPoint={hazardDefaultPoint}
+                        />
+                      ) : null}
+                    </div>
+                    <div className="mt-3">
+                      <HazardList hazards={eventHazardListItems} />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
