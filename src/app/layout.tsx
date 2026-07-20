@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     template: "%s | District 76 Riders",
   },
   description:
-    "All bikes, all riders, one community. District 76 is a motorcycle community founded in Clarksville, TN and built for riders across Tennessee — group rides, scenic roads, and a platform made by riders, for riders.",
+    "All bikes, all riders, one community. District 76 is a motorcycle community founded in Clarksville, TN and built for all riders — group rides, scenic roads, and a platform made by riders, for riders.",
   keywords: [
     "motorcycle community",
     "Clarksville TN",
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     siteName: "District 76 Riders",
     title: "District 76 Riders — All Bikes, All Riders, One Community",
     description:
-      "All bikes, all riders, one community. Founded in Clarksville, TN and built for riders across Tennessee. Share your rides, plan the next group ride, log your build, and discover scenic roads. No patches, no politics, no brand requirements.",
+      "All bikes, all riders, one community. Founded in Clarksville, TN and built for all riders. Share your rides, plan the next group ride, log your build, and discover scenic roads. No patches, no politics, no brand requirements.",
     images: [{ url: "/images/og/image.png", width: 1200, height: 651, alt: "District 76 Riders" }],
   },
   twitter: {

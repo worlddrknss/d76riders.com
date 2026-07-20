@@ -56,7 +56,7 @@ export function Footer() {
             Clarksville, Tennessee
           </p>
           <p className="max-w-xs text-sm text-slate-400">
-            Founded in Clarksville and built for riders across Tennessee.
+            Founded in Clarksville and built for all riders.
           </p>
         </div>
 
