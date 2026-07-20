@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 
 /**
  * The full social feed. Home (/) is the rider dashboard now; this is where the
- * For You / Following / Discover / Mine stream lives. Signed-in only — visitors
- * bounce to the marketing home.
+ * Latest / Following / Momentum stream lives. Signed-in only — visitors bounce
+ * to the marketing home.
  */
 export default async function FeedPage({
   searchParams,
@@ -38,8 +38,9 @@ export default async function FeedPage({
   if (!viewer) redirect("/");
 
   const { feed } = await searchParams;
-  const mode =
-    feed === "discover" || feed === "mine" || feed === "following" ? feed : "foryou";
+  // Anything unrecognised (including the retired foryou/discover/mine links)
+  // falls back to the chronological default.
+  const mode = feed === "following" || feed === "momentum" ? feed : "latest";
 
   return <HomeFeed viewer={viewer} mode={mode} />;
 }

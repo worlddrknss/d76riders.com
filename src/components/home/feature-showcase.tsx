@@ -101,7 +101,7 @@ export function FeatureShowcase() {
                 <Feat><strong className="font-semibold">Two Wheels Down</strong> — the biker salute replaces the like. Give one, the rider knows.</Feat>
                 <Feat><strong className="font-semibold">Stories</strong> that vanish in 24 hours, and posts you can Save for later.</Feat>
                 <Feat><strong className="font-semibold">Direct messages</strong> with riders you both follow, photos included.</Feat>
-                <Feat><strong className="font-semibold">For You, Following &amp; Discover</strong> tabs so the good stuff surfaces.</Feat>
+                <Feat><strong className="font-semibold">A feed in real order</strong> — newest first, always. No algorithm deciding what you see.</Feat>
               </ul>
             </FadeUp>
 

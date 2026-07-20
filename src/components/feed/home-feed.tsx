@@ -9,19 +9,20 @@ import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { StoryBar } from "@/components/stories/story-bar";
 import type { StoryGroup } from "@/components/stories/story-viewer";
-import { FEED_PAGE_SIZE, getFeedEntries } from "@/lib/feed";
+import { FEED_PAGE_SIZE, getFeedEntries, type FeedMode } from "@/lib/feed";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
 /**
- * The logged-in home: a following feed. Journal posts from the riders you follow
- * (and your own), newest first, with the story bar and a composer on top. This is
- * the consumption half of the journal split — you create on your profile, you
- * catch up here.
+ * The logged-in feed: journal posts with the story bar and a composer on top.
+ * Defaults to Latest — the whole community, newest first — because a chronological
+ * feed shows what actually happened rather than what ranking chose to promote.
+ * Momentum is the one opt-in ranked tab. This is the consumption half of the
+ * journal split — you create on your profile, you catch up here.
  */
 export async function HomeFeed({
   viewer,
-  mode = "following",
+  mode = "latest",
 }: {
   viewer: {
     id: string;
@@ -32,14 +33,14 @@ export async function HomeFeed({
     coverPosition: number;
     location: string | null;
   };
-  mode?: "foryou" | "following" | "discover" | "mine";
+  mode?: FeedMode;
 }) {
   const following = await prisma.riderFollow.findMany({
     where: { followerId: viewer.id },
     select: { followingId: true },
   });
-  // "Following" = riders you follow + yourself. "Discover" = everyone else, so
-  // it surfaces riders you're not following yet.
+  // "Following" = riders you follow + yourself; also seeds the right rail's
+  // "riders to follow" suggestions.
   const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
   const feed = await getFeedEntries({ viewerId: viewer.id, knownIds, mode, take: FEED_PAGE_SIZE });
 
@@ -79,11 +80,10 @@ export async function HomeFeed({
   const viewerAvatar = mediaUrl(viewer.avatarUrl);
   const viewerCover = mediaUrl(viewer.coverUrl);
 
-  const TABS: { mode: "foryou" | "following" | "discover" | "mine"; label: string; href: string }[] = [
-    { mode: "foryou", label: "For You", href: "/feed" },
+  const TABS: { mode: FeedMode; label: string; href: string }[] = [
+    { mode: "latest", label: "Latest", href: "/feed" },
     { mode: "following", label: "Following", href: "/feed?feed=following" },
-    { mode: "discover", label: "Discover", href: "/feed?feed=discover" },
-    { mode: "mine", label: "Mine", href: "/feed?feed=mine" },
+    { mode: "momentum", label: "Momentum", href: "/feed?feed=momentum" },
   ];
 
   return (
@@ -132,7 +132,7 @@ export async function HomeFeed({
             <StoryBar groups={storyGroups} currentRiderId={viewer.id} canPost currentAvatarUrl={viewerAvatar} />
           </div>
 
-          {/* Following · Discover · Mine */}
+          {/* Latest · Following · Momentum */}
           <div className="flex border-b border-border">
             {TABS.map((t) => (
               <Link
@@ -149,32 +149,18 @@ export async function HomeFeed({
 
           {feed.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-canvas p-10 text-center">
-              {mode === "discover" ? (
-                <>
-                  <Compass className="mx-auto h-8 w-8 text-muted/50" />
-                  <p className="mt-3 text-sm font-medium text-ink">Nothing new to discover right now</p>
-                  <p className="mt-1 text-sm text-muted">
-                    You&apos;re following everyone who&apos;s posted. Check back as more riders join and share.
-                  </p>
-                </>
-              ) : mode === "mine" ? (
-                <>
-                  <Users className="mx-auto h-8 w-8 text-muted/50" />
-                  <p className="mt-3 text-sm font-medium text-ink">You haven&apos;t posted yet</p>
-                  <p className="mt-1 text-sm text-muted">Use the box above to share your first ride.</p>
-                </>
-              ) : mode === "following" ? (
+              {mode === "following" ? (
                 <>
                   <Users className="mx-auto h-8 w-8 text-muted/50" />
                   <p className="mt-3 text-sm font-medium text-ink">Your feed is quiet</p>
                   <p className="mt-1 text-sm text-muted">
-                    Follow riders and their ride journals show up here. Post your own above, or check For You.
+                    Follow riders and their ride journals show up here. Post your own above, or see everything in Latest.
                   </p>
                   <Link
                     href="/feed"
                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
                   >
-                    <Compass className="h-4 w-4" /> See For You
+                    <Compass className="h-4 w-4" /> See Latest
                   </Link>
                 </>
               ) : (

@@ -136,7 +136,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
   // Depends on the queries above: feed needs knownIds; ride status needs the event id.
   const knownIds = [...new Set([...following.map((f) => f.followingId), viewer.id])];
   const [feed, checkIn, liveCount] = await Promise.all([
-    getFeedEntries({ viewerId: viewer.id, knownIds, mode: "foryou", take: 3 }),
+    getFeedEntries({ viewerId: viewer.id, knownIds, mode: "following", take: 3 }),
     nextRsvp
       ? prisma.eventCheckIn.findUnique({
           where: { eventId_riderId: { eventId: nextRsvp.event.id, riderId: viewer.id } },
@@ -378,7 +378,7 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
             <div>
               <div className="flex items-center justify-between">
                 <h3 className="font-display text-lg font-bold uppercase tracking-tight text-ink">From your feed</h3>
-                <Link href="/feed" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
+                <Link href="/feed?feed=following" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
                   Open full feed <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -391,10 +391,10 @@ export async function RiderDashboard({ viewer }: { viewer: Viewer }) {
                   <p className="text-sm font-medium text-ink">Your feed is just getting started</p>
                   <p className="mt-1 text-sm text-muted">Follow a few riders and their posts show up here.</p>
                   <Link
-                    href="/feed?feed=discover"
+                    href="/riders"
                     className="mt-4 inline-flex items-center gap-2 rounded-lg bg-sunset px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
                   >
-                    Discover riders <ArrowRight className="h-4 w-4" />
+                    Find riders <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
               )}

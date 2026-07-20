@@ -3,13 +3,18 @@ import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
 export const FEED_PAGE_SIZE = 20;
-export type FeedMode = "foryou" | "following" | "discover" | "mine";
+export type FeedMode = "latest" | "following" | "momentum";
 
 /**
- * A page of feed entries for the home feed. "foryou" = the whole community,
- * ranked by momentum (trending) then recency. "following" = riders you follow +
- * yourself, newest first. "discover" = riders you don't follow, ranked by
- * momentum then recency. "mine" = only your own posts, newest first.
+ * A page of feed entries for the home feed.
+ *
+ * Chronological is the default everywhere — the community feed should show what
+ * actually happened, in order, not what an algorithm decided to promote. Ranking
+ * is confined to one clearly-labelled, opt-in tab.
+ *
+ * "latest"    = the whole community, newest first (the default).
+ * "following" = riders you follow + yourself, newest first.
+ * "momentum"  = the whole community, ranked by momentum (trending) then recency.
  */
 export async function getFeedEntries({
   viewerId,
@@ -24,16 +29,9 @@ export async function getFeedEntries({
   skip?: number;
   take?: number;
 }): Promise<JournalGridEntry[]> {
-  const where =
-    mode === "mine"
-      ? { authorId: viewerId }
-      : mode === "discover"
-        ? { authorId: { notIn: knownIds } }
-        : mode === "foryou"
-          ? {}
-          : { authorId: { in: knownIds } };
+  const where = mode === "following" ? { authorId: { in: knownIds } } : {};
   const orderBy =
-    mode === "discover" || mode === "foryou"
+    mode === "momentum"
       ? [{ momentum: "desc" as const }, { createdAt: "desc" as const }]
       : [{ createdAt: "desc" as const }];
 
