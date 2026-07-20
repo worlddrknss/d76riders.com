@@ -1,0 +1,6 @@
+{
+  // Deliberate exceptions for a professional, GitHub-rendered README.
+  "MD033": false, // allow inline HTML — the centered <div> header + badges
+  "MD041": false, // first line is the centered header block, not a bare H1
+  "MD060": false  // don't require table pipes to be padded into alignment
+}
