@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 
 import { absoluteUrl } from "@/lib/absolute-url";
 import { logActivity, logActivityForRiders } from "@/lib/activity";
+import { sendPushToRider } from "@/lib/push";
 import { requireUserId } from "@/lib/authz";
 import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
@@ -815,7 +816,7 @@ export async function riderDownAction(
     select: { id: true },
   });
 
-  // Notify every organizer immediately (in-app; push/SMS is future work).
+  // Notify every organizer immediately — in-app feed plus a push.
   const organizerIds = await organizerRiderIds(eventId);
   const locationSuffix = cleanLocation ? ` near ${cleanLocation}` : "";
   await logActivityForRiders(organizerIds, {
@@ -824,6 +825,20 @@ export async function riderDownAction(
     refId: eventId,
     metadata: { incidentId: incident.id, affectedRiderId: affected.id },
   });
+
+  // Emergency push — bypasses quiet hours (sendPushToRider, not pushNotifyRider)
+  // because a rider-down alert has to reach organizers immediately, even
+  // overnight. Best-effort per organizer; never blocks the report.
+  await Promise.all(
+    organizerIds.map((rid) =>
+      sendPushToRider(rid, {
+        title: "🚨 Rider down",
+        body: `${affected.name} on ${event.title}${locationSuffix}. Open for details.`,
+        url: `/events/${event.slug}`,
+        tag: `rider-down-${incident.id}`,
+      }).catch(() => {}),
+    ),
+  );
 
   revalidatePath(`/events/${event.slug}`);
   return { error: null, success: true };

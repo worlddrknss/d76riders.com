@@ -29,22 +29,32 @@ export async function validateAndScanImageUpload(file: File, source: string): Pr
   }
 
   const scanResult = await scanForMalware(buffer);
-  if (scanResult === "INFECTED") {
+  // Fail CLOSED: a detected infection, or a scanner that was meant to run but
+  // errored (ClamAV enabled-but-unreachable in prod), both block the upload.
+  // Only an explicitly-disabled scanner (SKIPPED — e.g. local dev, mode "off")
+  // lets the file through, so enabling scanning can never be silently bypassed
+  // by the scanner simply being down.
+  if (scanResult === "INFECTED" || scanResult === "ERROR") {
+    const infected = scanResult === "INFECTED";
     try {
       await logMalwareAudit({
         source,
         contentType: file.type || null,
         fileSizeBytes: file.size,
-        scanResult: "INFECTED",
+        scanResult,
         actionTaken: "BLOCKED",
         deleted: false,
-        details: `Blocked upload: ${file.name}`,
+        details: infected ? `Blocked upload: ${file.name}` : `Blocked (scanner unavailable): ${file.name}`,
       });
     } catch {
       // Never block upload handling on audit logging failure.
     }
 
-    throw new Error("Upload blocked: malware detected in image.");
+    throw new Error(
+      infected
+        ? "Upload blocked: malware detected in image."
+        : "Uploads are temporarily unavailable — the malware scanner is unreachable. Please try again shortly.",
+    );
   }
 
   try {
@@ -52,11 +62,11 @@ export async function validateAndScanImageUpload(file: File, source: string): Pr
       source,
       contentType: file.type || null,
       fileSizeBytes: file.size,
-      scanResult,
+      scanResult, // CLEAN, or SKIPPED when scanning is disabled
       actionTaken: "ALLOWED",
       deleted: false,
-      details: scanResult === "ERROR"
-        ? `Scanner unavailable/error for: ${file.name}`
+      details: scanResult === "SKIPPED"
+        ? `Scan skipped (disabled): ${file.name}`
         : `Scan clean: ${file.name}`,
     });
   } catch {
