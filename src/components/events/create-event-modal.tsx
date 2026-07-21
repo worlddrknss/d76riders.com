@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 
 /**
- * Full-page modal shell for the intercepted `/events/new` route. Renders over
- * whatever page the organizer was on; closing returns them there via router.back
- * (the URL was masked to /events/new by the interception). A hard refresh or a
- * direct visit skips this entirely and loads the real page.
+ * Full-screen modal shell for the intercepted `/events/new` route. Fills the
+ * viewport (Facebook-composer style): a header bar on top, then the form, which
+ * lays itself out as fields + live preview. Closing returns the organizer to the
+ * page they were on via router.back (the URL was masked to /events/new). A hard
+ * refresh or direct visit skips this and loads the real page.
  *
- * Deliberately no backdrop-click-to-close: the create form is long, and a stray
- * click shouldn't wipe it. Close is the X or Escape only.
+ * Close is the X or Escape only — the create form is long, so no stray-click
+ * dismiss.
  */
 export function CreateEventModal({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -22,7 +23,6 @@ export function CreateEventModal({ children }: { children: React.ReactNode }) {
       if (e.key === "Escape") close();
     };
     document.addEventListener("keydown", onKey);
-    // Freeze the page behind the modal.
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -33,32 +33,28 @@ export function CreateEventModal({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] overflow-y-auto bg-ink/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex flex-col bg-surface"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-event-modal-title"
     >
-      <div className="mx-auto my-6 w-full max-w-4xl px-4">
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-lift">
-          <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border bg-surface px-6 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
-              <h1 id="create-event-modal-title" className="mt-0.5 font-display text-2xl font-semibold text-ink">
-                Create Event
-              </h1>
-            </div>
-            <button
-              type="button"
-              onClick={close}
-              aria-label="Close"
-              className="-mr-1 rounded-lg p-2 text-muted transition hover:bg-canvas hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-sunset/50"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="p-6">{children}</div>
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
+          <h1 id="create-event-modal-title" className="font-display text-xl font-bold text-ink sm:text-2xl">
+            Create Event
+          </h1>
         </div>
-      </div>
+        <button
+          type="button"
+          onClick={close}
+          aria-label="Close"
+          className="-mr-1 rounded-lg p-2 text-muted transition hover:bg-canvas hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-sunset/50"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1">{children}</div>
     </div>
   );
 }

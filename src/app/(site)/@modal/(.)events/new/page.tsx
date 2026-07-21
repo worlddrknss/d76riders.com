@@ -26,7 +26,7 @@ export default async function InterceptedCreateEventPage() {
 
   return (
     <CreateEventModal>
-      <CreateEventForm recentSpots={recentSpots} defaultTimezone={defaultTimezone} crews={crews} />
+      <CreateEventForm recentSpots={recentSpots} defaultTimezone={defaultTimezone} crews={crews} withPreview />
     </CreateEventModal>
   );
 }

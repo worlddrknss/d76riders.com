@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { CalendarClock, ImageIcon } from "lucide-react";
 
 import type { MeetupSpot } from "@/lib/events";
 
@@ -17,23 +18,159 @@ const initialCreateEventFormState: CreateEventFormState = {
   error: null,
 };
 
+const DIFFICULTY_LABELS: Record<string, string> = {
+  BEGINNER_FRIENDLY: "Beginner Friendly",
+  INTERMEDIATE: "Intermediate",
+  SCENIC: "Scenic",
+};
+
+// Pull the short abbreviation ("CT") out of a timezone label like "Central (CT)".
+function tzAbbrev(tz: string): string {
+  const label = US_TIMEZONES.find((t) => t.value === tz)?.label ?? "";
+  return label.match(/\(([^)]+)\)/)?.[1] ?? "";
+}
+
+// Format a datetime-local string as the ride's typed wall clock — no zone math,
+// since the preview mirrors exactly what the organizer entered.
+function formatWhen(value: string): { day: string; mon: string; weekday: string; time: string | null } | null {
+  if (!value) return null;
+  const [datePart, timePart] = value.split("T");
+  const [y, m, d] = (datePart ?? "").split("-").map((n) => Number.parseInt(n, 10));
+  if (!y || !m || !d) return null;
+  let hh = 0;
+  let mm = 0;
+  if (timePart) {
+    const [h, mi] = timePart.split(":").map((n) => Number.parseInt(n, 10));
+    hh = h || 0;
+    mm = mi || 0;
+  }
+  const dt = new Date(y, m - 1, d, hh, mm);
+  if (Number.isNaN(dt.getTime())) return null;
+  return {
+    day: String(d),
+    mon: dt.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+    weekday: dt.toLocaleDateString("en-US", { weekday: "long" }),
+    time: timePart ? dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : null,
+  };
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-asphalt">{children}</span>;
+}
+
+/** Live event-card preview, mirroring how the ride will read on the events page. */
+function EventPreview({
+  title,
+  excerpt,
+  description,
+  startsAt,
+  timezone,
+  difficulty,
+  distance,
+  crewName,
+  photoUrl,
+}: {
+  title: string;
+  excerpt: string;
+  description: string;
+  startsAt: string;
+  timezone: string;
+  difficulty: string;
+  distance: string;
+  crewName: string | null;
+  photoUrl: string | null;
+}) {
+  const when = formatWhen(startsAt);
+  const summary = excerpt.trim() || description.trim();
+  const diffLabel = difficulty ? DIFFICULTY_LABELS[difficulty] ?? null : null;
+  const tz = tzAbbrev(timezone);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+      <div className="relative aspect-[16/10] w-full bg-canvas">
+        {photoUrl ? (
+          <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-muted/40">
+            <ImageIcon className="h-10 w-10" />
+          </div>
+        )}
+        {when ? (
+          <div className="absolute left-3 top-3 grid h-14 w-14 place-items-center rounded-xl bg-surface/95 text-center shadow-soft">
+            <span className="font-display text-xl font-bold leading-none text-ink">{when.day}</span>
+            <span className="text-[0.6rem] font-bold uppercase tracking-wide text-sunset">{when.mon}</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="space-y-2 p-4">
+        <h3 className="font-display text-lg font-bold text-ink">{title.trim() || "Your event title"}</h3>
+        {when?.weekday ? (
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-sunset">
+            <CalendarClock className="h-3.5 w-3.5" />
+            {when.weekday}
+            {when.time ? ` · ${when.time}${tz ? ` ${tz}` : ""}` : ""}
+          </p>
+        ) : null}
+        <p className="line-clamp-3 text-sm text-muted">
+          {summary || "A short summary of the ride will show here."}
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {distance ? <Chip>{distance} mi</Chip> : null}
+          {diffLabel ? <Chip>{diffLabel}</Chip> : null}
+          {crewName ? <Chip>{crewName}</Chip> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CreateEventForm({
   recentSpots,
   defaultTimezone = DEFAULT_TIMEZONE,
   crews = [],
+  withPreview = false,
 }: {
   recentSpots?: { meet: MeetupSpot[]; ksu: MeetupSpot[] };
   defaultTimezone?: string;
   crews?: { id: string; name: string }[];
+  /** Two-column form + live preview (used in the full-screen modal). */
+  withPreview?: boolean;
 }) {
   const [state, formAction] = useActionState<CreateEventFormState, FormData>(
     createEventAction,
     initialCreateEventFormState,
   );
-  const [excerpt, setExcerpt] = useState("");
 
-  return (
-    <form action={formAction} className="space-y-5">
+  // Controlled only for the fields the live preview reflects; everything else
+  // stays uncontrolled so the form submission is unchanged.
+  const [title, setTitle] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [description, setDescription] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [timezone, setTimezone] = useState(defaultTimezone);
+  const [difficulty, setDifficulty] = useState("");
+  const [distance, setDistance] = useState("");
+  const [crewId, setCrewId] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  // Blob URL for the chosen photo; revoke the previous one on change and the
+  // last one on unmount so we don't leak object URLs.
+  const photoUrlRef = useRef<string | null>(null);
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.currentTarget.files?.[0] ?? null;
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+    const next = file ? URL.createObjectURL(file) : null;
+    photoUrlRef.current = next;
+    setPhotoUrl(next);
+  }
+  useEffect(() => () => {
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current);
+  }, []);
+
+  const crewName = crewId ? crews.find((c) => c.id === crewId)?.name ?? null : null;
+
+  const fields = (
+    <>
       <div className="space-y-1.5">
         <label htmlFor="title" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
           Event Title
@@ -44,6 +181,8 @@ export function CreateEventForm({
           type="text"
           required
           maxLength={120}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           placeholder="Saturday Sunrise Loop"
         />
@@ -76,6 +215,8 @@ export function CreateEventForm({
           id="description"
           name="description"
           rows={4}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           placeholder="Pace, safety notes, and what riders should expect."
         />
@@ -102,7 +243,8 @@ export function CreateEventForm({
           <select
             id="crewId"
             name="crewId"
-            defaultValue=""
+            value={crewId}
+            onChange={(e) => setCrewId(e.target.value)}
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           >
             <option value="">No sub-community</option>
@@ -125,6 +267,7 @@ export function CreateEventForm({
           name="eventPhoto"
           type="file"
           accept="image/png,image/jpeg,image/webp"
+          onChange={handlePhoto}
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft file:mr-3 file:rounded-md file:border-0 file:bg-asphalt file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white"
         />
       </div>
@@ -136,7 +279,8 @@ export function CreateEventForm({
         <select
           id="timezone"
           name="timezone"
-          defaultValue={defaultTimezone}
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
           className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
         >
           {US_TIMEZONES.map((tz) => (
@@ -158,6 +302,8 @@ export function CreateEventForm({
             name="startsAt"
             type="datetime-local"
             required
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
         </div>
@@ -217,6 +363,8 @@ export function CreateEventForm({
             type="number"
             min={1}
             step={1}
+            value={distance}
+            onChange={(e) => setDistance(e.target.value)}
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
             placeholder="80"
           />
@@ -229,7 +377,8 @@ export function CreateEventForm({
           <select
             id="difficulty"
             name="difficulty"
-            defaultValue=""
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           >
             <option value="">Not specified</option>
@@ -318,14 +467,63 @@ export function CreateEventForm({
           <EventRoutePlannerField />
         </div>
       </div>
+    </>
+  );
 
-      {state.error ? (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {state.error}
-        </p>
-      ) : null}
+  const errorEl = state.error ? (
+    <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+      {state.error}
+    </p>
+  ) : null;
 
-      <AuthSubmitButton idleLabel="Create Event" pendingLabel="Creating Event..." />
+  const preview = (
+    <EventPreview
+      title={title}
+      excerpt={excerpt}
+      description={description}
+      startsAt={startsAt}
+      timezone={timezone}
+      difficulty={difficulty}
+      distance={distance}
+      crewName={crewName}
+      photoUrl={photoUrl}
+    />
+  );
+
+  // Single column — the standalone /events/new page.
+  if (!withPreview) {
+    return (
+      <form action={formAction} className="space-y-5">
+        {fields}
+        {errorEl}
+        <AuthSubmitButton idleLabel="Create Event" pendingLabel="Creating Event..." />
+      </form>
+    );
+  }
+
+  // Two-column form + live preview, with a pinned footer — the full-screen modal.
+  return (
+    <form action={formAction} className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-8">
+          <div className="mx-auto max-w-2xl space-y-5">
+            {fields}
+            {errorEl}
+          </div>
+        </div>
+        <aside className="hidden min-h-0 overflow-y-auto border-l border-border bg-canvas px-5 py-6 sm:px-8 lg:block">
+          <div className="mx-auto max-w-md">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Preview</p>
+            <div className="mt-3">{preview}</div>
+            <p className="mt-3 text-xs text-muted">Roughly how your ride will appear on the events page.</p>
+          </div>
+        </aside>
+      </div>
+      <div className="shrink-0 border-t border-border bg-surface px-5 py-4 sm:px-8">
+        <div className="mx-auto max-w-2xl">
+          <AuthSubmitButton idleLabel="Create Event" pendingLabel="Creating Event..." />
+        </div>
+      </div>
     </form>
   );
 }
