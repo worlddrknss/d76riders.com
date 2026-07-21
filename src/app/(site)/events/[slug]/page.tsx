@@ -471,12 +471,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           : { label: "Upcoming", cls: "border-forest/40 bg-forest/10 text-forest" };
 
   const flyerUrl = event.galleryItems[0]?.url ?? null;
-  const aboutCard = event.description ? (
+  const aboutCard = event.description || eventWeather ? (
     <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
       <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
-      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
-        <Linkify text={event.description} />
-      </p>
+      {event.description ? (
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
+          <Linkify text={event.description} />
+        </p>
+      ) : null}
+      {eventWeather ? (
+        <div className={event.description ? "mt-4" : "mt-3"}>
+          <EventWeatherPanel forecast={eventWeather} />
+        </div>
+      ) : null}
     </div>
   ) : null;
 
@@ -726,12 +733,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   <Link href={`/r/${event.host.handle}`} className="hover:text-sunset">{event.host.name}</Link>
                 </DetailRow>
               </dl>
-
-              {eventWeather ? (
-                <div className="mt-4">
-                  <EventWeatherPanel forecast={eventWeather} />
-                </div>
-              ) : null}
 
               <div className="mt-5 space-y-2 border-t border-border pt-4">
                 <EventRsvpButton
