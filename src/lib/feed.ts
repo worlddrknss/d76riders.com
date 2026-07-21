@@ -49,8 +49,6 @@ export async function getFeedEntries({
       author: { select: { name: true, handle: true, avatarUrl: true } },
       galleryItems: { orderBy: { createdAt: "asc" }, take: 1, select: { url: true } },
       _count: { select: { likes: true, comments: true } },
-      likes: { select: { riderId: true } },
-      saves: { select: { riderId: true } },
       comments: {
         orderBy: { createdAt: "asc" },
         take: 10,
@@ -58,6 +56,25 @@ export async function getFeedEntries({
       },
     },
   });
+
+  // Per-viewer like/save flags: fetch only the viewer's own rows for this page,
+  // instead of pulling every liker/saver of each entry to scan in JS (a popular
+  // post could carry thousands). Two indexed lookups scoped to the page ids.
+  const pageIds = entries.map((e) => e.id);
+  const [likedRows, savedRows] = pageIds.length
+    ? await Promise.all([
+        prisma.like.findMany({
+          where: { riderId: viewerId, journalEntryId: { in: pageIds } },
+          select: { journalEntryId: true },
+        }),
+        prisma.save.findMany({
+          where: { riderId: viewerId, journalEntryId: { in: pageIds } },
+          select: { journalEntryId: true },
+        }),
+      ])
+    : [[], []];
+  const likedSet = new Set(likedRows.map((r) => r.journalEntryId));
+  const savedSet = new Set(savedRows.map((r) => r.journalEntryId));
 
   return entries.map((entry) => ({
     id: entry.id,
@@ -68,8 +85,8 @@ export async function getFeedEntries({
     dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
-    isLiked: entry.likes.some((l) => l.riderId === viewerId),
-    isSaved: entry.saves.some((s) => s.riderId === viewerId),
+    isLiked: likedSet.has(entry.id),
+    isSaved: savedSet.has(entry.id),
     comments: entry.comments.map((c) => ({
       id: c.id,
       body: c.body,
