@@ -4,6 +4,7 @@ import { SettingsNav } from "@/components/account/settings-nav";
 import { AppShell } from "@/components/layout/app-shell";
 import { EmergencyAccessLog } from "@/components/profile/emergency-access-log";
 import { EmergencyCardManager, type EmergencyCardData } from "@/components/profile/emergency-card-manager";
+import { NfcTagGuide } from "@/components/profile/nfc-tag-guide";
 import { decryptEmergencyPayload, isEmergencyCryptoConfigured } from "@/lib/emergency-crypto";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -72,6 +73,7 @@ export default async function EmergencySettingsPage() {
           </div>
           <EmergencyAccessLog accesses={emergencyAccesses} />
         </div>
+        {emergencyCard ? <NfcTagGuide /> : null}
       </div>
     </AppShell>
   );
