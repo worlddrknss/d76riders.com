@@ -7,14 +7,16 @@ const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
 
 /**
  * A media URL fit for an OpenGraph/social image. Our uploads are stored as WebP,
- * which Facebook and many link scrapers won't render — so route our own proxied
- * media through `?format=jpeg` (transcoded on the fly). Third-party URLs are left
- * as-is since they're already in broadly-supported formats.
+ * which Facebook and most link scrapers won't render. They also frequently strip
+ * query strings and pick a decoder from the path extension — so a `.webp?format=
+ * jpeg` URL fails. Route through `/api/og/<key>.jpg`: query-free and
+ * `.jpg`-terminated, always transcoded to JPEG. Third-party URLs are left as-is.
  */
 export function ogImageUrl(rawUrl: string | null | undefined): string | undefined {
   const url = mediaUrl(rawUrl);
   if (!url) return undefined;
-  return url.startsWith("/api/media/") ? `${url}?format=jpeg` : url;
+  if (!url.startsWith("/api/media/")) return url;
+  return `/api/og/${url.slice("/api/media/".length)}.jpg`;
 }
 
 export function mediaUrl(rawUrl: string | null | undefined): string {
