@@ -80,7 +80,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
   return (
     <AppShell>
       <Link href="/sub-communities" className="text-xs font-semibold text-muted hover:text-ink">
-        ← All crews
+        ← All sub-communities
       </Link>
 
       <header className="mt-3 flex flex-wrap items-start justify-between gap-4">

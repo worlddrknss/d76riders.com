@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ActivityType } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Award, Bike, BookText, CalendarDays, DollarSign, Image as ImageIcon, Lock, MapPin, MessageSquare, Receipt, Trash2, Video, Wrench } from "lucide-react";
@@ -35,6 +36,21 @@ import { CreateVideoDialog } from "@/components/videos/create-video-dialog";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
+
+// Personal notifications that must never surface on the public profile feed —
+// they leak location (emergency-card views), incidents, or are private nudges.
+// They still reach the rider via /notifications.
+const PRIVATE_ACTIVITY_TYPES: ActivityType[] = [
+  ActivityType.EMERGENCY_CARD_VIEWED,
+  ActivityType.MISSING_CHECKOUT,
+  ActivityType.NO_SHOW,
+  ActivityType.RIDER_DOWN,
+  ActivityType.EVENT_MESSAGE,
+  ActivityType.RSVP_WAITLISTED,
+  ActivityType.WAITLIST_PROMOTED,
+  ActivityType.MENTIONED,
+  ActivityType.COMMENTED,
+];
 
 // Gear sections (icon resolved by key inside GearTabbedView).
 const ownerGearSections = [
@@ -250,7 +266,7 @@ export default async function RiderProfilePage({
       select: { eventId: true },
     }),
     prisma.activity.findMany({
-      where: { riderId: rider.id },
+      where: { riderId: rider.id, type: { notIn: PRIVATE_ACTIVITY_TYPES } },
       orderBy: { createdAt: "desc" },
       take: 5,
       select: { id: true, type: true, summary: true, createdAt: true },

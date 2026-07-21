@@ -86,7 +86,7 @@ export async function createChallengeAction(
       select: { id: true },
     });
     if (!membership) {
-      return { error: "You can only set a challenge for a crew you're in.", success: null };
+      return { error: "You can only set a challenge for a sub-community you're in.", success: null };
     }
   }
 
@@ -225,7 +225,7 @@ export async function joinChallengeAction(slug: string): Promise<ChallengeAction
       select: { id: true },
     });
     if (!membership) {
-      return { error: "This challenge is for a crew you're not in yet.", success: null };
+      return { error: "This challenge is for a sub-community you're not in yet.", success: null };
     }
   }
 

@@ -116,7 +116,7 @@ export function CreateChallengeDialog({ crews }: CreateChallengeDialogProps) {
                   <option value="">Open to everyone</option>
                   {crews.map((crew) => (
                     <option key={crew.id} value={crew.id}>
-                      {crew.name} crew only
+                      {crew.name} only
                     </option>
                   ))}
                 </select>

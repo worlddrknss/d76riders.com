@@ -34,7 +34,7 @@ export async function createCrewAction(
 ): Promise<CrewFormState> {
   const riderId = await currentRiderId();
   if (!riderId) {
-    return { error: "Please log in to start a crew.", success: null };
+    return { error: "Please log in to start a sub-community.", success: null };
   }
 
   const name = (formData.get("name")?.toString() ?? "").trim();
@@ -42,11 +42,11 @@ export async function createCrewAction(
   const open = formData.get("open") === "on";
 
   if (!name || name.length > 80) {
-    return { error: "Give the crew a name (80 characters or fewer).", success: null };
+    return { error: "Give the sub-community a name (80 characters or fewer).", success: null };
   }
 
   if (!description || description.length > 300) {
-    return { error: "Say what the crew is about, in 300 characters or fewer.", success: null };
+    return { error: "Say what the sub-community is about, in 300 characters or fewer.", success: null };
   }
 
   const slug = slugify(name);
@@ -56,7 +56,7 @@ export async function createCrewAction(
 
   const clash = await prisma.crew.findUnique({ where: { slug }, select: { id: true } });
   if (clash) {
-    return { error: "A crew with that name already exists. Pick another.", success: null };
+    return { error: "A sub-community with that name already exists. Pick another.", success: null };
   }
 
   const led = await prisma.crewMember.count({
@@ -64,7 +64,7 @@ export async function createCrewAction(
   });
   if (led >= MAX_CREWS_LED_PER_RIDER) {
     return {
-      error: `You already lead ${MAX_CREWS_LED_PER_RIDER} crews. Hand one over before starting another.`,
+      error: `You already lead ${MAX_CREWS_LED_PER_RIDER} sub-communities. Hand one over before starting another.`,
       success: null,
     };
   }
@@ -99,7 +99,7 @@ async function currentRiderId(): Promise<string | null> {
 export async function joinCrewAction(crewSlug: string): Promise<CrewActionState> {
   const riderId = await currentRiderId();
   if (!riderId) {
-    return { error: "Please log in to join a crew.", success: null };
+    return { error: "Please log in to join a sub-community.", success: null };
   }
 
   const crew = await prisma.crew.findUnique({
@@ -108,7 +108,7 @@ export async function joinCrewAction(crewSlug: string): Promise<CrewActionState>
   });
 
   if (!crew || !crew.active) {
-    return { error: "That crew doesn't exist.", success: null };
+    return { error: "That sub-community doesn't exist.", success: null };
   }
 
   // Closed crews are managed by their leads — joining is by invitation only.
@@ -140,7 +140,7 @@ export async function leaveCrewAction(crewSlug: string): Promise<CrewActionState
   });
 
   if (!crew) {
-    return { error: "That crew doesn't exist.", success: null };
+    return { error: "That sub-community doesn't exist.", success: null };
   }
 
   const membership = await prisma.crewMember.findUnique({
@@ -158,7 +158,7 @@ export async function leaveCrewAction(crewSlug: string): Promise<CrewActionState
       where: { crewId: crew.id, role: "LEAD" },
     });
     if (leadCount <= 1) {
-      return { error: "Hand the crew to another lead before you leave.", success: null };
+      return { error: "Hand the sub-community to another lead before you leave.", success: null };
     }
   }
 
