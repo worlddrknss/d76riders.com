@@ -11,14 +11,14 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
-  title: "Crews",
+  title: "Sub-communities",
   description:
-    "Find your people — sportbike, touring, beginner, and women riders crews within the District 76 Riders community.",
-  alternates: { canonical: "/crews" },
+    "Find your people — city and interest sub-communities within the District 76 Riders community.",
+  alternates: { canonical: "/sub-communities" },
   openGraph: {
     images: OG_IMAGE,
-    title: "Crews — District 76 Riders",
-    description: "Sub-groups within the community. Find the riders who ride like you do.",
+    title: "Sub-communities — District 76 Riders",
+    description: "Groups within the community — by city, by ride style, by whatever brings riders together.",
   },
 };
 
@@ -52,15 +52,15 @@ export default async function CrewsPage() {
     <AppShell>
       <PageHeader
         icon={Users}
-        title="Find Your Crew"
-        subtitle="District 76 is one community with a lot of different riders in it. Crews are where you find the ones who ride like you do. Join as many as you want, or none at all."
+        title="Find Your Sub-community"
+        subtitle="District 76 is one community with a lot of different riders in it. Sub-communities are where you find your city and the riders who ride like you do. Join as many as you want, or none at all."
         action={currentUser ? <CreateCrewDialog /> : undefined}
       />
 
       {crews.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <Users className="mx-auto h-8 w-8 text-muted/50" />
-              <p className="mt-3 text-sm text-muted">No crews yet.</p>
+              <p className="mt-3 text-sm text-muted">No sub-communities yet.</p>
             </div>
           ) : (
             <StaggerList className="grid gap-4 sm:grid-cols-2">
@@ -70,7 +70,7 @@ export default async function CrewsPage() {
                 return (
                   <StaggerItem key={crew.id}>
                     <Link
-                      href={`/crews/${crew.slug}`}
+                      href={`/sub-communities/${crew.slug}`}
                       className="block h-full rounded-xl border border-border bg-surface p-5 shadow-soft transition hover:border-sunset/40"
                     >
                       <div className="flex items-center gap-3">

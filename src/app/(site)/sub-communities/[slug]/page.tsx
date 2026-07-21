@@ -20,12 +20,12 @@ export async function generateMetadata(props: {
     select: { name: true, description: true },
   });
 
-  if (!crew) return { title: "Crew Not Found" };
+  if (!crew) return { title: "Sub-community Not Found" };
 
   return {
     title: `${crew.name} | District 76 Riders`,
     description: crew.description,
-    alternates: { canonical: `/crews/${slug}` },
+    alternates: { canonical: `/sub-communities/${slug}` },
     openGraph: {
     images: OG_IMAGE, title: crew.name, description: crew.description, type: "website" },
   };
@@ -79,7 +79,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
 
   return (
     <AppShell>
-      <Link href="/crews" className="text-xs font-semibold text-muted hover:text-ink">
+      <Link href="/sub-communities" className="text-xs font-semibold text-muted hover:text-ink">
         ← All crews
       </Link>
 

@@ -263,32 +263,44 @@ const QUESTS = [
   },
 ];
 
+// Default sub-communities are city-based — riders find their local scene first.
+// (Users can still create interest-based ones.)
 const CREWS = [
   {
-    slug: "sportbike",
-    name: "Sportbike",
-    description: "Twisties, track days, and anything with clip-ons.",
+    slug: "clarksville",
+    name: "Clarksville",
+    description: "Home base. Where District 76 started — group rides, coffee runs, and new-rider meetups.",
     sortOrder: 1,
   },
   {
-    slug: "touring",
-    name: "Touring",
-    description: "Long hauls, saddlebags, and all-day comfort.",
+    slug: "nashville",
+    name: "Nashville",
+    description: "Music City miles. City escapes, Natchez Trace runs, and after-work rides.",
     sortOrder: 2,
   },
   {
-    slug: "beginner",
-    name: "Beginner",
-    description: "New riders welcome. Relaxed pace, no ego, plenty of stops.",
+    slug: "knoxville",
+    name: "Knoxville",
+    description: "East TN and the doorway to the Smokies. Mountain roads and big-elevation days.",
     sortOrder: 3,
   },
   {
-    slug: "women-riders",
-    name: "Women Riders",
-    description: "Women who ride, riding together.",
+    slug: "chattanooga",
+    name: "Chattanooga",
+    description: "Scenic City. Gateway to the Dragon, the Cherohala, and the best twisties in the state.",
     sortOrder: 4,
   },
+  {
+    slug: "memphis",
+    name: "Memphis",
+    description: "West TN. Delta backroads, river routes, and a scene building out in the west.",
+    sortOrder: 5,
+  },
 ];
+
+// The previous interest-based defaults, retired in favour of city sub-communities.
+// Deactivated (not deleted) so any events/members attached to them are preserved.
+const RETIRED_CREW_SLUGS = ["sportbike", "touring", "beginner", "women-riders"];
 
 export async function seedCatalog(prisma: Db) {
   for (const badge of BADGES) {
@@ -303,6 +315,11 @@ export async function seedCatalog(prisma: Db) {
   for (const crew of CREWS) {
     await prisma.crew.upsert({ where: { slug: crew.slug }, create: crew, update: crew });
   }
+  // Retire the old interest-based defaults so they drop out of the active listing.
+  await prisma.crew.updateMany({
+    where: { slug: { in: RETIRED_CREW_SLUGS } },
+    data: { active: false },
+  });
 
   // Unlike the definitions above, policy text is meant to be edited by admins —
   // so create each only when missing rather than upserting over their wording.

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { joinCrewAction, leaveCrewAction, type CrewActionState } from "@/app/(site)/crews/actions";
+import { joinCrewAction, leaveCrewAction, type CrewActionState } from "@/app/(site)/sub-communities/actions";
 import { Button } from "@/components/ui/button";
 
 type CrewMembershipButtonProps = {
@@ -18,7 +18,7 @@ export function CrewMembershipButton({ slug, isMember, open }: CrewMembershipBut
 
   // Non-members can't join a closed crew, so there's no button to offer them.
   if (!member && !open) {
-    return <p className="text-xs text-muted">Invite only — ask a crew lead.</p>;
+    return <p className="text-xs text-muted">Invite only — ask a lead.</p>;
   }
 
   return (
@@ -35,7 +35,7 @@ export function CrewMembershipButton({ slug, isMember, open }: CrewMembershipBut
           })
         }
       >
-        {pending ? "…" : member ? "Leave Crew" : "Join Crew"}
+        {pending ? "…" : member ? "Leave" : "Join"}
       </Button>
       {result?.error ? <p className="mt-1 max-w-48 text-xs text-red-600">{result.error}</p> : null}
     </div>

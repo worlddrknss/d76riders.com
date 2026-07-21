@@ -482,7 +482,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-soft">
             {event.crew ? (
               <Link
-                href={`/crews/${event.crew.slug}`}
+                href={`/sub-communities/${event.crew.slug}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-sunset/40 bg-sunset/10 px-3 py-1 text-xs font-semibold text-sunset hover:bg-sunset/20"
               >
                 {event.crew.name} crew

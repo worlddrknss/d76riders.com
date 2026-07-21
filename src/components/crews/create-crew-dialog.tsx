@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 
-import { createCrewAction, type CrewFormState } from "@/app/(site)/crews/actions";
+import { createCrewAction, type CrewFormState } from "@/app/(site)/sub-communities/actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -19,25 +19,25 @@ export function CreateCrewDialog() {
     <>
       <Button variant="accent" onClick={() => setOpen(true)} className="gap-2">
         <Plus className="h-4 w-4" />
-        Start a Crew
+        Start a Sub-community
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Start a Crew</DialogTitle>
+            <DialogTitle>Start a Sub-community</DialogTitle>
           </DialogHeader>
 
           <p className="mt-1 text-sm text-muted">
-            A crew is a group within District 76 for riders who ride like you do. You&apos;ll be its lead.
+            A sub-community is a group within District 76 — a city, a riding style, whatever brings riders together. You&apos;ll be its lead.
           </p>
 
           <form action={formAction} className="mt-4 space-y-4">
             <div>
               <label htmlFor="crew-name" className="text-xs font-semibold uppercase tracking-wide text-muted">
-                Crew Name
+                Name
               </label>
-              <Input id="crew-name" name="name" required maxLength={80} placeholder="Dual Sport" className="mt-1" />
+              <Input id="crew-name" name="name" required maxLength={80} placeholder="Nashville" className="mt-1" />
             </div>
 
             <div>
@@ -81,7 +81,7 @@ export function CreateCrewDialog() {
                 Cancel
               </Button>
               <Button type="submit" variant="accent">
-                Start Crew
+                Start Sub-community
               </Button>
             </div>
           </form>

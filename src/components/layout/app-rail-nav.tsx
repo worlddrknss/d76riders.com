@@ -86,7 +86,7 @@ export function AppRailNav({
     { href: "/saved", label: "Saved", icon: Bookmark },
   ];
   const more: Item[] = [
-    { href: "/crews", label: "Crews", icon: Users },
+    { href: "/sub-communities", label: "Sub-communities", icon: Users },
     { href: "/challenges", label: "Challenges", icon: Flag },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/ride-of-the-month", label: "Ride of the Month", icon: Star },

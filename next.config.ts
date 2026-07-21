@@ -29,6 +29,11 @@ const nextConfig: NextConfig = {
       // us, and two near-empty pages served nobody. The filter keeps the
       // sponsors-only view that /sponsors used to be.
       { source: "/sponsors", destination: "/shops?tier=sponsor", permanent: true },
+      // "Crews" became "Sub-communities" (the public term). Permanent so old
+      // links/shares and search rankings carry over. The Crew model/tables and
+      // the /admin/community/crews routes are internal and unchanged.
+      { source: "/crews", destination: "/sub-communities", permanent: true },
+      { source: "/crews/:path*", destination: "/sub-communities/:path*", permanent: true },
     ];
   },
 };

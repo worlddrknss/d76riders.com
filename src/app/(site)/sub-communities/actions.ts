@@ -80,8 +80,8 @@ export async function createCrewAction(
     select: { slug: true },
   });
 
-  revalidatePath("/crews");
-  redirect(`/crews/${crew.slug}`);
+  revalidatePath("/sub-communities");
+  redirect(`/sub-communities/${crew.slug}`);
 }
 
 async function currentRiderId(): Promise<string | null> {
@@ -122,8 +122,8 @@ export async function joinCrewAction(crewSlug: string): Promise<CrewActionState>
     update: {},
   });
 
-  revalidatePath(`/crews/${crewSlug}`);
-  revalidatePath("/crews");
+  revalidatePath(`/sub-communities/${crewSlug}`);
+  revalidatePath("/sub-communities");
 
   return { error: null, success: `You joined ${crew.name}.` };
 }
@@ -166,8 +166,8 @@ export async function leaveCrewAction(crewSlug: string): Promise<CrewActionState
     where: { crewId_riderId: { crewId: crew.id, riderId } },
   });
 
-  revalidatePath(`/crews/${crewSlug}`);
-  revalidatePath("/crews");
+  revalidatePath(`/sub-communities/${crewSlug}`);
+  revalidatePath("/sub-communities");
 
   return { error: null, success: `You left ${crew.name}.` };
 }
