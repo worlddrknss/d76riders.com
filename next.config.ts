@@ -4,10 +4,11 @@ const nextConfig: NextConfig = {
   output: "standalone",
   experimental: {
     serverActions: {
-      // Profile edit submits avatar + cover together, and event/garage/gear
-      // photo uploads all flow through Server Actions — modern phone photos are
-      // several MB each, so keep headroom for a multi-image submission.
-      bodySizeLimit: "30mb",
+      // Profile edit submits avatar + cover together; marketplace allows up to
+      // 6 photos; and high-res exports/illustrations can be tens of MB each.
+      // When a body exceeds this, Next truncates it and the multipart read
+      // (file.arrayBuffer()) hangs forever — so keep generous headroom.
+      bodySizeLimit: "75mb",
     },
   },
   images: {
