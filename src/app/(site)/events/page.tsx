@@ -59,7 +59,7 @@ export default async function EventsPage() {
       <PageHeader
         icon={CalendarDays}
         title="Events"
-        subtitle="Group rides with clear route expectations, meetup points, and pace guidance. Reserve your spot and roll out with the crew."
+        subtitle="Group rides with clear route expectations, meetup points, and pace guidance. Reserve your spot and roll out with the community."
       />
 
       {/* UPCOMING RIDES LIST */}

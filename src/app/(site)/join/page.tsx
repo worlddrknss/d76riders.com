@@ -33,7 +33,7 @@ export default async function JoinPage(props: {
       <PageHero
         image={siteImages.pageHeroes.join}
         eyebrow="Join District 76"
-        title="Ride With a Local Crew That Actually Rides"
+        title="Ride With a Local Community That Actually Rides"
         description="Founded in Clarksville, TN and open to riders anywhere — for anyone who wants consistent routes, strong community standards, and people they can count on."
       />
 

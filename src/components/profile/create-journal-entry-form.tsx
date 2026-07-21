@@ -25,7 +25,7 @@ export function CreateJournalEntryForm() {
 
       <div className="space-y-1.5">
         <label htmlFor="body" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">Ride Story</label>
-        <textarea id="body" name="body" rows={5} required className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" placeholder="How did the ride go? Pace, roads, crew, weather, lessons learned..." />
+        <textarea id="body" name="body" rows={5} required className="w-full rounded-lg border border-border bg-surface px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none" placeholder="How did the ride go? Pace, roads, riders, weather, lessons learned..." />
       </div>
 
       <div className="space-y-1.5">
