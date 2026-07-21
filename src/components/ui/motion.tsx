@@ -58,12 +58,15 @@ interface StaggerListProps {
 }
 
 export function StaggerList({ children, className }: StaggerListProps) {
+  // Animate on mount rather than whileInView: these lists sit at the top of
+  // their pages (in view immediately), and an in-view trigger that doesn't
+  // re-fire on a client-side filter navigation would leave items stuck at
+  // opacity 0 — present in the DOM but invisible. `animate` always reveals them.
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-40px" }}
+      animate="visible"
       className={className}
     >
       {children}

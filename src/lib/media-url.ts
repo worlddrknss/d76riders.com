@@ -16,7 +16,11 @@ export function ogImageUrl(rawUrl: string | null | undefined): string | undefine
   const url = mediaUrl(rawUrl);
   if (!url) return undefined;
   if (!url.startsWith("/api/media/")) return url;
-  return `/api/og/${url.slice("/api/media/".length)}.jpg`;
+  // Strip the stored extension so no ".webp" appears anywhere in the URL —
+  // scrapers pick a decoder from the path, and a ".webp.jpg" makes them try
+  // WebP on JPEG bytes. The /api/og route resolves the real object.
+  const key = url.slice("/api/media/".length).replace(/\.[a-z0-9]+$/i, "");
+  return `/api/og/${key}.jpg`;
 }
 
 export function mediaUrl(rawUrl: string | null | undefined): string {

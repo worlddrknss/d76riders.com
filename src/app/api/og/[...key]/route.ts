@@ -1,4 +1,4 @@
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, type GetObjectCommandOutput, S3Client } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
@@ -27,19 +27,31 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ key: string[] }> },
 ) {
-  let objectKey = params ? (await params).key.join("/") : "";
-  // The `.jpg` suffix is only there for the scrapers; the real object is the
-  // stored (usually .webp) key underneath it.
-  if (objectKey.endsWith(".jpg")) objectKey = objectKey.slice(0, -4);
-
-  if (!objectKey || objectKey.includes("..")) {
+  const raw = (await params).key.join("/");
+  if (!raw || raw.includes("..")) {
     return new Response("Not found", { status: 404 });
   }
 
+  // The public URL is `<name>.jpg` with the stored extension stripped (so no
+  // ".webp" ever appears in the URL for scrapers). Recover the real object by
+  // trying the formats we actually store, then the literal key.
+  const base = raw.replace(/\.jpg$/i, "");
+  const candidates = [`${base}.webp`, `${base}.png`, `${base}.jpeg`, `${base}.jpg`, base];
+
   try {
     const s3 = createClient();
-    const response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: objectKey }));
-    if (!response.Body) {
+    let response: GetObjectCommandOutput | null = null;
+    for (const candidate of candidates) {
+      try {
+        response = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: candidate }));
+        break;
+      } catch (err: unknown) {
+        const code = (err as { name?: string }).name;
+        if (code === "NoSuchKey" || code === "NotFound") continue;
+        throw err;
+      }
+    }
+    if (!response || !response.Body) {
       return new Response("Not found", { status: 404 });
     }
 
@@ -63,7 +75,7 @@ export async function GET(
     if (code === "NoSuchKey" || code === "NotFound") {
       return new Response("Not found", { status: 404 });
     }
-    console.error("[og]", objectKey, err);
+    console.error("[og]", raw, err);
     return new Response("Internal error", { status: 500 });
   }
 }
