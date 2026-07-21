@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 const initialState: RoadFormState = { error: null, success: null };
 
 export function CreateRoadDialog() {
-  const params = useSearchParams();
+  const params = useSearchParams() ?? new URLSearchParams();
   // Opens automatically when reached via the top-bar "+ Create → New road".
   const [open, setOpen] = useState(() => params.get("new") === "1");
   const [state, formAction] = useActionState<RoadFormState, FormData>(createRoadAction, initialState);

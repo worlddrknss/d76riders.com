@@ -24,7 +24,7 @@ export type ProfileTab = {
  */
 export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams() ?? new URLSearchParams();
 
   const requested = searchParams.get("tab");
   const resolved = tabs.some((tab) => tab.id === requested) ? requested : tabs[0]?.id;

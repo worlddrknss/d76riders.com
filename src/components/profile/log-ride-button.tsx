@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function LogRideButton() {
-  const params = useSearchParams();
+  const params = useSearchParams() ?? new URLSearchParams();
   // Opens automatically when reached via the top-bar "+ Create → Log a ride".
   const [open, setOpen] = useState(() => params.get("log") === "ride");
   const [error, setError] = useState<string | null>(null);

@@ -150,7 +150,7 @@ function NavDropdown({
 }
 
 export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, recentActivities }: NavbarClientProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);

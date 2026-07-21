@@ -57,7 +57,7 @@ export function AppRailNav({
   rides: number;
   miles: number;
 }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const params = useSearchParams();
   const [moreOpen, setMoreOpen] = useState(false);
 

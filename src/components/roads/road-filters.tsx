@@ -6,7 +6,7 @@ import { useTransition } from "react";
 
 export function RoadFilters({ canSortNear = false }: { canSortNear?: boolean }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams() ?? new URLSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const currentSearch = searchParams.get("q") ?? "";
