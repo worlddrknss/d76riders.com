@@ -13,6 +13,7 @@ import {
   Images,
   LayoutDashboard,
   LogOut,
+  MapPinned,
   MessageSquare,
   MoreHorizontal,
   Newspaper,
@@ -77,6 +78,7 @@ export function AppRailNav({
   const community: Item[] = [
     { href: "/events", label: "Events", icon: CalendarDays },
     { href: "/roads", label: "Roads", icon: Route },
+    { href: "/nearby", label: "Nearby", icon: MapPinned },
     { href: "/r", label: "Riders", icon: Users, exact: true },
   ];
   const inbox: Item[] = [
