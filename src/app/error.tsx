@@ -10,7 +10,6 @@ import { Home, RotateCcw, TriangleAlert } from "lucide-react";
  */
 export default function Error({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -19,6 +18,12 @@ export default function Error({
     // Surfaces in server/pod logs for diagnosis.
     console.error("[error-boundary]", error);
   }, [error]);
+
+  // A full reload (not reset()) so recovery also survives deployment skew and
+  // stale chunks: reset() re-renders with the same cached bundle — which still
+  // references the old build's Server Action IDs after a redeploy — whereas a
+  // reload fetches the fresh bundle. We ship often, so open tabs go stale.
+  const retry = () => window.location.reload();
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
@@ -36,7 +41,7 @@ export default function Error({
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
-          onClick={() => reset()}
+          onClick={retry}
           className="inline-flex items-center gap-2 rounded-lg bg-sunset px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cf5a26]"
         >
           <RotateCcw className="h-4 w-4" /> Try again

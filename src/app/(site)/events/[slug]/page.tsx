@@ -42,7 +42,7 @@ import { getDailyForecast, withinForecastWindow } from "@/lib/weather";
 import { EventWeatherPanel } from "@/components/weather/weather-panel";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
-import { mediaUrl } from "@/lib/media-url";
+import { mediaUrl, ogImageUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
 import { postableCrews } from "@/lib/crews";
 import type { PlannerWaypoint, WaypointKind } from "@/lib/routing";
@@ -81,7 +81,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       .join(" · ")
   ).slice(0, 160);
 
-  const image = event.galleryItems[0]?.url ? mediaUrl(event.galleryItems[0].url) : undefined;
+  // The organizer's flyer, transcoded to JPEG so Facebook/OG scrapers render it
+  // (they skip our WebP uploads and otherwise fall back to a page image).
+  const image = ogImageUrl(event.galleryItems[0]?.url);
 
   return {
     title: `${event.title} — ${when}`,
@@ -94,7 +96,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       type: "article",
       url: `/events/${slug}`,
-      images: image ? [{ url: image }] : undefined,
+      images: image ? [{ url: image, type: "image/jpeg" }] : undefined,
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",

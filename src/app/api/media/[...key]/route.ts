@@ -1,4 +1,5 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
 
@@ -15,7 +16,7 @@ function createClient() {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ key: string[] }> },
 ) {
   const { key } = await params;
@@ -25,6 +26,11 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
+  // Scrapers (Facebook/OpenGraph, some email clients) don't render WebP, which
+  // is how we store uploads. `?format=jpeg` transcodes on the fly so shared
+  // links show the real flyer instead of falling back to a page image.
+  const wantJpeg = new URL(request.url).searchParams.get("format") === "jpeg";
+
   try {
     const s3 = createClient();
     const response = await s3.send(
@@ -33,6 +39,18 @@ export async function GET(
 
     if (!response.Body) {
       return new Response("Not found", { status: 404 });
+    }
+
+    if (wantJpeg) {
+      const bytes = Buffer.from(await (response.Body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray());
+      const jpeg = await sharp(bytes).flatten({ background: "#ffffff" }).jpeg({ quality: 85 }).toBuffer();
+      return new Response(jpeg as unknown as BodyInit, {
+        headers: {
+          "Content-Type": "image/jpeg",
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "Content-Length": jpeg.length.toString(),
+        },
+      });
     }
 
     const stream = response.Body as ReadableStream;

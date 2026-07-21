@@ -9,7 +9,6 @@ import { useEffect } from "react";
  */
 export default function GlobalError({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -17,6 +16,9 @@ export default function GlobalError({
   useEffect(() => {
     console.error("[global-error]", error);
   }, [error]);
+
+  // Full reload, not reset(): recovers deploy skew / stale chunks too.
+  const retry = () => window.location.reload();
 
   return (
     <html lang="en">
@@ -44,7 +46,7 @@ export default function GlobalError({
         </p>
         <button
           type="button"
-          onClick={() => reset()}
+          onClick={retry}
           style={{
             marginTop: "8px",
             border: "none",
