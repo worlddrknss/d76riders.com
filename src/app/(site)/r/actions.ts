@@ -82,14 +82,11 @@ export async function createJournalEntryAction(
     }
 
     let secureUpload: { buffer: Buffer; ext: string; contentType: string };
-    console.info(`[journal] scan start size=${ridePhoto.size} type=${ridePhoto.type}`);
     try {
       secureUpload = await validateAndScanImageUpload(ridePhoto, "riders-journal-photo-create");
     } catch (error) {
-      console.error("[journal] scan/validate failed", error);
       return { error: error instanceof Error ? error.message : "Unable to validate ride photo upload.", success: null };
     }
-    console.info("[journal] scan done, upload start");
 
     const key = `journal/${rider.id}/${crypto.randomUUID()}.${secureUpload.ext}`;
     try {
@@ -98,10 +95,8 @@ export async function createJournalEntryAction(
       console.error("[journal] photo upload failed", error);
       return { error: "Couldn't upload your photo. Please try again in a moment.", success: null };
     }
-    console.info("[journal] upload done");
   }
 
-  console.info("[journal] create start");
   const created = await prisma.journalEntry.create({
     data: {
       authorId: rider.id,
@@ -120,12 +115,11 @@ export async function createJournalEntryAction(
     select: { id: true },
   });
 
-  console.info("[journal] create done, syncing tags");
   await syncJournalTagsAndMentions({ entryId: created.id, body, authorId: rider.id });
-  console.info("[journal] done");
 
   revalidatePath("/r", "layout");
   revalidatePath("/");
+  revalidatePath("/feed");
   revalidatePath(`/r/${rider.handle}`);
 
   return { error: null, success: "Ride history entry published." };
