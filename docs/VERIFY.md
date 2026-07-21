@@ -24,7 +24,7 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 - ✅ **Feed performance** — feed no longer over-fetches every like/save per entry; two indexed, viewer-scoped lookups instead. _(v2.93.0)_
 - ⬜ **Automated tests + CI gates** — still no test runner. **Biggest remaining ROI**: locks down authz ownership, reputation scoring, feed ranking, crypto.
 - ⬜ **Error tracking / observability** — a Sentry-style tracker + structured logging (would have surfaced the SMTP hang, and sped up the publish-hang diagnosis, before a user hit them).
-- ⬜ **Error boundaries** — no `error.tsx` / `not-found.tsx`; an uncaught render error shows the raw crash screen (seen during the publish-hang incident).
+- ✅ **Error boundaries** — `error.tsx` (app-wide recovery), `global-error.tsx` (root-layout failures), and a branded `not-found.tsx`. No more raw framework crash screen. _(v2.96.0)_
 - 🟡 **Perf tail** — sequential awaits in `closeRideAction` / S3 deletes could be bounded `Promise.all`.
 
 ## 🛠️ Incidents & fixes (2026-07-20)
