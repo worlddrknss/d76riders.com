@@ -16,13 +16,13 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 - ✅ **Location-aware discovery** — required location/timezone at signup + geocoded rider coords; Events location dropdown + Nearest sort; Roads Nearest sort; **/nearby map** of nearby events + roads. Geocode also runs on profile save. _(v2.85–2.87, map v2.91.0)_
 - ✅ **Marketplace / classifieds (MVP)** — Listing + ListingImage schema; create (scanned, rate-limited image upload) / mark-sold / relist / delete; `/marketplace` (search + category + sold filters), detail (gallery, seller, "Message seller"), and post form; nav link. _(v2.94.0)_
 - ✅ **Sub-communities** — renamed **Crews → Sub-communities** (labels + `/crews`→`/sub-communities` with redirects; model stays internal). Default sub-communities are now **city-based**: Clarksville, Nashville, Knoxville, Chattanooga, Memphis. _(v2.92.0)_
-- ⬜ **Mentorship matching** — skill tracks + mentor trust level exist; pair new riders with nearby mentors.
+- ✅ **Mentorship matching** — `/mentors` lists riders who've earned mentor level, one card per rider with the skills they mentor + a verified check, sorted **nearest-first** by rider coordinates. Nav link added. _(v2.97.0)_
 - ✅ **Weather on ride pages** — Open-Meteo (free, no API key). Events show a ride-day forecast in "About this ride"; roads show current conditions. Best-effort + hour-cached. _(v2.95.1)_
 
 ## ⚙️ Enhancements
 
 - ✅ **Feed performance** — feed no longer over-fetches every like/save per entry; two indexed, viewer-scoped lookups instead. _(v2.93.0)_
-- ⬜ **Automated tests + CI gates** — still no test runner. **Biggest remaining ROI**: locks down authz ownership, reputation scoring, feed ranking, crypto.
+- ✅ **Automated tests + CI gates** — Vitest suite (14 tests): trust scoring math + level gates, emergency vault crypto (round-trip/tamper), password hashing, elevation + price formatting. `ci.yml` runs lint + test + build on every push to main and PR (blocking). _(v2.98.0)_
 - ⬜ **Error tracking / observability** — a Sentry-style tracker + structured logging (would have surfaced the SMTP hang, and sped up the publish-hang diagnosis, before a user hit them).
 - ✅ **Error boundaries** — `error.tsx` (app-wide recovery), `global-error.tsx` (root-layout failures), and a branded `not-found.tsx`. No more raw framework crash screen. _(v2.96.0)_
 - 🟡 **Perf tail** — sequential awaits in `closeRideAction` / S3 deletes could be bounded `Promise.all`.
@@ -36,9 +36,9 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 
 ## Next up (recommendation)
 
-1. **Automated tests + CI gates** — the last big foundational gap; protects everything shipped this pass.
-2. **Error boundaries + observability** — cheap, and directly shortens the next incident.
-3. Then a feature: **mentorship matching** or **sub-communities-near-me** (small; sub-communities still have no coordinates).
+1. **Observability** — a Sentry-style error tracker + structured logging is the last foundational gap (error boundaries + tests are done; this closes the loop on catching issues before users do).
+2. **Grow the test suite** — the harness exists now; add tests around feed ranking and the rate limiter next.
+3. Small features: **sub-communities-near-me** (coords exist), **marketplace buyer↔seller DMs**.
 
 ## Follow-ups still open
 
