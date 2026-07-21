@@ -17,7 +17,7 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 - ✅ **Marketplace / classifieds (MVP)** — Listing + ListingImage schema; create (scanned, rate-limited image upload) / mark-sold / relist / delete; `/marketplace` (search + category + sold filters), detail (gallery, seller, "Message seller"), and post form; nav link. _(v2.94.0)_
 - ✅ **Sub-communities** — renamed **Crews → Sub-communities** (labels + `/crews`→`/sub-communities` with redirects; model stays internal). Default sub-communities are now **city-based**: Clarksville, Nashville, Knoxville, Chattanooga, Memphis. _(v2.92.0)_
 - ⬜ **Mentorship matching** — skill tracks + mentor trust level exist; pair new riders with nearby mentors.
-- ⬜ **Weather on ride pages** — surface conditions for an event's date/route.
+- ✅ **Weather on ride pages** — Open-Meteo (free, no API key). Events show a ride-day forecast in "About this ride"; roads show current conditions. Best-effort + hour-cached. _(v2.95.1)_
 
 ## ⚙️ Enhancements
 
@@ -38,7 +38,7 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 
 1. **Automated tests + CI gates** — the last big foundational gap; protects everything shipped this pass.
 2. **Error boundaries + observability** — cheap, and directly shortens the next incident.
-3. Then a feature: **mentorship matching**, **weather on rides**, or **sub-communities-near-me** (small; sub-communities still have no coordinates).
+3. Then a feature: **mentorship matching** or **sub-communities-near-me** (small; sub-communities still have no coordinates).
 
 ## Follow-ups still open
 
