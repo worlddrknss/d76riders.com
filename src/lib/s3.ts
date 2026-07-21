@@ -1,4 +1,5 @@
 import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
 const endpoint = process.env.S3_ENDPOINT;
@@ -17,6 +18,15 @@ function createClient() {
   return new S3Client({
     ...s3Config,
     endpoint,
+    // AWS SDK v3 (>= 3.729) defaults to sending a CRC32 checksum with
+    // aws-chunked content-encoding on PutObject. MinIO (and some other
+    // S3-compatible stores) can't process that trailer and the upload HANGS.
+    // Only checksum when the operation actually requires it — restores the
+    // pre-3.729 behaviour MinIO expects.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+    // Never let a stalled connection hang an upload forever.
+    requestHandler: new NodeHttpHandler({ connectionTimeout: 5_000, requestTimeout: 30_000 }),
   });
 }
 

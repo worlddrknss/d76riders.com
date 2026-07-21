@@ -32,3 +32,10 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started_
 1. **Tests + CI gates** — protects everything just shipped; highest ROI.
 2. **Feed perf fix** — small, self-contained win.
 3. Then pick a feature: **marketplace** (biggest community pull) or **crews-near-me** (small, leverages the new coords).
+
+## Follow Ups
+Two follow-ups I flagged along the way:
+
+1. **Marketplace contact**: "Message seller" reuses the platform's mutual-follow DM gate (falls back to the seller's profile). True buyer↔seller messaging without a follow needs the DM gate relaxed for listing contexts — a deliberate decision I left for you.
+
+2. **Crews-near-me**: sub-communities still have no coordinates, so no proximity sorting for them yet (easy add now).
