@@ -112,6 +112,7 @@ model Rider {
   romVotes RideOfMonthVote[]
   quests         RiderQuest[]
   crews          CrewMember[]
+  listings       Listing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

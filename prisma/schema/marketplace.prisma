@@ -1,0 +1,57 @@
+// Marketplace domain — rider-to-rider classifieds for bikes, parts, and gear.
+
+enum ListingCategory {
+  BIKE
+  PARTS
+  GEAR
+  ACCESSORIES
+  OTHER
+}
+
+enum ListingCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+  FOR_PARTS
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  REMOVED
+}
+
+model Listing {
+  id          String           @id @default(cuid())
+  sellerId    String
+  title       String
+  description String
+  // Whole cents to avoid float money. 0 = "free" / "make offer" handled in UI.
+  priceCents  Int
+  category    ListingCategory
+  condition   ListingCondition @default(GOOD)
+  status      ListingStatus    @default(ACTIVE)
+  location    String?
+
+  seller Rider          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  images ListingImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([sellerId])
+  @@index([category])
+}
+
+model ListingImage {
+  id        String @id @default(cuid())
+  listingId String
+  url       String
+  order     Int    @default(0)
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+}

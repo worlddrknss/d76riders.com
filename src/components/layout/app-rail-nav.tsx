@@ -21,6 +21,7 @@ import {
   Rss,
   Settings,
   Shield,
+  ShoppingBag,
   Star,
   Store,
   Trophy,
@@ -79,6 +80,7 @@ export function AppRailNav({
     { href: "/events", label: "Events", icon: CalendarDays },
     { href: "/roads", label: "Roads", icon: Route },
     { href: "/nearby", label: "Nearby", icon: MapPinned },
+    { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
     { href: "/r", label: "Riders", icon: Users, exact: true },
   ];
   const inbox: Item[] = [
