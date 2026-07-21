@@ -5,16 +5,23 @@ import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 
 /**
- * Full-screen modal shell for the intercepted `/events/new` route. Fills the
- * viewport (Facebook-composer style): a header bar on top, then the form, which
- * lays itself out as fields + live preview. Closing returns the organizer to the
- * page they were on via router.back (the URL was masked to /events/new). A hard
+ * Shared full-screen modal shell for intercepted "create" routes (new event, new
+ * article). A header bar with an eyebrow + title on top, then the content fills
+ * the rest of the viewport. Closing returns the user to the page they were on via
+ * router.back (the URL was masked to the real route by the interception); a hard
  * refresh or direct visit skips this and loads the real page.
  *
- * Close is the X or Escape only — the create form is long, so no stray-click
- * dismiss.
+ * Close is the X or Escape only — these forms are long, so no stray-click dismiss.
  */
-export function CreateEventModal({ children }: { children: React.ReactNode }) {
+export function FullPageModal({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow?: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const close = useCallback(() => router.back(), [router]);
 
@@ -36,13 +43,15 @@ export function CreateEventModal({ children }: { children: React.ReactNode }) {
       className="fixed inset-0 z-[60] flex flex-col bg-surface"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="create-event-modal-title"
+      aria-labelledby="full-page-modal-title"
     >
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
-          <h1 id="create-event-modal-title" className="font-display text-xl font-bold text-ink sm:text-2xl">
-            Create Event
+          {eyebrow ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">{eyebrow}</p>
+          ) : null}
+          <h1 id="full-page-modal-title" className="font-display text-xl font-bold text-ink sm:text-2xl">
+            {title}
           </h1>
         </div>
         <button

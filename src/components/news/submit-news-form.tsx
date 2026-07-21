@@ -10,9 +10,11 @@ const initialState: SubmitNewsFormState = { error: null };
 type SubmitNewsFormProps = {
   categories: { id: string; name: string }[];
   existingTags: string[];
+  /** Drop the in-form title when a surrounding shell (e.g. the modal) supplies it. */
+  hideHeading?: boolean;
 };
 
-export function SubmitNewsForm({ categories, existingTags }: SubmitNewsFormProps) {
+export function SubmitNewsForm({ categories, existingTags, hideHeading = false }: SubmitNewsFormProps) {
   const [contentHtml, setContentHtml] = useState("");
   const [state, formAction] = useActionState(submitNewsAction, initialState);
 
@@ -24,8 +26,10 @@ export function SubmitNewsForm({ categories, existingTags }: SubmitNewsFormProps
   return (
     <form action={formAction} className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-semibold text-asphalt">Submit an Article</h1>
-        <p className="mt-2 text-sm text-muted">
+        {hideHeading ? null : (
+          <h1 className="font-display text-3xl font-semibold text-asphalt">Submit an Article</h1>
+        )}
+        <p className={`${hideHeading ? "" : "mt-2 "}text-sm text-muted`}>
           Share news, ride reports, or gear reviews with the District 76 community. Your article will be reviewed by a moderator before being published.
         </p>
       </div>
