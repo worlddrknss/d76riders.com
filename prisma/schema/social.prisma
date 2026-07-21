@@ -11,6 +11,22 @@ model RiderFollow {
   @@index([followingId])
 }
 
+// One rider blocking another. A block in either direction ends DMs between the
+// pair (checked in canDm), which is how a seller silences an unwanted buyer on
+// an open-contact marketplace thread.
+model RiderBlock {
+  blockerId String
+  blockedId String
+
+  blocker Rider @relation("RiderBlockBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked Rider @relation("RiderBlockBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+}
+
 model EventFollow {
   riderId String
   eventId String

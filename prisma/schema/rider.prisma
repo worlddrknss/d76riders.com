@@ -69,6 +69,8 @@ model Rider {
   videos RiderVideo[]
   following RiderFollow[] @relation("RiderFollowFollower")
   followers RiderFollow[] @relation("RiderFollowFollowing")
+  blocking  RiderBlock[]  @relation("RiderBlockBlocker")
+  blockedBy RiderBlock[]  @relation("RiderBlockBlocked")
   followedEvents EventFollow[]
   organizedEvents EventOrganizer[]
   eventCheckIns  EventCheckIn[]

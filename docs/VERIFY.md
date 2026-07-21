@@ -43,4 +43,4 @@ _Reviewed 2026-07-21. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 
 ## Follow-ups still open
 
-1. **Marketplace harassment control** — open-contact threads bypass the follow gate by design; there's no per-thread block yet, so a seller can't silence an unwanted buyer beyond ignoring them. Add a block/mute when marketplace volume warrants it.
+1. ✅ **Marketplace harassment control** — riders can now **block** each other from the DM thread (`RiderBlock`); a block in either direction ends messaging both ways, overriding open-contact, and swaps the composer for a notice. _(v2.113.0)_

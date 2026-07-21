@@ -12,11 +12,16 @@ export function DmThread({
   viewerId,
   otherName,
   initialMessages,
+  canSend = true,
+  blockedNote,
 }: {
   conversationId: string;
   viewerId: string;
   otherName: string;
   initialMessages: MessageDTO[];
+  /** When false, the composer is replaced with a notice (e.g. a block). */
+  canSend?: boolean;
+  blockedNote?: string;
 }) {
   const [messages, setMessages] = useState<MessageDTO[]>(initialMessages);
   const [text, setText] = useState("");
@@ -108,6 +113,11 @@ export function DmThread({
         <div ref={bottomRef} />
       </div>
 
+      {!canSend ? (
+        <p className="border-t border-border p-4 text-center text-sm text-muted">
+          {blockedNote ?? "You can't reply to this conversation."}
+        </p>
+      ) : (
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -160,6 +170,7 @@ export function DmThread({
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }

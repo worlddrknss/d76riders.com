@@ -12,8 +12,44 @@ export function canonicalPair(a: string, b: string): [string, string] {
  * from a marketplace listing) stays messageable regardless of follow state — the
  * listing is the invitation to reach out.
  */
+/** True if either rider has blocked the other — blocks end DMs both ways. */
+export async function isBlockedBetween(riderId: string, otherId: string): Promise<boolean> {
+  const block = await prisma.riderBlock.findFirst({
+    where: {
+      OR: [
+        { blockerId: riderId, blockedId: otherId },
+        { blockerId: otherId, blockedId: riderId },
+      ],
+    },
+    select: { blockerId: true },
+  });
+  return Boolean(block);
+}
+
+/** Who has blocked whom, from the viewer's perspective. */
+export async function getBlockState(
+  riderId: string,
+  otherId: string,
+): Promise<{ iBlocked: boolean; blockedByThem: boolean }> {
+  const rows = await prisma.riderBlock.findMany({
+    where: {
+      OR: [
+        { blockerId: riderId, blockedId: otherId },
+        { blockerId: otherId, blockedId: riderId },
+      ],
+    },
+    select: { blockerId: true },
+  });
+  return {
+    iBlocked: rows.some((r) => r.blockerId === riderId),
+    blockedByThem: rows.some((r) => r.blockerId === otherId),
+  };
+}
+
 export async function canDm(riderId: string, otherId: string): Promise<boolean> {
   if (!riderId || !otherId || riderId === otherId) return false;
+  // A block in either direction ends messaging — this overrides open-contact.
+  if (await isBlockedBetween(riderId, otherId)) return false;
   const [riderAId, riderBId] = canonicalPair(riderId, otherId);
   const openThread = await prisma.conversation.findUnique({
     where: { riderAId_riderBId: { riderAId, riderBId } },

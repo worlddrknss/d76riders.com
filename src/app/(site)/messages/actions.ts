@@ -42,6 +42,41 @@ export async function startConversationAction(otherHandle: string): Promise<void
   redirect(`/messages/${conversationId}`);
 }
 
+/** Resolve the other participant of a conversation the viewer is part of. */
+async function otherInConversation(conversationId: string, meId: string): Promise<string | null> {
+  const convo = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { riderAId: true, riderBId: true },
+  });
+  if (!convo) return null;
+  return otherParticipant(convo, meId);
+}
+
+/** Block the other participant of a thread — ends DMs both ways until unblocked. */
+export async function blockRiderAction(conversationId: string): Promise<void> {
+  const me = await viewerRider();
+  if (!me) return;
+  const otherId = await otherInConversation(conversationId, me.id);
+  if (!otherId || otherId === me.id) return;
+  await prisma.riderBlock.upsert({
+    where: { blockerId_blockedId: { blockerId: me.id, blockedId: otherId } },
+    create: { blockerId: me.id, blockedId: otherId },
+    update: {},
+  });
+  revalidatePath(`/messages/${conversationId}`);
+  revalidatePath("/messages");
+}
+
+export async function unblockRiderAction(conversationId: string): Promise<void> {
+  const me = await viewerRider();
+  if (!me) return;
+  const otherId = await otherInConversation(conversationId, me.id);
+  if (!otherId) return;
+  await prisma.riderBlock.deleteMany({ where: { blockerId: me.id, blockedId: otherId } });
+  revalidatePath(`/messages/${conversationId}`);
+  revalidatePath("/messages");
+}
+
 /**
  * Send a message (text and/or a photo). Re-checks the mutual-follow gate, scans
  * and stores any image, and pushes the recipient.

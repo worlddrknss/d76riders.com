@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Ban, RotateCcw } from "lucide-react";
 
+import { blockRiderAction, unblockRiderAction } from "@/app/(site)/messages/actions";
 import { DmThread } from "@/components/messages/dm-thread";
-import { otherParticipant } from "@/lib/dm";
+import { getBlockState, otherParticipant } from "@/lib/dm";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -42,6 +43,11 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
 
   const other = convo.riderAId === me.id ? convo.riderB : convo.riderA;
   const avatar = mediaUrl(other.avatarUrl);
+  const { iBlocked, blockedByThem } = await getBlockState(me.id, other.id);
+  const canSend = !iBlocked && !blockedByThem;
+  const blockedNote = iBlocked
+    ? `You blocked ${other.name}. Unblock to message again.`
+    : "You can't reply to this conversation.";
   const initialMessages = convo.messages.map((m) => ({
     ...m,
     createdAt: m.createdAt.toISOString(),
@@ -71,6 +77,26 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
             )}
             <span className="font-semibold text-ink">{other.name}</span>
           </Link>
+
+          {iBlocked ? (
+            <form action={unblockRiderAction.bind(null, id)} className="ml-auto">
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:border-ink/30 hover:text-ink"
+              >
+                <RotateCcw className="h-3.5 w-3.5" /> Unblock
+              </button>
+            </form>
+          ) : (
+            <form action={blockRiderAction.bind(null, id)} className="ml-auto">
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:border-red-300 hover:text-red-600"
+              >
+                <Ban className="h-3.5 w-3.5" /> Block
+              </button>
+            </form>
+          )}
         </div>
 
         <DmThread
@@ -78,6 +104,8 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           viewerId={me.id}
           otherName={other.name}
           initialMessages={initialMessages}
+          canSend={canSend}
+          blockedNote={blockedNote}
         />
       </div>
     </section>
