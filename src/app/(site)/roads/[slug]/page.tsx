@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Clock, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { RoadWeatherPanel } from "@/components/weather/weather-panel";
+import { getCurrentWeather } from "@/lib/weather";
 import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";
 import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
@@ -132,6 +134,15 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
     kind: waypoint.type as WaypointKind,
   }));
 
+  // Current conditions at the road: its KSU, else the middle of the route.
+  const weatherPoint: [number, number] | null =
+    road.route?.ksuLat != null && road.route?.ksuLng != null
+      ? [road.route.ksuLng, road.route.ksuLat]
+      : coordinates.length > 0
+        ? coordinates[Math.floor(coordinates.length / 2)]
+        : null;
+  const roadWeather = weatherPoint ? await getCurrentWeather(weatherPoint[1], weatherPoint[0]) : null;
+
   const isOwner = currentUser?.id === road.rider.userId;
   const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
 
@@ -254,6 +265,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                   <p className="text-xs text-muted">{climb ? climb.label : "Total gain"}</p>
                 </div>
               )}
+              {roadWeather ? <RoadWeatherPanel current={roadWeather} /> : null}
             </div>
 
             {/* ROUTE QUALITY — post-ride feedback + blended score */}

@@ -8,6 +8,7 @@ import { SiFacebook } from "@icons-pack/react-simple-icons";
 import { AppShell } from "@/components/layout/app-shell";
 import { EventManageActions } from "@/components/events/event-manage-actions";
 import {
+  DEFAULT_TIMEZONE,
   formatEventDate,
   formatEventTime,
   isSameDayInTz,
@@ -37,6 +38,8 @@ import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { HazardList } from "@/components/hazards/hazard-list";
 import { elevationDifficulty } from "@/lib/elevation";
 import { activeHazardWhere } from "@/lib/hazards";
+import { getDailyForecast, withinForecastWindow } from "@/lib/weather";
+import { EventWeatherPanel } from "@/components/weather/weather-panel";
 import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
@@ -363,6 +366,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // Check-in state — "today" is judged in the event's own timezone.
   const isEventDay = isSameDayInTz(event.startsAt, event.timezone);
   const isActiveEvent = event.status === "UPCOMING" && isEventDay;
+
+  // Ride-day forecast — only for an upcoming, mapped meetup inside the forecast
+  // window (Open-Meteo ~16 days out). Best-effort; null hides the panel.
+  const eventDateLocal = new Intl.DateTimeFormat("en-CA", {
+    timeZone: event.timezone ?? DEFAULT_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(event.startsAt);
+  const eventWeather =
+    event.status === "UPCOMING" &&
+    event.meetLat != null &&
+    event.meetLng != null &&
+    withinForecastWindow(eventDateLocal, now)
+      ? await getDailyForecast(event.meetLat, event.meetLng, eventDateLocal)
+      : null;
   // A ride whose start time has passed but was never closed — organizers still
   // need to manage attendance and close it out.
   const hasStarted = event.startsAt.getTime() <= now.getTime();
@@ -707,6 +726,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   <Link href={`/r/${event.host.handle}`} className="hover:text-sunset">{event.host.name}</Link>
                 </DetailRow>
               </dl>
+
+              {eventWeather ? (
+                <div className="mt-4">
+                  <EventWeatherPanel forecast={eventWeather} />
+                </div>
+              ) : null}
 
               <div className="mt-5 space-y-2 border-t border-border pt-4">
                 <EventRsvpButton
