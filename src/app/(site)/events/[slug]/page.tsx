@@ -44,6 +44,7 @@ import { JsonLd, eventJsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld"
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
 import { getCurrentUser } from "@/lib/session";
+import { postableCrews } from "@/lib/crews";
 import type { PlannerWaypoint, WaypointKind } from "@/lib/routing";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -265,6 +266,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
     : null;
   const viewerTz = viewerRider?.timezone ?? null;
+  // Sub-communities the managing organizer can move this ride into (their own).
+  const manageableCrews =
+    viewerRider && (isOwner || isOrganizer) ? await postableCrews(viewerRider.id) : [];
 
   // Community gallery: attendee-uploaded photos (riderId set) — distinct from the
   // organizer's cover flyer (riderId null), so the two never mix.
@@ -609,9 +613,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   maxCapacity: event.maxCapacity,
                   rsvpDeadline: event.rsvpDeadline ? toZonedInputValue(event.rsvpDeadline, event.timezone) : null,
                   galleryClosesAt: event.galleryClosesAt ? toZonedInputValue(event.galleryClosesAt, event.timezone) : null,
+                  crewId: event.crewId,
+                  crewName: event.crew?.name ?? null,
                   hasPhoto: event.galleryItems.length > 0,
                   hasRoute: !!event.routeId,
                 }}
+                crews={manageableCrews}
               />
             )}
           </div>

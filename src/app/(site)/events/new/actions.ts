@@ -6,6 +6,7 @@ import { RideDifficulty } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
+import { resolvePostableCrewId } from "@/lib/crews";
 import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -258,6 +259,9 @@ export async function createEventAction(
     return { error: "No rider profile found for your account yet." };
   }
 
+  // Optional sub-community — only honoured if the organizer belongs to it.
+  const crewId = await resolvePostableCrewId(rider.id, normalizeText(formData.get("crewId")) || null);
+
   const slug = await buildUniqueEventSlug(title);
   let eventPhotoUrl: string | null = null;
 
@@ -318,6 +322,7 @@ export async function createEventAction(
     const event = await tx.rideEvent.create({
       data: {
         hostId: rider.id,
+        crewId,
         title,
         slug,
         excerpt: excerpt ? excerpt.slice(0, 255) : null,

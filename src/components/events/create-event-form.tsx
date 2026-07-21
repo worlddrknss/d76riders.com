@@ -20,9 +20,11 @@ const initialCreateEventFormState: CreateEventFormState = {
 export function CreateEventForm({
   recentSpots,
   defaultTimezone = DEFAULT_TIMEZONE,
+  crews = [],
 }: {
   recentSpots?: { meet: MeetupSpot[]; ksu: MeetupSpot[] };
   defaultTimezone?: string;
+  crews?: { id: string; name: string }[];
 }) {
   const [state, formAction] = useActionState<CreateEventFormState, FormData>(
     createEventAction,
@@ -91,6 +93,28 @@ export function CreateEventForm({
           placeholder="https://www.facebook.com/events/..."
         />
       </div>
+
+      {crews.length > 0 ? (
+        <div className="space-y-1.5">
+          <label htmlFor="crewId" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Sub-community (Optional)
+          </label>
+          <select
+            id="crewId"
+            name="crewId"
+            defaultValue=""
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          >
+            <option value="">No sub-community</option>
+            {crews.map((crew) => (
+              <option key={crew.id} value={crew.id}>
+                {crew.name}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted">Posts this ride to a sub-community you belong to, so it shows on that group&apos;s calendar.</p>
+        </div>
+      ) : null}
 
       <div className="space-y-1.5">
         <label htmlFor="eventPhoto" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">

@@ -10,6 +10,7 @@ import { absoluteUrl } from "@/lib/absolute-url";
 import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { sendPushToRider } from "@/lib/push";
 import { requireUserId } from "@/lib/authz";
+import { resolvePostableCrewId } from "@/lib/crews";
 import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
@@ -152,6 +153,17 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
     redirect(`/events/${event.slug}`);
   }
 
+  // Sub-community: keep an existing assignment as-is (the editor may not be a
+  // member of it), but any change must land in a sub-community they belong to.
+  const crewIdInput = normalizeText(formData.get("crewId")) || null;
+  let crewId: string | null;
+  if (crewIdInput && crewIdInput === event.crewId) {
+    crewId = event.crewId;
+  } else {
+    const editorRider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+    crewId = editorRider ? await resolvePostableCrewId(editorRider.id, crewIdInput) : null;
+  }
+
   const facebookEventUrl = toOptionalUrl(facebookEventUrlInput);
   if (facebookEventUrlInput && !facebookEventUrl) {
     redirect(`/events/${event.slug}`);
@@ -183,6 +195,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
       where: { id: event.id },
       data: {
         title,
+        crewId,
         excerpt: excerpt ? excerpt.slice(0, 255) : null,
         description: description || null,
         startsAt,

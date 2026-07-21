@@ -51,11 +51,19 @@ type EventData = {
   maxCapacity: number | null;
   rsvpDeadline: string | null;
   galleryClosesAt: string | null;
+  crewId: string | null;
+  crewName: string | null;
   hasPhoto: boolean;
   hasRoute: boolean;
 };
 
-export function EventManageActions({ event }: { event: EventData }) {
+export function EventManageActions({
+  event,
+  crews = [],
+}: {
+  event: EventData;
+  crews?: { id: string; name: string }[];
+}) {
   const [editOpen, setEditOpen] = useState(false);
   const [editPending, startEditTransition] = useTransition();
   const [excerptValue, setExcerptValue] = useState(event.excerpt ?? "");
@@ -226,6 +234,21 @@ export function EventManageActions({ event }: { event: EventData }) {
                   </select>
                 </div>
               </div>
+              {crews.length > 0 || event.crewId ? (
+                <div>
+                  <label htmlFor="edit-event-crew" className="text-xs font-semibold uppercase tracking-wide text-muted">Sub-community</label>
+                  <select id="edit-event-crew" name="crewId" defaultValue={event.crewId ?? ""} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm text-ink">
+                    <option value="">No sub-community</option>
+                    {/* Preserve a current sub-community the editor isn't a member of. */}
+                    {event.crewId && event.crewName && !crews.some((c) => c.id === event.crewId) ? (
+                      <option value={event.crewId}>{event.crewName}</option>
+                    ) : null}
+                    {crews.map((crew) => (
+                      <option key={crew.id} value={crew.id}>{crew.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div className="grid gap-4 grid-cols-2">
                 <div>
                   <label htmlFor="edit-event-capacity" className="text-xs font-semibold uppercase tracking-wide text-muted">Max Capacity</label>
