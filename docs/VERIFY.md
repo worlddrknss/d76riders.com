@@ -1,6 +1,6 @@
 # Roadmap — Status
 
-_Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.94.3_
+_Reviewed 2026-07-21. ✅ done · 🟡 partial · ⬜ not started · Live at v2.98.0_
 
 ## 🔒 Security — ✅ COMPLETE
 
@@ -15,7 +15,8 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 
 - ✅ **Location-aware discovery** — required location/timezone at signup + geocoded rider coords; Events location dropdown + Nearest sort; Roads Nearest sort; **/nearby map** of nearby events + roads. Geocode also runs on profile save. _(v2.85–2.87, map v2.91.0)_
 - ✅ **Marketplace / classifieds (MVP)** — Listing + ListingImage schema; create (scanned, rate-limited image upload) / mark-sold / relist / delete; `/marketplace` (search + category + sold filters), detail (gallery, seller, "Message seller"), and post form; nav link. _(v2.94.0)_
-- ✅ **Sub-communities** — renamed **Crews → Sub-communities** (labels + `/crews`→`/sub-communities` with redirects; model stays internal). Default sub-communities are now **city-based**: Clarksville, Nashville, Knoxville, Chattanooga, Memphis. _(v2.92.0)_
+- ✅ **Sub-communities** — renamed **Crews → Sub-communities** (labels + `/crews`→`/sub-communities` with redirects; model stays internal). Default sub-communities are now **city-based**: Clarksville, Nashville, Knoxville, Chattanooga, Memphis, each with coordinates so the listing sorts **nearest-first** for signed-in riders (distance shown per card). _(v2.92.0, near-me v2.99.0)_
+- ✅ **Marketplace buyer↔seller DMs** — "Message seller" now opens a real buyer↔seller thread without a mutual follow. The listing is the invitation: it marks the conversation **open-contact** so follow-up sends bypass the DM gate. Normal DMs still require a mutual follow (unfollow still ends them). _(v2.99.0)_
 - ✅ **Mentorship matching** — `/mentors` lists riders who've earned mentor level, one card per rider with the skills they mentor + a verified check, sorted **nearest-first** by rider coordinates. Nav link added. _(v2.97.0)_
 - ✅ **Weather on ride pages** — Open-Meteo (free, no API key). Events show a ride-day forecast in "About this ride"; roads show current conditions. Best-effort + hour-cached. _(v2.95.1)_
 
@@ -38,9 +39,8 @@ _Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 
 1. **Observability** — a Sentry-style error tracker + structured logging is the last foundational gap (error boundaries + tests are done; this closes the loop on catching issues before users do).
 2. **Grow the test suite** — the harness exists now; add tests around feed ranking and the rate limiter next.
-3. Small features: **sub-communities-near-me** (coords exist), **marketplace buyer↔seller DMs**.
+3. ✅ Small features: **sub-communities-near-me** + **marketplace buyer↔seller DMs** — both shipped in v2.99.0.
 
 ## Follow-ups still open
 
-1. **Marketplace contact** — "Message seller" reuses the mutual-follow DM gate (falls back to the seller's profile). True buyer↔seller messaging without a follow needs the DM gate relaxed for listing contexts — a deliberate decision left for you.
-2. **Sub-communities-near-me** — sub-communities have no coordinates yet, so no proximity sorting (easy add now that riders have coords).
+1. **Marketplace harassment control** — open-contact threads bypass the follow gate by design; there's no per-thread block yet, so a seller can't silence an unwanted buyer beyond ignoring them. Add a block/mute when marketplace volume warrants it.

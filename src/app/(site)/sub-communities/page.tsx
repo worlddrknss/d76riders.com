@@ -8,6 +8,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { prisma } from "@/lib/prisma";
+import { haversineMiles } from "@/lib/routing";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -27,8 +28,13 @@ export const dynamic = "force-dynamic";
 export default async function CrewsPage() {
   const now = new Date();
   const currentUser = await getCurrentUser();
+  const viewer = currentUser
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { latitude: true, longitude: true } })
+    : null;
+  const viewerPoint: [number, number] | null =
+    viewer?.latitude != null && viewer?.longitude != null ? [viewer.longitude, viewer.latitude] : null;
 
-  const crews = await prisma.crew.findMany({
+  const rows = await prisma.crew.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     select: {
@@ -38,6 +44,8 @@ export default async function CrewsPage() {
       description: true,
       avatarUrl: true,
       open: true,
+      latitude: true,
+      longitude: true,
       _count: { select: { members: true } },
       events: {
         where: { startsAt: { gte: now }, status: "UPCOMING" },
@@ -47,6 +55,17 @@ export default async function CrewsPage() {
       },
     },
   });
+
+  // When we know where the viewer is, surface the closest sub-communities first
+  // (ones without coordinates fall to the end); otherwise keep the curated order.
+  const crews = rows.map((crew) => ({
+    ...crew,
+    distance:
+      viewerPoint && crew.latitude != null && crew.longitude != null
+        ? haversineMiles(viewerPoint, [crew.longitude, crew.latitude])
+        : null,
+  }));
+  if (viewerPoint) crews.sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
 
   return (
     <AppShell>
@@ -91,6 +110,9 @@ export default async function CrewsPage() {
                           <p className="text-xs text-muted">
                             {crew._count.members} member{crew._count.members === 1 ? "" : "s"}
                             {crew.open ? "" : " · invite only"}
+                            {crew.distance != null ? (
+                              <span className="font-semibold text-sunset"> · {Math.round(crew.distance)} mi</span>
+                            ) : null}
                           </p>
                         </div>
                       </div>

@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
+import { canonicalPair } from "@/lib/dm";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
@@ -119,6 +120,32 @@ export async function setListingStatusAction(listingId: string, status: ListingS
   });
   revalidatePath(`/marketplace/${listingId}`);
   revalidatePath("/marketplace");
+}
+
+// Buyer contacts a seller about a listing. Unlike a cold DM, this doesn't require
+// a mutual follow — the active listing is the seller's invitation to be reached.
+// It opens (or reuses) a conversation marked open-contact so follow-up sends pass
+// the DM gate, then drops the buyer straight into the thread.
+export async function messageSellerAction(listingId: string): Promise<void> {
+  const rider = await currentRider();
+  if (!rider) redirect("/login");
+
+  const listing = await prisma.listing.findUnique({
+    where: { id: listingId },
+    select: { status: true, sellerId: true },
+  });
+  // Gone, removed, or your own listing — nothing to message.
+  if (!listing || listing.status === "REMOVED") redirect("/marketplace");
+  if (listing.sellerId === rider.id) redirect(`/marketplace/${listingId}`);
+
+  const [riderAId, riderBId] = canonicalPair(rider.id, listing.sellerId);
+  const convo = await prisma.conversation.upsert({
+    where: { riderAId_riderBId: { riderAId, riderBId } },
+    create: { riderAId, riderBId, openContact: true },
+    update: { openContact: true },
+    select: { id: true },
+  });
+  redirect(`/messages/${convo.id}`);
 }
 
 export async function deleteListingAction(listingId: string): Promise<void> {

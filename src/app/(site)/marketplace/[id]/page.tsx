@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, MapPin, MessageSquare } from "lucide-react";
 
-import { startConversationAction } from "@/app/(site)/messages/actions";
+import { messageSellerAction } from "@/app/(site)/marketplace/actions";
 import { AppShell } from "@/components/layout/app-shell";
 import { ListingOwnerActions } from "@/components/marketplace/listing-owner-actions";
 import { CATEGORY_LABEL, CONDITION_LABEL, formatPrice } from "@/lib/marketplace";
@@ -107,7 +107,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   <ListingOwnerActions listingId={listing.id} sold={sold} />
                 </div>
               ) : currentUser ? (
-                <form action={startConversationAction.bind(null, listing.seller.handle)} className="mt-4">
+                <form action={messageSellerAction.bind(null, listing.id)} className="mt-4">
                   <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#cf5a26]">
                     <MessageSquare className="h-4 w-4" /> Message seller
                   </button>

@@ -8,6 +8,9 @@ model Conversation {
   riderAId      String
   riderBId      String
   lastMessageAt DateTime @default(now())
+  // Open-contact threads (e.g. started from a marketplace listing) bypass the
+  // mutual-follow DM gate — the listing itself is the invitation to reach out.
+  openContact   Boolean  @default(false)
   createdAt     DateTime @default(now())
 
   riderA   Rider           @relation("ConversationRiderA", fields: [riderAId], references: [id], onDelete: Cascade)

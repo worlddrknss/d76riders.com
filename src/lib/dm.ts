@@ -8,10 +8,18 @@ export function canonicalPair(a: string, b: string): [string, string] {
 /**
  * DMs are gated on a mutual follow — both riders must follow each other. This is
  * checked when starting a conversation AND on every send, so unfollowing ends the
- * ability to message.
+ * ability to message. The one exception: an open-contact conversation (started
+ * from a marketplace listing) stays messageable regardless of follow state — the
+ * listing is the invitation to reach out.
  */
 export async function canDm(riderId: string, otherId: string): Promise<boolean> {
   if (!riderId || !otherId || riderId === otherId) return false;
+  const [riderAId, riderBId] = canonicalPair(riderId, otherId);
+  const openThread = await prisma.conversation.findUnique({
+    where: { riderAId_riderBId: { riderAId, riderBId } },
+    select: { openContact: true },
+  });
+  if (openThread?.openContact) return true;
   const [aFollowsB, bFollowsA] = await Promise.all([
     prisma.riderFollow.findUnique({
       where: { followerId_followingId: { followerId: riderId, followingId: otherId } },
