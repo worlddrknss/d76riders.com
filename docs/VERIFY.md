@@ -1,41 +1,46 @@
 # Roadmap — Status
 
-_Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started_
+_Reviewed 2026-07-20. ✅ done · 🟡 partial · ⬜ not started · Live at v2.94.3_
 
-## 🔒 Security (do first) — ✅ COMPLETE
+## 🔒 Security — ✅ COMPLETE
 
 - ✅ **Rate limiting** — Postgres-backed, cross-replica, fails-open. On login (per-IP + per-account), register, password-reset, emergency-card alert, and hazard reports. _(v2.89.0)_
 - ✅ **Server-action authorization audit** — Verified: every mutate-by-id action re-checks ownership/role; **no IDOR holes found**. Admin actions re-check roles at the action level.
 - ✅ **Emergency-contact vault crypto review** — Verified sound: AES-256-GCM envelope encryption, fresh random IV per seal, auth-tag stored + verified.
-- ✅ **Upload scanning** — Now **fails closed**: ClamAV enabled-but-unreachable blocks the upload instead of silently allowing. Dev (disabled) still passes. _(v2.90.0)_
+- ✅ **Upload scanning fails closed** — ClamAV enabled-but-unreachable now blocks the upload instead of silently allowing. Dev (disabled) still passes. _(v2.90.0)_
+- ✅ **Password reset flow** — was entirely missing. Single-use 1h token, no enumeration, revokes sessions. _(v2.88.0)_
+- ✅ **Rider-down push** — emergency alert pushes to organizers, bypassing quiet hours. _(v2.90.0)_
 
-### Bonus security/safety shipped this pass (from the deeper audit)
-- ✅ **Password reset flow** — was entirely missing; users could get locked out. Single-use 1h token, no enumeration, revokes sessions. _(v2.88.0)_
-- ✅ **Rider-down push** — emergency alert now pushes to organizers, bypassing quiet hours. _(v2.90.0)_
+## ✨ Features
 
-## ✨ Features (highest community value)
-
-- 🟡 **Location-aware discovery** — ✅ required location/timezone at signup + geocoded rider coords; ✅ Events location dropdown + Nearest sort; ✅ Roads Nearest sort. ⬜ **Remaining: a map view of nearby events/roads.** _(v2.85–2.87)_
-- ⬜ **Parts & gear marketplace / classifieds** — the #1 ask for moto communities; S3 uploads, garages, and messaging already exist to build on.
+- ✅ **Location-aware discovery** — required location/timezone at signup + geocoded rider coords; Events location dropdown + Nearest sort; Roads Nearest sort; **/nearby map** of nearby events + roads. Geocode also runs on profile save. _(v2.85–2.87, map v2.91.0)_
+- ✅ **Marketplace / classifieds (MVP)** — Listing + ListingImage schema; create (scanned, rate-limited image upload) / mark-sold / relist / delete; `/marketplace` (search + category + sold filters), detail (gallery, seller, "Message seller"), and post form; nav link. _(v2.94.0)_
+- ✅ **Sub-communities** — renamed **Crews → Sub-communities** (labels + `/crews`→`/sub-communities` with redirects; model stays internal). Default sub-communities are now **city-based**: Clarksville, Nashville, Knoxville, Chattanooga, Memphis. _(v2.92.0)_
 - ⬜ **Mentorship matching** — skill tracks + mentor trust level exist; pair new riders with nearby mentors.
-- ✅ **Sub-communities → already shipped as Crews.** Crew + CrewMember (LEAD/MEMBER), open/closed join, crew-hosted events + challenges, `/crews` pages + admin. 🟡 _Only gap: crews have no location, so no "crews near me" — easy add now that riders have coords._
 - ⬜ **Weather on ride pages** — surface conditions for an event's date/route.
 
-## ⚙️ Enhancements (foundational health)
+## ⚙️ Enhancements
 
-- ⬜ **Automated tests + CI gates** — still no test runner. Biggest long-term ROI: locks down authz ownership, reputation scoring, feed ranking, crypto.
-- ⬜ **Error tracking / observability** — a Sentry-style tracker + structured logging would have surfaced the SMTP hang before a user hit it.
-- ⬜ **Performance sweep** — top item: feed over-fetches all likes/saves per entry to compute per-viewer flags in JS (`lib/feed.ts`); one scoped query fixes it. Also sequential awaits in `closeRideAction` / S3 deletes.
+- ✅ **Feed performance** — feed no longer over-fetches every like/save per entry; two indexed, viewer-scoped lookups instead. _(v2.93.0)_
+- ⬜ **Automated tests + CI gates** — still no test runner. **Biggest remaining ROI**: locks down authz ownership, reputation scoring, feed ranking, crypto.
+- ⬜ **Error tracking / observability** — a Sentry-style tracker + structured logging (would have surfaced the SMTP hang, and sped up the publish-hang diagnosis, before a user hit them).
+- ⬜ **Error boundaries** — no `error.tsx` / `not-found.tsx`; an uncaught render error shows the raw crash screen (seen during the publish-hang incident).
+- 🟡 **Perf tail** — sequential awaits in `closeRideAction` / S3 deletes could be bounded `Promise.all`.
+
+## 🛠️ Incidents & fixes (2026-07-20)
+
+- ✅ **Publish hang / "page couldn't load"** — root cause was **Cloudflare's Managed WAF rule "React – Leaking Server Functions" (CVE-2025-55183)**, auto-enabled on the zone that day, false-positive-blocking legitimate Next.js Server-Action POSTs. **Not our code** — proven by end-to-end tests (app, Envoy, full Cloudflare path all handled uploads fine). Resolved via a scoped WAF **Skip** custom rule (matches the `next-action` header) + confirmed the app is **already patched** (Next 16.2.9 + React 19.2.4). Also hardened along the way: S3 client timeouts, `bodySizeLimit` 30→75MB, upload try/catch. _(v2.94.1–2)_
+- ✅ **Feed didn't update after publish** — `FeedList` seeded items from `useState` and ignored `router.refresh()`; now re-seeds on the server's first-page change, and the create action revalidates `/feed`. _(v2.94.3)_
+- ✅ **SMTP outbound blocked** — cluster NetworkPolicy had no egress for 465/587; added it (infra repo) + app-side send timeouts so a mail outage can't hang registration. _(earlier)_
+- ✅ **MinIO upload hangs** — ruled out during the publish-hang hunt; MinIO/S3 confirmed healthy.
 
 ## Next up (recommendation)
 
-1. **Tests + CI gates** — protects everything just shipped; highest ROI.
-2. **Feed perf fix** — small, self-contained win.
-3. Then pick a feature: **marketplace** (biggest community pull) or **crews-near-me** (small, leverages the new coords).
+1. **Automated tests + CI gates** — the last big foundational gap; protects everything shipped this pass.
+2. **Error boundaries + observability** — cheap, and directly shortens the next incident.
+3. Then a feature: **mentorship matching**, **weather on rides**, or **sub-communities-near-me** (small; sub-communities still have no coordinates).
 
-## Follow Ups
-Two follow-ups I flagged along the way:
+## Follow-ups still open
 
-1. **Marketplace contact**: "Message seller" reuses the platform's mutual-follow DM gate (falls back to the seller's profile). True buyer↔seller messaging without a follow needs the DM gate relaxed for listing contexts — a deliberate decision I left for you.
-
-2. **Crews-near-me**: sub-communities still have no coordinates, so no proximity sorting for them yet (easy add now).
+1. **Marketplace contact** — "Message seller" reuses the mutual-follow DM gate (falls back to the seller's profile). True buyer↔seller messaging without a follow needs the DM gate relaxed for listing contexts — a deliberate decision left for you.
+2. **Sub-communities-near-me** — sub-communities have no coordinates yet, so no proximity sorting (easy add now that riders have coords).
