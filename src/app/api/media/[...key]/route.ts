@@ -42,7 +42,9 @@ export async function GET(
     }
 
     if (wantJpeg) {
-      const bytes = Buffer.from(await (response.Body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray());
+      // Buffer the object the same way the streaming path treats Body, so this
+      // doesn't depend on the SDK stream mixin being present.
+      const bytes = Buffer.from(await new Response(response.Body as unknown as BodyInit).arrayBuffer());
       const jpeg = await sharp(bytes).flatten({ background: "#ffffff" }).jpeg({ quality: 85 }).toBuffer();
       return new Response(jpeg as unknown as BodyInit, {
         headers: {
@@ -66,6 +68,7 @@ export async function GET(
     if (code === "NoSuchKey" || code === "NotFound") {
       return new Response("Not found", { status: 404 });
     }
+    console.error("[media]", objectKey, err);
     return new Response("Internal error", { status: 500 });
   }
 }
