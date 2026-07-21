@@ -9,8 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function SiteLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   // Read here rather than in each page so every location search across the site
   // shares one lookup. Signed-out riders get null, and searches fall back to
@@ -33,6 +35,7 @@ export default async function SiteLayout({
   return (
     <RiderProximityProvider location={rider?.location ?? null}>
       <main>{children}</main>
+      {modal}
       <Footer />
     </RiderProximityProvider>
   );

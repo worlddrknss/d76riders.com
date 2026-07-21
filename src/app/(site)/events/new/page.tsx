@@ -2,18 +2,16 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { CreateEventForm } from "@/components/events/create-event-form";
-import { recentMeetupSpots } from "@/lib/events";
+import { loadCreateEventFormData } from "@/app/(site)/events/new/shared";
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
-import { postableCrews } from "@/lib/crews";
-import { DEFAULT_TIMEZONE } from "@/lib/datetime";
-import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
 export default async function CreateEventPage() {
   const currentUser = await getCurrentUser();
 
+  let userId: string;
   try {
-    await requireUserRole(currentUser?.id, "USER");
+    userId = await requireUserRole(currentUser?.id, "USER");
   } catch (error) {
     if (error instanceof AuthenticationError) {
       redirect("/login?next=/events/new");
@@ -28,15 +26,7 @@ export default async function CreateEventPage() {
 
   // Read after the auth gate: nothing here is public, and an unauthorised
   // visitor shouldn't cost a query.
-  const recentSpots = await recentMeetupSpots();
-  // Default the event's timezone to the organizer's own, so most rides need no
-  // thought about it.
-  const rider = currentUser
-    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
-    : null;
-  const defaultTimezone = rider?.timezone ?? DEFAULT_TIMEZONE;
-  // Only sub-communities this rider belongs to can host their event.
-  const crews = rider ? await postableCrews(rider.id) : [];
+  const { recentSpots, defaultTimezone, crews } = await loadCreateEventFormData(userId);
 
   return (
     <section className="page-shell">
