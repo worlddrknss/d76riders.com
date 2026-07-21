@@ -42,10 +42,14 @@ export async function GET(
     }
 
     if (wantJpeg) {
-      // Buffer the object the same way the streaming path treats Body, so this
-      // doesn't depend on the SDK stream mixin being present.
-      const bytes = Buffer.from(await new Response(response.Body as unknown as BodyInit).arrayBuffer());
-      const jpeg = await sharp(bytes).flatten({ background: "#ffffff" }).jpeg({ quality: 85 }).toBuffer();
+      // Collect the S3 stream into a fresh, contiguous Node Buffer. (arrayBuffer()
+      // hands sharp shared/pooled memory, which it rejects with "SharedArrayBuffer
+      // is not allowed"; concatenating copied chunks avoids that.)
+      const chunks: Buffer[] = [];
+      for await (const chunk of response.Body as unknown as AsyncIterable<Uint8Array>) {
+        chunks.push(Buffer.from(chunk));
+      }
+      const jpeg = await sharp(Buffer.concat(chunks)).flatten({ background: "#ffffff" }).jpeg({ quality: 85 }).toBuffer();
       return new Response(jpeg as unknown as BodyInit, {
         headers: {
           "Content-Type": "image/jpeg",
