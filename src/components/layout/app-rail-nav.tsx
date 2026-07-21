@@ -82,6 +82,7 @@ export function AppRailNav({
     { href: "/roads", label: "Roads", icon: Route },
     { href: "/nearby", label: "Nearby", icon: MapPinned },
     { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
+    { href: "/shops", label: "Shops & Sponsors", icon: Store },
     { href: "/r", label: "Riders", icon: Users, exact: true },
   ];
   const inbox: Item[] = [
@@ -96,7 +97,6 @@ export function AppRailNav({
     { href: "/ride-of-the-month", label: "Ride of the Month", icon: Star },
     { href: "/magazine", label: "Magazine", icon: Newspaper },
     { href: "/gallery", label: "Gallery", icon: Images },
-    { href: "/shops", label: "Shops & Sponsors", icon: Store },
     { href: "/ambassadors", label: "Ambassadors", icon: Award },
     { href: "/safety", label: "Ride Safety", icon: Shield },
     { href: "/emergency-response", label: "Emergency Response", icon: HeartPulse },
@@ -128,9 +128,9 @@ export function AppRailNav({
   const groupLabel = "px-2.5 pb-1 pt-2.5 text-[0.64rem] font-bold uppercase tracking-[0.14em] text-muted";
 
   return (
-    <nav className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+    <nav className="flex max-h-[calc(100dvh-var(--nav-h,5.5rem)-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
       {/* Identity */}
-      <Link href={`/r/${handle}`} className="flex items-center gap-3 px-3.5 pb-3 pt-4 transition hover:bg-canvas">
+      <Link href={`/r/${handle}`} className="flex shrink-0 items-center gap-3 px-3.5 pb-3 pt-4 transition hover:bg-canvas">
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} className="h-[46px] w-[46px] shrink-0 rounded-full object-cover" />
         ) : (
@@ -143,7 +143,7 @@ export function AppRailNav({
           <span className="truncate text-xs text-muted">@{handle}</span>
         </span>
       </Link>
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3.5 pb-3 text-xs text-muted">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-2.5 gap-y-1 px-3.5 pb-3 text-xs text-muted">
         <span><b className="font-semibold text-ink">{rides}</b> rides</span>
         <span><b className="font-semibold text-ink">{miles.toLocaleString()}</b> mi</span>
         {trustLevel && (
@@ -151,7 +151,7 @@ export function AppRailNav({
         )}
       </div>
 
-      <div className="border-t border-border p-2">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-t border-border p-2">
         <p className={groupLabel}>You</p>
         {you.map(renderItem)}
         <p className={groupLabel}>Community</p>
@@ -175,7 +175,7 @@ export function AppRailNav({
         )}
       </div>
 
-      <div className="border-t border-border p-2">
+      <div className="shrink-0 border-t border-border p-2">
         {renderItem({ href: "/settings", label: "Settings", icon: Settings })}
         <form action={logoutAction}>
           <button
