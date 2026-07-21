@@ -61,7 +61,7 @@ export function AppRailNav({
   const params = useSearchParams();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const tab = params.get("tab");
+  const tab = params?.get("tab") ?? null;
   const isActive = (item: Item) => {
     if (item.tab !== undefined) return pathname === item.href.split("?")[0] && tab === item.tab;
     const base = item.href.split("?")[0];

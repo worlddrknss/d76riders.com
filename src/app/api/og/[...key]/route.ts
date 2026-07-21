@@ -16,25 +16,25 @@ function createClient() {
 }
 
 /**
- * OpenGraph/social image endpoint. Uploads are stored as WebP, which Facebook
- * and most link scrapers can't render — and they often strip query strings, so
- * a `?format=jpeg` on the WebP URL isn't reliable either. This route lives at a
- * `.jpg`-terminated, query-free URL (`/api/og/<key>.jpg`) and always returns a
- * baseline JPEG transcode of the stored object, so scrapers get a format they
- * understand no matter how they normalise the URL.
+ * OpenGraph/social image endpoint. Uploads are stored as WebP, which Facebook and
+ * most link scrapers can't render, so this transcodes to a baseline JPEG. The
+ * public URL is a clean `<name>.jpg` (stored extension stripped) so no ".webp"
+ * appears anywhere for extension-sniffing scrapers.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ key: string[] }> },
 ) {
   const raw = (await params).key.join("/");
+  // Temporary: prove what scrapers (Facebook) actually receive from origin.
+  console.log("[og-req]", (request.headers.get("user-agent") ?? "?").slice(0, 80), raw);
+
   if (!raw || raw.includes("..")) {
     return new Response("Not found", { status: 404 });
   }
 
-  // The public URL is `<name>.jpg` with the stored extension stripped (so no
-  // ".webp" ever appears in the URL for scrapers). Recover the real object by
-  // trying the formats we actually store, then the literal key.
+  // Recover the stored object behind the `.jpg` URL: try the formats we store,
+  // then the literal key.
   const base = raw.replace(/\.jpg$/i, "");
   const candidates = [`${base}.webp`, `${base}.png`, `${base}.jpeg`, `${base}.jpg`, base];
 
@@ -68,6 +68,8 @@ export async function GET(
         "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=31536000, immutable",
         "Content-Length": body.byteLength.toString(),
+        // Neutralise the app-router RSC Vary header some scrapers dislike.
+        Vary: "Accept",
       },
     });
   } catch (err: unknown) {
