@@ -42,19 +42,20 @@ export async function GET(
     }
 
     if (wantJpeg) {
-      // Collect the S3 stream into a fresh, contiguous Node Buffer. (arrayBuffer()
-      // hands sharp shared/pooled memory, which it rejects with "SharedArrayBuffer
-      // is not allowed"; concatenating copied chunks avoids that.)
       const chunks: Buffer[] = [];
       for await (const chunk of response.Body as unknown as AsyncIterable<Uint8Array>) {
         chunks.push(Buffer.from(chunk));
       }
       const jpeg = await sharp(Buffer.concat(chunks)).flatten({ background: "#ffffff" }).jpeg({ quality: 85 }).toBuffer();
-      return new Response(jpeg as unknown as BodyInit, {
+      // sharp's output Buffer is backed by a SharedArrayBuffer, which undici's
+      // Response rejects ("SharedArrayBuffer is not allowed"). Copy into a fresh,
+      // unshared Uint8Array before responding.
+      const body = new Uint8Array(jpeg);
+      return new Response(body, {
         headers: {
           "Content-Type": "image/jpeg",
           "Cache-Control": "public, max-age=31536000, immutable",
-          "Content-Length": jpeg.length.toString(),
+          "Content-Length": body.byteLength.toString(),
         },
       });
     }
