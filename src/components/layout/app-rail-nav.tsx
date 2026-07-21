@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ChevronDown,
   Flag,
+  GraduationCap,
   HeartPulse,
   Images,
   LayoutDashboard,
@@ -89,6 +90,7 @@ export function AppRailNav({
   ];
   const more: Item[] = [
     { href: "/sub-communities", label: "Sub-communities", icon: Users },
+    { href: "/mentors", label: "Mentors", icon: GraduationCap },
     { href: "/challenges", label: "Challenges", icon: Flag },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/ride-of-the-month", label: "Ride of the Month", icon: Star },
