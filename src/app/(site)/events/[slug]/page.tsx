@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserCheck, UserRound } from "lucide-react";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -742,12 +742,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               </dl>
 
               <div className="mt-5 space-y-2 border-t border-border pt-4">
+                <div className="flex items-center justify-center gap-2 pb-0.5 text-sm text-muted">
+                  <UserCheck className="h-4 w-4 text-sunset" />
+                  <span className="font-semibold text-ink">
+                    {event.maxCapacity != null ? `${attendeeCount} / ${event.maxCapacity}` : attendeeCount}
+                  </span>
+                  <span>registered</span>
+                  {waitlistCount > 0 && <span className="text-xs">· {waitlistCount} waitlisted</span>}
+                </div>
+                {currentUser ? (
+                  <form action={toggleEventFollowAction.bind(null, event.id)}>
+                    <button
+                      type="submit"
+                      className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt"
+                    >
+                      {isTracking ? "Tracking this ride" : "Track event"}
+                    </button>
+                  </form>
+                ) : null}
                 <EventRsvpButton
                   eventId={event.id}
                   currentRsvp={currentRsvp}
-                  attendeeCount={attendeeCount}
-                  waitlistCount={waitlistCount}
-                  capacity={event.maxCapacity}
                   capacityFull={capacityFull}
                   rsvpClosed={rsvpClosed}
                   rsvpDeadline={event.rsvpDeadline ? formatEventDate(event.rsvpDeadline, event.timezone) : null}
@@ -760,16 +775,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     isCheckedOut={!!viewerCheckIn?.checkOutAt}
                   />
                 )}
-                {currentUser ? (
-                  <form action={toggleEventFollowAction.bind(null, event.id)}>
-                    <button
-                      type="submit"
-                      className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt"
-                    >
-                      {isTracking ? "Tracking this ride" : "Track event"}
-                    </button>
-                  </form>
-                ) : null}
                 {event.facebookEventUrl ? (
                   <a
                     href={event.facebookEventUrl}
