@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, MapPin, Route as RouteIcon, Signal, UserCheck, UserRound } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, Flag, MapPin, Route as RouteIcon, Signal, UserCheck, UserRound } from "lucide-react";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -15,7 +15,6 @@ import {
   toZonedInputValue,
   viewerTimeHint,
 } from "@/lib/datetime";
-import { ksuLocationDiffers } from "@/lib/events";
 import { EventQrCode } from "@/components/events/event-qr-code";
 import { EventRsvpButton } from "@/components/events/event-rsvp-button";
 import { EventCheckInButton } from "@/components/events/event-check-in-button";
@@ -234,10 +233,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   if (!event) {
     notFound();
   }
-
-  // Nearly every ride departs from its meetup point, so KSU only gets its own
-  // address when the ride genuinely stages somewhere else.
-  const departsElsewhere = ksuLocationDiffers(event);
 
   const coordinates = extractCoordinates(event.route?.geometry);
 
@@ -606,10 +601,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   meetAddress: event.meetAddress,
                   meetLat: event.meetLat,
                   meetLng: event.meetLng,
-                  ksuLocation: event.ksuLocation,
-                  ksuAddress: event.ksuAddress,
-                  ksuLat: event.ksuLat,
-                  ksuLng: event.ksuLng,
+                  endLocation: event.endLocation,
+                  endAddress: event.endAddress,
+                  endLat: event.endLat,
+                  endLng: event.endLng,
                   distanceMiles: event.distanceMiles,
                   difficulty: event.difficulty,
                   maxCapacity: event.maxCapacity,
@@ -687,7 +682,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </DetailRow>
                 <DetailRow
                   icon={MapPin}
-                  label={departsElsewhere ? "Meetup" : "Location"}
+                  label="Meetup"
                   sub={
                     <>
                       {event.meetAddress ?? "Meetup point"}
@@ -707,20 +702,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     </>
                   }
                 >
-                  {event.meetLocation || event.ksuLocation || "TBD"}
+                  {event.meetLocation || "TBD"}
                 </DetailRow>
-                {departsElsewhere ? (
+                {event.endLocation ? (
                   <DetailRow
-                    icon={MapPin}
-                    label="Departs from"
+                    icon={Flag}
+                    label="Final destination"
                     sub={
                       <>
-                        {event.ksuAddress ?? null}
-                        {event.ksuLat != null && event.ksuLng != null ? (
+                        {event.endAddress ?? null}
+                        {event.endLat != null && event.endLng != null ? (
                           <>
-                            {event.ksuAddress ? " · " : null}
+                            {event.endAddress ? " · " : null}
                             <a
-                              href={`https://www.google.com/maps/search/?api=1&query=${event.ksuLat},${event.ksuLng}`}
+                              href={`https://www.google.com/maps/search/?api=1&query=${event.endLat},${event.endLng}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="font-semibold text-sunset hover:underline"
@@ -732,7 +727,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       </>
                     }
                   >
-                    {event.ksuLocation}
+                    {event.endLocation}
                   </DetailRow>
                 ) : null}
                 <DetailRow icon={Signal} label="Pace" sub={event.distanceMiles ? `${event.distanceMiles} miles` : "Distance TBD"}>

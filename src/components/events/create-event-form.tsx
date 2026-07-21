@@ -311,10 +311,11 @@ export function CreateEventForm({
         <p className="text-xs text-muted">The times below are the ride&apos;s local time in this zone.</p>
       </div>
 
+      {/* The meetup carries two times: when to arrive, and when kickstands go up. */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="startsAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            Event Start (Required)
+            Arrival Time (Required)
           </label>
           <input
             id="startsAt"
@@ -325,6 +326,20 @@ export function CreateEventForm({
             onChange={(e) => setStartsAt(e.target.value)}
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
+          <p className="text-xs text-muted">When riders should be at the meetup.</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="ksuAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            KSU Time (Optional)
+          </label>
+          <input
+            id="ksuAt"
+            name="ksuAt"
+            type="datetime-local"
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          />
+          <p className="text-xs text-muted">Kickstands up — when the ride rolls out.</p>
         </div>
 
         <div className="space-y-1.5">
@@ -338,18 +353,6 @@ export function CreateEventForm({
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
         </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="ksuAt" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-            KSU Time (Optional)
-          </label>
-          <input
-            id="ksuAt"
-            name="ksuAt"
-            type="datetime-local"
-            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-          />
-        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -357,17 +360,14 @@ export function CreateEventForm({
           fieldPrefix="meet"
           label="Meetup Location"
           placeholder="Search a place or address…"
+          hint="Where riders gather and kickstands go up."
           recentSpots={recentSpots?.meet}
         />
-        {/* Kickstands up is a time, not a second address: nearly every ride
-            leaves from the place it met at. Blank means exactly that, so this
-            only gets filled for the rare ride that stages elsewhere. */}
         <LocationAutocomplete
-          fieldPrefix="ksu"
-          label="KSU Location (optional)"
-          placeholder="Only if departing from somewhere else"
-          hint="Leave blank if kickstands up is at the meetup location."
-          recentSpots={recentSpots?.ksu}
+          fieldPrefix="end"
+          label="Final Destination (optional)"
+          placeholder="Where the ride ends…"
+          hint="Leave blank for an out-and-back or open-ended ride."
         />
       </div>
 

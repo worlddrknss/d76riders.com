@@ -140,6 +140,10 @@ export async function createEventAction(
   const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
   const meetLat = toOptionalCoord(normalizeText(formData.get("meetLat")), -90, 90);
   const meetLng = toOptionalCoord(normalizeText(formData.get("meetLng")), -180, 180);
+  const endLocation = normalizeText(formData.get("endLocation"));
+  const endAddress = normalizeText(formData.get("endAddress")).slice(0, 300);
+  const endLat = toOptionalCoord(normalizeText(formData.get("endLat")), -90, 90);
+  const endLng = toOptionalCoord(normalizeText(formData.get("endLng")), -180, 180);
   const ksuAtInput = normalizeText(formData.get("ksuAt"));
   const ksuLocation = normalizeText(formData.get("ksuLocation"));
   const ksuAddress = normalizeText(formData.get("ksuAddress")).slice(0, 300);
@@ -341,6 +345,10 @@ export async function createEventAction(
         meetAddress: meetAddress || null,
         meetLat,
         meetLng,
+        endLocation: endLocation || null,
+        endAddress: endAddress || null,
+        endLat,
+        endLng,
         distanceMiles: resolvedRouteDistanceMiles ? Math.round(resolvedRouteDistanceMiles) : distanceMiles,
         maxCapacity,
         rsvpDeadline,

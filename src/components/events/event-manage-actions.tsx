@@ -42,10 +42,10 @@ type EventData = {
   meetAddress: string | null;
   meetLat: number | null;
   meetLng: number | null;
-  ksuLocation: string | null;
-  ksuAddress: string | null;
-  ksuLat: number | null;
-  ksuLng: number | null;
+  endLocation: string | null;
+  endAddress: string | null;
+  endLat: number | null;
+  endLng: number | null;
   distanceMiles: number | null;
   difficulty: string | null;
   maxCapacity: number | null;
@@ -192,31 +192,32 @@ export function EventManageActions({
               </div>
               <div className="grid gap-4 grid-cols-2">
                 <div>
-                  <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Starts At</label>
+                  <label htmlFor="edit-event-starts" className="text-xs font-semibold uppercase tracking-wide text-muted">Arrival Time</label>
                   <Input id="edit-event-starts" name="startsAt" type="datetime-local" defaultValue={event.startsAt} className="mt-1" required />
+                </div>
+                <div>
+                  <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU Time (optional)</label>
+                  <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt ?? ""} className="mt-1" />
                 </div>
                 <div>
                   <label htmlFor="edit-event-ends" className="text-xs font-semibold uppercase tracking-wide text-muted">Ends At (optional)</label>
                   <Input id="edit-event-ends" name="endsAt" type="datetime-local" defaultValue={event.endsAt ?? ""} className="mt-1" />
                 </div>
-                <div>
-                  <label htmlFor="edit-event-ksu" className="text-xs font-semibold uppercase tracking-wide text-muted">KSU At</label>
-                  <Input id="edit-event-ksu" name="ksuAt" type="datetime-local" defaultValue={event.ksuAt ?? ""} className="mt-1" />
-                </div>
               </div>
               <div className="grid gap-4 grid-cols-2">
                 <LocationAutocomplete
                   fieldPrefix="meet"
-                  label="Meet Location"
+                  label="Meetup Location"
                   placeholder="Search a place or address…"
+                  hint="Where riders gather and kickstands go up."
                   defaultValue={{ name: event.meetLocation, address: event.meetAddress, lat: event.meetLat, lng: event.meetLng }}
                 />
                 <LocationAutocomplete
-                  fieldPrefix="ksu"
-                  label="KSU Location (optional)"
-                  placeholder="Only if departing from somewhere else"
-                  hint="Leave blank if kickstands up is at the meetup location."
-                  defaultValue={{ name: event.ksuLocation, address: event.ksuAddress, lat: event.ksuLat, lng: event.ksuLng }}
+                  fieldPrefix="end"
+                  label="Final Destination (optional)"
+                  placeholder="Where the ride ends…"
+                  hint="Leave blank for an out-and-back or open-ended ride."
+                  defaultValue={{ name: event.endLocation, address: event.endAddress, lat: event.endLat, lng: event.endLng }}
                 />
               </div>
               <div className="grid gap-4 grid-cols-2">

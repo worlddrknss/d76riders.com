@@ -29,6 +29,12 @@ model RideEvent {
   meetAddress   String?
   meetLat       Float?
   meetLng       Float?
+  // Final destination — where the ride ends. Meetup is the start (arrival +
+  // kickstands-up); this is the endpoint.
+  endLocation   String?
+  endAddress    String?
+  endLat        Float?
+  endLng        Float?
   distanceMiles Int?
   difficulty    RideDifficulty?
   status        EventStatus     @default(UPCOMING)

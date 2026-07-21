@@ -136,10 +136,10 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   const meetAddress = normalizeText(formData.get("meetAddress")).slice(0, 300);
   const meetLat = toOptionalCoord(normalizeText(formData.get("meetLat")), -90, 90);
   const meetLng = toOptionalCoord(normalizeText(formData.get("meetLng")), -180, 180);
-  const ksuLocation = normalizeText(formData.get("ksuLocation"));
-  const ksuAddress = normalizeText(formData.get("ksuAddress")).slice(0, 300);
-  const ksuLat = toOptionalCoord(normalizeText(formData.get("ksuLat")), -90, 90);
-  const ksuLng = toOptionalCoord(normalizeText(formData.get("ksuLng")), -180, 180);
+  const endLocation = normalizeText(formData.get("endLocation"));
+  const endAddress = normalizeText(formData.get("endAddress")).slice(0, 300);
+  const endLat = toOptionalCoord(normalizeText(formData.get("endLat")), -90, 90);
+  const endLng = toOptionalCoord(normalizeText(formData.get("endLng")), -180, 180);
   const facebookEventUrlInput = normalizeText(formData.get("facebookEventUrl"));
   const distanceMiles = toOptionalInt(normalizeText(formData.get("distanceMiles")));
   const maxCapacity = toOptionalInt(normalizeText(formData.get("maxCapacity")));
@@ -207,10 +207,10 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         meetAddress: meetAddress || null,
         meetLat,
         meetLng,
-        ksuLocation: ksuLocation || null,
-        ksuAddress: ksuAddress || null,
-        ksuLat,
-        ksuLng,
+        endLocation: endLocation || null,
+        endAddress: endAddress || null,
+        endLat,
+        endLng,
         facebookEventUrl,
         distanceMiles,
         maxCapacity,
