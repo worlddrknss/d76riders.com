@@ -115,7 +115,7 @@ export default async function NewsArticlePage({
       {/* HEADER */}
       <section className="relative w-full overflow-hidden bg-asphalt">
         <div className="route-lines absolute inset-0 opacity-30" aria-hidden="true" />
-        <div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="relative py-10">
           <nav className="flex items-center gap-1 text-xs font-semibold uppercase tracking-widest text-slate-400">
             <Link href="/" className="hover:text-white">Home</Link>
             <ChevronRight className="h-3 w-3" />
@@ -129,7 +129,7 @@ export default async function NewsArticlePage({
         </div>
       </section>
 
-      <section className="w-full bg-canvas">
+      <section className="py-10">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
           {/* ARTICLE BODY */}
           <article>

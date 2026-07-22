@@ -146,7 +146,7 @@ const preRide = [
 export default function SafetyPage() {
   return (
     <AppShell>
-      <div className="max-w-4xl">
+      <div>
         <PageHeader
           icon={Shield}
           title="Ride Smart. Ride Together."
@@ -154,19 +154,19 @@ export default function SafetyPage() {
         />
 
       {/* FORMATIONS */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Group Formations</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Know Your Position
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">
+            <p className="mt-4 max-w-2xl text-lg text-muted">
               Where you sit in the lane decides who can see you and where you go when something appears in front of you.
             </p>
           </FadeUp>
 
-          <StaggerList className="mt-16 grid gap-6 lg:grid-cols-3">
+          <StaggerList className="mt-8 grid gap-6 lg:grid-cols-3">
             {formations.map((f) => (
               <StaggerItem key={f.title}>
                 <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
@@ -186,19 +186,19 @@ export default function SafetyPage() {
       </section>
 
       {/* WHO DOES WHAT (dark) */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">On The Day</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Who Does What
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            <p className="mt-4 max-w-2xl text-lg text-slate-300">
               Every ride has a lead and a sweep. Knowing which is which, and what they are for, is most of what makes a group ride work.
             </p>
           </FadeUp>
 
-          <div className="mt-16 space-y-4">
+          <div className="mt-8 space-y-4">
             {rideRoles.map((item) => {
               const Icon = item.icon;
               return (
@@ -220,16 +220,16 @@ export default function SafetyPage() {
       </section>
 
       {/* PACK DISCIPLINE */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">In The Pack</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Four Things That Keep A Group Safe
             </h2>
           </FadeUp>
 
-          <div className="mt-16 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {packRules.map((item) => (
               <FadeUp key={item.title}>
                 <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-soft">
@@ -243,14 +243,14 @@ export default function SafetyPage() {
       </section>
 
       {/* HAND SIGNALS (dark) */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Communication</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Hand Signals
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            <p className="mt-4 max-w-2xl text-lg text-slate-300">
               At speed you cannot shout and most of us are not on comms. Signals only work if they get passed back, so whatever reaches you, send it on to the rider behind.
             </p>
           </FadeUp>
@@ -279,19 +279,19 @@ export default function SafetyPage() {
       </section>
 
       {/* WHEN IT GOES WRONG */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">When It Goes Wrong</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Nobody Gets Left Behind
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">
+            <p className="mt-4 max-w-2xl text-lg text-muted">
               Rides get split, bikes break, and occasionally someone goes down. None of it is a drama if everyone knows what happens next.
             </p>
           </FadeUp>
 
-          <StaggerList className="mt-16 grid gap-6 lg:grid-cols-3">
+          <StaggerList className="mt-8 grid gap-6 lg:grid-cols-3">
             {goesWrong.map((item) => {
               const Icon = item.icon;
               return (
@@ -334,8 +334,8 @@ export default function SafetyPage() {
       </section>
 
       {/* EMERGENCY CARD */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-5xl px-4 pb-24 sm:px-6 lg:px-8">
+      <section className="py-10">
+        <div>
           <FadeUp>
             <div className="flex flex-col items-start gap-5 rounded-2xl border border-border bg-surface p-6 shadow-soft sm:flex-row sm:items-center sm:justify-between sm:p-8">
               <div className="flex items-start gap-4">
@@ -363,14 +363,14 @@ export default function SafetyPage() {
       </section>
 
       {/* PRE-RIDE */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Before You Ride</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Pre-Ride Checklist
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            <p className="mt-4 max-w-2xl text-lg text-slate-300">
               Five minutes in the driveway, and the ride starts the way it should.
             </p>
           </FadeUp>
@@ -389,8 +389,8 @@ export default function SafetyPage() {
       </section>
 
       {/* CTA */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-4xl px-4 py-24 text-center sm:px-6 lg:px-8">
+      <section className="py-10">
+        <div>
           <ScaleIn>
             <ShieldCheck className="mx-auto h-12 w-12 text-sunset" />
           </ScaleIn>
@@ -398,7 +398,7 @@ export default function SafetyPage() {
             <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Safety Is A Skill. Practice It.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
+            <p className="mt-4 max-w-xl text-lg text-muted">
               The riders worth following are not the quickest ones. They are the ones who get everybody home, every
               time, and make it look unremarkable.
             </p>

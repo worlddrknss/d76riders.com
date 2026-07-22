@@ -121,7 +121,7 @@ const emergencyFields = [
 export default function SafetyPage() {
   return (
     <AppShell>
-      <div className="max-w-4xl">
+      <div>
         <PageHeader
           icon={HeartPulse}
           title="Every Ride. Every Rider. Protected."
@@ -140,19 +140,19 @@ export default function SafetyPage() {
       </section>
 
       {/* PILLARS */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Our Safety Stack</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Built for the Realities of Group Riding
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">
+            <p className="mt-4 max-w-2xl text-lg text-muted">
               Group rides are incredible — but they come with real risks. We build tools that reduce those risks without slowing anyone down.
             </p>
           </FadeUp>
 
-          <StaggerList className="mt-16 grid gap-6 sm:grid-cols-2">
+          <StaggerList className="mt-8 grid gap-6 sm:grid-cols-2">
             {pillars.map((pillar) => (
               <StaggerItem key={pillar.title}>
                 <div className="flex h-full items-start gap-4 rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
@@ -171,14 +171,14 @@ export default function SafetyPage() {
       </section>
 
       {/* NFC EMERGENCY ID — DARK SECTION */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">NFC Emergency ID</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Your Helmet Speaks When You Can&apos;t
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
+            <p className="mt-4 max-w-2xl text-lg text-slate-300">
               Every District 76 rider receives a transparent NFC sticker for their helmet. If the worst happens, a first responder taps it with their phone and instantly sees your emergency information.
             </p>
           </FadeUp>
@@ -206,19 +206,19 @@ export default function SafetyPage() {
       </section>
 
       {/* PRIVACY & SECURITY */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-6xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Privacy &amp; Security</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Your Data, Your Control
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted">
+            <p className="mt-4 max-w-2xl text-lg text-muted">
               Emergency information is sensitive. We treat it that way — with encryption, access controls, and full transparency about who sees what.
             </p>
           </FadeUp>
 
-          <StaggerList className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <StaggerList className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {nfcFeatures.map((feature) => (
               <StaggerItem key={feature.title}>
                 <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
@@ -235,14 +235,14 @@ export default function SafetyPage() {
       </section>
 
       {/* WHAT'S ON THE CARD */}
-      <section className="w-full bg-surface">
-        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Emergency Card</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               What a First Responder Sees
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-muted">
+            <p className="mt-4 max-w-xl text-muted">
               After confirming emergency access, the following fields are displayed — only the ones you&apos;ve chosen to share.
             </p>
           </FadeUp>
@@ -275,8 +275,8 @@ export default function SafetyPage() {
       </section>
 
       {/* CTA */}
-      <section className="w-full bg-asphalt">
-        <div className="mx-auto w-full max-w-4xl px-4 py-24 text-center sm:px-6 lg:px-8">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 sm:px-8">
+        <div>
           <ScaleIn>
             <ShieldCheck className="mx-auto h-12 w-12 text-sunset" />
           </ScaleIn>
@@ -284,7 +284,7 @@ export default function SafetyPage() {
             <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Ride Together. Look Out for Each Other.
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">
+            <p className="mt-4 max-w-xl text-lg text-slate-300">
               Safety is a community effort. Join District 76 and ride with people who take it seriously.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">

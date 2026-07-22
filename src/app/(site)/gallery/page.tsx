@@ -73,7 +73,7 @@ export default async function GalleryPage() {
         subtitle="Rides, road stops, and the people who make the Clarksville motorcycle community worth showing up for."
       />
 
-      <section className="w-full bg-canvas">
+      <section className="py-10">
         <div className="w-full px-4 py-16 sm:px-6 lg:px-8">
           {galleries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
@@ -125,7 +125,7 @@ export default async function GalleryPage() {
         </div>
       </section>
 
-      <section className="w-full bg-canvas">
+      <section className="py-10">
         <div className="w-full px-4 pb-16 sm:px-6 lg:px-8">
           <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-soft sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sunset">Rode with us?</p>

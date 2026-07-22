@@ -65,7 +65,7 @@ export default async function NewsPage() {
         subtitle="Ride reports, gear talk, and stories from the road. Notes from riders who actually log the miles."
       />
 
-      <section className="w-full bg-canvas">
+      <section className="py-10">
         <div className="grid w-full gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_20rem] lg:px-8">
           {/* ARTICLE GRID */}
           <div>

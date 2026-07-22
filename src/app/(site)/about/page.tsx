@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <AppShell>
-      <div className="max-w-4xl">
+      <div>
         <PageHeader
           icon={Info}
           title="Motorcycles Bring People Together"
@@ -30,8 +30,8 @@ export default function AboutPage() {
         />
 
       {/* BELIEF */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
+      <section className="py-10">
+        <div>
           <FadeUp>
             <p className="text-lg leading-relaxed text-muted sm:text-xl">
               District 76 Riders exists for people who love to ride. Sport bike, cruiser, Harley, Grom, adventure bike, or your first motorcycle. Doesn&apos;t matter. You&apos;re welcome here.
@@ -44,8 +44,8 @@ export default function AboutPage() {
       </section>
 
       {/* THE STORY — DARK */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">The Story</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
@@ -87,9 +87,9 @@ export default function AboutPage() {
       </section>
 
       {/* WHAT YOU'LL FIND */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-4xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">What You&apos;ll Find Here</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               Built by Riders, for Riders
@@ -118,8 +118,8 @@ export default function AboutPage() {
       </section>
 
       {/* WHAT WE AREN'T — DARK */}
-      <section className="w-full bg-asphalt text-white">
-        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
+      <section className="rounded-2xl bg-asphalt px-6 py-10 text-white sm:px-8">
+        <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">What We Aren&apos;t</p>
             <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
@@ -147,14 +147,14 @@ export default function AboutPage() {
       </section>
 
       {/* THE PLATFORM */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-3xl px-4 py-24 sm:px-6 lg:px-8">
-          <FadeUp className="text-center">
+      <section className="py-10">
+        <div>
+          <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">The Platform</p>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
               More Than a Facebook Group
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
+            <p className="mt-4 max-w-xl text-lg text-muted">
               We built our own platform because the community deserves better than algorithm-buried Facebook posts.
             </p>
           </FadeUp>
@@ -181,8 +181,8 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="w-full bg-canvas">
-        <div className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:px-8">
+      <section className="py-10">
+        <div>
           <ScaleIn>
             <div className="relative overflow-hidden rounded-3xl">
               <div
