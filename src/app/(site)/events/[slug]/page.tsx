@@ -612,6 +612,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   galleryClosesAt: event.galleryClosesAt ? toZonedInputValue(event.galleryClosesAt, event.timezone) : null,
                   crewId: event.crewId,
                   crewName: event.crew?.name ?? null,
+                  photoUrl: flyerUrl ? mediaUrl(flyerUrl) : null,
                   hasPhoto: event.galleryItems.length > 0,
                   hasRoute: !!event.routeId,
                 }}
