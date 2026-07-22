@@ -18,6 +18,7 @@ import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
+import { distanceMilesFromGeometry } from "@/lib/routing";
 import { eventMessageSchema, riderDownSchema, rsvpIntentSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
@@ -77,6 +78,12 @@ function toOptionalCoord(value: string, min: number, max: number): number | null
   if (!value) return null;
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) && parsed >= min && parsed <= max ? parsed : null;
+}
+
+function toOptionalFloat(value: string): number | null {
+  if (!value) return null;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function toOptionalInt(value: string): number | null {
@@ -243,6 +250,96 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
   }
 
   revalidatePath(`/events/${event.slug}`);
+}
+
+type PlannerWaypointInput = {
+  lng: number;
+  lat: number;
+  kind: "START" | "KSU" | "FUEL" | "FOOD" | "REST" | "STOP" | "END";
+  label?: string;
+};
+
+function parseJson<T>(value: string): T | null {
+  if (!value) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Attach (or replace) an event's official route from the route planner. This is
+ * the single entry point for event route planning — a ride created without a
+ * route can get one later, and an existing route is replaced by drawing a new
+ * one. Organizer-only.
+ */
+export async function saveEventRouteAction(
+  eventId: string,
+  payload: { geometry: string; waypoints: string; distanceMiles: string },
+): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const event = await prisma.rideEvent.findFirst({
+    where: { id: eventId, organizers: { some: { rider: { userId } } } },
+    select: { id: true, slug: true, title: true, hostId: true, routeId: true },
+  });
+  if (!event) return { error: "Only this ride's organizers can set its route." };
+
+  const geometry = parseJson<{ type: "LineString"; coordinates: [number, number][] }>(payload.geometry);
+  if (!geometry || geometry.type !== "LineString" || geometry.coordinates.length < 2) {
+    return { error: "Draw a route with at least two points before saving." };
+  }
+  const waypoints = parseJson<PlannerWaypointInput[]>(payload.waypoints) ?? [];
+
+  // Trust the geometry over the client's number.
+  const derivedMiles = distanceMilesFromGeometry(geometry.coordinates);
+  const distanceMiles = derivedMiles ?? toOptionalFloat(payload.distanceMiles);
+  const ksu = waypoints.find((w) => w.kind === "KSU");
+  const start = waypoints.find((w) => w.kind === "START");
+  const previousRouteId = event.routeId;
+
+  await prisma.$transaction(async (tx) => {
+    const route = await tx.route.create({
+      data: {
+        riderId: event.hostId,
+        name: `${event.title} Route`,
+        distanceMiles,
+        geometry,
+        ksuLat: ksu?.lat ?? start?.lat ?? null,
+        ksuLng: ksu?.lng ?? start?.lng ?? null,
+        waypoints: waypoints.length
+          ? {
+              create: waypoints.map((w, index) => ({
+                label: w.label || null,
+                type: w.kind,
+                lat: w.lat,
+                lng: w.lng,
+                order: index,
+              })),
+            }
+          : undefined,
+      },
+      select: { id: true },
+    });
+
+    await tx.rideEvent.update({
+      where: { id: event.id },
+      data: {
+        routeId: route.id,
+        distanceMiles: distanceMiles ? Math.round(distanceMiles) : undefined,
+      },
+    });
+
+    // routeId is unique per event, so the old route is orphaned once swapped.
+    if (previousRouteId) {
+      await tx.route.delete({ where: { id: previousRouteId } });
+    }
+  });
+
+  revalidatePath(`/events/${event.slug}`);
+  return { error: null };
 }
 
 export async function deleteEventAction(eventId: string): Promise<void> {

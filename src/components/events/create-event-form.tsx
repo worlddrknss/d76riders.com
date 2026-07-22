@@ -10,7 +10,6 @@ import {
 } from "@/app/(site)/events/new/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
 import { EventPreview } from "@/components/events/event-preview";
-import { EventRoutePlannerField } from "@/components/events/event-route-planner-field";
 import { LocationAutocomplete } from "@/components/events/location-autocomplete";
 import { DEFAULT_TIMEZONE, US_TIMEZONES } from "@/lib/datetime";
 
@@ -365,41 +364,13 @@ export function CreateEventForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-canvas/80 p-4">
-        <h3 className="font-display text-lg font-semibold text-asphalt">Official Event Route (Optional)</h3>
-        <p className="mt-1 text-sm text-muted">Launch the route planner to define the official route for this event.</p>
-
-        <div className="mt-4 space-y-4">
-          <div className="space-y-1.5">
-            <label htmlFor="routeName" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-              Route Name
-            </label>
-            <input
-              id="routeName"
-              name="routeName"
-              type="text"
-              maxLength={120}
-              className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-              placeholder="LBL Scenic Loop"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label htmlFor="routeDescription" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-              Route Description
-            </label>
-            <textarea
-              id="routeDescription"
-              name="routeDescription"
-              rows={3}
-              className="w-full rounded-lg border border-border bg-white px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-              placeholder="Fuel stop near mile 40, tighter corners after mile 50."
-            />
-          </div>
-
-          <EventRoutePlannerField />
-        </div>
-      </div>
+      {/* The official route is drawn from the event page's organizer toolbar
+          ("Add Route") once the ride exists — one entry point that handles both
+          adding and replacing, instead of drawing a map mid-form. */}
+      <p className="rounded-xl border border-border bg-canvas/80 p-4 text-sm text-muted">
+        <span className="font-semibold text-asphalt">Official route:</span> create the ride first, then use{" "}
+        <span className="font-semibold text-asphalt">Add Route</span> on the event page to draw it.
+      </p>
     </>
   );
 

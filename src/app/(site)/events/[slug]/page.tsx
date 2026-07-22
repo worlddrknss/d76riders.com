@@ -22,6 +22,7 @@ import { AttendancePanel } from "@/components/events/attendance-panel";
 import { RiderDownPanel } from "@/components/events/rider-down-panel";
 import { EventGallery } from "@/components/events/event-gallery";
 import { EventOrganizers } from "@/components/events/event-organizers";
+import { EventRoutePlannerButton } from "@/components/events/event-route-planner-button";
 import { EventRecap } from "@/components/events/event-recap";
 import { isGalleryOpen } from "@/lib/event-gallery";
 import { EventRidersList } from "@/components/events/event-riders-list";
@@ -641,6 +642,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               eventTitle={event.title}
               counts={messageAudienceCounts}
             />
+            <EventRoutePlannerButton eventId={event.id} hasRoute={!!event.routeId} />
           </div>
         ) : null}
 
