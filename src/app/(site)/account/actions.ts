@@ -83,6 +83,62 @@ export async function updateCoverPositionAction(position: number): Promise<void>
   revalidatePath(`/r/${rider.handle}`);
 }
 
+/**
+ * Replace just the avatar.
+ *
+ * The crop, zoom and framing are applied in the browser and the already-square
+ * result is what arrives here — so every place that renders an avatar as a
+ * plain circular <img> stays correct without knowing anything about framing.
+ * Kept separate from updateAccountProfileAction because that one reads the
+ * whole profile form; posting only a file to it would blank every other field.
+ */
+export async function updateAvatarAction(formData: FormData): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const file = formData.get("avatarFile");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "No image was provided." };
+  }
+  if (!allowedImageTypes.has(file.type)) {
+    return { error: "Avatar image must be a JPG, PNG, or WebP image." };
+  }
+  if (!isS3Configured()) {
+    return { error: "Storage is not configured for avatar uploads yet." };
+  }
+
+  let secureUpload: { buffer: Buffer; ext: string; contentType: string };
+  try {
+    secureUpload = await validateAndScanImageUpload(file, "account-avatar-update");
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to validate avatar image." };
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { image: true, rider: { select: { handle: true, avatarUrl: true } } },
+  });
+  if (!existing?.rider) return { error: "Profile not found." };
+
+  const key = `avatars/${userId}/${crypto.randomUUID()}.${secureUpload.ext}`;
+  const nextAvatarUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: userId }, data: { image: nextAvatarUrl } });
+    await tx.rider.update({ where: { userId }, data: { avatarUrl: nextAvatarUrl } });
+  });
+
+  // Only bin the old file once the new one is safely stored and referenced.
+  const previous = existing.rider.avatarUrl ?? existing.image ?? null;
+  if (previous && previous !== nextAvatarUrl) {
+    await deleteFileByUrl(previous);
+  }
+
+  revalidatePath(`/r/${existing.rider.handle}`);
+  revalidatePath("/account");
+  return { error: null };
+}
+
 export async function updateAccountProfileAction(
   _previousState: AccountFormState,
   formData: FormData,

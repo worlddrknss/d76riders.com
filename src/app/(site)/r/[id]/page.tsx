@@ -9,6 +9,7 @@ import { SiInstagram, SiInstagramHex, SiTiktok, SiTiktokHex, SiX, SiXHex, SiYout
 
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { AppShell } from "@/components/layout/app-shell";
+import { AvatarEditor } from "@/components/profile/avatar-editor";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { SocialIconLink } from "@/components/profile/social-icon-link";
 import { ProfileEditButton } from "@/components/profile/profile-edit-button";
@@ -922,17 +923,21 @@ export default async function RiderProfilePage({
               lower edge; a negative margin on a flex child doesn't lift it out. */}
           <div className="relative px-5 pb-5 sm:px-8">
             <div className="absolute -top-12 left-5 sm:-top-16 sm:left-8">
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt={rider.name}
-                  className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
-                />
-              ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
-                  {rider.name.charAt(0)}
-                </div>
-              )}
+              {/* Relative so the owner's edit badge can sit on the avatar's rim. */}
+              <div className="relative">
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt={rider.name}
+                    className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
+                    {rider.name.charAt(0)}
+                  </div>
+                )}
+                {isOwner && <AvatarEditor url={avatar || null} name={rider.name} />}
+              </div>
             </div>
 
             {/* Clears the avatar: stacked under it on mobile, beside it from sm up. */}
