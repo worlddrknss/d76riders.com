@@ -149,6 +149,7 @@ export default function SafetyPage() {
       <div>
         <PageHeader
           icon={Shield}
+          eyebrow="Preparedness"
           title="Ride Smart. Ride Together."
           subtitle="Riding in a group is most of the fun and all of the responsibility. This is how we do it, and what we expect from each other on the road."
         />

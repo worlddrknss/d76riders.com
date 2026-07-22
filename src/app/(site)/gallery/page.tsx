@@ -69,6 +69,7 @@ export default async function GalleryPage() {
     <AppShell>
       <PageHeader
         icon={Images}
+        eyebrow="Community"
         title="District 76 Moments"
         subtitle="Rides, road stops, and the people who make the Clarksville motorcycle community worth showing up for."
       />

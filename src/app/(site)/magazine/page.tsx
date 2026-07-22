@@ -61,6 +61,7 @@ export default async function NewsPage() {
     <AppShell>
       <PageHeader
         icon={Newspaper}
+        eyebrow="Magazine"
         title="District 76 News"
         subtitle="Ride reports, gear talk, and stories from the road. Notes from riders who actually log the miles."
       />

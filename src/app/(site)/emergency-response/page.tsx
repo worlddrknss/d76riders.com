@@ -124,6 +124,7 @@ export default function SafetyPage() {
       <div>
         <PageHeader
           icon={HeartPulse}
+          eyebrow="Preparedness"
           title="Every Ride. Every Rider. Protected."
           subtitle="Safety isn't a feature we bolt on. It's the foundation."
         />

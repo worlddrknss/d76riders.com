@@ -25,6 +25,7 @@ export default function AboutPage() {
       <div>
         <PageHeader
           icon={Info}
+          eyebrow="About District 76"
           title="Motorcycles Bring People Together"
           subtitle="Everything else is optional."
         />
