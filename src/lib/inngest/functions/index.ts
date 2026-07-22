@@ -1,3 +1,4 @@
+import { eventReminders } from "./event-reminders";
 import { maintenanceReminders } from "./maintenance-reminders";
 import { momentumRecompute } from "./momentum-recompute";
 import { notificationDigest } from "./notification-digest";
@@ -13,4 +14,5 @@ export const functions = [
   notificationDigest,
   spotlightPick,
   maintenanceReminders,
+  eventReminders,
 ];

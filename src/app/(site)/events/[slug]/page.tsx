@@ -810,6 +810,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
           {/* MAIN column */}
           <div className="space-y-6 lg:col-start-1 lg:row-start-1">
+            {/* Post-ride recap — a completed ride leads with how it went. */}
+            {event.status === "COMPLETED" ? (
+              <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
+                <div className="flex items-center gap-2">
+                  <Flag className="h-5 w-5 text-sunset" />
+                  <h2 className="font-display text-xl font-semibold text-asphalt">Ride recap</h2>
+                </div>
+                <p className="mt-1 text-sm text-muted">This one&apos;s in the books.</p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  {[
+                    { v: event.checkIns.length, l: event.checkIns.length === 1 ? "rider rode" : "riders rode" },
+                    ...(event.distanceMiles ? [{ v: event.distanceMiles, l: "miles" }] : []),
+                    { v: galleryRows.length, l: galleryRows.length === 1 ? "photo" : "photos" },
+                  ].map((s) => (
+                    <div key={s.l} className="min-w-20 flex-1 rounded-lg bg-canvas p-3 text-center">
+                      <p className="font-display text-2xl font-bold text-ink">{s.v}</p>
+                      <p className="text-xs text-muted">{s.l}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             {/* The flyer is a portrait poster and lives in the rail, where a tall
                 image fills the column instead of stranding text beside it. The
                 main column leads with the write-up. */}

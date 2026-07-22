@@ -171,6 +171,7 @@ export function CreateEventForm({
   const [distance, setDistance] = useState("");
   const [crewId, setCrewId] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState("");
 
   // Blob URL for the chosen photo; revoke the previous one on change and the
   // last one on unmount so we don't leak object URLs.
@@ -353,6 +354,44 @@ export function CreateEventForm({
             className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
           />
         </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor="repeat" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+            Repeat
+          </label>
+          <select
+            id="repeat"
+            name="repeat"
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value)}
+            className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+          >
+            <option value="">Does not repeat</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every 2 weeks</option>
+            <option value="monthly">Monthly</option>
+          </select>
+          <p className="text-xs text-muted">Great for recurring bike nights — creates the whole series at once.</p>
+        </div>
+        {repeat ? (
+          <div className="space-y-1.5">
+            <label htmlFor="occurrences" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+              How many rides
+            </label>
+            <input
+              id="occurrences"
+              name="occurrences"
+              type="number"
+              min={2}
+              max={12}
+              defaultValue={4}
+              className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
+            />
+            <p className="text-xs text-muted">Including the first (max 12). Each is its own ride you can edit or cancel.</p>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

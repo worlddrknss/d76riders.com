@@ -38,6 +38,12 @@ model RideEvent {
   distanceMiles Int?
   difficulty    RideDifficulty?
   status        EventStatus     @default(UPCOMING)
+  // Stamped when the ~24h "your ride is tomorrow" reminder push has fired, so it
+  // goes out exactly once. Set by the event-reminders Inngest cron.
+  reminderSentAt DateTime?
+  // Recurring series: occurrences created together share a seriesId so they can
+  // be recognised as one repeating ride. Null for one-off events.
+  seriesId      String?
   routeId       String?         @unique
   maxCapacity   Int?
   rsvpDeadline  DateTime?
@@ -68,6 +74,8 @@ model RideEvent {
   @@index([startsAt])
   @@index([featured])
   @@index([crewId])
+  @@index([seriesId])
+  @@index([status, reminderSentAt, startsAt])
 }
 
 model Rsvp {

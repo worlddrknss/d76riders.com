@@ -624,7 +624,7 @@ export async function closeRideAction(eventId: string): Promise<void> {
 
   const event = await prisma.rideEvent.findUnique({
     where: { id: eventId },
-    select: { title: true },
+    select: { title: true, slug: true, distanceMiles: true },
   });
   const eventTitle = event?.title ?? "a ride";
 
@@ -698,6 +698,29 @@ export async function closeRideAction(eventId: string): Promise<void> {
   ];
   for (const affectedRiderId of affectedRiderIds) {
     await syncRiderProgression(affectedRiderId);
+  }
+
+  // Post-ride recap: pull everyone who actually rode back to see the photos.
+  if (checkedInRiderIds.size > 0 && event) {
+    const riderCount = checkedInRiderIds.size;
+    const photoCount = await prisma.galleryItem.count({
+      where: { eventId, riderId: { not: null } },
+    });
+    const parts = [
+      `${riderCount} rider${riderCount === 1 ? "" : "s"} rode`,
+      event.distanceMiles ? `${event.distanceMiles} mi` : null,
+      photoCount > 0 ? `${photoCount} photo${photoCount === 1 ? "" : "s"}` : null,
+    ].filter(Boolean);
+    await Promise.all(
+      [...checkedInRiderIds].map((rid) =>
+        sendPushToRider(rid, {
+          title: `Ride recap — ${eventTitle}`,
+          body: `${parts.join(" · ")}. See how it went →`,
+          url: `/events/${event.slug}`,
+          tag: `ride-recap-${eventId}`,
+        }).catch(() => {}),
+      ),
+    );
   }
 
   revalidatePath("/events");

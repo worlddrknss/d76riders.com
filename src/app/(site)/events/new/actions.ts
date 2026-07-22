@@ -82,6 +82,23 @@ function parseJsonValue<T>(value: string): T | null {
   }
 }
 
+// Recurrence: shift a datetime-local wall-clock string (YYYY-MM-DDTHH:mm) by N
+// steps, keeping the local time-of-day. We shift the wall clock (not the UTC
+// instant) and re-derive UTC per occurrence, so a DST change between occurrences
+// doesn't drift the ride's local start time.
+function shiftWallClock(input: string, kind: string, steps: number): string {
+  if (!input || steps === 0) return input;
+  const [datePart, timePart] = input.split("T");
+  const [y, m, d] = datePart.split("-").map((n) => Number.parseInt(n, 10));
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (kind === "monthly") dt.setUTCMonth(dt.getUTCMonth() + steps);
+  else dt.setUTCDate(dt.getUTCDate() + steps * (kind === "biweekly" ? 14 : 7));
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getUTCDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}${timePart ? `T${timePart}` : ""}`;
+}
+
 function toSlug(value: string): string {
   return value
     .toLowerCase()
@@ -266,7 +283,31 @@ export async function createEventAction(
   // Optional sub-community — only honoured if the organizer belongs to it.
   const crewId = await resolvePostableCrewId(rider.id, normalizeText(formData.get("crewId")) || null);
 
-  const slug = await buildUniqueEventSlug(title);
+  // Recurrence: create a series of occurrences that share a seriesId.
+  const repeatKind = normalizeText(formData.get("repeat"));
+  const isRecurring = repeatKind === "weekly" || repeatKind === "biweekly" || repeatKind === "monthly";
+  const occurrenceCount = isRecurring
+    ? Math.min(Math.max(toOptionalInt(normalizeText(formData.get("occurrences"))) ?? 4, 2), 12)
+    : 1;
+  const seriesId = occurrenceCount > 1 ? crypto.randomUUID() : null;
+
+  // Pre-compute a unique slug per occurrence (checked against the DB and each
+  // other, since the occurrences aren't committed yet).
+  const slugs: string[] = [await buildUniqueEventSlug(title)];
+  for (let i = 1; i < occurrenceCount; i++) {
+    const base = `${slugs[0]}-${i + 1}`;
+    let candidate = base;
+    let suffix = 2;
+    while (
+      slugs.includes(candidate) ||
+      (await prisma.rideEvent.findUnique({ where: { slug: candidate }, select: { id: true } }))
+    ) {
+      candidate = `${base}-${suffix}`;
+      suffix += 1;
+    }
+    slugs.push(candidate);
+  }
+
   let eventPhotoUrl: string | null = null;
 
   if (eventPhoto instanceof File && eventPhoto.size > 0) {
@@ -286,93 +327,101 @@ export async function createEventAction(
     }
 
     const optimized = await optimizeImage(secureUpload.buffer);
-    const key = `events/${rider.id}/${slug}-${crypto.randomUUID()}.${optimized.ext}`;
+    const key = `events/${rider.id}/${slugs[0]}-${crypto.randomUUID()}.${optimized.ext}`;
     eventPhotoUrl = await uploadFile(key, optimized.data, optimized.contentType);
   }
 
   await prisma.$transaction(async (tx) => {
-    let routeId: string | undefined;
+    for (let i = 0; i < occurrenceCount; i++) {
+      // Per-occurrence times: shift the wall clock and re-derive UTC (DST-safe).
+      // i === 0 keeps the organizer's exact input.
+      const occStartsAt = zonedInputToUtc(shiftWallClock(startsAtInput, repeatKind, i), timezone) ?? startsAt;
+      const occKsuAt = zonedInputToUtc(shiftWallClock(ksuAtInput, repeatKind, i), timezone);
+      const occEndsAt = zonedInputToUtc(shiftWallClock(endsAtInput, repeatKind, i), timezone);
+      const occGalleryClosesAt = zonedInputToUtc(shiftWallClock(galleryClosesAtInput, repeatKind, i), timezone);
+      const occRsvpDeadline = zonedInputToUtc(shiftWallClock(rsvpDeadlineInput, repeatKind, i), timezone);
 
-    if (hasRouteData) {
-      const resolvedRouteName = routeName || `${title} Route`;
+      let routeId: string | undefined;
+      if (hasRouteData) {
+        const resolvedRouteName = routeName || `${title} Route`;
+        const route = await tx.route.create({
+          data: {
+            riderId: rider.id,
+            name: resolvedRouteName,
+            description: routeDescription || null,
+            distanceMiles: resolvedRouteDistanceMiles,
+            geometry: routeGeometry ?? undefined,
+            ksuLat: routeKsuLat,
+            ksuLng: routeKsuLng,
+            waypoints: routeWaypoints.length
+              ? {
+                  create: routeWaypoints.map((waypoint, index) => ({
+                    label: waypoint.label || null,
+                    type: waypoint.kind,
+                    lat: waypoint.lat,
+                    lng: waypoint.lng,
+                    order: index,
+                  })),
+                }
+              : undefined,
+          },
+          select: { id: true },
+        });
+        routeId = route.id;
+      }
 
-      const route = await tx.route.create({
+      const event = await tx.rideEvent.create({
         data: {
-          riderId: rider.id,
-          name: resolvedRouteName,
-          description: routeDescription || null,
-          distanceMiles: resolvedRouteDistanceMiles,
-          geometry: routeGeometry ?? undefined,
-          ksuLat: routeKsuLat,
-          ksuLng: routeKsuLng,
-          waypoints: routeWaypoints.length
+          hostId: rider.id,
+          crewId,
+          seriesId,
+          title,
+          slug: slugs[i],
+          excerpt: excerpt ? excerpt.slice(0, 255) : null,
+          description: description || null,
+          facebookEventUrl,
+          startsAt: occStartsAt,
+          endsAt: occEndsAt,
+          galleryClosesAt: occGalleryClosesAt,
+          ksuAt: occKsuAt,
+          timezone,
+          ksuLocation: ksuLocation || null,
+          ksuAddress: ksuAddress || null,
+          ksuLat,
+          ksuLng,
+          meetLocation: meetLocation || null,
+          meetAddress: meetAddress || null,
+          meetLat,
+          meetLng,
+          endLocation: endLocation || null,
+          endAddress: endAddress || null,
+          endLat,
+          endLng,
+          distanceMiles: resolvedRouteDistanceMiles ? Math.round(resolvedRouteDistanceMiles) : distanceMiles,
+          maxCapacity,
+          rsvpDeadline: occRsvpDeadline,
+          difficulty,
+          routeId,
+          galleryItems: eventPhotoUrl
             ? {
-                create: routeWaypoints.map((waypoint, index) => ({
-                  label: waypoint.label || null,
-                  type: waypoint.kind,
-                  lat: waypoint.lat,
-                  lng: waypoint.lng,
-                  order: index,
-                })),
+                create: {
+                  url: eventPhotoUrl,
+                  caption: `${title} cover image`,
+                },
               }
             : undefined,
         },
-        select: { id: true },
       });
 
-      routeId = route.id;
+      await tx.eventOrganizer.create({
+        data: {
+          eventId: event.id,
+          riderId: rider.id,
+          role: "HOST",
+        },
+      });
     }
-
-    const event = await tx.rideEvent.create({
-      data: {
-        hostId: rider.id,
-        crewId,
-        title,
-        slug,
-        excerpt: excerpt ? excerpt.slice(0, 255) : null,
-        description: description || null,
-        facebookEventUrl,
-        startsAt,
-        endsAt,
-        galleryClosesAt,
-        ksuAt,
-        timezone,
-        ksuLocation: ksuLocation || null,
-        ksuAddress: ksuAddress || null,
-        ksuLat,
-        ksuLng,
-        meetLocation: meetLocation || null,
-        meetAddress: meetAddress || null,
-        meetLat,
-        meetLng,
-        endLocation: endLocation || null,
-        endAddress: endAddress || null,
-        endLat,
-        endLng,
-        distanceMiles: resolvedRouteDistanceMiles ? Math.round(resolvedRouteDistanceMiles) : distanceMiles,
-        maxCapacity,
-        rsvpDeadline,
-        difficulty,
-        routeId,
-        galleryItems: eventPhotoUrl
-          ? {
-              create: {
-                url: eventPhotoUrl,
-                caption: `${title} cover image`,
-              },
-            }
-          : undefined,
-      },
-    });
-
-    await tx.eventOrganizer.create({
-      data: {
-        eventId: event.id,
-        riderId: rider.id,
-        role: "HOST",
-      },
-    });
   });
 
-  redirect(`/events/${slug}`);
+  redirect(`/events/${slugs[0]}`);
 }

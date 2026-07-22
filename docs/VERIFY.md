@@ -20,6 +20,10 @@ _Reviewed 2026-07-21. ✅ done · 🟡 partial · ⬜ not started · Live at v2.
 - ✅ **Mentorship matching** — `/mentors` lists riders who've earned mentor level, one card per rider with the skills they mentor + a verified check, sorted **nearest-first** by rider coordinates. Nav link added. _(v2.97.0)_
 - ✅ **Weather on ride pages** — Open-Meteo (free, no API key). Events show a ride-day forecast in "About this ride"; roads show current conditions. Best-effort + hour-cached. _(v2.95.1)_
 
+- ✅ **Recurring events** — the create form has a **Repeat** control (weekly / every 2 weeks / monthly, up to 12); the whole series is generated at once, each occurrence its own editable ride sharing a `seriesId`. Times are DST-correct (wall-clock shifted, UTC re-derived per occurrence). _(v2.117.0)_
+- ✅ **Ride reminders + weather push** — an hourly Inngest cron pushes RSVP'd riders ~24h before a ride with the ride-day forecast; fires once per event (`reminderSentAt`). _(v2.117.0)_
+- ✅ **Post-ride recap** — closing a ride pushes everyone who rode ("N riders · X mi · Y photos — see how it went"), and completed event pages lead with a recap card. _(v2.117.0)_
+
 ## ⚙️ Enhancements
 
 - ✅ **Feed performance** — feed no longer over-fetches every like/save per entry; two indexed, viewer-scoped lookups instead. _(v2.93.0)_
