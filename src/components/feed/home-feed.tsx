@@ -6,7 +6,6 @@ import { FeedList } from "@/components/feed/feed-list";
 import { FeedRightRail } from "@/components/feed/feed-right-rail";
 import { CoverPhoto } from "@/components/profile/cover-photo";
 import { JournalComposerBar } from "@/components/profile/journal-composer-bar";
-import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { StoryBar } from "@/components/stories/story-bar";
 import type { StoryGroup } from "@/components/stories/story-viewer";
 import { FEED_PAGE_SIZE, getFeedEntries, type FeedMode } from "@/lib/feed";
@@ -124,7 +123,6 @@ export async function HomeFeed({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="w-full min-w-0 space-y-4">
-          <InstallPrompt />
           <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
 
           {/* Stories — a light bar under the composer */}

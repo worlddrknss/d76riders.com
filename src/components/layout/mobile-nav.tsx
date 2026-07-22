@@ -11,6 +11,7 @@ import {
   CalendarDays,
   CalendarPlus2,
   ChevronRight,
+  Download,
   Home,
   LogOut,
   MessageSquare,
@@ -26,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
+import { SHOW_INSTALL_EVENT } from "@/components/pwa/install-prompt";
 import { navItems, type NavItem } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
 
@@ -294,6 +296,25 @@ export function MobileNav({
             onNavigate={close}
           />
         ))}
+
+        {/* A permanent way back to the install banner — iOS offers no install
+            affordance of its own, so dismissing it once shouldn't bury it. */}
+        <section>
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/4">
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                window.dispatchEvent(new Event(SHOW_INSTALL_EVENT));
+              }}
+              className="flex min-h-12 w-full items-center gap-3 px-4 py-3 text-left text-[0.95rem] text-slate-200 transition active:bg-white/10"
+            >
+              <Download className="h-4 w-4 shrink-0 text-slate-400" />
+              <span className="flex-1">Install app</span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />
+            </button>
+          </div>
+        </section>
 
         {currentUser && (
           <>
