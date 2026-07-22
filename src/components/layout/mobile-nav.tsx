@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Bell,
@@ -39,13 +40,17 @@ type MobileNavProps = {
 
 type SheetKind = "more" | "create" | null;
 
+// Never-changing subscription: this store only reports "are we on the client",
+// which flips once at hydration and never again.
+const subscribeNever = () => () => {};
+
+const isGroup = (item: NavItem): item is Extract<NavItem, { children: unknown }> => "children" in item;
+const isLink = (item: NavItem): item is Extract<NavItem, { href: string }> => "href" in item;
+
 /**
  * A path is "current" when it's the page or an ancestor of it — compared by
  * segment, not by raw prefix, so /roads doesn't light up the /r (Riders) tab.
  */
-const isGroup = (item: NavItem): item is Extract<NavItem, { children: unknown }> => "children" in item;
-const isLink = (item: NavItem): item is Extract<NavItem, { href: string }> => "href" in item;
-
 function isCurrent(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -70,6 +75,12 @@ export function MobileNav({
   pathname,
 }: MobileNavProps) {
   const [sheet, setSheet] = useState<SheetKind>(null);
+
+  // Rendered through a portal on document.body. The navbar that mounts this is
+  // a motion.header, and a transformed ancestor becomes the containing block
+  // for position:fixed — which pinned the bar to the header and let it scroll
+  // away instead of staying on the viewport.
+  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
 
   // Close on navigation — adjusted at render on a pathname change rather than
   // in an effect, matching the other menus in the navbar.
@@ -108,7 +119,9 @@ export function MobileNav({
     ? TAB_HREFS.map((href) => ({ href, ...TAB_META[href] }))
     : [...TAB_HREFS, "/r"].map((href) => ({ href, ...TAB_META[href] }));
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       {/* BOTTOM TAB BAR */}
       <nav
@@ -308,7 +321,8 @@ export function MobileNav({
           </>
         )}
       </Sheet>
-    </>
+    </>,
+    document.body,
   );
 }
 
