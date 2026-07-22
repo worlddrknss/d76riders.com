@@ -66,17 +66,23 @@ export function NfcTagGuide() {
         </div>
       </div>
 
+      {/* The icon is the only sibling flex item — the sentence stays in one
+          element so inline emphasis doesn't get laid out as its own column. */}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <p className="flex items-start gap-2 text-xs text-muted">
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
           <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sunset" />
-          Stick it where someone would look — inside your helmet, on the tank, triple clamp, or a fork
-          leg. Give it a scan to test before you rely on it.
+          <span>
+            Stick it where someone would look: inside your helmet, on the tank, triple clamp, or a fork
+            leg. Give it a scan to test before you rely on it.
+          </span>
         </p>
-        <p className="flex items-start gap-2 text-xs text-muted">
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-muted">
           <RefreshCw className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sunset" />
-          Tags rewrite freely — repeat these steps anytime to overwrite. If you tap{" "}
-          <span className="font-semibold text-ink">New Link</span> above, the old link stops working, so
-          re-write your tag with the new one.
+          <span>
+            Tags rewrite freely, so repeat these steps anytime to overwrite one. If you tap{" "}
+            <span className="font-semibold text-ink">New Link</span> above, the old link stops working,
+            so re-write your tag with the new one.
+          </span>
         </p>
       </div>
     </section>
