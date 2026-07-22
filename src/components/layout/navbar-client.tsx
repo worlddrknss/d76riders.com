@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings, Plus, Rss, Newspaper, Route } from "lucide-react";
+import { ChevronDown, UserRound, Bike, CalendarPlus2, LogOut, Shield, Bell, BellRing, Bookmark, MessageSquare, Search, Wrench, CheckCheck, UserCog, Settings, Plus, Rss, Newspaper, Route } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
 import { markAllReadAction } from "@/app/(site)/notifications/actions";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { navItems } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
 
@@ -151,7 +152,6 @@ function NavDropdown({
 
 export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, recentActivities }: NavbarClientProps) {
   const pathname = usePathname() ?? "";
-  const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -164,7 +164,6 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
     setLastPath(pathname);
-    setIsOpen(false);
     setMenuOpen(false);
     setNotifOpen(false);
     setCreateOpen(false);
@@ -466,7 +465,7 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
                       <Bike className="h-4 w-4 text-slate-300" />
                       <span>Garage</span>
                     </Link>
-                    <Link href={`/r/${currentUser.handle}?tab=garage`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
+                    <Link href={`/r/${currentUser.handle}?tab=garage&sub=gear`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/10">
                       <Wrench className="h-4 w-4 text-slate-300" />
                       <span>Gear</span>
                     </Link>
@@ -531,167 +530,37 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
             </>
           )}
 
-          <button
-            type="button"
-            className="rounded-lg border border-white/20 p-2 text-white lg:hidden"
-            onClick={() => setIsOpen((prev) => !prev)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={isOpen}
-          >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          {/* Signed-out riders had no visible way in on mobile — Log In and Join
+              were both lg-only, leaving just the logo and a hamburger. */}
+          {!currentUser && (
+            <div className="flex items-center gap-2 lg:hidden">
+              <Link
+                href="/login"
+                className="rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-white active:bg-white/10"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/join"
+                className="rounded-md bg-sunset px-3 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-white active:bg-[#cf5a26]"
+              >
+                Join
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
-      {isOpen ? (
-        <div className="border-t border-white/10 bg-asphalt lg:hidden">
-          <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-            <nav className="grid gap-1" aria-label="Mobile navigation">
-              {navItems.map((item) => {
-                if ("href" in item) {
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-[0.14em] ${
-                        pathname === item.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                }
-
-                return (
-                  <div key={item.label}>
-                    <p className="px-3 pt-3 pb-1 text-xs font-semibold uppercase tracking-widest text-slate-500">{item.label}</p>
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={`rounded-lg px-3 py-2 pl-6 text-sm font-medium ${
-                          pathname === child.href ? "bg-white/10 text-white" : "text-slate-300 hover:bg-white/5"
-                        }`}
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                );
-              })}
-
-              {currentUser ? (
-                <>
-                  <Link
-                    href={`/r/${currentUser.handle}`}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  <Link
-                    href={`/r/${currentUser.handle}?tab=garage`}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Garage
-                  </Link>
-                  <Link
-                    href={`/r/${currentUser.handle}?tab=garage`}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Gear
-                  </Link>
-                  <Link
-                    href="/notifications"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Notifications
-                  </Link>
-                  <Link
-                    href="/events/new"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Create Event
-                  </Link>
-                  <Link
-                    href="/messages"
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Messages
-                    {dmUnreadCount > 0 && (
-                      <span className="rounded-full bg-sunset px-1.5 py-0.5 text-[0.65rem] font-bold text-white">
-                        {dmUnreadCount > 99 ? "99+" : dmUnreadCount}
-                      </span>
-                    )}
-                  </Link>
-                  <Link
-                    href="/saved"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Saved
-                  </Link>
-                  <Link
-                    href="/account"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Account
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Settings
-                  </Link>
-                  {isAdministrator ? (
-                    <Link
-                      href="/admin"
-                      className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Admin Console
-                    </Link>
-                  ) : null}
-                  <form action={logoutAction}>
-                    <button
-                      type="submit"
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-300 hover:bg-red-500/10"
-                    >
-                      Log Out
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-white/5"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/join"
-                    className="mt-1 rounded-md bg-sunset px-3 py-2 text-sm font-semibold text-white"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Join the Community
-                  </Link>
-                </>
-              )}
-            </nav>
-          </div>
-        </div>
-      ) : null}
+      {/* Mobile navigation is a bottom tab bar + sheets, not a drawer hanging
+          off the top of the screen. */}
+      <MobileNav
+        currentUser={currentUser}
+        notificationCount={notificationCount}
+        dmUnreadCount={dmUnreadCount}
+        isAdministrator={isAdministrator}
+        userInitials={userInitials}
+        pathname={pathname}
+      />
     </motion.header>
   );
 }

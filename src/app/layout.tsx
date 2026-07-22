@@ -29,6 +29,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#1c1c1c",
+  // Required for env(safe-area-inset-*) to report anything on notched iPhones —
+  // the mobile tab bar sits on top of the home indicator without it.
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -96,7 +99,11 @@ export default function RootLayout({
       lang="en"
       className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-canvas text-ink">
+      {/* Bottom padding clears the fixed mobile tab bar (and the home
+          indicator beneath it) so page content is never trapped under it. */}
+      <body
+        className="min-h-full bg-canvas pb-[calc(4rem+env(safe-area-inset-bottom))] text-ink lg:pb-0"
+      >
         <JsonLd data={organizationJsonLd()} />
         <Navbar />
         {children}

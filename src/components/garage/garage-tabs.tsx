@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 /**
@@ -7,6 +8,9 @@ import { useState } from "react";
  * the app-shell mock. Content nodes are built on the server and passed in; this
  * just switches which one is visible. Service is owner-only (public viewers get
  * Bikes + Gear).
+ *
+ * `?sub=` picks the opening tab so nav menus can link straight to Gear or
+ * Service instead of every entry landing on Bikes.
  */
 export function GarageTabs({
   bikes,
@@ -22,7 +26,18 @@ export function GarageTabs({
     { id: "gear", label: "Gear", node: gear },
     ...(service ? [{ id: "service", label: "Service", node: service }] : []),
   ];
-  const [active, setActive] = useState("bikes");
+  const requested = useSearchParams()?.get("sub") ?? "";
+  const valid = tabs.some((t) => t.id === requested) ? requested : "bikes";
+
+  const [active, setActive] = useState(valid);
+  // Follow the URL when it changes under us (menu link tapped while already on
+  // the profile), without clobbering a tab the rider picked by hand.
+  const [lastRequested, setLastRequested] = useState(valid);
+  if (valid !== lastRequested) {
+    setLastRequested(valid);
+    setActive(valid);
+  }
+
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
 
   return (
