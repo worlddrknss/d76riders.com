@@ -123,13 +123,39 @@ const goesWrong = [
   },
 ];
 
+// Split into the imperative and the reasoning so the action can carry the weight
+// — under stress you scan the bold line, not the paragraph.
 const crashSteps = [
-  "Stop safely and park where you shield the scene without blocking the responders' way in. Hazards on. You are no use to anyone as the second casualty.",
-  "Send one person to call 911 and give them a road name, a junction, or a mile marker. Everyone assuming somebody else called is a real thing that happens.",
-  "Stop serious bleeding with firm direct pressure. Blood loss is the thing you can actually fix on a roadside. If you carry a tourniquet and know how to use it, use it, and note the time.",
-  "Leave the helmet on unless they are not breathing. It is holding the head and neck in line. Getting it off badly is worse than leaving it on.",
-  "Do not move them unless they are in immediate danger from traffic or fire. Kneel where they can see you without turning their head.",
-  "Tell the medics what you saw: the speed, what they hit, whether they were knocked out, and for how long. You were there and they were not.",
+  {
+    action: "Stop safely and shield the scene",
+    detail:
+      "Park where you shield the scene without blocking the responders' way in. Hazards on. You are no use to anyone as the second casualty.",
+  },
+  {
+    action: "Send one person to call 911",
+    detail:
+      "Give them a road name, a junction, or a mile marker. Everyone assuming somebody else called is a real thing that happens.",
+  },
+  {
+    action: "Stop serious bleeding with firm direct pressure",
+    detail:
+      "Blood loss is the thing you can actually fix on a roadside. If you carry a tourniquet and know how to use it, use it, and note the time.",
+  },
+  {
+    action: "Leave the helmet on",
+    detail:
+      "Unless they are not breathing. It is holding the head and neck in line. Getting it off badly is worse than leaving it on.",
+  },
+  {
+    action: "Do not move them",
+    detail:
+      "Unless they are in immediate danger from traffic or fire. Kneel where they can see you without turning their head.",
+  },
+  {
+    action: "Tell the medics what you saw",
+    detail:
+      "The speed, what they hit, whether they were knocked out, and for how long. You were there and they were not.",
+  },
 ];
 
 const preRide = [
@@ -309,26 +335,40 @@ export default function SafetyPage() {
             })}
           </StaggerList>
 
+          {/* The most consequential block on the site — it gets a solid header bar
+              and full column width so it can't be scrolled past. */}
           <FadeUp>
-            <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-red-200 bg-red-50/50 p-6 shadow-soft sm:p-8">
-              <div className="flex items-center gap-3">
-                <HeartPulse className="h-6 w-6 shrink-0 text-red-600" />
-                <h3 className="font-display text-xl font-semibold text-asphalt">The first few minutes at a crash</h3>
+            <div className="mt-10 overflow-hidden rounded-2xl border-2 border-red-600 shadow-lift">
+              <div className="flex items-start gap-3 bg-red-600 px-6 py-5 sm:px-8">
+                <HeartPulse className="mt-1 h-7 w-7 shrink-0 text-white" />
+                <div>
+                  <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-white/75">
+                    If someone goes down
+                  </p>
+                  <h3 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                    The first few minutes at a crash
+                  </h3>
+                </div>
               </div>
-              <ol className="mt-5 space-y-3">
-                {crashSteps.map((step, i) => (
-                  <li key={step} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                      {i + 1}
-                    </span>
-                    <p className="text-sm leading-relaxed text-asphalt">{step}</p>
-                  </li>
-                ))}
-              </ol>
-              <p className="mt-5 text-xs leading-relaxed text-muted">
-                This is what to do until the professionals arrive, not a substitute for being trained. If you ride often,
-                a day on a first aid course is the best money you will spend on kit you hope never to use.
-              </p>
+
+              <div className="bg-red-50/70 px-6 py-6 sm:px-8">
+                <ol className="space-y-4">
+                  {crashSteps.map((step, i) => (
+                    <li key={step.action} className="flex items-start gap-4">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-600 font-display text-base font-bold text-white">
+                        {i + 1}
+                      </span>
+                      <p className="text-base leading-relaxed text-asphalt/80">
+                        <span className="font-bold text-red-900">{step.action}.</span> {step.detail}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+                <p className="mt-6 border-t border-red-200 pt-4 text-xs leading-relaxed text-asphalt/60">
+                  This is what to do until the professionals arrive, not a substitute for being trained. If you ride often,
+                  a day on a first aid course is the best money you will spend on kit you hope never to use.
+                </p>
+              </div>
             </div>
           </FadeUp>
         </div>
