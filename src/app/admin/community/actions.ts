@@ -78,12 +78,12 @@ export async function createCrewAction(formData: FormData): Promise<void> {
     action: "crew.create",
     entityType: "Crew",
     entityId: crew.id,
-    summary: `Created crew "${crew.name}"`,
+    summary: `Created sub-community "${crew.name}"`,
     after: crew,
   });
 
   revalidatePath("/admin/community");
-  revalidatePath("/crews");
+  revalidatePath("/sub-communities");
   redirect("/admin/community");
 }
 
@@ -106,12 +106,12 @@ export async function deleteCrewAction(crewId: string): Promise<void> {
     action: "crew.delete",
     entityType: "Crew",
     entityId: crewId,
-    summary: `Deleted crew "${crew.name}"`,
+    summary: `Deleted sub-community "${crew.name}"`,
     before: crew,
   });
 
   revalidatePath("/admin/community");
-  revalidatePath("/crews");
+  revalidatePath("/sub-communities");
 }
 
 // Promote a rider to crew lead, or add them as a member.
@@ -149,7 +149,7 @@ export async function setCrewMemberAction(formData: FormData): Promise<void> {
   });
 
   revalidatePath("/admin/community");
-  revalidatePath(`/crews/${crew.slug}`);
+  revalidatePath(`/sub-communities/${crew.slug}`);
 }
 
 // ---------- Sponsors ----------
@@ -475,16 +475,16 @@ export async function updateCrewAction(crewId: string, formData: FormData): Prom
       entityType: "Crew",
       entityId: crewId,
       summary: !next.active
-        ? `Deactivated crew "${next.name}" — hidden, members kept`
-        : `Updated crew "${next.name}"`,
+        ? `Deactivated sub-community "${next.name}" — hidden, members kept`
+        : `Updated sub-community "${next.name}"`,
       before,
       after,
     });
   }
 
   revalidatePath("/admin/community");
-  revalidatePath("/crews");
-  revalidatePath(`/crews/${existing.slug}`);
+  revalidatePath("/sub-communities");
+  revalidatePath(`/sub-communities/${existing.slug}`);
   redirect("/admin/community");
 }
 

@@ -34,7 +34,7 @@ export default async function EditCrewPage(props: { params: Promise<{ id: string
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Moderation</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-white">Edit Crew</h1>
+        <h1 className="mt-2 font-display text-3xl font-bold text-white">Edit Sub-community</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           {crew._count.members} member{crew._count.members === 1 ? "" : "s"} · {crew._count.events} ride
           {crew._count.events === 1 ? "" : "s"}
@@ -86,7 +86,7 @@ export default async function EditCrewPage(props: { params: Promise<{ id: string
             <span>
               Active
               <span className="mt-0.5 block text-xs text-slate-500">
-                Unchecking hides the crew from the community without deleting it — members and their history
+                Unchecking hides the sub-community from the site without deleting it — members and their history
                 stay. Prefer this to deleting.
               </span>
             </span>
@@ -104,7 +104,7 @@ export default async function EditCrewPage(props: { params: Promise<{ id: string
             type="submit"
             className="rounded-lg border border-sunset/40 bg-sunset/15 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-sunset/25"
           >
-            Save Crew
+            Save Sub-community
           </button>
         </div>
       </form>

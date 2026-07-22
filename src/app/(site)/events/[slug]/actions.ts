@@ -848,8 +848,10 @@ export async function addOrganizerAction(
   });
   if (!hostOrg) return { error: "Only the host can manage organizers." };
 
+  // Handles are stored lowercase (enforced at signup), so match what someone
+  // typed rather than rejecting "WorldDrknss" as an unknown rider.
   const targetRider = await prisma.rider.findUnique({
-    where: { handle: targetHandle },
+    where: { handle: targetHandle.trim().toLowerCase() },
     select: { id: true },
   });
   if (!targetRider) return { error: "Rider not found." };
@@ -883,6 +885,76 @@ export async function removeOrganizerAction(eventId: string, organizerId: string
 
   await prisma.eventOrganizer.delete({ where: { id: organizerId } });
   revalidatePath("/events");
+}
+
+/**
+ * Hand the ride to someone else.
+ *
+ * Ownership lives in two places — `RideEvent.hostId` (what the page and every
+ * permission check reads) and the mirrored HOST row in EventOrganizer (what the
+ * staff list renders) — so both move together in one transaction or neither
+ * does. The outgoing host stays on as a LEAD rather than being dropped: they
+ * planned the ride, and silently revoking their access on handover would be a
+ * surprise. They can be removed afterwards by the new host.
+ */
+export async function transferHostAction(
+  eventId: string,
+  targetHandle: string,
+): Promise<{ error: string | null }> {
+  if (typeof eventId !== "string" || !eventId || typeof targetHandle !== "string" || !targetHandle) {
+    return { error: "Invalid request." };
+  }
+
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const event = await prisma.rideEvent.findUnique({
+    where: { id: eventId },
+    select: { id: true, slug: true, title: true, hostId: true, host: { select: { userId: true, name: true } } },
+  });
+  if (!event) return { error: "Ride not found." };
+
+  // hostId is the source of truth — a co-organizer with a LEAD row can't hand
+  // away a ride that isn't theirs.
+  if (event.host.userId !== userId) return { error: "Only the host can transfer the ride." };
+
+  const target = await prisma.rider.findUnique({
+    where: { handle: targetHandle.trim().toLowerCase() },
+    select: { id: true, name: true, handle: true },
+  });
+  if (!target) return { error: "Rider not found." };
+  if (target.id === event.hostId) return { error: "They already host this ride." };
+
+  const previousHostId = event.hostId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.rideEvent.update({ where: { id: eventId }, data: { hostId: target.id } });
+
+    // Demote first: the outgoing host may not have a row at all (older rides),
+    // and updateMany is a no-op rather than a throw when there's nothing to hit.
+    await tx.eventOrganizer.updateMany({
+      where: { eventId, riderId: previousHostId, role: "HOST" },
+      data: { role: "LEAD" },
+    });
+
+    // The new host may already be staff in another role — upsert moves them up.
+    await tx.eventOrganizer.upsert({
+      where: { eventId_riderId: { eventId, riderId: target.id } },
+      create: { eventId, riderId: target.id, role: "HOST" },
+      update: { role: "HOST" },
+    });
+  });
+
+  await sendPushToRider(target.id, {
+    title: "You're hosting a ride",
+    body: `${event.host.name} handed you ${event.title}. You can manage it now.`,
+    url: `/events/${event.slug}`,
+    tag: `host-transfer-${eventId}`,
+  }).catch(() => {});
+
+  revalidatePath("/events");
+  revalidatePath(`/events/${event.slug}`);
+  return { error: null };
 }
 
 // ─── Rider Down Quick Alert ─────────────────────────────────────────

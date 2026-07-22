@@ -18,7 +18,7 @@ type CommunityDeleteButtonProps = {
 };
 
 const COPY: Record<CommunityDeleteButtonProps["kind"], string> = {
-  crew: "Delete crew \"%s\"? Its members lose the crew and its rides are unlinked. This cannot be undone.",
+  crew: "Delete sub-community \"%s\"? Its members lose it and its rides are unlinked. This cannot be undone.",
   sponsor: "Remove sponsor \"%s\"? It is unlinked from every ride it backed. This cannot be undone.",
   challenge:
     "Delete challenge \"%s\"? Every rider's entry and progress in it goes too. This cannot be undone.",

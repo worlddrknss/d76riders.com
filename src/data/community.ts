@@ -29,7 +29,7 @@ export const navItems: NavItem[] = [
   {
     label: "Community",
     children: [
-      { href: "/crews", label: "Crews" },
+      { href: "/sub-communities", label: "Sub-communities" },
       { href: "/challenges", label: "Challenges" },
       { href: "/ride-of-the-month", label: "Ride of the Month" },
       { href: "/leaderboard", label: "Leaderboard" },

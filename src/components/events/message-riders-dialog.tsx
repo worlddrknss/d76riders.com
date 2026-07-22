@@ -84,17 +84,19 @@ export function MessageRidersDialog({ eventId, eventTitle, counts }: MessageRide
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
+      {/* Matches the other organizer toolbar buttons (Analytics / Add Route) —
+          the outline Button variant is bg-transparent, which read as a gap. */}
+      <button
+        type="button"
         onClick={() => {
           setResult(null);
           setOpen(true);
         }}
+        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-semibold text-ink transition hover:border-sunset/50 hover:text-sunset"
       >
-        <MessageSquare className="h-3.5 w-3.5" />
+        <MessageSquare className="h-4 w-4 text-sunset" />
         Message Riders
-      </Button>
+      </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md">
