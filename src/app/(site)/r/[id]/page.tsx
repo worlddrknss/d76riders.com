@@ -972,8 +972,14 @@ export default async function RiderProfilePage({
                     </span>
                   ) : null}
                 </div>
+                {/* Part of the identity block, not a sibling of it — outside
+                    this column the bio started at the card's left edge, under
+                    the avatar, detached from the name it describes. */}
+                {rider.bio ? (
+                  <p className="mt-2.5 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>
+                ) : null}
                 {socialAccounts.length > 0 ? (
-                  <div className="mt-2 flex items-center gap-1.5">
+                  <div className="mt-3 flex items-center gap-1.5">
                     {socialAccounts.map((social) => (
                       <SocialIconLink key={social.label} {...social} riderName={rider.name} />
                     ))}
@@ -1010,8 +1016,6 @@ export default async function RiderProfilePage({
                 </div>
               ) : null}
             </div>
-
-            {rider.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">{rider.bio}</p>}
 
             {/* Admin moderation controls — de-emphasized, admin-only. */}
             {isAdmin ? (
