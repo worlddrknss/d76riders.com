@@ -14,9 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { UsernameField } from "@/components/profile/username-field";
 import { US_TIMEZONES } from "@/lib/datetime";
 
-type ProfileData = {
+export type ProfileData = {
   displayName: string;
   username: string;
   avatarUrl: string;
@@ -29,6 +30,8 @@ type ProfileData = {
   tiktokHandle: string;
   instagramHandle: string;
   twitterHandle: string;
+  /** Days left before the username can change again; 0 = free to change. */
+  usernameCooldownDaysLeft: number;
 };
 
 type ProfileEditDialogProps = {
@@ -70,10 +73,12 @@ export function ProfileEditDialog({ open, onOpenChange, profile }: ProfileEditDi
                 <label htmlFor="ep-displayName" className="text-xs font-semibold uppercase tracking-wide text-muted">Display Name</label>
                 <input id="ep-displayName" name="displayName" type="text" defaultValue={profile.displayName} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
               </div>
-              <div>
-                <label htmlFor="ep-username" className="text-xs font-semibold uppercase tracking-wide text-muted">Username</label>
-                <input id="ep-username" name="username" type="text" required minLength={3} maxLength={24} pattern="[a-z0-9._-]+" defaultValue={profile.username} className="mt-1 w-full rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-              </div>
+              <UsernameField
+                id="ep-username"
+                defaultValue={profile.username}
+                currentUsername={profile.username}
+                cooldownDaysLeft={profile.usernameCooldownDaysLeft}
+              />
             </div>
             <div>
               <label htmlFor="ep-avatarUrl" className="text-xs font-semibold uppercase tracking-wide text-muted">Avatar URL <span className="font-normal normal-case tracking-normal text-muted/70">(optional)</span></label>

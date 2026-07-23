@@ -5,6 +5,11 @@ model Rider {
   id             String   @id @default(cuid())
   userId         String   @unique
   handle         String   @unique
+  // When the handle was last changed. Null = never changed since signup, so the
+  // first change is always allowed. Handles appear in profile URLs and @mentions
+  // that other riders have already learned, so changes are rate-limited rather
+  // than free — see HANDLE_CHANGE_DAYS in account/actions.
+  handleChangedAt DateTime?
   name           String
   location       String?
   // Geocoded from `location` (best-effort, at signup or profile edit). Powers

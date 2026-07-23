@@ -13,6 +13,14 @@ import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-uploa
 import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import { clearUserSession, getCurrentUser } from "@/lib/session";
+import {
+  cooldownMessage,
+  handleCooldownDaysLeft,
+  isReservedUsername,
+  isValidUsername,
+  normalizeUsername,
+  USERNAME_RULE_MESSAGE,
+} from "@/lib/username";
 import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
 export type AccountFormState = {
@@ -26,14 +34,6 @@ export type DeleteAccountFormState = {
 
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
-}
-
-function normalizeUsername(value: FormDataEntryValue | null): string {
-  return normalizeText(value).toLowerCase();
-}
-
-function isValidUsername(username: string): boolean {
-  return /^[a-z0-9](?:[a-z0-9._-]{1,22}[a-z0-9])?$/.test(username);
 }
 
 function isValidAvatarUrl(value: string): boolean {
@@ -195,8 +195,7 @@ export async function updateAccountProfileAction(
 
   if (!username || !isValidUsername(username)) {
     return {
-      error:
-        "Username must be 3-24 characters and use only lowercase letters, numbers, dots, underscores, or hyphens.",
+      error: USERNAME_RULE_MESSAGE,
       success: null,
     };
   }
@@ -227,10 +226,29 @@ export async function updateAccountProfileAction(
           avatarUrl: true,
           coverUrl: true,
           location: true,
+          handle: true,
+          handleChangedAt: true,
         },
       },
     },
   });
+
+  // Handle changes are rate-limited: the handle is in every profile URL and
+  // @mention other riders have already learned, so it can't churn. Only stamp
+  // (and only refuse) when it's genuinely different from the stored one —
+  // re-saving the same profile must never burn or trip the window.
+  const previousHandle = existingProfile?.rider?.handle ?? null;
+  const handleIsChanging = previousHandle !== null && previousHandle !== username;
+
+  if (handleIsChanging) {
+    const daysLeft = handleCooldownDaysLeft(existingProfile?.rider?.handleChangedAt ?? null);
+    if (daysLeft > 0) {
+      return { error: cooldownMessage(daysLeft), success: null };
+    }
+    if (isReservedUsername(username)) {
+      return { error: "That username is reserved.", success: null };
+    }
+  }
 
   // Keep coordinates in sync with the location text so "near me" stays accurate.
   // Only re-geocode when the location actually changed (best-effort — a failed
@@ -321,6 +339,9 @@ export async function updateAccountProfileAction(
         where: { userId },
         data: {
           handle: username,
+          // Stamped only on a real change, so the 28-day window starts when the
+          // handle actually moved rather than on any profile save.
+          handleChangedAt: handleIsChanging ? new Date() : undefined,
           name: resolvedDisplayName,
           avatarUrl: nextAvatarUrl,
           coverUrl: nextCoverUrl !== undefined ? nextCoverUrl : undefined,

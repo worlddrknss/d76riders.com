@@ -3,23 +3,12 @@
 import { useState } from "react";
 import { Pencil } from "lucide-react";
 
-import { ProfileEditDialog } from "@/components/profile/profile-edit-dialog";
+import { ProfileEditDialog, type ProfileData } from "@/components/profile/profile-edit-dialog";
 
+// Reuses the dialog's own type rather than restating it — the two drifting is
+// what let a new required field compile here and fail there.
 type ProfileEditButtonProps = {
-  profile: {
-    displayName: string;
-    username: string;
-    avatarUrl: string;
-    bio: string;
-    location: string;
-    timezone: string | null;
-    favoriteRoad: string;
-    yearStartedRiding: number | null;
-    youtubeHandle: string;
-    tiktokHandle: string;
-    instagramHandle: string;
-    twitterHandle: string;
-  };
+  profile: ProfileData;
 };
 
 export function ProfileEditButton({ profile }: ProfileEditButtonProps) {

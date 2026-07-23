@@ -5,6 +5,7 @@ import { useActionState } from "react";
 
 import { type AuthFormState, registerAction } from "@/app/(site)/(auth)/actions";
 import { AuthSubmitButton } from "@/components/auth/auth-submit-button";
+import { UsernameField } from "@/components/profile/username-field";
 import { US_TIMEZONES } from "@/lib/datetime";
 
 const initialAuthFormState: AuthFormState = {
@@ -35,23 +36,7 @@ export function RegisterForm({ referralCode }: { referralCode?: string }) {
         <p className="text-xs text-muted">Optional. If empty, your username will be shown.</p>
       </div>
 
-      <div className="space-y-1.5">
-        <label htmlFor="username" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
-          Username
-        </label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          required
-          autoComplete="username"
-          minLength={3}
-          maxLength={24}
-          pattern="[a-z0-9._-]+"
-          className="w-full rounded-lg border border-border bg-canvas px-3.5 py-2.5 text-sm text-ink shadow-soft focus:border-sunset/50 focus:outline-none"
-        />
-        <p className="text-xs text-muted">3-24 chars, lowercase letters, numbers, ., _, -</p>
-      </div>
+      <UsernameField id="username" hint="3-24 chars, lowercase letters, numbers, ., _, -" />
 
       <div className="space-y-1.5">
         <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">

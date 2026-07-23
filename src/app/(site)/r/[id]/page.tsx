@@ -36,6 +36,7 @@ import { deleteVideoAction } from "@/app/(site)/videos/mine/actions";
 import { CreateVideoDialog } from "@/components/videos/create-video-dialog";
 import { prisma } from "@/lib/prisma";
 import { mediaUrl } from "@/lib/media-url";
+import { handleCooldownDaysLeft } from "@/lib/username";
 import { getCurrentUser } from "@/lib/session";
 
 // Personal notifications that must never surface on the public profile feed —
@@ -107,6 +108,7 @@ export default async function RiderProfilePage({
       id: true,
       userId: true,
       handle: true,
+      handleChangedAt: true,
       name: true,
       isAmbassador: true,
       bio: true,
@@ -379,6 +381,7 @@ export default async function RiderProfilePage({
     tiktokHandle: rider.tiktokUrl?.replace(/^https:\/\/tiktok\.com\/@?/, "") || "",
     instagramHandle: rider.instagramUrl?.replace(/^https:\/\/instagram\.com\//, "") || "",
     twitterHandle: rider.twitterUrl?.replace(/^https:\/\/x\.com\//, "") || "",
+    usernameCooldownDaysLeft: handleCooldownDaysLeft(rider.handleChangedAt),
   } : null;
 
   // Owner-only rich bike data — modification/service costs stay private to the owner.

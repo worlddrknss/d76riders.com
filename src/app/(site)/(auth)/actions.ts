@@ -13,6 +13,12 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { recordReferral } from "@/lib/referrals";
 import { clearUserSession, createUserSession } from "@/lib/session";
+import {
+  isReservedUsername,
+  isValidUsername,
+  normalizeUsername,
+  USERNAME_RULE_MESSAGE,
+} from "@/lib/username";
 
 export type AuthFormState = {
   error: string | null;
@@ -24,14 +30,6 @@ function normalizeEmail(value: FormDataEntryValue | null): string {
 
 function normalizeText(value: FormDataEntryValue | null): string {
   return (value?.toString() ?? "").trim();
-}
-
-function normalizeUsername(value: FormDataEntryValue | null): string {
-  return (value?.toString() ?? "").trim().toLowerCase();
-}
-
-function isValidUsername(username: string): boolean {
-  return /^[a-z0-9](?:[a-z0-9._-]{1,22}[a-z0-9])?$/.test(username);
 }
 
 export async function registerAction(
@@ -57,10 +55,11 @@ export async function registerAction(
   }
 
   if (!isValidUsername(username)) {
-    return {
-      error:
-        "Username must be 3-24 characters and use only lowercase letters, numbers, dots, underscores, or hyphens.",
-    };
+    return { error: USERNAME_RULE_MESSAGE };
+  }
+
+  if (isReservedUsername(username)) {
+    return { error: "That username is reserved." };
   }
 
   if (!email) {
