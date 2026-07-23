@@ -341,6 +341,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     waitlisted: countFor("WAITLISTED"),
     interested: countFor("INTERESTED"),
     checkedIn: event.checkIns.length,
+    tracking: event.followers.length,
   };
 
   // Viewer's own RSVP status (GOING or WAITLISTED — event.rsvps only lists GOING).
@@ -750,14 +751,30 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   <span>registered</span>
                   {waitlistCount > 0 && <span className="text-xs">· {waitlistCount} waitlisted</span>}
                 </div>
+                {/* Tracking is the soft "might go" — the label says what it buys
+                    you, because "Track event" on its own told nobody anything. */}
                 {currentUser ? (
                   <form action={toggleEventFollowAction.bind(null, event.id)}>
                     <button
                       type="submit"
-                      className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-asphalt transition hover:border-asphalt"
+                      title={
+                        isTracking
+                          ? "You'll be notified if the time or meetup point changes. Tap to stop."
+                          : "Get notified if the time or meetup point changes. Doesn't hold you a spot."
+                      }
+                      className={`w-full rounded-lg border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] transition ${
+                        isTracking
+                          ? "border-sunset/40 bg-sunset/10 text-sunset hover:border-sunset"
+                          : "border-border text-asphalt hover:border-asphalt"
+                      }`}
                     >
-                      {isTracking ? "Tracking this ride" : "Track event"}
+                      {isTracking ? "Tracking this ride" : "Track this ride"}
                     </button>
+                    <p className="mt-1 text-center text-[0.65rem] leading-snug text-muted">
+                      {isTracking
+                        ? "We'll tell you if the time or meetup point changes."
+                        : "Get told if plans change. Doesn't hold a spot — register for that."}
+                    </p>
                   </form>
                 ) : null}
                 <EventRsvpButton

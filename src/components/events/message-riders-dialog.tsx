@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 type MessageRidersDialogProps = {
   eventId: string;
   eventTitle: string;
-  counts: { going: number; waitlisted: number; interested: number; checkedIn: number };
+  counts: { going: number; waitlisted: number; interested: number; checkedIn: number; tracking: number };
 };
 
 const AUDIENCES = [
@@ -20,6 +20,7 @@ const AUDIENCES = [
   { value: "WAITLISTED", label: "Waitlist only" },
   { value: "INTERESTED", label: "Interested only" },
   { value: "CHECKED_IN", label: "Checked in (on the ride)" },
+  { value: "TRACKING", label: "Tracking (interested, not registered)" },
 ] as const;
 
 // Starting points for the messages organizers actually send. Editable — they
@@ -65,6 +66,7 @@ export function MessageRidersDialog({ eventId, eventTitle, counts }: MessageRide
     WAITLISTED: counts.waitlisted,
     INTERESTED: counts.interested,
     CHECKED_IN: counts.checkedIn,
+    TRACKING: counts.tracking,
   };
 
   function submit() {

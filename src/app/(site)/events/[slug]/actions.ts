@@ -11,7 +11,7 @@ import { logActivity, logActivityForRiders } from "@/lib/activity";
 import { sendPushToRider } from "@/lib/push";
 import { requireUserId } from "@/lib/authz";
 import { resolvePostableCrewId } from "@/lib/crews";
-import { DEFAULT_TIMEZONE, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
+import { DEFAULT_TIMEZONE, formatEventDate, formatEventTime, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
 import { syncRiderProgression } from "@/lib/reputation";
@@ -249,7 +249,59 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
     await deleteFilesByUrls(previousPhotoUrls);
   }
 
+  // Tell the people who are counting on this ride when it actually moves.
+  //
+  // Only the details that change a rider's plans count: the start, kickstands
+  // up, and where to meet. A tweaked description or a new cover photo isn't
+  // worth a notification, and treating it as one is how people learn to ignore
+  // them. Trackers and RSVP'd riders are told together — notifying trackers
+  // about a time change while leaving attendees in the dark would be absurd.
+  const timeChanged = event.startsAt.getTime() !== startsAt.getTime();
+  const ksuChanged = (event.ksuAt?.getTime() ?? null) !== (ksuAt?.getTime() ?? null);
+  const placeChanged = (event.meetLocation ?? "") !== (meetLocation || "");
+
+  if (timeChanged || ksuChanged || placeChanged) {
+    const [followers, rsvps, editor] = await Promise.all([
+      prisma.eventFollow.findMany({ where: { eventId: event.id }, select: { riderId: true } }),
+      prisma.rsvp.findMany({
+        where: { eventId: event.id, status: { in: ["GOING", "WAITLISTED", "INTERESTED"] } },
+        select: { riderId: true },
+      }),
+      prisma.rider.findUnique({ where: { userId }, select: { id: true } }),
+    ]);
+
+    const audience = new Set([...followers, ...rsvps].map((r) => r.riderId));
+    // The organizer making the change doesn't need telling.
+    if (editor) audience.delete(editor.id);
+
+    if (audience.size > 0) {
+      const parts: string[] = [];
+      if (timeChanged) parts.push(`now ${formatEventDate(startsAt, timezone)} at ${formatEventTime(startsAt, timezone)}`);
+      if (ksuChanged) parts.push(ksuAt ? `kickstands up ${formatEventTime(ksuAt, timezone)}` : "kickstands-up time removed");
+      if (placeChanged) parts.push(meetLocation ? `meeting at ${meetLocation}` : "meetup location removed");
+      const summary = `${title} changed — ${parts.join(" · ")}`;
+
+      const riderIds = [...audience];
+      await logActivityForRiders(riderIds, {
+        type: "EVENT_UPDATED",
+        summary,
+        refId: event.id,
+      });
+      await Promise.all(
+        riderIds.map((riderId) =>
+          sendPushToRider(riderId, {
+            title: "Ride details changed",
+            body: summary,
+            url: `/events/${event.slug}`,
+            tag: `event-updated-${event.id}`,
+          }).catch(() => {}),
+        ),
+      );
+    }
+  }
+
   revalidatePath(`/events/${event.slug}`);
+  revalidatePath("/notifications");
 }
 
 type PlannerWaypointInput = {
@@ -431,9 +483,12 @@ export async function messageEventRidersAction(
     return { error: "Rider profile not found.", sent: null };
   }
 
-  // CHECKED_IN reads from check-ins; the rest are RSVP states.
+  // CHECKED_IN reads from check-ins, TRACKING from follows; the rest are RSVP states.
   let riderIds: string[];
-  if (audience === "CHECKED_IN") {
+  if (audience === "TRACKING") {
+    const follows = await prisma.eventFollow.findMany({ where: { eventId }, select: { riderId: true } });
+    riderIds = follows.map((row) => row.riderId);
+  } else if (audience === "CHECKED_IN") {
     const checkIns = await prisma.eventCheckIn.findMany({
       where: { eventId },
       select: { riderId: true },

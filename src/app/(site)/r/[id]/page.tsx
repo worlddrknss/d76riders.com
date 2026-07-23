@@ -48,6 +48,7 @@ const PRIVATE_ACTIVITY_TYPES: ActivityType[] = [
   ActivityType.NO_SHOW,
   ActivityType.RIDER_DOWN,
   ActivityType.EVENT_MESSAGE,
+  ActivityType.EVENT_UPDATED,
   ActivityType.RSVP_WAITLISTED,
   ActivityType.WAITLIST_PROMOTED,
   ActivityType.MENTIONED,
@@ -219,14 +220,18 @@ export default async function RiderProfilePage({
         },
       },
       followedEvents: {
-        take: 6,
+        take: 12,
         orderBy: { createdAt: "desc" },
         select: {
           event: {
             select: {
+              id: true,
               slug: true,
               title: true,
               startsAt: true,
+              timezone: true,
+              status: true,
+              meetLocation: true,
             },
           },
         },
@@ -834,6 +839,54 @@ export default async function RiderProfilePage({
       </div>
     );
 
+  // Rides this rider is tracking — soft interest, so owner-only. Tracking says
+  // "might go", and putting that on a public profile invites questions nobody
+  // asked for. Finished rides drop off; what's useful is what's still coming.
+  const trackedEvents = isOwner
+    ? rider.followedEvents
+        .map((row) => row.event)
+        .filter((ev) => ev.status === "UPCOMING" && ev.startsAt >= new Date())
+    : [];
+
+  const trackedSection =
+    trackedEvents.length === 0 ? null : (
+      <div className="mt-8">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+          Tracking · {trackedEvents.length}
+        </h3>
+        <p className="mt-1 text-xs text-muted">
+          Rides you&apos;re watching. You&apos;ll be told if the time or meetup point changes — register to
+          hold a spot.
+        </p>
+        <div className="mt-3 space-y-2">
+          {trackedEvents.map((ev) => {
+            const chip = eventDayMonth(ev.startsAt, ev.timezone ?? DEFAULT_TIMEZONE);
+            return (
+              <Link
+                key={ev.id}
+                href={`/events/${ev.slug}`}
+                className="flex items-center gap-4 rounded-xl border border-border bg-canvas p-3 transition hover:border-sunset/40"
+              >
+                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg bg-surface">
+                  <span className="text-[0.55rem] font-semibold uppercase tracking-wider text-sunset">{chip.month}</span>
+                  <span className="font-display text-base leading-none text-ink">{chip.day}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-sm font-semibold text-ink">{ev.title}</h4>
+                  {ev.meetLocation ? (
+                    <p className="mt-0.5 truncate text-xs text-muted">{ev.meetLocation}</p>
+                  ) : null}
+                </div>
+                <span className="shrink-0 rounded-full bg-canvas px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider text-muted ring-1 ring-border">
+                  Tracking
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+
   // Consolidated tabs: Gear folds into Garage, Photos + Videos into Media, and
   // Skills into Overview — same content, far fewer top-level tabs.
   const sectionHeader = (title: string) => (
@@ -906,7 +959,18 @@ export default async function RiderProfilePage({
     { id: "overview", label: "Overview", content: overviewMerged },
     { id: "journal", label: "Journal", count: rider.journalEntries.length, content: journalContent },
     { id: "garage", label: "Garage", count: rider.bikes.length, content: garageMerged },
-    { id: "events", label: "Events", count: profileEvents.length, content: eventsContent },
+    {
+      id: "events",
+      label: "Events",
+      count: profileEvents.length,
+      content: (
+        <>
+          {/* Don't show "no rides yet" to someone who is clearly tracking some. */}
+          {profileEvents.length === 0 && trackedEvents.length > 0 ? null : eventsContent}
+          {trackedSection}
+        </>
+      ),
+    },
     { id: "media", label: "Media", count: profilePhotos.length + rider.videos.length, content: mediaMerged },
   ];
 

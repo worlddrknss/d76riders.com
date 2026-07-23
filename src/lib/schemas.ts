@@ -59,6 +59,8 @@ export const eventMessageAudienceSchema = z.enum([
   "WAITLISTED",
   "INTERESTED",
   "CHECKED_IN",
+  // Riders who tapped Track — soft interest, never RSVP'd.
+  "TRACKING",
 ]);
 
 export const eventMessageSchema = z.object({

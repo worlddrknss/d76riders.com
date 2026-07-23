@@ -43,6 +43,7 @@ const STYLES: Partial<Record<ActivityType, { icon: ComponentType<{ className?: s
   COMPLETED_RIDE: { icon: Flag, tint: "text-forest bg-forest/10" },
   CHECK_IN: { icon: MapPin, tint: "text-forest bg-forest/10" },
   CHECK_OUT: { icon: MapPin, tint: "text-muted bg-asphalt/5" },
+  EVENT_UPDATED: { icon: CalendarDays, tint: "text-sunset bg-sunset/10" },
   FOLLOWED_RIDER: { icon: UserPlus, tint: "text-sunset bg-sunset/10" },
   FAVORITED_BUILD: { icon: Sparkles, tint: "text-sunset bg-sunset/10" },
   BADGE_EARNED: { icon: Award, tint: "text-sunset bg-sunset/10" },
