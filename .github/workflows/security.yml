@@ -32,8 +32,8 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: NPM audit (high and critical)
-        run: npm audit --audit-level=high
+      - name: NPM audit (high and critical, minus accepted advisories)
+        run: node scripts/audit-check.mjs
 
       - name: Trivy filesystem scan (SARIF)
         uses: aquasecurity/trivy-action@master
