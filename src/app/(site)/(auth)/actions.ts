@@ -188,6 +188,8 @@ export async function loginAction(
     select: {
       id: true,
       passwordHash: true,
+      suspendedAt: true,
+      suspendedReason: true,
     },
   });
 
@@ -199,6 +201,18 @@ export async function loginAction(
 
   if (!isValidPassword) {
     return { error: "Invalid email or password." };
+  }
+
+  // Checked after the password so the response can't be used to discover which
+  // addresses belong to suspended accounts. A suspended rider is told plainly —
+  // an account that silently stops working reads as a bug and generates a
+  // support thread instead of an appeal.
+  if (user.suspendedAt) {
+    return {
+      error: user.suspendedReason
+        ? `This account is suspended: ${user.suspendedReason}`
+        : "This account is suspended. Contact a moderator if you think that's a mistake.",
+    };
   }
 
   await createUserSession(user.id);

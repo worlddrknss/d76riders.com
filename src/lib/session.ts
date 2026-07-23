@@ -75,6 +75,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
           email: true,
           emailVerified: true,
           image: true,
+          suspendedAt: true,
           rider: {
             select: {
               handle: true,
@@ -98,6 +99,14 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   if (session.expires < new Date()) {
     await prisma.session.delete({ where: { sessionToken } });
+    return null;
+  }
+
+  // Suspension has to bite on the session, not just at login — otherwise an
+  // already-signed-in account carries on for up to thirty days. Every session
+  // goes, so the block holds across their other devices too.
+  if (session.user.suspendedAt) {
+    await prisma.session.deleteMany({ where: { userId: session.user.id } });
     return null;
   }
 

@@ -36,8 +36,21 @@ model User {
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
 
+  // Suspension. Null = in good standing. A suspended account keeps all of its
+  // content — this is a lock on the door, not a delete — but its sessions are
+  // dropped and it cannot log back in. The reason is shown to the rider so a
+  // suspension is never a silent disappearance, and the moderator who applied
+  // it is recorded because "who did this" is the first question every time.
+  suspendedAt     DateTime?
+  suspendedReason String?
+  suspendedById   String?
+  suspendedBy     User?     @relation("UserSuspender", fields: [suspendedById], references: [id], onDelete: SetNull)
+  suspendedUsers  User[]    @relation("UserSuspender")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([suspendedAt])
 }
 
 model UserRole {
