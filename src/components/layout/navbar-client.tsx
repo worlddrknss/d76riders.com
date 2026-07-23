@@ -224,7 +224,12 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`sticky top-0 z-50 text-white transition-all duration-300 ${
+      // safe-pt is the site-wide half of the PWA fix: the header is the only
+      // thing anchored to the top of the viewport, so insetting it pushes every
+      // page below the status bar. Its background still runs edge to edge, which
+      // is what black-translucent expects. --nav-h is measured off this element,
+      // so the app rail and admin sidebar follow the new height on their own.
+      className={`safe-pt sticky top-0 z-50 text-white transition-all duration-300 ${
         scrolled
           ? "border-b border-white/10 bg-asphalt/80 backdrop-blur-xl shadow-lg"
           : "border-b border-white/10 bg-asphalt"
