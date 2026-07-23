@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Clock, MapPin, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
+import { ChevronRight, Clock, Mountain, Route as RouteIcon, Signal, UserRound } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { RoadWeatherPanel } from "@/components/weather/weather-panel";
@@ -258,11 +258,6 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 <p className="mt-1.5 text-sm font-medium text-ink">{difficultyLabel(road.difficulty)}</p>
                 <p className="text-xs text-muted">Skill level</p>
               </div>
-              <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Upkeep</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">Community</p>
-                <p className="text-xs text-muted">Any rider can keep it current</p>
-              </div>
               {elevationGainFt != null && (
                 <div className="rounded-lg border border-border bg-canvas p-4">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Elevation</div>
@@ -292,10 +287,11 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
               </div>
             )}
 
-            {/* FOOTER: Shared by */}
-            <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-border pt-5 text-sm text-muted">
-              <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Shared by: <Link href={`/r/${road.rider.handle}`} className="font-medium text-ink hover:text-sunset">{road.rider.name}</Link></span>
-              <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-sunset" />@{road.rider.handle}</span>
+            {/* FOOTER: attribution + the community-maintained note (was a filler
+                stat card that orphaned the 2-up grid). */}
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-5 text-sm text-muted">
+              <span className="inline-flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />Shared by <Link href={`/r/${road.rider.handle}`} className="font-medium text-ink hover:text-sunset">{road.rider.name}</Link></span>
+              <span className="inline-flex items-center gap-2"><Mountain className="h-4 w-4 text-sunset" />Community-maintained — any rider can keep it current</span>
             </div>
           </div>
 
