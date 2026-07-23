@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BarChart3, CalendarDays, CalendarPlus, ChevronRight, Clock3, Flag, MapPin, Route as RouteIcon, Signal, UserCheck, UserRound } from "lucide-react";
+import { BarChart3, CalendarDays, CalendarPlus, CalendarX, ChevronRight, Clock3, Flag, MapPin, Route as RouteIcon, Signal, UserCheck, UserRound } from "lucide-react";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -363,7 +363,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const isTracking = viewerRider ? event.followers.some((item) => item.riderId === viewerRider.id) : false;
 
   const now = new Date();
-  const rsvpClosed = event.rsvpDeadline ? event.rsvpDeadline.getTime() < now.getTime() : false;
+  // Closed by the deadline, or because the ride is off/finished. The action
+  // enforces all three; this is what stops the button offering it in the first place.
+  const rsvpClosed =
+    event.status === "CANCELLED" ||
+    event.status === "COMPLETED" ||
+    (event.rsvpDeadline ? event.rsvpDeadline.getTime() < now.getTime() : false);
   const capacityFull = event.maxCapacity != null && attendeeCount >= event.maxCapacity;
 
   // Check-in state — "today" is judged in the event's own timezone.
@@ -554,6 +559,22 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       ) : null}
       <div className="space-y-6">
+        {/* A cancelled ride is the one thing on this page that must not be
+            missed. The status pill beside the title is easy to skim past when
+            every other detail still reads like a live ride. */}
+        {event.status === "CANCELLED" ? (
+          <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 p-4">
+            <CalendarX className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <div>
+              <p className="font-display text-base text-red-800">This ride was cancelled</p>
+              <p className="mt-0.5 text-sm text-red-700">
+                The organizer called it off. Everything below is kept for the record — the details, route
+                and photos are still here, but nobody is riding this one.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest">
           <Link href="/" className="text-muted transition hover:text-sunset">Home</Link>
@@ -591,6 +612,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               <EventManageActions
                 event={{
                   id: event.id,
+                  status: event.status,
                   title: event.title,
                   excerpt: event.excerpt,
                   description: event.description,

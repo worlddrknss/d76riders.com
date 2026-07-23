@@ -24,6 +24,27 @@ import { eventMessageSchema, riderDownSchema, rsvpIntentSchema } from "@/lib/sch
 import { getCurrentUser } from "@/lib/session";
 import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
+/**
+ * Everyone who should hear about a change to this ride: riders holding a place
+ * (going, waitlisted, interested) plus riders tracking it. Riders who declined
+ * are left out — they weren't coming, so telling them is noise.
+ *
+ * Shared by cancel, reopen and delete so the three can't drift on who counts.
+ */
+async function rideAudienceRiderIds(eventId: string, excludeRiderId?: string | null): Promise<string[]> {
+  const [rsvps, followers] = await Promise.all([
+    prisma.rsvp.findMany({
+      where: { eventId, status: { in: ["GOING", "WAITLISTED", "INTERESTED"] } },
+      select: { riderId: true },
+    }),
+    prisma.eventFollow.findMany({ where: { eventId }, select: { riderId: true } }),
+  ]);
+
+  const ids = new Set([...rsvps, ...followers].map((row) => row.riderId));
+  if (excludeRiderId) ids.delete(excludeRiderId);
+  return [...ids];
+}
+
 // Organizer rider ids for an event (for fanning out notifications).
 async function organizerRiderIds(eventId: string): Promise<string[]> {
   const organizers = await prisma.eventOrganizer.findMany({
@@ -395,6 +416,93 @@ export async function saveEventRouteAction(
   return { error: null };
 }
 
+/**
+ * Call a ride off without destroying it.
+ *
+ * Deleting was the only way to cancel, which also took the photos, the route,
+ * the roster and every rider's record of having been there. A cancelled ride
+ * keeps its page — riders who arrive at a stale link get an answer instead of a
+ * 404 — and can be reopened if the weather call goes the other way.
+ *
+ * HOST-only, matching delete: a sweep or marshal shouldn't be able to call off
+ * someone else's ride.
+ */
+export async function cancelEventAction(eventId: string): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const event = await prisma.rideEvent.findFirst({
+    where: { id: eventId, organizers: { some: { rider: { userId }, role: "HOST" } } },
+    select: { id: true, slug: true, title: true, status: true, startsAt: true, timezone: true },
+  });
+  if (!event) return { error: "Only this ride's host can cancel it." };
+  if (event.status === "CANCELLED") return { error: null };
+  if (event.status === "COMPLETED") return { error: "This ride has already been completed." };
+
+  await prisma.rideEvent.update({ where: { id: event.id }, data: { status: "CANCELLED" } });
+
+  const host = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  const riderIds = await rideAudienceRiderIds(event.id, host?.id);
+
+  if (riderIds.length > 0) {
+    const summary = `${event.title} on ${formatEventDate(event.startsAt, event.timezone)} was cancelled by the organizer.`;
+    await logActivityForRiders(riderIds, { type: "EVENT_CANCELLED", summary, refId: event.id });
+    await mapWithConcurrency(riderIds, 8, (riderId) =>
+      sendPushToRider(riderId, {
+        title: "Ride cancelled",
+        body: summary,
+        url: `/events/${event.slug}`,
+        tag: `event-cancelled-${event.id}`,
+      }).catch(() => {}),
+    );
+  }
+
+  revalidatePath(`/events/${event.slug}`);
+  revalidatePath("/events");
+  revalidatePath("/notifications");
+  return { error: null };
+}
+
+/**
+ * Put a cancelled ride back on. The same people who were told it was off are
+ * told it's back — a cancellation nobody can see reversed is worse than not
+ * being able to reverse it.
+ */
+export async function reopenEventAction(eventId: string): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const event = await prisma.rideEvent.findFirst({
+    where: { id: eventId, organizers: { some: { rider: { userId }, role: "HOST" } } },
+    select: { id: true, slug: true, title: true, status: true, startsAt: true, timezone: true },
+  });
+  if (!event) return { error: "Only this ride's host can reopen it." };
+  if (event.status !== "CANCELLED") return { error: null };
+
+  await prisma.rideEvent.update({ where: { id: event.id }, data: { status: "UPCOMING" } });
+
+  const host = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  const riderIds = await rideAudienceRiderIds(event.id, host?.id);
+
+  if (riderIds.length > 0) {
+    const summary = `${event.title} is back on — ${formatEventDate(event.startsAt, event.timezone)} at ${formatEventTime(event.startsAt, event.timezone)}.`;
+    await logActivityForRiders(riderIds, { type: "EVENT_UPDATED", summary, refId: event.id });
+    await mapWithConcurrency(riderIds, 8, (riderId) =>
+      sendPushToRider(riderId, {
+        title: "Ride is back on",
+        body: summary,
+        url: `/events/${event.slug}`,
+        tag: `event-reopened-${event.id}`,
+      }).catch(() => {}),
+    );
+  }
+
+  revalidatePath(`/events/${event.slug}`);
+  revalidatePath("/events");
+  revalidatePath("/notifications");
+  return { error: null };
+}
+
 export async function deleteEventAction(eventId: string): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
@@ -415,21 +523,9 @@ export async function deleteEventAction(eventId: string): Promise<void> {
 
   const urls = event.galleryItems.map((item) => item.url);
 
-  // Who to tell, gathered before the transaction wipes the rows that say so.
-  // Riders who explicitly declined ("NOT_GOING") aren't included — they already
-  // weren't coming, and telling them is noise.
-  const [rsvps, followers, host] = await Promise.all([
-    prisma.rsvp.findMany({
-      where: { eventId: event.id, status: { in: ["GOING", "WAITLISTED", "INTERESTED"] } },
-      select: { riderId: true },
-    }),
-    prisma.eventFollow.findMany({ where: { eventId: event.id }, select: { riderId: true } }),
-    prisma.rider.findUnique({ where: { userId }, select: { id: true } }),
-  ]);
-
-  const audience = new Set([...rsvps, ...followers].map((row) => row.riderId));
-  // The host doing the cancelling knows.
-  if (host) audience.delete(host.id);
+  // Gathered before the transaction wipes the very rows that say who to tell.
+  const host = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  const audience = new Set(await rideAudienceRiderIds(event.id, host?.id));
 
   await prisma.$transaction(async (tx) => {
     // Delete related records that may not cascade automatically
@@ -605,7 +701,7 @@ export async function rsvpAction(
 
   const event = await prisma.rideEvent.findUnique({
     where: { id: eventId },
-    select: { id: true, slug: true, title: true, maxCapacity: true, rsvpDeadline: true },
+    select: { id: true, slug: true, title: true, status: true, maxCapacity: true, rsvpDeadline: true },
   });
   if (!event) {
     return { error: "Event not found.", status: null };
@@ -628,6 +724,15 @@ export async function rsvpAction(
     revalidatePath(`/events/${event.slug}`);
     revalidatePath("/events");
     return { error: null, status: "CANCELLED" };
+  }
+
+  // A cancelled or finished ride takes no new RSVPs. Withdrawing is handled
+  // above and stays allowed, so nobody is stuck on a roster for a dead ride.
+  if (event.status === "CANCELLED") {
+    return { error: "This ride was cancelled.", status: null };
+  }
+  if (event.status === "COMPLETED") {
+    return { error: "This ride has already happened.", status: null };
   }
 
   // RSVP cutoff.

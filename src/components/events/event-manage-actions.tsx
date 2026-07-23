@@ -2,9 +2,14 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, X } from "lucide-react";
+import { CalendarX, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 
-import { updateEventAction, deleteEventAction } from "@/app/(site)/events/[slug]/actions";
+import {
+  updateEventAction,
+  deleteEventAction,
+  cancelEventAction,
+  reopenEventAction,
+} from "@/app/(site)/events/[slug]/actions";
 import { EventPreview } from "@/components/events/event-preview";
 import { LocationAutocomplete } from "@/components/events/location-autocomplete";
 import { Button } from "@/components/ui/button";
@@ -51,6 +56,8 @@ type EventData = {
   photoUrl: string | null;
   hasPhoto: boolean;
   hasRoute: boolean;
+  /** Drives whether the toolbar offers Cancel or Reopen. */
+  status: string;
 };
 
 const labelClass = "text-xs font-semibold uppercase tracking-[0.08em] text-muted";
@@ -67,6 +74,7 @@ export function EventManageActions({
   const [editOpen, setEditOpen] = useState(false);
   const [editPending, startEditTransition] = useTransition();
   const [deletePending, startDeleteTransition] = useTransition();
+  const [cancelPending, startCancelTransition] = useTransition();
   const router = useRouter();
 
   // Controlled only for the fields the live preview reflects.
@@ -141,6 +149,20 @@ export function EventManageActions({
     });
   }
 
+  function handleCancel() {
+    startCancelTransition(async () => {
+      await cancelEventAction(event.id);
+      router.refresh();
+    });
+  }
+
+  function handleReopen() {
+    startCancelTransition(async () => {
+      await reopenEventAction(event.id);
+      router.refresh();
+    });
+  }
+
   function handleDelete() {
     startDeleteTransition(async () => {
       await deleteEventAction(event.id);
@@ -164,11 +186,54 @@ export function EventManageActions({
         >
           <Pencil className="h-3.5 w-3.5" />
         </Button>
+        {/* Cancel before delete: calling a ride off is the common case, and
+            deleting takes the photos, route and roster with it. */}
+        {event.status === "CANCELLED" ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Put this ride back on"
+            onClick={handleReopen}
+            disabled={cancelPending}
+            className="h-8 w-8 bg-white/80 text-forest backdrop-blur hover:text-forest/80"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+        ) : (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                title="Cancel this ride"
+                className="h-8 w-8 bg-white/80 text-amber-600 backdrop-blur hover:text-amber-700"
+              >
+                <CalendarX className="h-3.5 w-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this ride?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Everyone registered or tracking gets told straight away. The page, photos, route and
+                  roster all stay, and you can put it back on later.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep it on</AlertDialogCancel>
+                <AlertDialogAction onClick={handleCancel} disabled={cancelPending}>
+                  {cancelPending ? "Cancelling…" : "Cancel ride"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
+              title="Delete this ride"
               className="h-8 w-8 bg-white/80 text-red-600 backdrop-blur hover:text-red-700"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -178,7 +243,8 @@ export function EventManageActions({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this event?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. The event, its cover image, and attached route will be permanently removed.
+                This cannot be undone — the ride, its photos, route and roster go with it. To call the ride
+                off but keep the page and its history, cancel it instead.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

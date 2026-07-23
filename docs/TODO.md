@@ -21,10 +21,3 @@ if you need what they said.
 - [ ] 2026-09-01 — review the two accepted advisories in `scripts/audit-check.mjs`.
       Both are postcss/sharp bundled inside Next with no fix available. Run
       `npm run audit:check`; it flags an entry once it stops being reported.
-
-## Known gaps, not yet decided
-
-- `EventStatus.CANCELLED` exists and the event page renders a cancelled state,
-  but no action ever sets it — deleting is currently the only way to call off a
-  ride, which also destroys its photos, route and roster. A soft cancel would
-  keep the page and history and send the same notification the delete does.
