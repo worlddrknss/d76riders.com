@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
-import Image from "next/image";
-import Link from "next/link";
-import { MapPin, Route as RouteIcon, Signal, Star } from "lucide-react";
+import { Route as RouteIcon } from "lucide-react";
 
 import { CreateRoadDialog } from "@/components/roads/create-road-dialog";
+import { RoadCard } from "@/components/roads/road-card";
 import { RoadFilters } from "@/components/roads/road-filters";
 import { AppShell } from "@/components/layout/app-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { StaggerList, StaggerItem } from "@/components/ui/motion";
 import { prisma } from "@/lib/prisma";
-import { mediaUrl } from "@/lib/media-url";
 import { haversineMiles } from "@/lib/routing";
 import { getCurrentUser } from "@/lib/session";
 
@@ -26,9 +24,6 @@ export const metadata: Metadata = {
   },
 };
 
-function difficultyLabel(value: string | null): string {
-  return value ? value.replaceAll("_", " ") : "Not specified";
-}
 
 // A road's representative point for "near me": its route's KSU, else the first
 // coordinate of the route geometry (GeoJSON LineString or Feature). Null when
@@ -53,7 +48,7 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
   const currentUser = await getCurrentUser();
 
   const viewer = currentUser
-    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { latitude: true, longitude: true } })
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { name: true, handle: true, latitude: true, longitude: true } })
     : null;
   const viewerPoint: [number, number] | null =
     viewer?.latitude != null && viewer?.longitude != null ? [viewer.longitude, viewer.latitude] : null;
@@ -111,7 +106,9 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
         icon={RouteIcon}
         title="Roads"
         subtitle="Discover the best roads in Tennessee and beyond. Community-shared routes with scenic ratings, difficulty levels, and saved GPS geometry."
-        action={currentUser ? <CreateRoadDialog /> : undefined}
+        action={
+          viewer ? <CreateRoadDialog riderName={viewer.name} riderHandle={viewer.handle} /> : undefined
+        }
       />
 
       <div className="space-y-6">
@@ -122,37 +119,24 @@ export default async function RoadsPage({ searchParams }: RoadsPageProps) {
               <p className="text-sm text-muted">No roads found matching your filters.</p>
             </div>
           ) : (
-            <StaggerList className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <StaggerList className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {roads.map(({ road, distance }) => (
                 <StaggerItem key={road.id}>
-                <Link href={`/roads/${road.slug}`} className="group overflow-hidden rounded-xl border border-border bg-surface shadow-soft transition hover:shadow-lift">
-                  {road.galleryItems[0]?.url ? <Image src={mediaUrl(road.galleryItems[0].url)} alt={road.galleryItems[0].caption || road.name} width={400} height={176} className="h-44 w-full object-cover transition group-hover:scale-[1.02]" /> : null}
-                  <div className="p-5">
-                    <p className="font-display text-lg text-asphalt group-hover:text-sunset">{road.name}</p>
-                    <p className="mt-2 line-clamp-2 text-sm text-muted">{road.description || "No road description yet."}</p>
-                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
-                      <span className="inline-flex items-center gap-1"><RouteIcon className="h-3.5 w-3.5 text-sunset" />{road.distanceMiles ? `${road.distanceMiles} miles` : "Distance TBD"}</span>
-                      <span className="inline-flex items-center gap-1"><Signal className="h-3.5 w-3.5 text-sunset" />{difficultyLabel(road.difficulty)}</span>
-                      {(() => {
-                        const quality = road.qualityScore ?? road.scenicRating;
-                        return (
-                          <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-sunset" />{quality != null ? `${quality.toFixed(1)} quality` : "Unrated"}</span>
-                        );
-                      })()}
-                      {distance != null ? (
-                        <span className="inline-flex items-center gap-1 font-semibold text-sunset"><MapPin className="h-3.5 w-3.5" />{Math.round(distance)} mi away</span>
-                      ) : null}
-                    </div>
-                    {(road.scenicRating != null || road.conditionRating != null || road.twistinessRating != null) && (
-                      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[0.7rem] text-muted">
-                        {road.scenicRating != null && <span><span className="text-ink/60">Scenery</span> <b className="font-semibold text-ink">{road.scenicRating.toFixed(1)}</b></span>}
-                        {road.conditionRating != null && <span><span className="text-ink/60">Pavement</span> <b className="font-semibold text-ink">{road.conditionRating.toFixed(1)}</b></span>}
-                        {road.twistinessRating != null && <span><span className="text-ink/60">Twistiness</span> <b className="font-semibold text-ink">{road.twistinessRating.toFixed(1)}</b></span>}
-                      </div>
-                    )}
-                    <p className="mt-3 text-xs text-muted inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />Shared by {road.rider.name} (@{road.rider.handle})</p>
-                  </div>
-                </Link>
+                  <RoadCard
+                    road={{
+                      slug: road.slug,
+                      name: road.name,
+                      description: road.description,
+                      distanceMiles: road.distanceMiles,
+                      difficulty: road.difficulty,
+                      qualityScore: road.qualityScore,
+                      scenicRating: road.scenicRating,
+                      imageUrl: road.galleryItems[0]?.url ?? null,
+                      riderName: road.rider.name,
+                      riderHandle: road.rider.handle,
+                      distanceAway: distance,
+                    }}
+                  />
                 </StaggerItem>
               ))}
             </StaggerList>

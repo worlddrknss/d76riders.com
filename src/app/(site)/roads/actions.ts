@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 
 import { RideDifficulty } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireUserId } from "@/lib/authz";
@@ -13,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { distanceMilesFromGeometry } from "@/lib/routing";
 import { routeGeometrySchema, routeWaypointsSchema } from "@/lib/schemas";
 import { getCurrentUser } from "@/lib/session";
-import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
+import { deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 
 export type RoadFormState = {
   error: string | null;
@@ -178,16 +179,102 @@ export async function createRoadAction(_previousState: RoadFormState, formData: 
   redirect(`/roads/${slug}`);
 }
 
+/**
+ * Attach or replace a road's route from the planner.
+ *
+ * Mirrors saveEventRouteAction: the single entry point for road route geometry,
+ * so a road created without one can get it later and an existing route is
+ * replaced by drawing a new one. Open to any signed-in rider. Distance is
+ * derived from the
+ * geometry server-side rather than trusted from the client.
+ */
+export async function saveRoadRouteAction(
+  roadId: string,
+  payload: { geometry: string; waypoints: string; distanceMiles: string },
+): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  requireUserId(currentUser?.id);
+
+  // Roads are community-maintained: any signed-in rider can draw or replace a
+  // route to keep it current. Deleting the road is the only owner/admin action.
+  const road = await prisma.road.findUnique({
+    where: { id: roadId },
+    select: { id: true, slug: true, name: true, riderId: true, routeId: true },
+  });
+  if (!road) return { error: "Road not found." };
+
+  const geometryResult = routeGeometrySchema.safeParse(parseJsonValue(payload.geometry));
+  const geometry = geometryResult.success ? geometryResult.data : null;
+  if (!geometry || geometry.coordinates.length < 2) {
+    return { error: "Draw a route with at least two points before saving." };
+  }
+  const waypointsResult = routeWaypointsSchema.safeParse(parseJsonValue(payload.waypoints) ?? []);
+  const waypoints = waypointsResult.success ? waypointsResult.data : [];
+
+  const derivedMiles = distanceMilesFromGeometry(geometry.coordinates as [number, number][]);
+  const distanceMiles = derivedMiles ?? toOptionalFloat(payload.distanceMiles);
+  const ksu = waypoints.find((w) => w.kind === "KSU");
+  const start = waypoints.find((w) => w.kind === "START");
+  const elevationGainFt = await computeElevationGainFt(geometry.coordinates as [number, number][]);
+  const previousRouteId = road.routeId;
+
+  await prisma.$transaction(async (tx) => {
+    const route = await tx.route.create({
+      data: {
+        riderId: road.riderId,
+        name: `${road.name} Route`,
+        distanceMiles,
+        elevationGainFt,
+        geometry,
+        ksuLat: ksu?.lat ?? start?.lat ?? null,
+        ksuLng: ksu?.lng ?? start?.lng ?? null,
+        waypoints: waypoints.length
+          ? {
+              create: waypoints.map((w, index) => ({
+                label: w.label || null,
+                type: w.kind,
+                lat: w.lat,
+                lng: w.lng,
+                order: index,
+              })),
+            }
+          : undefined,
+      },
+      select: { id: true },
+    });
+
+    await tx.road.update({
+      where: { id: road.id },
+      data: {
+        routeId: route.id,
+        distanceMiles: distanceMiles ? Math.round(distanceMiles) : undefined,
+      },
+    });
+
+    // Replace, don't orphan: the old route's waypoints cascade with it.
+    if (previousRouteId) {
+      await tx.route.delete({ where: { id: previousRouteId } });
+    }
+  });
+
+  revalidatePath(`/roads/${road.slug}`);
+  revalidatePath("/roads");
+  return { error: null };
+}
+
 export async function deleteRoadAction(roadId: string): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
-  const road = await prisma.road.findFirst({
-    where: { id: roadId, rider: { userId } },
-    include: { galleryItems: true },
+  // Deleting stays restricted to the creator or an admin. Everyone can maintain
+  // a road; nobody random gets to remove it.
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
+  const road = await prisma.road.findUnique({
+    where: { id: roadId },
+    include: { galleryItems: true, rider: { select: { userId: true } } },
   });
 
-  if (!road) {
+  if (!road || !(isAdmin || road.rider.userId === userId)) {
     redirect("/roads");
   }
 
@@ -198,16 +285,18 @@ export async function deleteRoadAction(roadId: string): Promise<void> {
       await tx.route.delete({ where: { id: road.routeId } });
     }
   });
-  await Promise.all(urls.map((url) => deleteFileByUrl(url)));
+  await deleteFilesByUrls(urls);
   redirect("/roads");
 }
 
 export async function updateRoadAction(roadId: string, formData: FormData): Promise<void> {
   const currentUser = await getCurrentUser();
-  const userId = requireUserId(currentUser?.id);
+  requireUserId(currentUser?.id);
 
-  const road = await prisma.road.findFirst({
-    where: { id: roadId, rider: { userId } },
+  // Community-maintained: any signed-in rider can edit a road's details to keep
+  // them accurate. The creator's attribution is unchanged.
+  const road = await prisma.road.findUnique({
+    where: { id: roadId },
     include: {
       galleryItems: true,
       route: { include: { waypoints: true } },

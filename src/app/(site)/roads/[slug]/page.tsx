@@ -11,6 +11,7 @@ import { HazardList } from "@/components/hazards/hazard-list";
 import { HazardMap } from "@/components/hazards/hazard-map";
 import { ReportHazardDialog } from "@/components/hazards/report-hazard-dialog";
 import { RoadManageActions } from "@/components/roads/road-manage-actions";
+import { RoadRoutePlannerButton } from "@/components/roads/road-route-planner-button";
 import { RoadQualityCard } from "@/components/roads/road-quality-card";
 import { RouteStops } from "@/components/routes/route-stops";
 import { elevationDifficulty } from "@/lib/elevation";
@@ -222,23 +223,27 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 <h1 className="font-display text-3xl text-ink">{road.name}</h1>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{road.description || "No road description yet."}</p>
               </div>
-              {isOwner && (
-                <div className="flex shrink-0 items-center gap-1">
+              {/* Community-maintained: any signed-in rider can edit and add or
+                  redraw the route. Delete stays with the creator or an admin. */}
+              {currentUser ? (
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  <RoadRoutePlannerButton roadId={road.id} hasRoute={!!road.route} />
                   <RoadManageActions
                     road={{
                       id: road.id,
                       name: road.name,
                       description: road.description,
                       difficulty: road.difficulty,
-                      scenicRating: road.scenicRating,
                       hasImage: !!road.galleryItems[0]?.url,
                       hasRoute: !!road.route,
-                      routeName: road.route?.name ?? null,
-                      routeDescription: road.route?.description ?? null,
+                      coverImageUrl: road.galleryItems[0]?.url ? mediaUrl(road.galleryItems[0].url) : null,
+                      riderName: road.rider.name,
+                      riderHandle: road.rider.handle,
+                      canDelete: isOwner || isAdmin,
                     }}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* INFO CARDS */}
@@ -254,9 +259,9 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
                 <p className="text-xs text-muted">Skill level</p>
               </div>
               <div className="rounded-lg border border-border bg-canvas p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Type</div>
-                <p className="mt-1.5 text-sm font-medium text-ink">Featured Road</p>
-                <p className="text-xs text-muted">Community curated</p>
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-sunset"><Mountain className="h-3.5 w-3.5" />Upkeep</div>
+                <p className="mt-1.5 text-sm font-medium text-ink">Community</p>
+                <p className="text-xs text-muted">Any rider can keep it current</p>
               </div>
               {elevationGainFt != null && (
                 <div className="rounded-lg border border-border bg-canvas p-4">
