@@ -6,7 +6,6 @@ import { readingMinutes } from "@/lib/reading-time";
 
 type ArticlePreviewProps = {
   title: string;
-  excerpt: string;
   categoryName: string;
   contentHtml: string;
   /** Object URL of the chosen cover, before upload. */
@@ -22,11 +21,11 @@ type ArticlePreviewProps = {
  *
  * Scaled down to sit in the composer's side column: the hero is shorter and the
  * body is clipped, since the point is checking the shape and the framing rather
- * than proofreading at full size.
+ * than proofreading at full size. The excerpt is absent for the same reason it
+ * is absent from the article — it belongs to the listing card, not the page.
  */
 export function ArticlePreview({
   title,
-  excerpt,
   categoryName,
   contentHtml,
   coverUrl,
@@ -91,21 +90,13 @@ export function ArticlePreview({
       </div>
 
       <div className="p-4">
-        {excerpt.trim() ? (
-          <p className="border-l-2 border-sunset pl-3 text-sm leading-relaxed text-ink">{excerpt}</p>
-        ) : (
-          <p className="border-l-2 border-border pl-3 text-sm italic text-muted/70">
-            Your excerpt appears here, above the article.
-          </p>
-        )}
-
         {contentHtml.trim() ? (
           <div
-            className="prose prose-reading prose-sm mt-4 max-h-64 overflow-hidden text-sm prose-headings:uppercase prose-headings:tracking-tight"
+            className="prose prose-reading prose-sm max-h-72 overflow-hidden text-sm prose-headings:uppercase prose-headings:tracking-tight"
             dangerouslySetInnerHTML={{ __html: contentHtml }}
           />
         ) : (
-          <p className="mt-4 text-sm italic text-muted/70">Start writing and the article appears here.</p>
+          <p className="text-sm italic text-muted/70">Start writing and the article appears here.</p>
         )}
       </div>
     </div>

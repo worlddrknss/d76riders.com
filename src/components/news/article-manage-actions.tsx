@@ -245,7 +245,6 @@ export function ArticleManageActions({
                       <div className="mt-3">
                         <ArticlePreview
                           title={title}
-                          excerpt={excerpt}
                           categoryName={categoryName}
                           contentHtml={contentHtml}
                           coverUrl={previewCover}

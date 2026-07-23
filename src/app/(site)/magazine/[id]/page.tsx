@@ -247,16 +247,11 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
         {/* The body sits on a surface card like everything else on the site —
             long-form copy directly on the canvas read as an unfinished page. */}
         <article className="min-w-0 rounded-2xl border border-border bg-surface p-6 shadow-soft sm:p-9">
-          {/* The excerpt was written for every article and shown on none of
-              them — it earns its place as the standfirst. */}
-          {post.excerpt ? (
-            <p className="border-l-2 border-sunset pl-4 text-base leading-relaxed text-ink sm:text-lg">
-              {post.excerpt}
-            </p>
-          ) : null}
-
+          {/* No standfirst here — the excerpt already does its work on the
+              listing card and in the share preview; repeating it above the
+              opening line just says the same thing twice. */}
           <div
-            className="prose prose-sm prose-reading mt-8 max-w-[72ch] prose-headings:uppercase prose-headings:tracking-tight prose-h2:text-xl prose-h3:text-lg prose-img:rounded-xl"
+            className="prose prose-sm prose-reading max-w-[72ch] prose-headings:uppercase prose-headings:tracking-tight prose-h2:text-xl prose-h3:text-lg prose-img:rounded-xl"
             dangerouslySetInnerHTML={{ __html: body }}
           />
 

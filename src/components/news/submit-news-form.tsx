@@ -109,7 +109,7 @@ export function SubmitNewsForm({
           value={excerpt}
           onChange={(e) => setExcerpt(e.target.value)}
           className="rounded-lg border border-border bg-canvas px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:border-sunset/70 focus:outline-none"
-          placeholder="Short summary shown on the magazine listing and above the article"
+          placeholder="Short summary shown on the magazine listing and in link previews"
           required
         />
       </label>
@@ -165,7 +165,6 @@ export function SubmitNewsForm({
   const preview = (
     <ArticlePreview
       title={title}
-      excerpt={excerpt}
       categoryName={categoryName}
       contentHtml={contentHtml}
       coverUrl={coverUrl}
