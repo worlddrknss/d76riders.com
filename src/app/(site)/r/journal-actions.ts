@@ -55,6 +55,8 @@ export async function toggleJournalLikeAction(entryId: string): Promise<void> {
     revalidatePath(`/r/${entry.author.handle}`);
   }
   revalidatePath("/");
+  // The feed also lives at /feed — revalidating only "/" left it stale.
+  revalidatePath("/feed");
 }
 
 // Toggle a private save (bookmark) on a journal post. Never public, no count on
@@ -84,6 +86,8 @@ export async function toggleJournalSaveAction(entryId: string): Promise<void> {
     revalidatePath(`/r/${entry.author.handle}`);
   }
   revalidatePath("/");
+  // The feed also lives at /feed — revalidating only "/" left it stale.
+  revalidatePath("/feed");
   revalidatePath("/saved");
 }
 
@@ -135,6 +139,8 @@ export async function addJournalCommentAction(entryId: string, formData: FormDat
     revalidatePath(`/r/${entry.author.handle}`);
   }
   revalidatePath("/");
+  // The feed also lives at /feed — revalidating only "/" left it stale.
+  revalidatePath("/feed");
 }
 
 export async function deleteJournalCommentAction(commentId: string): Promise<void> {
@@ -153,4 +159,6 @@ export async function deleteJournalCommentAction(commentId: string): Promise<voi
     revalidatePath(`/r/${comment.journalEntry.author.handle}`);
   }
   revalidatePath("/");
+  // The feed also lives at /feed — revalidating only "/" left it stale.
+  revalidatePath("/feed");
 }

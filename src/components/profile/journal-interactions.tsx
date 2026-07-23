@@ -41,6 +41,29 @@ export function JournalInteractions({
   entryUrl,
 }: JournalInteractionsProps) {
   const [showComments, setShowComments] = useState(false);
+  // Like and save paint immediately rather than waiting on the server.
+  //
+  // Relying on revalidation alone never worked in the feed: FeedList re-seeds
+  // only when the first page's `${id}:${length}` signature changes, and a like
+  // changes neither an id nor the count — so the client kept its stale copy and
+  // the reaction only appeared after a manual reload.
+  const [liked, setLiked] = useState(isLiked);
+  const [count, setCount] = useState(likeCount);
+  const [saved, setSaved] = useState(isSaved);
+
+  // Re-sync when the server does send new values, adjusted at render rather
+  // than in an effect, matching the reset pattern used elsewhere.
+  const [fromServer, setFromServer] = useState({ isLiked, likeCount, isSaved });
+  if (
+    fromServer.isLiked !== isLiked ||
+    fromServer.likeCount !== likeCount ||
+    fromServer.isSaved !== isSaved
+  ) {
+    setFromServer({ isLiked, likeCount, isSaved });
+    setLiked(isLiked);
+    setCount(likeCount);
+    setSaved(isSaved);
+  }
   const [likePending, startLikeTransition] = useTransition();
   const [savePending, startSaveTransition] = useTransition();
   const [commentPending, startCommentTransition] = useTransition();
@@ -49,15 +72,30 @@ export function JournalInteractions({
 
   function handleLike() {
     if (!isAuthenticated) return;
+    const next = !liked;
+    setLiked(next);
+    setCount((c) => Math.max(0, c + (next ? 1 : -1)));
     startLikeTransition(async () => {
-      await toggleJournalLikeAction(entryId);
+      try {
+        await toggleJournalLikeAction(entryId);
+      } catch {
+        // Put it back rather than leaving a reaction the server never recorded.
+        setLiked(!next);
+        setCount((c) => Math.max(0, c + (next ? -1 : 1)));
+      }
     });
   }
 
   function handleSave() {
     if (!isAuthenticated) return;
+    const next = !saved;
+    setSaved(next);
     startSaveTransition(async () => {
-      await toggleJournalSaveAction(entryId);
+      try {
+        await toggleJournalSaveAction(entryId);
+      } catch {
+        setSaved(!next);
+      }
     });
   }
 
@@ -89,11 +127,11 @@ export function JournalInteractions({
           disabled={likePending || !isAuthenticated}
           title="Two wheels down — keep it rubber-side down, ride safe"
           className={`inline-flex items-center gap-1.5 text-sm font-medium transition ${
-            isLiked ? "text-forest" : "text-muted hover:text-forest"
+            liked ? "text-forest" : "text-muted hover:text-forest"
           } disabled:opacity-50`}
         >
-          <TwoWheelsDownIcon className="h-4.5 w-4.5" filled={isLiked} />
-          {likeCount > 0 ? likeCount : "Two down"}
+          <TwoWheelsDownIcon className="h-4.5 w-4.5" filled={liked} />
+          {count > 0 ? count : "Two down"}
         </button>
 
         <button
@@ -119,13 +157,13 @@ export function JournalInteractions({
             type="button"
             onClick={handleSave}
             disabled={savePending}
-            title={isSaved ? "Saved — tap to remove" : "Save this post"}
+            title={saved ? "Saved — tap to remove" : "Save this post"}
             className={`ml-auto inline-flex items-center gap-1.5 text-sm font-medium transition ${
-              isSaved ? "text-ink" : "text-muted hover:text-ink"
+              saved ? "text-ink" : "text-muted hover:text-ink"
             } disabled:opacity-50`}
           >
-            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
-            {isSaved ? "Saved" : "Save"}
+            <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+            {saved ? "Saved" : "Save"}
           </button>
         )}
       </div>
