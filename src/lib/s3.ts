@@ -1,6 +1,8 @@
 import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 
+import { mapWithConcurrency } from "@/lib/concurrency";
+
 const bucket = process.env.S3_BUCKET ?? "d76riders-uploads";
 const endpoint = process.env.S3_ENDPOINT;
 const publicEndpoint = process.env.S3_PUBLIC_ENDPOINT ?? endpoint;
@@ -110,10 +112,26 @@ export async function deleteFileByUrl(url: string | null | undefined): Promise<v
   await deleteFile(key);
 }
 
+/**
+ * Best-effort cleanup of a set of stored files.
+ *
+ * Bounded rather than sequential: deleting a ride's gallery was one round trip
+ * per photo, in series. Bounded rather than a bare Promise.all: a large gallery
+ * would otherwise open a connection per object at once.
+ *
+ * Per-file failures are logged and skipped rather than thrown. Every caller
+ * runs this *after* the authoritative database change, so throwing would both
+ * abandon the remaining files and surface an error for work that already
+ * succeeded — leaving more orphans than it reports.
+ */
 export async function deleteFilesByUrls(urls: Array<string | null | undefined>): Promise<void> {
-  for (const url of urls) {
-    await deleteFileByUrl(url);
-  }
+  await mapWithConcurrency(urls, 8, async (url) => {
+    try {
+      await deleteFileByUrl(url);
+    } catch (error) {
+      console.error("[s3] failed to delete", url, error);
+    }
+  });
 }
 
 export async function listAllKeys(prefix?: string): Promise<string[]> {

@@ -14,6 +14,7 @@ import { resolvePostableCrewId } from "@/lib/crews";
 import { DEFAULT_TIMEZONE, formatEventDate, formatEventTime, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
+import { mapWithConcurrency } from "@/lib/concurrency";
 import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -819,28 +820,28 @@ export async function closeRideAction(eventId: string): Promise<void> {
   });
   if (!organizer) return;
 
-  const event = await prisma.rideEvent.findUnique({
-    where: { id: eventId },
-    select: { title: true, slug: true, distanceMiles: true },
-  });
+  // Four independent reads — no reason to wait for each in turn. The checkout
+  // ones must still be captured before the transaction auto-checks-everyone-out.
+  const [event, missingCheckout, goingRsvps, checkIns] = await Promise.all([
+    prisma.rideEvent.findUnique({
+      where: { id: eventId },
+      select: { title: true, slug: true, distanceMiles: true },
+    }),
+    // Riders still checked in without a checkout, BEFORE auto-checkout.
+    prisma.eventCheckIn.findMany({
+      where: { eventId, checkOutAt: null },
+      select: { rider: { select: { id: true, name: true } } },
+    }),
+    // No-shows: riders who committed (GOING) but never checked in.
+    prisma.rsvp.findMany({
+      where: { eventId, status: "GOING" },
+      select: { riderId: true, rider: { select: { name: true } } },
+    }),
+    prisma.eventCheckIn.findMany({ where: { eventId }, select: { riderId: true } }),
+  ]);
+
   const eventTitle = event?.title ?? "a ride";
-
-  // Capture riders still checked in without a checkout BEFORE auto-checkout.
-  const missingCheckout = await prisma.eventCheckIn.findMany({
-    where: { eventId, checkOutAt: null },
-    select: { rider: { select: { id: true, name: true } } },
-  });
-
-  // No-shows: riders who committed (GOING) but never checked in.
-  const goingRsvps = await prisma.rsvp.findMany({
-    where: { eventId, status: "GOING" },
-    select: { riderId: true, rider: { select: { name: true } } },
-  });
-  const checkedInRiderIds = new Set(
-    (await prisma.eventCheckIn.findMany({ where: { eventId }, select: { riderId: true } })).map(
-      (c) => c.riderId,
-    ),
-  );
+  const checkedInRiderIds = new Set(checkIns.map((c) => c.riderId));
   const noShows = goingRsvps.filter((r) => !checkedInRiderIds.has(r.riderId));
 
   await prisma.$transaction(async (tx) => {
@@ -893,9 +894,10 @@ export async function closeRideAction(eventId: string): Promise<void> {
   const affectedRiderIds = [
     ...new Set([...checkedInRiderIds, ...noShows.map((ns) => ns.riderId)]),
   ];
-  for (const affectedRiderId of affectedRiderIds) {
-    await syncRiderProgression(affectedRiderId);
-  }
+  // Bounded, not sequential and not all at once: each recompute is several
+  // queries, so a forty-rider ride was forty round trips end to end, and firing
+  // them together would put forty of them on a pool sized for a handful.
+  await mapWithConcurrency(affectedRiderIds, 4, (riderId) => syncRiderProgression(riderId));
 
   // Post-ride recap: pull everyone who actually rode back to see the photos.
   if (checkedInRiderIds.size > 0 && event) {
