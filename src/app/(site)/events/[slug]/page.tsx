@@ -475,7 +475,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const flyerUrl = event.galleryItems[0]?.url ?? null;
   const aboutCard = event.description || eventWeather ? (
     <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
-      <h2 className="font-display text-lg font-semibold text-asphalt">About this ride</h2>
+      <h2 className="font-display text-lg text-asphalt">About this ride</h2>
       {event.description ? (
         <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted">
           <Linkify text={event.description} />
@@ -568,7 +568,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="font-display text-3xl font-semibold text-ink sm:text-4xl">{event.title}</h1>
+              <h1 className="font-display text-3xl text-ink sm:text-4xl">{event.title}</h1>
               <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.08em] ${statusMeta.cls}`}>
                 {statusMeta.label}
               </span>
@@ -818,7 +818,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               <div className="rounded-xl border border-border bg-surface p-5 shadow-soft sm:p-6">
                 <div className="flex items-center gap-2">
                   <Flag className="h-5 w-5 text-sunset" />
-                  <h2 className="font-display text-xl font-semibold text-asphalt">Ride recap</h2>
+                  <h2 className="font-display text-xl text-asphalt">Ride recap</h2>
                 </div>
                 <p className="mt-1 text-sm text-muted">This one&apos;s in the books.</p>
                 <div className="mt-4 flex flex-wrap gap-3">
@@ -828,7 +828,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                     { v: galleryRows.length, l: galleryRows.length === 1 ? "photo" : "photos" },
                   ].map((s) => (
                     <div key={s.l} className="min-w-20 flex-1 rounded-lg bg-canvas p-3 text-center">
-                      <p className="font-display text-2xl font-bold text-ink">{s.v}</p>
+                      <p className="font-display text-2xl text-ink">{s.v}</p>
                       <p className="text-xs text-muted">{s.l}</p>
                     </div>
                   ))}
@@ -845,7 +845,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="font-display text-xl font-semibold text-asphalt">
+                <h2 className="font-display text-xl text-asphalt">
                   {showLiveMap ? "Live Ride" : "Official Route"}
                 </h2>
                 <p className="mt-1 text-sm text-muted">
@@ -921,7 +921,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           // one and the page keeps its shape.
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
             <div>
-              <h2 className="font-display text-xl font-semibold text-asphalt">Meetup Location</h2>
+              <h2 className="font-display text-xl text-asphalt">Meetup Location</h2>
               <p className="mt-1 text-sm text-muted">{event.meetLocation ?? "Where the ride gathers."}</p>
             </div>
             <div className="mt-4">

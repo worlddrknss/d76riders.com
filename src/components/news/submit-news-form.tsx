@@ -27,7 +27,7 @@ export function SubmitNewsForm({ categories, existingTags, hideHeading = false }
     <form action={formAction} className="space-y-6">
       <div>
         {hideHeading ? null : (
-          <h1 className="font-display text-3xl font-semibold text-asphalt">Submit an Article</h1>
+          <h1 className="font-display text-3xl text-asphalt">Submit an Article</h1>
         )}
         <p className={`${hideHeading ? "" : "mt-2 "}text-sm text-muted`}>
           Share news, ride reports, or gear reviews with the District 76 community. Your article will be reviewed by a moderator before being published.

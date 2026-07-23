@@ -111,7 +111,7 @@ export function RoutePlannerField({
           <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 sm:px-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">{modalEyebrow}</p>
-              <h3 className="font-display text-xl font-semibold text-asphalt">{modalTitle}</h3>
+              <h3 className="font-display text-xl text-asphalt">{modalTitle}</h3>
               <p className="mt-1 text-xs text-muted">
                 {draftPlannerData?.geometry
                   ? `Draft route: ${draftPlannerData.geometryPoints} points${draftRouteDistanceMiles ? `, ${draftRouteDistanceMiles} miles` : ""}`

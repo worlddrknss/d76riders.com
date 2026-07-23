@@ -18,7 +18,7 @@ export default async function ModerationPage() {
     <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Content</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold text-white">Moderation Queue</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">Moderation Queue</h1>
         <p className="mt-2 text-sm text-slate-300">
           {pendingPosts.length === 0
             ? "No articles pending review."
@@ -32,7 +32,7 @@ export default async function ModerationPage() {
             <div key={post.id} className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <Link href={`/admin/news/${post.slug}/edit`} className="font-display text-lg font-semibold text-white hover:text-sunset">
+                  <Link href={`/admin/news/${post.slug}/edit`} className="font-display text-lg text-white hover:text-sunset">
                     {post.title}
                   </Link>
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-400">

@@ -16,7 +16,7 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Management</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Users</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Users</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           All registered accounts. Click a user to manage their roles and profile.
         </p>

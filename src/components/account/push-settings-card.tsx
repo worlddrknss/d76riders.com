@@ -121,7 +121,7 @@ export function PushSettingsCard({
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-      <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-ink">
+      <h2 className="flex items-center gap-2 font-display text-xl text-ink">
         <BellRing className="h-5 w-5 text-sunset" /> Push notifications
       </h2>
       <p className="mt-1 text-sm text-muted">

@@ -202,7 +202,7 @@ export function EventManageActions({
           <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
-              <h1 id="edit-event-modal-title" className="font-display text-xl font-bold text-ink sm:text-2xl">
+              <h1 id="edit-event-modal-title" className="font-display text-xl text-ink sm:text-2xl">
                 Edit Event
               </h1>
             </div>

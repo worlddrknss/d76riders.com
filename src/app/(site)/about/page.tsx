@@ -49,7 +49,7 @@ export default function AboutPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">The Story</p>
-            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
               We wanted something different.
             </h2>
           </FadeUp>
@@ -69,7 +69,7 @@ export default function AboutPage() {
           </FadeUp>
 
           <FadeUp>
-            <blockquote className="mt-12 border-l-4 border-sunset pl-6 font-display text-2xl font-semibold italic leading-snug text-white sm:text-3xl">
+            <blockquote className="mt-12 border-l-4 border-sunset pl-6 font-display text-2xl italic leading-snug text-white sm:text-3xl">
               &ldquo;A place where someone on a Grom could ride beside someone on a Road Glide and nobody cared what badge was on the tank.&rdquo;
             </blockquote>
           </FadeUp>
@@ -92,7 +92,7 @@ export default function AboutPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">What You&apos;ll Find Here</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Built by Riders, for Riders
             </h2>
           </FadeUp>
@@ -123,13 +123,13 @@ export default function AboutPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">What We Aren&apos;t</p>
-            <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
               District 76 Riders is not a motorcycle club.
             </h2>
           </FadeUp>
 
           <FadeUp>
-            <div className="mt-12 space-y-4 font-display text-xl font-semibold leading-relaxed sm:text-2xl">
+            <div className="mt-12 space-y-4 font-display text-xl leading-relaxed sm:text-2xl">
               <p>There are no prospects.</p>
               <p>No ranks.</p>
               <p>No mandatory patches.</p>
@@ -152,7 +152,7 @@ export default function AboutPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">The Platform</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               More Than a Facebook Group
             </h2>
             <p className="mt-4 max-w-xl text-lg text-muted">
@@ -194,10 +194,10 @@ export default function AboutPage() {
               <div className="absolute inset-0 bg-linear-to-br from-asphalt/95 via-asphalt/85 to-asphalt/70" aria-hidden="true" />
               <div className="relative flex flex-col items-center gap-6 px-6 py-20 text-center text-white sm:px-12 sm:py-24">
                 <FadeUp>
-                  <p className="font-display text-2xl font-bold leading-snug tracking-tight sm:text-3xl">
+                  <p className="font-display text-2xl leading-snug tracking-tight sm:text-3xl">
                     Every ride starts somewhere.
                   </p>
-                  <p className="mt-2 font-display text-2xl font-bold leading-snug tracking-tight sm:text-3xl">
+                  <p className="mt-2 font-display text-2xl leading-snug tracking-tight sm:text-3xl">
                     Maybe yours starts here.
                   </p>
                   <p className="mt-8 text-lg text-slate-300">

@@ -14,7 +14,7 @@ export default async function AdminCategoriesPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Content</p>
-          <h1 className="mt-2 font-display text-3xl font-semibold text-white">News Categories</h1>
+          <h1 className="mt-2 font-display text-3xl text-white">News Categories</h1>
           <p className="mt-2 text-sm text-slate-300">Manage categories used to organize news articles.</p>
         </div>
         <Link href="/admin/news/categories/new" className="rounded-lg bg-sunset px-4 py-2.5 text-sm font-semibold text-white hover:bg-sunset/85">

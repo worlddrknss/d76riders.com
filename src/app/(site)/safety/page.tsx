@@ -185,7 +185,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Group Formations</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Know Your Position
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-muted">
@@ -200,7 +200,7 @@ export default function SafetyPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sunset/10">
                     <ArrowUpDown className="h-5 w-5 text-sunset" />
                   </div>
-                  <h3 className="mt-4 font-display text-lg font-semibold text-asphalt">{f.title}</h3>
+                  <h3 className="mt-4 font-display text-lg text-asphalt">{f.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{f.description}</p>
                   <p className="mt-4 rounded-lg bg-canvas px-3 py-2 text-xs font-medium text-asphalt">
                     <span className="font-semibold text-sunset">When:</span> {f.when}
@@ -217,7 +217,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">On The Day</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
               Who Does What
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-300">
@@ -235,7 +235,7 @@ export default function SafetyPage() {
                       <Icon className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-display text-lg font-semibold">{item.role}</h3>
+                      <h3 className="font-display text-lg">{item.role}</h3>
                       <p className="mt-1 text-sm leading-relaxed text-slate-300">{item.description}</p>
                     </div>
                   </div>
@@ -251,7 +251,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">In The Pack</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Four Things That Keep A Group Safe
             </h2>
           </FadeUp>
@@ -260,7 +260,7 @@ export default function SafetyPage() {
             {packRules.map((item) => (
               <FadeUp key={item.title}>
                 <div className="flex h-full flex-col rounded-2xl border border-border bg-surface p-6 shadow-soft">
-                  <h3 className="font-display text-base font-semibold text-asphalt">{item.title}</h3>
+                  <h3 className="font-display text-base text-asphalt">{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{item.body}</p>
                 </div>
               </FadeUp>
@@ -274,7 +274,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Communication</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
               Hand Signals
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-300">
@@ -310,7 +310,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">When It Goes Wrong</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Nobody Gets Left Behind
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-muted">
@@ -327,7 +327,7 @@ export default function SafetyPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sunset/10">
                       <Icon className="h-5 w-5 text-sunset" />
                     </div>
-                    <h3 className="mt-4 font-display text-lg font-semibold text-asphalt">{item.title}</h3>
+                    <h3 className="mt-4 font-display text-lg text-asphalt">{item.title}</h3>
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{item.body}</p>
                   </div>
                 </StaggerItem>
@@ -345,7 +345,7 @@ export default function SafetyPage() {
                   <p className="text-[0.7rem] font-bold uppercase tracking-[0.16em] text-white/75">
                     If someone goes down
                   </p>
-                  <h3 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  <h3 className="font-display text-2xl tracking-tight text-white sm:text-3xl">
                     The first few minutes at a crash
                   </h3>
                 </div>
@@ -355,7 +355,7 @@ export default function SafetyPage() {
                 <ol className="space-y-4">
                   {crashSteps.map((step, i) => (
                     <li key={step.action} className="flex items-start gap-4">
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-600 font-display text-base font-bold text-white">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-600 font-display text-base text-white">
                         {i + 1}
                       </span>
                       <p className="text-base leading-relaxed text-asphalt/80">
@@ -384,7 +384,7 @@ export default function SafetyPage() {
                   <HeartPulse className="h-6 w-6 text-sunset" />
                 </div>
                 <div>
-                  <h2 className="font-display text-xl font-semibold text-asphalt">Put your details on your bike</h2>
+                  <h2 className="font-display text-xl text-asphalt">Put your details on your bike</h2>
                   <p className="mt-1 max-w-xl text-sm text-muted">
                     An emergency card holds your medical information and next of kin behind an NFC tag or QR code on
                     your helmet or tank. If you cannot answer questions, it answers them for you. Set it up from your
@@ -408,7 +408,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Before You Ride</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
               Pre-Ride Checklist
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-300">
@@ -436,7 +436,7 @@ export default function SafetyPage() {
             <ShieldCheck className="mx-auto h-12 w-12 text-sunset" />
           </ScaleIn>
           <FadeUp>
-            <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-6 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Safety Is A Skill. Practice It.
             </h2>
             <p className="mt-4 max-w-xl text-lg text-muted">

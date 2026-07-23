@@ -150,7 +150,7 @@ export default async function NearbyPage() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <section>
-                <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase tracking-tight text-ink">
+                <h2 className="flex items-center gap-2 font-display text-lg uppercase tracking-tight text-ink">
                   <CalendarDays className="h-5 w-5 text-sunset" /> Rides near you
                 </h2>
                 <ul className="mt-3 space-y-2">
@@ -173,7 +173,7 @@ export default async function NearbyPage() {
               </section>
 
               <section>
-                <h2 className="flex items-center gap-2 font-display text-lg font-bold uppercase tracking-tight text-ink">
+                <h2 className="flex items-center gap-2 font-display text-lg uppercase tracking-tight text-ink">
                   <RouteIcon className="h-5 w-5 text-forest" /> Roads near you
                 </h2>
                 <ul className="mt-3 space-y-2">

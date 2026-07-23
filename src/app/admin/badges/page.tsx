@@ -38,7 +38,7 @@ export default async function AdminBadgesPage(props: { searchParams: Promise<{ e
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Progression</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Badges</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Badges</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Badge definitions drive automatic awards. Riders earn them on check-in and when a ride closes — no
           badge is ever revoked once earned.
@@ -62,7 +62,7 @@ export default async function AdminBadgesPage(props: { searchParams: Promise<{ e
           action={createBadgeAction}
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
-          <h2 className="font-display text-lg font-semibold text-white">New badge</h2>
+          <h2 className="font-display text-lg text-white">New badge</h2>
 
           <input
             name="name"
@@ -125,7 +125,7 @@ export default async function AdminBadgesPage(props: { searchParams: Promise<{ e
           action={awardBadgeAction}
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
-          <h2 className="font-display text-lg font-semibold text-white">Award by hand</h2>
+          <h2 className="font-display text-lg text-white">Award by hand</h2>
           <p className="text-xs text-slate-400">
             The only way to grant a manual badge, and a way to give an automatic one early.
           </p>

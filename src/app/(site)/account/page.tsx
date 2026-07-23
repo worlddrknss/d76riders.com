@@ -35,7 +35,7 @@ export default async function AccountPage() {
     <AppShell>
       <div className="space-y-6">
         <div className="max-w-3xl space-y-4">
-          <h1 className="font-display text-3xl font-semibold text-ink">Settings</h1>
+          <h1 className="font-display text-3xl text-ink">Settings</h1>
           <SettingsNav />
         </div>
 
@@ -44,7 +44,7 @@ export default async function AccountPage() {
         {rider?.handle && (
           <div className="flex max-w-3xl items-center justify-between rounded-xl border border-border bg-surface p-5 shadow-soft">
             <div>
-              <h2 className="font-display text-lg font-semibold text-ink">Public profile</h2>
+              <h2 className="font-display text-lg text-ink">Public profile</h2>
               <p className="mt-0.5 text-sm text-muted">Edit your name, photo, bio, and socials from your profile.</p>
             </div>
             <Link

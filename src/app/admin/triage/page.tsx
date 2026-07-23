@@ -135,7 +135,7 @@ export default async function AdminTriagePage(props: {
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Moderation</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Content Triage</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Content Triage</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Every reported item across journals, comments, events, photos, profiles, and news — in one queue,
           ordered by SLA. Urgent reports are due within 4 hours, normal within 24, low within 72.

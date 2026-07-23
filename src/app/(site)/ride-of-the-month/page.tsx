@@ -108,14 +108,14 @@ export default async function RideOfMonthPage() {
                     leading ? "border-sunset/50" : "border-border"
                   }`}
                 >
-                  <span className="w-6 shrink-0 text-center font-display text-lg font-semibold text-muted">{i + 1}</span>
+                  <span className="w-6 shrink-0 text-center font-display text-lg text-muted">{i + 1}</span>
                   {cover ? (
                     <img src={cover} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                   ) : (
                     <div className="h-14 w-14 shrink-0 rounded-lg bg-canvas" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <Link href={`/events/${e.slug}`} className="font-display text-lg font-semibold text-ink hover:text-sunset">
+                    <Link href={`/events/${e.slug}`} className="font-display text-lg text-ink hover:text-sunset">
                       {e.title}
                     </Link>
                     <p className="text-xs text-muted">
@@ -138,7 +138,7 @@ export default async function RideOfMonthPage() {
 
         {pastWinners.length > 0 && (
           <div>
-            <h2 className="font-display text-xl font-semibold text-ink">Past winners</h2>
+            <h2 className="font-display text-xl text-ink">Past winners</h2>
             <ul className="mt-3 divide-y divide-border rounded-2xl border border-border bg-surface">
               {pastWinners.map((w) => (
                 <li key={w.period} className="flex items-center justify-between gap-3 px-5 py-3">

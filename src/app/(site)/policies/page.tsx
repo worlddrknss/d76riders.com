@@ -106,7 +106,7 @@ export default async function PoliciesPage() {
                         ) : null}
                       </div>
 
-                      <h2 className="mt-2 font-display text-lg font-semibold text-ink">{policy.title}</h2>
+                      <h2 className="mt-2 font-display text-lg text-ink">{policy.title}</h2>
                       {policy.summary ? <p className="mt-1 text-sm text-muted">{policy.summary}</p> : null}
                     </Link>
                   </StaggerItem>

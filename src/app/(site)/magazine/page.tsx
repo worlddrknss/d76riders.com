@@ -133,7 +133,7 @@ export default async function NewsPage({
                 </Link>
                 <div className="p-5">
                   <Link href={`/magazine/${article.id}`}>
-                    <h2 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
+                    <h2 className="font-display text-lg uppercase tracking-tight text-asphalt hover:text-sunset">
                       {article.title}
                     </h2>
                   </Link>

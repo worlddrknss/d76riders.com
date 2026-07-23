@@ -210,7 +210,7 @@ function JournalCard({
               {/* Title on its own line as a heading — running it inline after the
                   author name (already in the header above) read as one phrase. */}
               {entry.title && (
-                <h3 className="font-display text-base font-semibold text-ink">{entry.title}</h3>
+                <h3 className="font-display text-base text-ink">{entry.title}</h3>
               )}
               <p ref={bodyRef} className={`text-sm text-muted ${expanded ? "" : "line-clamp-3"}`}>
                 <JournalText text={entry.body} />

@@ -35,7 +35,7 @@ export default async function CreateEventPage() {
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
-              <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Create Event</h1>
+              <h1 className="mt-1 font-display text-3xl text-ink">Create Event</h1>
               <p className="mt-2 text-sm text-muted">
                 Publish a new ride event with meetup details. Route details are optional and can be added now.
               </p>

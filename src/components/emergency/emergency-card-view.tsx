@@ -49,7 +49,7 @@ export function EmergencyCardView({ token, rider, data }: EmergencyCardViewProps
     return (
       <div className="rounded-xl border border-red-300 bg-white p-6 text-center shadow-soft">
         <ShieldAlert className="mx-auto h-10 w-10 text-red-600" />
-        <h1 className="mt-3 font-display text-xl font-semibold text-ink">Emergency Rider Information</h1>
+        <h1 className="mt-3 font-display text-xl text-ink">Emergency Rider Information</h1>
         <p className="mt-2 text-sm text-muted">
           This card holds medical information for <strong>{rider.name}</strong>, intended for first
           responders and emergency use only. Accessing it is logged.
@@ -84,7 +84,7 @@ export function EmergencyCardView({ token, rider, data }: EmergencyCardViewProps
             <HeartPulse className="h-6 w-6" />
           </span>
           <div>
-            <h1 className="font-display text-lg font-semibold text-ink">{rider.name}</h1>
+            <h1 className="font-display text-lg text-ink">{rider.name}</h1>
             {rider.location && <p className="text-sm text-muted">{rider.location}</p>}
           </div>
         </div>

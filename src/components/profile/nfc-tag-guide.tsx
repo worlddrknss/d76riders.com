@@ -12,7 +12,7 @@ export function NfcTagGuide() {
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
       <div className="flex items-center gap-2">
         <Nfc className="h-5 w-5 text-sunset" />
-        <h2 className="font-display text-lg font-bold text-ink">Put your card on an NFC tag</h2>
+        <h2 className="font-display text-lg text-ink">Put your card on an NFC tag</h2>
       </div>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         Write your emergency-card link to a cheap NFC sticker (an NTAG213/215/216 tag works well) and

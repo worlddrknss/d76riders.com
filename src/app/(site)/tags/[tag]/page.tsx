@@ -87,7 +87,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
             <Hash className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="font-display text-2xl font-semibold text-ink">#{clean}</h1>
+            <h1 className="font-display text-2xl text-ink">#{clean}</h1>
             <p className="text-sm text-muted">
               {entries.length === 0
                 ? "No posts with this tag yet."

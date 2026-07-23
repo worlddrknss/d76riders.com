@@ -14,7 +14,7 @@ export default async function NewPolicyPage(props: { searchParams: Promise<{ err
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Governance</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-white">New Policy</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">New Policy</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Publish a document members must read and accept.
         </p>

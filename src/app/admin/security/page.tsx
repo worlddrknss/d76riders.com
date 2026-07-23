@@ -36,7 +36,7 @@ export default async function AdminSecurityPage() {
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Security</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Malware Scan Audits</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Malware Scan Audits</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Audit stream for image upload scanning. Events include clean scans, infected detections, and scanner errors.
         </p>
@@ -46,14 +46,14 @@ export default async function AdminSecurityPage() {
         {cards.map((card) => (
           <article key={card.label} className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
             <p className="text-sm font-semibold text-slate-300">{card.label}</p>
-            <p className="mt-2 font-display text-4xl font-bold text-sunset">{card.value}</p>
+            <p className="mt-2 font-display text-4xl text-sunset">{card.value}</p>
           </article>
         ))}
       </section>
 
       <section className="rounded-xl border border-white/10 bg-white/3 shadow-lg">
         <div className="border-b border-white/10 px-5 py-3">
-          <h2 className="font-display text-lg font-semibold text-white">Recent Scan Events</h2>
+          <h2 className="font-display text-lg text-white">Recent Scan Events</h2>
         </div>
 
         {audits.length === 0 ? (

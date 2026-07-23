@@ -44,7 +44,7 @@ export default async function AdminCrewsPage(props: { searchParams: Promise<{ er
 
       <section className="grid gap-4 lg:grid-cols-2">
         <form action={createCrewAction} className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-          <h2 className="font-display text-lg font-semibold text-white">New sub-community</h2>
+          <h2 className="font-display text-lg text-white">New sub-community</h2>
           <p className="text-xs text-slate-400">Riders can start their own — use this for official ones.</p>
           <input name="name" required placeholder="Sub-community name (e.g. Nashville)" className={inputClass} />
           <input name="description" placeholder="What this sub-community is about" className={inputClass} />
@@ -58,7 +58,7 @@ export default async function AdminCrewsPage(props: { searchParams: Promise<{ er
         </form>
 
         <form action={setCrewMemberAction} className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-          <h2 className="font-display text-lg font-semibold text-white">Add / promote member</h2>
+          <h2 className="font-display text-lg text-white">Add / promote member</h2>
           <p className="text-xs text-slate-400">
             Also how you hand a sub-community to a new lead, or add someone to an invite-only one.
           </p>

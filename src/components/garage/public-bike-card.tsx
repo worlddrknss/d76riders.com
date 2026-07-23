@@ -43,7 +43,7 @@ export function PublicBikeCard({ bike, isPrimary = false }: { bike: PublicBikeDa
       </div>
 
       <div className="p-4">
-        <h3 className="font-display text-lg font-bold text-ink">{bike.name}</h3>
+        <h3 className="font-display text-lg text-ink">{bike.name}</h3>
         <p className="mt-0.5 text-xs text-muted">{specs || bike.make}</p>
 
         <div className="mt-3 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted">

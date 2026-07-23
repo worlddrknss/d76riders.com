@@ -104,7 +104,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
                 <ArrowLeft className="h-3.5 w-3.5" />
                 {isOwner ? "Garage" : `${bike.rider.name}'s Garage`}
               </Link>
-              <h1 className="mt-2 font-display text-2xl font-bold uppercase tracking-tight text-ink sm:text-3xl">{bike.name}</h1>
+              <h1 className="mt-2 font-display text-2xl uppercase tracking-tight text-ink sm:text-3xl">{bike.name}</h1>
               <p className="mt-1 text-sm text-muted">
                 {[
                   bike.year,
@@ -129,7 +129,7 @@ export default async function BuildPage({ params }: { params: Promise<{ bikeId: 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-              <p className="font-display text-2xl font-bold text-ink sm:text-3xl">{s.value}</p>
+              <p className="font-display text-2xl text-ink sm:text-3xl">{s.value}</p>
               <p className="mt-1 text-xs text-muted">{s.label}</p>
             </div>
           ))}

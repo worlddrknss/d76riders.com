@@ -93,7 +93,7 @@ export function EventOrganizers({ eventId, organizers, isHost }: EventOrganizers
   return (
     <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
+        <h2 className="flex items-center gap-2 font-display text-xl text-asphalt">
           <Shield className="h-5 w-5 text-sunset" />
           Ride Staff
         </h2>

@@ -121,7 +121,7 @@ export default async function LeaderboardPage(props: {
                     className="flex items-center gap-4 rounded-xl border border-border bg-surface p-4 shadow-soft transition hover:border-sunset/40"
                   >
                     <span
-                      className={`w-8 shrink-0 text-center font-display text-xl font-bold ${
+                      className={`w-8 shrink-0 text-center font-display text-xl ${
                         RANK_STYLES[index] ?? "text-muted"
                       }`}
                     >

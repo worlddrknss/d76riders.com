@@ -82,7 +82,7 @@ export function SponsorDirectory({ sponsors }: { sponsors: AdminSponsor[] }) {
     <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-semibold text-white">Listings</h2>
+          <h2 className="font-display text-lg text-white">Listings</h2>
           <p className="mt-1 text-xs text-slate-400">
             Sponsors and plain listings alike. A tier is what makes a business a sponsor; blank means it is
             in the directory only.

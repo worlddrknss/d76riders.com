@@ -73,7 +73,7 @@ export function EventRoutePlannerButton({
             <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Event Route Builder</p>
-                <h3 className="font-display text-xl font-semibold text-asphalt">
+                <h3 className="font-display text-xl text-asphalt">
                   {hasRoute ? "Replace the official route" : "Official Event Route"}
                 </h3>
                 <p className="mt-1 text-xs text-muted">

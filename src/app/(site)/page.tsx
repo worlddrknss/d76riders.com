@@ -290,7 +290,7 @@ export default async function Home() {
           <div className="absolute inset-0 bg-asphalt/60" aria-hidden="true" />
           <div className="relative mx-auto flex min-h-[calc(100svh-5.5rem)] w-full max-w-7xl items-center px-4 py-24 sm:px-6 lg:px-8">
             <FadeUp className="max-w-2xl text-white">
-              <h1 className="font-display text-5xl font-bold uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
+              <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-tight drop-shadow-lg sm:text-6xl lg:text-7xl">
                 All bikes.<br />All riders.<br />
                 <span className="text-sunset">One community.</span>
               </h1>
@@ -317,7 +317,7 @@ export default async function Home() {
               <div className="mt-10 flex flex-wrap gap-x-9 gap-y-5">
                 {heroStats.map((s) => (
                   <div key={s.label}>
-                    <p className="font-display text-3xl font-black leading-none text-white">{s.value}</p>
+                    <p className="font-display text-3xl leading-none text-white">{s.value}</p>
                     <p className="mt-1 text-xs font-semibold text-white/60">{s.label}</p>
                   </div>
                 ))}
@@ -336,7 +336,7 @@ export default async function Home() {
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <FadeUp>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Rider Safety</p>
-              <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              <h2 className="mt-3 font-display text-3xl tracking-tight sm:text-4xl">
                 Your Helmet Speaks When You Can&apos;t
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-slate-300">
@@ -354,19 +354,19 @@ export default async function Home() {
             <FadeUp delay={0.15}>
               <div className="grid grid-cols-2 gap-4">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                  <p className="font-display text-2xl font-bold text-sunset">NFC</p>
+                  <p className="font-display text-2xl text-sunset">NFC</p>
                   <p className="mt-1 text-sm text-slate-300">NTAG215 rewritable tags</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                  <p className="font-display text-2xl font-bold text-sunset">0</p>
+                  <p className="font-display text-2xl text-sunset">0</p>
                   <p className="mt-1 text-sm text-slate-300">App downloads needed</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                  <p className="font-display text-2xl font-bold text-sunset">AES</p>
+                  <p className="font-display text-2xl text-sunset">AES</p>
                   <p className="mt-1 text-sm text-slate-300">Encrypted medical data</p>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                  <p className="font-display text-2xl font-bold text-sunset">You</p>
+                  <p className="font-display text-2xl text-sunset">You</p>
                   <p className="mt-1 text-sm text-slate-300">Control what&apos;s visible</p>
                 </div>
               </div>
@@ -380,7 +380,7 @@ export default async function Home() {
         <section className="w-full bg-canvas">
           <div className="mx-auto w-full max-w-7xl px-4 pt-16 sm:px-6 lg:px-8">
             <FadeUp className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+              <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">
                 Featured Rides
               </h2>
               <Link
@@ -418,7 +418,7 @@ export default async function Home() {
                         {formatEventDate(event.startsAt, event.timezone ?? DEFAULT_TIMEZONE)}
                         {event.crew ? ` · ${event.crew.name}` : ""}
                       </p>
-                      <h3 className="mt-1 font-display text-base font-semibold text-ink">{event.title}</h3>
+                      <h3 className="mt-1 font-display text-base text-ink">{event.title}</h3>
                       {event.excerpt ? (
                         <p className="mt-1 line-clamp-2 text-sm text-muted">{event.excerpt}</p>
                       ) : null}
@@ -444,7 +444,7 @@ export default async function Home() {
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <FadeUp className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
+            <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
             <Link href="/events" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               View All Rides <ArrowRight className="h-4 w-4" />
             </Link>
@@ -459,11 +459,11 @@ export default async function Home() {
                 >
                   <div className="absolute left-3 top-3 flex h-14 w-14 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
                     <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{eventDayMonth(ride.startsAt, ride.timezone ?? DEFAULT_TIMEZONE).month}</span>
-                    <span className="font-display text-xl font-bold leading-none">{String(eventDayMonth(ride.startsAt, ride.timezone ?? DEFAULT_TIMEZONE).day).padStart(2, "0")}</span>
+                    <span className="font-display text-xl leading-none">{String(eventDayMonth(ride.startsAt, ride.timezone ?? DEFAULT_TIMEZONE).day).padStart(2, "0")}</span>
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="font-display text-lg font-bold text-asphalt">{ride.title}</h3>
+                  <h3 className="font-display text-lg text-asphalt">{ride.title}</h3>
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                     <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-sunset" />{ride.meetLocation || ride.ksuLocation || "Location TBD"}</span>
                     <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{ride.distanceMiles ? `${ride.distanceMiles} miles` : "Distance TBD"}</span>
@@ -512,7 +512,7 @@ export default async function Home() {
       <section className="w-full bg-canvas">
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <FadeUp className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Featured Roads</h2>
+            <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">Featured Roads</h2>
             <Link href="/roads" className="inline-flex items-center gap-1 text-sm font-semibold text-sunset hover:text-[#cf5a26]">
               Explore All Roads <ArrowRight className="h-4 w-4" />
             </Link>
@@ -544,7 +544,7 @@ export default async function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <FadeUp className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Live from the community</p>
-            <h2 className="mt-2 font-display text-3xl font-bold uppercase tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl uppercase tracking-tight sm:text-4xl">
               Real riders, real miles
             </h2>
           </FadeUp>
@@ -556,7 +556,7 @@ export default async function Home() {
                 <div key={stat.label} className="flex items-center gap-3">
                   <Icon className="h-7 w-7 shrink-0 text-sunset" />
                   <div>
-                    <p className="font-display text-2xl font-black text-white">{stat.value}</p>
+                    <p className="font-display text-2xl text-white">{stat.value}</p>
                     <p className="text-xs text-white/60">{stat.label}</p>
                     <p className="text-[0.6rem] font-semibold uppercase tracking-wide text-forest">{stat.delta}</p>
                   </div>
@@ -589,7 +589,7 @@ export default async function Home() {
                     </p>
                     <Link
                       href={`/r/${spotlight.rider.handle}`}
-                      className="font-display text-xl font-bold hover:text-sunset"
+                      className="font-display text-xl hover:text-sunset"
                     >
                       {spotlight.rider.name}
                     </Link>
@@ -640,7 +640,7 @@ export default async function Home() {
       <section className="w-full bg-canvas">
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-2 lg:px-8">
           <FadeUp>
-            <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
+            <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">Recent Community Activity</h2>
             <div className="mt-5 space-y-4">
               {activities.length === 0 ? (
                 <p className="text-sm text-muted">No community activity yet — it&apos;ll show up here as riders post, ride, and earn badges.</p>
@@ -685,7 +685,7 @@ export default async function Home() {
           </FadeUp>
           {galleryPhotos.length > 0 && (
             <FadeUp delay={0.15}>
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">From Our Community</h2>
+              <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">From Our Community</h2>
               <div className="mt-5 grid grid-cols-3 gap-3">
                 <div
                   className="col-span-2 row-span-2 min-h-45 rounded-lg bg-cover bg-center"
@@ -712,7 +712,7 @@ export default async function Home() {
         <div className="mx-auto w-full max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
           <FadeUp className="flex items-end justify-between">
             <div>
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+              <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">
                 The <span className="text-sunset">Happenings</span>
               </h2>
               <p className="mt-1 text-sm text-muted">Latest stories from the District 76 community.</p>
@@ -737,7 +737,7 @@ export default async function Home() {
                 </Link>
                 <div className="p-5">
                   <Link href={`/magazine/${article.slug}`}>
-                    <h3 className="font-display text-base font-bold uppercase tracking-tight text-asphalt hover:text-sunset">
+                    <h3 className="font-display text-base uppercase tracking-tight text-asphalt hover:text-sunset">
                       {article.title}
                     </h3>
                   </Link>
@@ -758,7 +758,7 @@ export default async function Home() {
         <section className="w-full border-t border-border bg-canvas">
           <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <FadeUp className="flex items-center justify-between">
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">
+              <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">
                 Sponsors
               </h2>
               <Link
@@ -818,7 +818,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-asphalt/85" aria-hidden="true" />
         <div className="relative mx-auto flex w-full max-w-7xl flex-col items-start justify-between gap-6 px-4 py-14 sm:px-6 lg:flex-row lg:items-center lg:px-8">
           <FadeUp className="text-white">
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Ready to Ride With Us?</h2>
+            <h2 className="font-display text-3xl tracking-tight sm:text-4xl">Ready to Ride With Us?</h2>
             <p className="mt-2 max-w-lg text-slate-200">
               Join District 76 and connect with riders, discover new roads, and be part of something more.
             </p>

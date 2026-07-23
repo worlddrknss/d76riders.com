@@ -219,7 +219,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
             {/* HEADER: Title + Actions */}
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <h1 className="font-display text-3xl font-semibold text-ink">{road.name}</h1>
+                <h1 className="font-display text-3xl text-ink">{road.name}</h1>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{road.description || "No road description yet."}</p>
               </div>
               {isOwner && (
@@ -314,7 +314,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
           <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-xl font-semibold text-asphalt">Saved Road Route</h2>
+                <h2 className="font-display text-xl text-asphalt">Saved Road Route</h2>
                 <p className="mt-1 text-sm text-muted">
                   {activeHazards.length > 0
                     ? `${activeHazards.length} active ${activeHazards.length === 1 ? "hazard" : "hazards"} flagged by riders.`

@@ -67,7 +67,7 @@ export default async function AdminIncidentsPage(props: {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Moderation</p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-white">Incidents</h1>
+            <h1 className="mt-2 font-display text-4xl text-white">Incidents</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
               Private case files for follow-up on riders, events, and reports. Notes here are staff-only and never
               shown to members.
@@ -146,7 +146,7 @@ export default async function AdminIncidentsPage(props: {
                 ) : null}
               </div>
 
-              <p className="mt-2 font-display text-lg font-semibold text-white">{incident.title}</p>
+              <p className="mt-2 font-display text-lg text-white">{incident.title}</p>
               {incident.summary ? (
                 <p className="mt-1 line-clamp-2 text-sm text-slate-300">{incident.summary}</p>
               ) : null}

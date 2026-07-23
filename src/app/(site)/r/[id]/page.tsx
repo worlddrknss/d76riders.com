@@ -623,7 +623,7 @@ export default async function RiderProfilePage({
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-canvas p-4">
               <s.icon className="h-4 w-4 text-sunset" />
-              <p className="mt-2 font-display text-2xl font-bold leading-none text-ink">{s.value}</p>
+              <p className="mt-2 font-display text-2xl leading-none text-ink">{s.value}</p>
               <p className="mt-1.5 text-xs text-muted">{s.label}</p>
             </div>
           ))}
@@ -836,7 +836,7 @@ export default async function RiderProfilePage({
   // Consolidated tabs: Gear folds into Garage, Photos + Videos into Media, and
   // Skills into Overview — same content, far fewer top-level tabs.
   const sectionHeader = (title: string) => (
-    <h3 className="font-display text-lg font-bold uppercase tracking-tight text-ink">{title}</h3>
+    <h3 className="font-display text-lg uppercase tracking-tight text-ink">{title}</h3>
   );
   const skillsCard = (
     <div className={cardClass}>
@@ -935,7 +935,7 @@ export default async function RiderProfilePage({
                     className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
                   />
                 ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl text-sunset shadow-lift sm:h-32 sm:w-32">
                     {rider.name.charAt(0)}
                   </div>
                 )}
@@ -946,7 +946,7 @@ export default async function RiderProfilePage({
             {/* Clears the avatar: stacked under it on mobile, beside it from sm up. */}
             <div className="flex flex-wrap items-start justify-between gap-4 pt-14 sm:pl-36 sm:pt-4">
               <div className="min-w-0">
-                <h1 className="truncate font-display text-2xl font-bold text-ink sm:text-3xl">
+                <h1 className="truncate font-display text-2xl text-ink sm:text-3xl">
                   {rider.name}
                 </h1>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">

@@ -29,7 +29,7 @@ export default async function AmbassadorsPage() {
             <Award className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="font-display text-2xl font-semibold text-ink">Ambassadors</h1>
+            <h1 className="font-display text-2xl text-ink">Ambassadors</h1>
             <p className="text-sm text-muted">Riders who lead and represent District 76.</p>
           </div>
         </div>

@@ -55,7 +55,7 @@ export default async function AdminChallengesPage(props: {
           action={createChallengeAction}
           className="space-y-3 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg"
         >
-          <h2 className="font-display text-lg font-semibold text-white">New challenge</h2>
+          <h2 className="font-display text-lg text-white">New challenge</h2>
           <p className="text-xs text-slate-400">
             Riders can set their own — use this for official ones. Only rides inside the window count toward it.
           </p>

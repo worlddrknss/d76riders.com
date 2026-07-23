@@ -37,7 +37,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
         )}
       </div>
       <div className="p-3">
-        <p className="font-display text-lg font-bold text-ink">{formatPrice(listing.priceCents)}</p>
+        <p className="font-display text-lg text-ink">{formatPrice(listing.priceCents)}</p>
         <p className="mt-0.5 line-clamp-1 text-sm text-ink group-hover:text-sunset">{listing.title}</p>
         {listing.location ? (
           <p className="mt-1 inline-flex items-center gap-1 text-xs text-muted"><MapPin className="h-3 w-3 text-sunset" />{listing.location}</p>

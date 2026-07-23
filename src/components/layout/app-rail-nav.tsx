@@ -134,7 +134,7 @@ export function AppRailNav({
         {avatarUrl ? (
           <img src={avatarUrl} alt={name} className="h-[46px] w-[46px] shrink-0 rounded-full object-cover" />
         ) : (
-          <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full bg-sunset/15 font-display text-lg font-bold text-sunset">
+          <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full bg-sunset/15 font-display text-lg text-sunset">
             {name.charAt(0)}
           </span>
         )}

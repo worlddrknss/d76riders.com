@@ -78,7 +78,7 @@ export function RoadQualityCard({
           <Gauge className="h-4 w-4" /> Route Quality
         </h2>
         <div className="text-right">
-          <p className="font-display text-2xl font-bold text-ink">
+          <p className="font-display text-2xl text-ink">
             {q != null ? q.toFixed(1) : "—"}
             <span className="text-sm font-normal text-muted"> / 5</span>
           </p>

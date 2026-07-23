@@ -37,7 +37,7 @@ export function RiderDownPanel({ eventId, roster, incidents }: RiderDownPanelPro
     <div className="rounded-xl border border-red-200 bg-red-50/40 p-4 shadow-soft sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-asphalt">
+          <h2 className="flex items-center gap-2 font-display text-xl text-asphalt">
             <Siren className="h-5 w-5 text-red-600" />
             Safety
           </h2>

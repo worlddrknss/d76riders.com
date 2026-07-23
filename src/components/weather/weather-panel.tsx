@@ -35,7 +35,7 @@ export function EventWeatherPanel({ forecast }: { forecast: DailyForecast }) {
         <WeatherIcon code={forecast.code} className="h-4 w-4" /> Ride-day forecast
       </div>
       <div className="mt-2 flex items-baseline gap-2">
-        <p className="font-display text-2xl font-bold text-ink">{forecast.highF}°</p>
+        <p className="font-display text-2xl text-ink">{forecast.highF}°</p>
         <p className="text-sm text-muted">/ {forecast.lowF}°</p>
         <p className="text-sm font-medium text-ink">{weatherLabel(forecast.code)}</p>
       </div>

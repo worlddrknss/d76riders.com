@@ -30,14 +30,14 @@ export default async function EscalateReportPage(props: { params: Promise<{ repo
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Moderation</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-white">Escalate to Incident</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">Escalate to Incident</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Opens a private case file for follow-up. The report is marked reviewed and linked to the incident.
         </p>
       </section>
 
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-        <h2 className="font-display text-lg font-semibold text-white">Report</h2>
+        <h2 className="font-display text-lg text-white">Report</h2>
         <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500">Type</dt>

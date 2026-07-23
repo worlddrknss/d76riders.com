@@ -27,7 +27,7 @@ export function StoryComposer({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">Add to your story</h2>
+          <h2 className="font-display text-lg text-ink">Add to your story</h2>
           <button type="button" onClick={onClose} className="text-muted hover:text-ink" aria-label="Close">
             <X className="h-5 w-5" />
           </button>

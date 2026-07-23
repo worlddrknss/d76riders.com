@@ -42,7 +42,7 @@ export function EmergencyAccessLog({ accesses }: { accesses: EmergencyAccess[] }
     <section className="rounded-2xl border border-border bg-surface shadow-soft">
       <header className="flex items-center gap-2 border-b border-border px-5 py-4 sm:px-6">
         <ShieldAlert className="h-4 w-4 text-sunset" />
-        <h2 className="font-display text-lg font-semibold text-ink">Access log</h2>
+        <h2 className="font-display text-lg text-ink">Access log</h2>
         <span className="ml-auto text-xs text-muted">Who&apos;s opened your card</span>
       </header>
 

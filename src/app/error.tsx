@@ -30,7 +30,7 @@ export default function Error({
       <div className="grid h-14 w-14 place-items-center rounded-2xl bg-sunset/10 text-sunset">
         <TriangleAlert className="h-7 w-7" />
       </div>
-      <h1 className="mt-5 font-display text-2xl font-bold uppercase tracking-tight text-ink">
+      <h1 className="mt-5 font-display text-2xl uppercase tracking-tight text-ink">
         Something threw a chain
       </h1>
       <p className="mt-2 max-w-md text-sm text-muted">

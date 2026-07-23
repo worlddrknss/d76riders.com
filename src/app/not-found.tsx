@@ -5,8 +5,8 @@ import { Home, Route as RouteIcon } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-      <p className="font-display text-6xl font-black leading-none text-sunset">404</p>
-      <h1 className="mt-3 font-display text-2xl font-bold uppercase tracking-tight text-ink">Off the map</h1>
+      <p className="font-display text-6xl leading-none text-sunset">404</p>
+      <h1 className="mt-3 font-display text-2xl uppercase tracking-tight text-ink">Off the map</h1>
       <p className="mt-2 max-w-md text-sm text-muted">
         This road doesn&apos;t exist, or it moved. Let&apos;s get you back on route.
       </p>

@@ -23,7 +23,7 @@ export default async function NewListingPage() {
         <ChevronLeft className="h-3.5 w-3.5" /> Marketplace
       </Link>
       <div className="mt-3 max-w-2xl">
-        <h1 className="font-display text-3xl font-bold text-ink">Post a listing</h1>
+        <h1 className="font-display text-3xl text-ink">Post a listing</h1>
         <p className="mt-1 text-sm text-muted">Bikes, parts, gear — sell it to the community.</p>
         <div className="mt-6 rounded-xl border border-border bg-surface p-6 shadow-soft">
           <CreateListingForm />

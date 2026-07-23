@@ -64,7 +64,7 @@ export default async function AdminSponsorsPage(props: {
 
       {/* ── Review queue ── */}
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-        <h2 className="font-display text-lg font-semibold text-white">Awaiting review</h2>
+        <h2 className="font-display text-lg text-white">Awaiting review</h2>
         <p className="mt-1 text-xs text-slate-400">
           Approving puts the business on the public page with the community&apos;s name next to it — the tier
           is yours to set, not the applicant&apos;s.
@@ -164,7 +164,7 @@ export default async function AdminSponsorsPage(props: {
 
       {/* Linking a sponsor to a ride is its own job, not part of editing one. */}
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg lg:max-w-md">
-        <h2 className="font-display text-lg font-semibold text-white">Sponsor a ride</h2>
+        <h2 className="font-display text-lg text-white">Sponsor a ride</h2>
         <p className="mt-1 text-xs text-slate-400">Attach a business to a specific event.</p>
         <form action={linkSponsorToEventAction} className="mt-4 space-y-3">
           <select name="sponsorId" required className={inputClass}>

@@ -88,7 +88,7 @@ export function ShopReviews({
   return (
     <section className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="font-display text-xl font-semibold text-ink">Reviews</h2>
+        <h2 className="font-display text-xl text-ink">Reviews</h2>
         {reviews.length > 0 && (
           <span className="inline-flex items-center gap-2 text-sm text-muted">
             <Stars value={average} />

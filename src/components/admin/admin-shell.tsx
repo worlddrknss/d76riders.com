@@ -116,7 +116,7 @@ export function AdminShell({ children, currentUser }: AdminShellProps) {
       >
         <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sunset font-display text-xs font-bold text-white">
+            <div className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sunset font-display text-xs text-white">
               76
             </div>
             {!collapsed ? (

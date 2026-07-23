@@ -212,7 +212,7 @@ export function AvatarEditor({ url, name }: AvatarEditorProps) {
             className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-surface shadow-2xl sm:max-w-md sm:rounded-2xl"
           >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <h2 className="font-display text-lg font-bold text-ink">Choose profile picture</h2>
+              <h2 className="font-display text-lg text-ink">Choose profile picture</h2>
               <button
                 type="button"
                 onClick={closeEditor}

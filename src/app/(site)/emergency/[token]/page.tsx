@@ -23,7 +23,7 @@ function Notice({ title, body }: { title: string; body: string }) {
     <Shell>
       <div className="rounded-xl border border-border bg-surface p-6 text-center shadow-soft">
         <AlertOctagon className="mx-auto h-8 w-8 text-muted" />
-        <h1 className="mt-3 font-display text-xl font-semibold text-ink">{title}</h1>
+        <h1 className="mt-3 font-display text-xl text-ink">{title}</h1>
         <p className="mt-2 text-sm text-muted">{body}</p>
       </div>
     </Shell>

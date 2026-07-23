@@ -79,7 +79,7 @@ export default async function GalleryPage() {
           {galleries.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
               <ImageOff className="mx-auto h-8 w-8 text-muted/50" />
-              <h2 className="mt-3 font-display text-xl font-semibold text-ink">No ride photos yet</h2>
+              <h2 className="mt-3 font-display text-xl text-ink">No ride photos yet</h2>
               <p className="mx-auto mt-2 max-w-md text-sm text-muted">
                 After a ride, attendees can add photos on the event page. The latest galleries show up here.
               </p>
@@ -112,7 +112,7 @@ export default async function GalleryPage() {
                         {count}
                       </span>
                       <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-asphalt/90 to-transparent p-4">
-                        <p className="font-display text-lg font-semibold text-white">{event.title}</p>
+                        <p className="font-display text-lg text-white">{event.title}</p>
                         <p className="text-xs text-white/70">
                           {formatEventDate(event.startsAt, event.timezone ?? DEFAULT_TIMEZONE)}
                         </p>
@@ -130,7 +130,7 @@ export default async function GalleryPage() {
         <div className="w-full px-4 pb-16 sm:px-6 lg:px-8">
           <div className="rounded-2xl border border-border bg-surface p-8 text-center shadow-soft sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-sunset">Rode with us?</p>
-            <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-asphalt sm:text-3xl">Share Your Ride Shots</h2>
+            <h2 className="mt-2 font-display text-2xl tracking-tight text-asphalt sm:text-3xl">Share Your Ride Shots</h2>
             <p className="mx-auto mt-3 max-w-2xl text-muted">
               Add your photos to any ride from its event page — you&apos;re credited on every one.
             </p>

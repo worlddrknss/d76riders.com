@@ -48,7 +48,7 @@ export default async function JoinPage(props: {
           <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
             <div className="space-y-6">
               <CardShell className="rounded-xl rounded-bl-xl p-6 sm:p-8">
-                <h3 className="font-display text-2xl font-bold tracking-tight text-asphalt">Community Expectations</h3>
+                <h3 className="font-display text-2xl tracking-tight text-asphalt">Community Expectations</h3>
                 <ul className="mt-4 space-y-3 text-muted">
                   {guidelines.map((item) => (
                     <li key={item} className="flex items-start gap-2">
@@ -60,7 +60,7 @@ export default async function JoinPage(props: {
               </CardShell>
 
               <CardShell className="rounded-xl rounded-bl-xl p-6 sm:p-8">
-                <h3 className="font-display text-2xl font-bold tracking-tight text-asphalt">Benefits of Joining</h3>
+                <h3 className="font-display text-2xl tracking-tight text-asphalt">Benefits of Joining</h3>
                 <div className="mt-4 space-y-3">
                   {joinBenefits.map((benefit) => (
                     <div key={benefit.title} className="rounded-xl border border-border bg-canvas p-4">
@@ -74,7 +74,7 @@ export default async function JoinPage(props: {
 
             <aside>
               <div className="rounded-xl border border-border bg-surface p-6 shadow-lift sm:p-8">
-                <h3 className="font-display text-3xl font-semibold tracking-tight text-ink">Create account</h3>
+                <h3 className="font-display text-3xl tracking-tight text-ink">Create account</h3>
                 <p className="mt-2 text-sm text-muted">Set your username and start your District 76 profile.</p>
                 <div className="mt-4 flex flex-wrap gap-2.5 text-xs font-semibold uppercase tracking-[0.06em]">
                   <Link href="/login" className="rounded-md border border-border bg-canvas px-3 py-1.5 text-muted hover:bg-surface">

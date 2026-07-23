@@ -90,7 +90,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
         <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <FadeUp className="mx-auto max-w-2xl text-center">
             <p className={eyebrow}>Everything a rider needs, in one place</p>
-            <h2 className="mt-2 font-display text-3xl font-bold uppercase tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl uppercase tracking-tight text-asphalt sm:text-4xl">
               More than a Facebook group
             </h2>
             <p className="mt-4 text-muted">
@@ -102,7 +102,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
           <div className="mt-14 grid gap-12 lg:grid-cols-2 lg:items-center">
             <FadeUp>
               <p className={eyebrow}>The Feed</p>
-              <h3 className="mt-2 font-display text-2xl font-bold uppercase tracking-tight text-asphalt">
+              <h3 className="mt-2 font-display text-2xl uppercase tracking-tight text-asphalt">
                 Your ride, shared
               </h3>
               <p className="mt-3 text-muted">
@@ -134,7 +134,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
                 </div>
                 <div className="flex items-center gap-2.5">
                   <span
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full font-display text-xs font-bold text-white"
+                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full font-display text-xs text-white"
                     style={{ background: "linear-gradient(135deg,#3a352d,#22201a)" }}
                   >
                     JR
@@ -174,7 +174,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
           <div className="grid items-center gap-12 lg:grid-cols-[0.9fr_1.3fr]">
             <FadeUp>
               <p className={eyebrow}>Events &amp; Group Rides</p>
-              <h3 className="mt-2 font-display text-2xl font-bold uppercase tracking-tight">
+              <h3 className="mt-2 font-display text-2xl uppercase tracking-tight">
                 Show up, ride, regroup
               </h3>
               <p className="mt-3 text-slate-300">
@@ -237,7 +237,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
               <div className="rounded-2xl border border-border bg-surface p-4 shadow-lift" aria-hidden="true">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-display text-lg font-bold text-ink">Kawasaki Z650</div>
+                    <div className="font-display text-lg text-ink">Kawasaki Z650</div>
                     <div className="text-xs text-muted">Naked · 649cc</div>
                   </div>
                   <span className="inline-flex items-center gap-1.5 text-sm font-bold text-ink">
@@ -270,7 +270,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
 
             <FadeUp delay={0.15} className="lg:order-2 order-1">
               <p className={eyebrow}>Your Garage</p>
-              <h3 className="mt-2 font-display text-2xl font-bold uppercase tracking-tight text-asphalt">
+              <h3 className="mt-2 font-display text-2xl uppercase tracking-tight text-asphalt">
                 Every bolt, tracked
               </h3>
               <p className="mt-3 text-muted">
@@ -292,7 +292,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
         <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <FadeUp className="mx-auto max-w-2xl text-center">
             <p className={eyebrow}>Roads &amp; Routes</p>
-            <h2 className="mt-2 font-display text-3xl font-bold uppercase tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl uppercase tracking-tight sm:text-4xl">
               Know before you go
             </h2>
             <p className="mt-4 text-slate-300">
@@ -308,9 +308,9 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
               aria-hidden="true"
             >
               <div className="flex items-center justify-between">
-                <div className="font-display text-lg font-bold">{topRoad ? topRoad.name : "Cumberland Loop"}</div>
+                <div className="font-display text-lg">{topRoad ? topRoad.name : "Cumberland Loop"}</div>
                 <div className="text-right">
-                  <div className="font-display text-2xl font-black">
+                  <div className="font-display text-2xl">
                     {topRoad ? topRoad.quality.toFixed(1) : "4.6"}
                     <span className="text-sm font-normal text-[#a89f92]">/5</span>
                   </div>
@@ -363,7 +363,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
               { t: "Difficulty & hazards", d: "Difficulty read from elevation, with rider-flagged hazards pinned on the map." },
             ].map((sf) => (
               <FadeUp key={sf.t}>
-                <h4 className="flex items-center gap-2 font-display text-base font-bold uppercase tracking-tight">
+                <h4 className="flex items-center gap-2 font-display text-base uppercase tracking-tight">
                   <i className="h-2 w-2 rotate-45 rounded-[2px] bg-sunset" />
                   {sf.t}
                 </h4>
@@ -379,7 +379,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
         <div className="mx-auto w-full max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <FadeUp className="max-w-2xl">
             <p className={eyebrow}>And the stuff that matters when it counts</p>
-            <h2 className="mt-2 font-display text-3xl font-bold uppercase tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl uppercase tracking-tight text-asphalt sm:text-4xl">
               Built for the road, not just the feed
             </h2>
           </FadeUp>
@@ -389,7 +389,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#c93a26]/12 text-[#c93a26]">
                   <TwoWheelsDownIcon className="h-5 w-5" filled />
                 </div>
-                <h3 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt">Emergency ready</h3>
+                <h3 className="font-display text-lg uppercase tracking-tight text-asphalt">Emergency ready</h3>
                 <p className="mt-1.5 text-sm text-muted">
                   An NFC helmet ID first responders can tap for your contacts, blood type, and allergies,
                   plus a one-tap Rider Down alert to the group.
@@ -406,7 +406,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-sunset/14 text-sunset">
                   <Star className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt">Get recognized</h3>
+                <h3 className="font-display text-lg uppercase tracking-tight text-asphalt">Get recognized</h3>
                 <p className="mt-1.5 text-sm text-muted">
                   A weekly Rider Spotlight, an Ambassador program for community leaders, and badges that
                   mean you showed up.
@@ -423,7 +423,7 @@ export function FeatureShowcase({ topRoad }: { topRoad?: ShowcaseRoad | null }) 
                 <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-forest/14 text-forest">
                   <Bell className="h-5 w-5" />
                 </div>
-                <h3 className="font-display text-lg font-bold uppercase tracking-tight text-asphalt">Never miss a beat</h3>
+                <h3 className="font-display text-lg uppercase tracking-tight text-asphalt">Never miss a beat</h3>
                 <p className="mt-1.5 text-sm text-muted">
                   Push notifications for waves, comments, and ride updates, with quiet hours so nothing
                   buzzes you overnight.

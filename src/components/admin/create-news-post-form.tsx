@@ -54,7 +54,7 @@ export function CreateNewsPostForm({
     <form action={formAction} className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Editor</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-white">{heading}</h1>
+        <h1 className="mt-2 font-display text-2xl text-white">{heading}</h1>
         <p className="mt-2 text-sm text-slate-300">{description}</p>
 
         <div className="mt-5 grid gap-4">
@@ -160,7 +160,7 @@ export function CreateNewsPostForm({
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
               <dt className="text-xs uppercase tracking-[0.08em] text-slate-400">Words</dt>
-              <dd className="mt-1 font-display text-2xl font-bold text-white">{wordCount}</dd>
+              <dd className="mt-1 font-display text-2xl text-white">{wordCount}</dd>
             </div>
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
               <dt className="text-xs uppercase tracking-[0.08em] text-slate-400">Status</dt>

@@ -24,7 +24,7 @@ export function AdminContentComposer() {
     <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Editor</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-white">New Content Draft</h1>
+        <h1 className="mt-2 font-display text-2xl text-white">New Content Draft</h1>
         <p className="mt-2 text-sm text-slate-300">
           Same WYSIWYG foundation as Vara Performance, now wired for admin publishing workflows in District 76.
         </p>
@@ -64,7 +64,7 @@ export function AdminContentComposer() {
           <dl className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
               <dt className="text-xs uppercase tracking-[0.08em] text-slate-400">Words</dt>
-              <dd className="mt-1 font-display text-2xl font-bold text-white">{wordCount}</dd>
+              <dd className="mt-1 font-display text-2xl text-white">{wordCount}</dd>
             </div>
             <div className="rounded-lg border border-white/10 bg-white/[0.03] p-3">
               <dt className="text-xs uppercase tracking-[0.08em] text-slate-400">Status</dt>
@@ -90,7 +90,7 @@ export function AdminContentComposer() {
 
         <section className="rounded-2xl border border-white/10 bg-white/3 p-5 shadow-lg">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Preview</p>
-          <h2 className="mt-2 font-display text-xl font-semibold text-white">{title || "Untitled draft"}</h2>
+          <h2 className="mt-2 font-display text-xl text-white">{title || "Untitled draft"}</h2>
           <p className="mt-1 text-sm text-slate-300">{summary || "No summary yet."}</p>
           <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-3">
             <div

@@ -180,7 +180,7 @@ export function MobileNav({
 
       {/* CREATE SHEET — mirrors the desktop Create menu. */}
       <Sheet open={sheet === "create"} onClose={close} label="Create">
-        <h2 className="px-1 pb-1 font-display text-xl font-semibold text-white">Create</h2>
+        <h2 className="px-1 pb-1 font-display text-xl text-white">Create</h2>
         <div className="overflow-hidden rounded-xl border border-white/10 bg-white/4">
           <CreateRow href="/feed" label="Share a ride" hint="Post an update or photos" icon={Rss} onNavigate={close} />
           {currentUser && (

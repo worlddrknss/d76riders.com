@@ -597,7 +597,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
       <div className="grid h-full place-items-center bg-canvas px-6">
         <div className="max-w-md rounded-2xl border border-border bg-surface p-8 text-center shadow-soft">
           <MapPin className="mx-auto h-8 w-8 text-sunset" />
-          <h3 className="mt-4 font-display text-lg font-bold text-asphalt">Map key needed</h3>
+          <h3 className="mt-4 font-display text-lg text-asphalt">Map key needed</h3>
           <p className="mt-2 text-sm text-muted">
             Add a free MapTiler key to <code className="rounded bg-canvas px-1">.env</code> as{" "}
             <code className="rounded bg-canvas px-1">NEXT_PUBLIC_MAPTILER_KEY</code> and restart the
@@ -620,7 +620,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-sunset">
             Route Planner
           </p>
-          <h1 className="mt-0.5 font-display text-xl font-bold leading-tight text-asphalt">
+          <h1 className="mt-0.5 font-display text-xl leading-tight text-asphalt">
             Plan Your Ride
           </h1>
           <div className="mt-3">
@@ -706,13 +706,13 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div className="rounded-xl bg-white/70 p-3">
                 <p className="text-xs text-muted">Distance</p>
-                <p className="mt-1 font-display text-xl font-bold text-asphalt">
+                <p className="mt-1 font-display text-xl text-asphalt">
                   {activeRoute ? formatDistance(activeRoute.distanceMeters) : "—"}
                 </p>
               </div>
               <div className="rounded-xl bg-white/70 p-3">
                 <p className="text-xs text-muted">Ride time</p>
-                <p className="mt-1 font-display text-xl font-bold text-asphalt">
+                <p className="mt-1 font-display text-xl text-asphalt">
                   {activeRoute ? formatDuration(activeRoute.durationSeconds) : "—"}
                 </p>
               </div>

@@ -29,7 +29,7 @@ export default async function AdminRolesPage({ searchParams }: AdminRolesPagePro
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Access Control</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Role Assignment</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Role Assignment</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Grant or revoke roles for members. Roles determine access to admin features, moderation tools, and content publishing.
         </p>
@@ -37,7 +37,7 @@ export default async function AdminRolesPage({ searchParams }: AdminRolesPagePro
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1.5fr]">
         <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-          <h2 className="font-display text-lg font-semibold text-white">Grant Role</h2>
+          <h2 className="font-display text-lg text-white">Grant Role</h2>
           <p className="mt-1 text-sm text-slate-400">Assign a new role to a user account.</p>
           <RoleManager
             users={users}
@@ -47,7 +47,7 @@ export default async function AdminRolesPage({ searchParams }: AdminRolesPagePro
         </section>
 
         <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-          <h2 className="font-display text-lg font-semibold text-white">
+          <h2 className="font-display text-lg text-white">
             {selectedUser ? `Roles for ${selectedUser.name || selectedUser.email}` : "All Role Assignments"}
           </h2>
           <p className="mt-1 text-sm text-slate-400">

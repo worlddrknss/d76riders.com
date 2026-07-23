@@ -89,7 +89,7 @@ export default async function ChallengesPage() {
 
               return (
                 <div key={group.key}>
-                  <h2 className="font-display text-lg font-semibold text-ink">{group.label}</h2>
+                  <h2 className="font-display text-lg text-ink">{group.label}</h2>
 
                   <StaggerList className="mt-3 grid gap-4 sm:grid-cols-2">
                     {inGroup.map((challenge) => {
@@ -121,7 +121,7 @@ export default async function ChallengesPage() {
                               ) : null}
                             </div>
 
-                            <h3 className="mt-2 font-display text-lg font-semibold text-ink">{challenge.name}</h3>
+                            <h3 className="mt-2 font-display text-lg text-ink">{challenge.name}</h3>
                             <p className="mt-1 line-clamp-2 text-sm text-muted">{challenge.description}</p>
 
                             {mine ? (

@@ -99,7 +99,7 @@ export default async function MentorsPage() {
                       </span>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1.5 truncate font-display text-lg font-bold text-ink group-hover:text-sunset">
+                      <p className="flex items-center gap-1.5 truncate font-display text-lg text-ink group-hover:text-sunset">
                         {rider.name}
                         {verified ? <ShieldCheck className="h-4 w-4 shrink-0 text-forest" /> : null}
                       </p>

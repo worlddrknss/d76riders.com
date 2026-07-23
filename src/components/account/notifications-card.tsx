@@ -35,7 +35,7 @@ export function EmailChangeCard({ email, emailVerified }: { email: string; email
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-      <h2 className="font-display text-xl font-semibold text-ink">Email address</h2>
+      <h2 className="font-display text-xl text-ink">Email address</h2>
       <p className="mt-1 flex items-center gap-2 text-sm text-muted">
         <span className="text-ink">{email}</span>
         {emailVerified ? (
@@ -89,7 +89,7 @@ export function NotificationPrefsCard({ prefs }: { prefs: Prefs }) {
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-      <h2 className="font-display text-xl font-semibold text-ink">Email notifications</h2>
+      <h2 className="font-display text-xl text-ink">Email notifications</h2>
       <p className="mt-1 text-sm text-muted">Choose which activity sends you an email.</p>
 
       <form action={savePrefs} className="mt-4 space-y-3">

@@ -84,7 +84,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sunset">Organizer</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Ride analytics</h1>
+          <h1 className="mt-1 font-display text-3xl text-ink">Ride analytics</h1>
           <p className="mt-1 text-sm text-muted">
             How {event.title} did, and how your rides are trending overall.
           </p>
@@ -97,7 +97,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {rideTiles.map((t) => (
               <div key={t.label} className="rounded-xl border border-border bg-surface p-4 shadow-soft">
-                <p className="font-display text-3xl font-bold text-sunset">{t.value}</p>
+                <p className="font-display text-3xl text-sunset">{t.value}</p>
                 <p className="mt-1 text-xs uppercase tracking-[0.08em] text-muted">{t.label}</p>
               </div>
             ))}
@@ -106,13 +106,13 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Funnel */}
             <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-              <h3 className="font-display text-base font-semibold text-ink">Commitment to kickstands</h3>
+              <h3 className="font-display text-base text-ink">Commitment to kickstands</h3>
               <div className="mt-4 space-y-3">
                 {rideFunnel.map((step) => (
                   <div key={step.label}>
                     <div className="flex items-baseline justify-between text-sm">
                       <span className="text-muted">{step.label}</span>
-                      <span className="font-display font-semibold text-ink">{step.value}</span>
+                      <span className="font-display text-ink">{step.value}</span>
                     </div>
                     <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-canvas">
                       <div
@@ -130,7 +130,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
             {/* No-shows */}
             <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-              <h3 className="font-display text-base font-semibold text-ink">
+              <h3 className="font-display text-base text-ink">
                 Said going, didn&apos;t show
                 <span className="ml-2 text-sm font-normal text-muted">{ride.noShows.length}</span>
               </h3>
@@ -169,7 +169,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
           <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="font-display text-base font-semibold text-ink">Turnout by ride</h3>
+                <h3 className="font-display text-base text-ink">Turnout by ride</h3>
                 <p className="mt-1 text-xs text-muted">Who said they were going, and who actually rode.</p>
               </div>
               <div className="flex items-center gap-4 text-xs text-muted">
@@ -213,7 +213,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
           {/* Churn */}
           <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-            <h3 className="font-display text-base font-semibold text-ink">Who&apos;s drifting away</h3>
+            <h3 className="font-display text-base text-ink">Who&apos;s drifting away</h3>
             <p className="mt-1 text-xs text-muted">
               Riders who came to your rides in the previous 90 days but not the last 90.
             </p>
@@ -224,7 +224,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
             ) : (
               <div className="mt-4 flex flex-wrap items-end gap-6">
                 <div>
-                  <p className="font-display text-4xl font-bold text-sunset">{pct(mine.churn.churnRate)}</p>
+                  <p className="font-display text-4xl text-sunset">{pct(mine.churn.churnRate)}</p>
                   <p className="text-xs uppercase tracking-[0.08em] text-muted">
                     {mine.churn.churned} of {mine.churn.priorActive} lapsed
                   </p>
@@ -232,15 +232,15 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
                 <dl className="flex flex-1 gap-3 text-center">
                   <div className="flex-1 rounded-lg border border-border bg-canvas p-3">
                     <dt className="text-[0.6rem] uppercase tracking-wide text-muted">Retained</dt>
-                    <dd className="mt-1 font-display text-xl font-bold text-forest">{mine.churn.retained}</dd>
+                    <dd className="mt-1 font-display text-xl text-forest">{mine.churn.retained}</dd>
                   </div>
                   <div className="flex-1 rounded-lg border border-border bg-canvas p-3">
                     <dt className="text-[0.6rem] uppercase tracking-wide text-muted">Lapsed</dt>
-                    <dd className="mt-1 font-display text-xl font-bold text-red-600">{mine.churn.churned}</dd>
+                    <dd className="mt-1 font-display text-xl text-red-600">{mine.churn.churned}</dd>
                   </div>
                   <div className="flex-1 rounded-lg border border-border bg-canvas p-3">
                     <dt className="text-[0.6rem] uppercase tracking-wide text-muted">New / back</dt>
-                    <dd className="mt-1 font-display text-xl font-bold text-sky-600">{mine.churn.returningOrNew}</dd>
+                    <dd className="mt-1 font-display text-xl text-sky-600">{mine.churn.returningOrNew}</dd>
                   </div>
                 </dl>
               </div>

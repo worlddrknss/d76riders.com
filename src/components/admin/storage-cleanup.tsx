@@ -57,15 +57,15 @@ export function StorageCleanup() {
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">S3 Objects</p>
-                <p className="mt-1 font-display text-2xl font-bold text-white">{scanResult.totalS3Keys}</p>
+                <p className="mt-1 font-display text-2xl text-white">{scanResult.totalS3Keys}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Referenced</p>
-                <p className="mt-1 font-display text-2xl font-bold text-emerald-300">{scanResult.referencedKeys}</p>
+                <p className="mt-1 font-display text-2xl text-emerald-300">{scanResult.referencedKeys}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Orphaned</p>
-                <p className="mt-1 font-display text-2xl font-bold text-red-300">{scanResult.orphanedKeys.length}</p>
+                <p className="mt-1 font-display text-2xl text-red-300">{scanResult.orphanedKeys.length}</p>
               </div>
             </div>
 

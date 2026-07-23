@@ -87,7 +87,7 @@ export default async function SavedPage() {
             <Bookmark className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="font-display text-2xl font-semibold text-ink">Saved</h1>
+            <h1 className="font-display text-2xl text-ink">Saved</h1>
             <p className="text-sm text-muted">
               {entries.length === 0
                 ? "Posts you save show up here — just you."

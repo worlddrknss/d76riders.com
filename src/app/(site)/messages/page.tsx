@@ -79,7 +79,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
           <MessageSquare className="h-5 w-5" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-semibold text-ink">Messages</h1>
+          <h1 className="font-display text-2xl text-ink">Messages</h1>
           <p className="text-sm text-muted">Direct messages with riders you both follow.</p>
         </div>
       </div>

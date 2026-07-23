@@ -188,7 +188,7 @@ export default async function ShopsPage({
                           logos that filled the band's corner. */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <h2 className="font-display text-base font-semibold text-ink">
+                          <h2 className="font-display text-base text-ink">
                             {shop.name}
                           </h2>
                           {shop.category ? (

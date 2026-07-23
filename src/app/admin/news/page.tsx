@@ -50,7 +50,7 @@ export default async function AdminNewsPage() {
     <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Publishing</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold text-white">News Management</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">News Management</h1>
         <p className="mt-2 text-sm text-slate-300">Create, edit, and manage blog posts.</p>
       </div>
 

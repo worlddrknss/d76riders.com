@@ -64,7 +64,7 @@ export default async function EmergencySettingsPage() {
     <AppShell>
       <div className="space-y-6">
         <div className="max-w-3xl space-y-4">
-          <h1 className="font-display text-3xl font-semibold text-ink">Settings</h1>
+          <h1 className="font-display text-3xl text-ink">Settings</h1>
           <SettingsNav />
         </div>
         <div className="grid gap-5 lg:grid-cols-[22rem_1fr]">

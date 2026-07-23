@@ -20,7 +20,7 @@ export function CategoryForm({ action, heading, submitLabel, initialValues }: Ca
     <div className="mx-auto max-w-xl space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">Content</p>
-        <h1 className="mt-2 font-display text-3xl font-semibold text-white">{heading}</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">{heading}</h1>
       </div>
 
       <form action={formAction} className="space-y-4 rounded-2xl border border-white/10 bg-white/3 p-6 shadow-lg">

@@ -70,7 +70,7 @@ export function EventPreview({
   return (
     <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-display text-2xl font-bold text-ink">{title.trim() || "Your event title"}</h3>
+        <h3 className="font-display text-2xl text-ink">{title.trim() || "Your event title"}</h3>
         <span className="shrink-0 rounded-full border border-forest/30 bg-forest/10 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-forest">
           Upcoming
         </span>
@@ -120,7 +120,7 @@ export function EventPreview({
 
       {description.trim() ? (
         <div className="mt-4 rounded-xl border border-border bg-canvas/60 p-4">
-          <h4 className="font-display text-base font-bold text-ink">About this ride</h4>
+          <h4 className="font-display text-base text-ink">About this ride</h4>
           <p className="mt-1.5 whitespace-pre-wrap text-sm text-ink/80">{description}</p>
         </div>
       ) : null}

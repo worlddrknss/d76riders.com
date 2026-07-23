@@ -30,7 +30,7 @@ export default async function AdminPoliciesPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Governance</p>
-            <h1 className="mt-2 font-display text-4xl font-bold text-white">Policies</h1>
+            <h1 className="mt-2 font-display text-4xl text-white">Policies</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
               Community guidelines and safety waivers members must accept. Bumping a version re-prompts every
               member, since acceptance is recorded per version.
@@ -84,7 +84,7 @@ export default async function AdminPoliciesPage() {
                       </span>
                     </div>
 
-                    <p className="mt-2 font-display text-lg font-semibold text-white">{policy.title}</p>
+                    <p className="mt-2 font-display text-lg text-white">{policy.title}</p>
                     {policy.summary ? (
                       <p className="mt-1 line-clamp-2 text-sm text-slate-300">{policy.summary}</p>
                     ) : null}

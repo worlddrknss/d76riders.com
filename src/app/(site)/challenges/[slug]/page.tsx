@@ -108,7 +108,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
           <div className="grid gap-4 sm:grid-cols-4">
             <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
               <p className="text-xs uppercase tracking-[0.08em] text-muted">Goal</p>
-              <p className="mt-1 font-display text-2xl font-bold text-ink">
+              <p className="mt-1 font-display text-2xl text-ink">
                 {challenge.goal.toLocaleString()}
               </p>
               <p className="text-xs text-muted">{METRIC_LABEL[challenge.metric]}</p>
@@ -126,14 +126,14 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
             </div>
             <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
               <p className="text-xs uppercase tracking-[0.08em] text-muted">Riders in</p>
-              <p className="mt-1 font-display text-2xl font-bold text-ink">{challenge.entries.length}</p>
+              <p className="mt-1 font-display text-2xl text-ink">{challenge.entries.length}</p>
               <p className="text-xs text-muted">{finishers} finished</p>
             </div>
             <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
               <p className="text-xs uppercase tracking-[0.08em] text-muted">Your progress</p>
               {mine ? (
                 <>
-                  <p className="mt-1 font-display text-2xl font-bold text-sunset">
+                  <p className="mt-1 font-display text-2xl text-sunset">
                     {mine.progress.toLocaleString()}
                   </p>
                   <p className="text-xs text-muted">
@@ -164,7 +164,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
 
           {/* Standings */}
           <div>
-            <h2 className="font-display text-lg font-semibold text-ink">Standings</h2>
+            <h2 className="font-display text-lg text-ink">Standings</h2>
             {challenge.entries.length === 0 ? (
               <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-12 text-center shadow-soft">
                 <Trophy className="mx-auto h-8 w-8 text-muted/50" />
@@ -187,7 +187,7 @@ export default async function ChallengeDetailPage(props: { params: Promise<{ slu
                         }`}
                       >
                         <span
-                          className={`w-6 shrink-0 text-center font-display text-lg font-bold ${
+                          className={`w-6 shrink-0 text-center font-display text-lg ${
                             RANK_STYLES[index] ?? "text-muted"
                           }`}
                         >

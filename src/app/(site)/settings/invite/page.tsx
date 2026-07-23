@@ -31,7 +31,7 @@ export default async function InviteSettingsPage() {
     <AppShell>
       <div className="space-y-6">
         <div className="max-w-3xl space-y-4">
-          <h1 className="font-display text-3xl font-semibold text-ink">Settings</h1>
+          <h1 className="font-display text-3xl text-ink">Settings</h1>
           <SettingsNav />
         </div>
 
@@ -52,11 +52,11 @@ export default async function InviteSettingsPage() {
               <h2 className={headingClass}>So far</h2>
               <div className="mt-3 flex items-baseline gap-x-8 gap-y-2">
                 <p className="flex flex-col">
-                  <span className="font-display text-3xl font-bold text-ink">{referral.clicks}</span>
+                  <span className="font-display text-3xl text-ink">{referral.clicks}</span>
                   <span className="text-xs uppercase tracking-[0.08em] text-muted">Link opens</span>
                 </p>
                 <p className="flex flex-col">
-                  <span className="font-display text-3xl font-bold text-sunset">{referral.conversions}</span>
+                  <span className="font-display text-3xl text-sunset">{referral.conversions}</span>
                   <span className="text-xs uppercase tracking-[0.08em] text-muted">Riders joined</span>
                 </p>
               </div>
@@ -67,7 +67,7 @@ export default async function InviteSettingsPage() {
             <InviteChart data={referral.series} />
 
             <div>
-              <h2 className="font-display text-lg font-semibold text-ink">Riders you brought in</h2>
+              <h2 className="font-display text-lg text-ink">Riders you brought in</h2>
               {referral.referrals.length === 0 ? (
                 <div className="mt-3 rounded-xl border border-dashed border-border bg-surface p-8 text-center shadow-soft">
                   <UserPlus className="mx-auto h-7 w-7 text-muted/50" />

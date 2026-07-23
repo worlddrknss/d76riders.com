@@ -62,7 +62,7 @@ export function EventGallery({
   return (
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-soft sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="font-display text-lg font-semibold text-ink">
+        <h2 className="font-display text-lg text-ink">
           Gallery {photos.length > 0 && <span className="text-muted">· {photos.length}</span>}
         </h2>
         {canUpload ? (

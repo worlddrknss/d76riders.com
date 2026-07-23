@@ -30,7 +30,7 @@ export function AttendancePanel({ eventId, attendees, eventStatus }: AttendanceP
     <div className="rounded-xl border border-border bg-surface p-4 shadow-soft sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-semibold text-asphalt">Attendance</h2>
+          <h2 className="font-display text-xl text-asphalt">Attendance</h2>
           <p className="mt-1 text-sm text-muted">
             {checkedInCount}/{attendees.length} checked in
             {checkedOutCount > 0 ? ` · ${checkedOutCount} checked out` : ""}

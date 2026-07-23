@@ -32,7 +32,7 @@ export function CalendarSubscribe({
   return (
     <div className="max-w-3xl rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Calendar</p>
-      <h2 className="mt-1 flex items-center gap-2 font-display text-xl font-semibold text-ink">
+      <h2 className="mt-1 flex items-center gap-2 font-display text-xl text-ink">
         <CalendarClock className="h-5 w-5 text-sunset" />
         Sync your rides
       </h2>

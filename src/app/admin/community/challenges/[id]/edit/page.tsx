@@ -33,7 +33,7 @@ export default async function EditChallengePage(props: { params: Promise<{ id: s
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Moderation</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-white">Edit Challenge</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">Edit Challenge</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           {challenge._count.entries} rider{challenge._count.entries === 1 ? "" : "s"} in ·{" "}
           {challenge.goal.toLocaleString()} {challenge.metric.replaceAll("_", " ").toLowerCase()} · {window}

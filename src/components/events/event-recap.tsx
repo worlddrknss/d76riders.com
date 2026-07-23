@@ -38,7 +38,7 @@ export function EventRecap({
             <Flag className="h-3.5 w-3.5" />
             Ride recap
           </p>
-          <h2 className="mt-1 font-display text-2xl font-semibold text-white">{title} is in the books</h2>
+          <h2 className="mt-1 font-display text-2xl text-white">{title} is in the books</h2>
           <p className="mt-1 text-sm text-white/70">
             Thanks to everyone who rode. Here&apos;s how it went{hasRoute ? ", route and all" : ""}.
           </p>
@@ -51,7 +51,7 @@ export function EventRecap({
           return (
             <div key={s.label} className="flex flex-col items-center gap-1 px-4 py-5 text-center">
               <Icon className="h-5 w-5 text-sunset" />
-              <span className="font-display text-2xl font-semibold text-ink">{s.value}</span>
+              <span className="font-display text-2xl text-ink">{s.value}</span>
               <span className="text-xs uppercase tracking-wide text-muted">{s.label}</span>
             </div>
           );

@@ -58,7 +58,7 @@ export function ReputationPanel({
   return (
     <section className="rounded-xl border border-border bg-surface p-5 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold text-ink">Progression</h2>
+        <h2 className="font-display text-lg text-ink">Progression</h2>
         <div className="flex items-center gap-3">
           {actionSlot}
           <Link href="/leaderboard" className="text-xs font-semibold text-sunset hover:underline">

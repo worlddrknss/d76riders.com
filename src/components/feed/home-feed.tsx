@@ -100,13 +100,13 @@ export async function HomeFeed({
                 className="h-24 w-24 rounded-full border-4 border-surface object-cover shadow-lift sm:h-32 sm:w-32"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl font-bold text-sunset shadow-lift sm:h-32 sm:w-32">
+              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-surface bg-sunset/10 font-display text-4xl text-sunset shadow-lift sm:h-32 sm:w-32">
                 {viewer.name.charAt(0)}
               </div>
             )}
           </div>
           <div className="pt-14 sm:pl-36 sm:pt-4">
-            <h1 className="truncate font-display text-2xl font-bold text-ink sm:text-3xl">{viewer.name}</h1>
+            <h1 className="truncate font-display text-2xl text-ink sm:text-3xl">{viewer.name}</h1>
             <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
               <span>@{viewer.handle}</span>
               {viewer.location && (

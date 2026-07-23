@@ -108,7 +108,7 @@ export default async function RidersPage() {
                   )}
                 </div>
                 <div className="px-5 pb-5 pt-9">
-                  <h2 className="font-display text-lg font-bold tracking-tight text-asphalt">{rider.name}</h2>
+                  <h2 className="font-display text-lg tracking-tight text-asphalt">{rider.name}</h2>
                   <p className="text-sm text-muted">{bikeLabel}</p>
                   <div className="mt-4 space-y-2 text-sm text-muted">
                     <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-sunset" />{ridesCount} rides</p>

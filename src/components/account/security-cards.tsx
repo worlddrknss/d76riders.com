@@ -21,7 +21,7 @@ export function PasswordChangeCard() {
 
   return (
     <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-      <h2 className="font-display text-xl font-semibold text-ink">Password</h2>
+      <h2 className="font-display text-xl text-ink">Password</h2>
       <p className="mt-1 text-sm text-muted">Use at least 8 characters.</p>
 
       <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">

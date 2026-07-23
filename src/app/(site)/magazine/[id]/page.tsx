@@ -198,7 +198,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
             ) : null}
           </nav>
 
-          <h1 className="mt-3 max-w-4xl text-balance font-display text-3xl font-bold uppercase leading-[1.05] tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 max-w-4xl text-balance font-display text-3xl uppercase leading-[1.05] tracking-tight text-white sm:text-5xl">
             {post.title}
           </h1>
 
@@ -363,7 +363,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
           show rather than an empty box. */}
       {related.length > 0 ? (
         <section className="mt-14 border-t border-border pt-10">
-          <h2 className="font-display text-xl font-bold uppercase tracking-tight text-ink">Keep Reading</h2>
+          <h2 className="font-display text-xl uppercase tracking-tight text-ink">Keep Reading</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((item, i) => (
               <Link

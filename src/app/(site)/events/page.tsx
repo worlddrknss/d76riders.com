@@ -67,7 +67,7 @@ export default async function EventsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <CalendarDays className="h-5 w-5 text-sunset" />
-              <h2 className="font-display text-xl font-bold uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
+              <h2 className="font-display text-xl uppercase tracking-tight text-asphalt">Upcoming Rides</h2>
             </div>
             <div className="flex items-center gap-3">
               <Link
@@ -108,14 +108,14 @@ export default async function EventsPage() {
                   >
                     <div className="absolute inset-0 bg-linear-to-t from-asphalt/50 to-transparent" />
                     <div className="absolute bottom-3 left-3 flex h-16 w-16 flex-col items-center justify-center rounded-lg bg-white text-asphalt shadow-soft">
-                      <span className="font-display text-2xl font-bold leading-none">{badge.day}</span>
+                      <span className="font-display text-2xl leading-none">{badge.day}</span>
                       <span className="text-[0.6rem] font-bold uppercase tracking-wider text-sunset">{badge.month}</span>
                     </div>
                   </div>
 
                   {/* DETAILS */}
                   <div className="p-6">
-                    <h3 className="font-display text-2xl font-bold uppercase tracking-tight text-asphalt">{event.title}</h3>
+                    <h3 className="font-display text-2xl uppercase tracking-tight text-asphalt">{event.title}</h3>
                     <p className="mt-3 text-sm leading-relaxed text-muted">{event.excerpt || "No event excerpt yet."}</p>
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
                       <span className="inline-flex items-center gap-1"><Route className="h-3.5 w-3.5 text-sunset" />{event.distanceMiles ? `${event.distanceMiles} miles` : "Distance TBD"}</span>
@@ -165,7 +165,7 @@ export default async function EventsPage() {
             <div className="absolute inset-0 bg-asphalt/75" aria-hidden="true" />
             <div className="relative flex flex-col items-start gap-6 p-8 sm:flex-row sm:items-center sm:justify-between sm:p-10">
               <div className="text-white">
-                <h2 className="font-display text-2xl font-bold tracking-tight">Explore Featured Roads</h2>
+                <h2 className="font-display text-2xl tracking-tight">Explore Featured Roads</h2>
                 <p className="mt-2 max-w-lg text-sm text-slate-200">
                   Discover rider-shared routes around Clarksville with saved geometry, scenic ratings, and road notes. Route planning is built into every event.
                 </p>

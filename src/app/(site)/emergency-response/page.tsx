@@ -145,7 +145,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Our Safety Stack</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Built for the Realities of Group Riding
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-muted">
@@ -161,7 +161,7 @@ export default function SafetyPage() {
                     <pillar.icon className="h-5 w-5 text-sunset" />
                   </div>
                   <div>
-                    <h3 className="font-display text-lg font-semibold text-asphalt">{pillar.title}</h3>
+                    <h3 className="font-display text-lg text-asphalt">{pillar.title}</h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted">{pillar.description}</p>
                   </div>
                 </div>
@@ -176,7 +176,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">NFC Emergency ID</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">
               Your Helmet Speaks When You Can&apos;t
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-slate-300">
@@ -197,7 +197,7 @@ export default function SafetyPage() {
                   <div className="absolute -left-8 flex h-6 w-6 items-center justify-center rounded-full bg-sunset text-xs font-bold text-white">
                     {item.step}
                   </div>
-                  <h3 className="font-display text-base font-semibold">{item.title}</h3>
+                  <h3 className="font-display text-base">{item.title}</h3>
                   <p className="mt-1 text-sm leading-relaxed text-slate-300">{item.text}</p>
                 </div>
               ))}
@@ -211,7 +211,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Privacy &amp; Security</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               Your Data, Your Control
             </h2>
             <p className="mt-4 max-w-2xl text-lg text-muted">
@@ -226,7 +226,7 @@ export default function SafetyPage() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sunset/10">
                     <feature.icon className="h-5 w-5 text-sunset" />
                   </div>
-                  <h3 className="mt-4 font-display text-base font-semibold text-asphalt">{feature.title}</h3>
+                  <h3 className="mt-4 font-display text-base text-asphalt">{feature.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">{feature.description}</p>
                 </div>
               </StaggerItem>
@@ -240,7 +240,7 @@ export default function SafetyPage() {
         <div>
           <FadeUp>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sunset">Emergency Card</p>
-            <h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-asphalt sm:text-4xl">
+            <h2 className="mt-2 font-display text-3xl tracking-tight text-asphalt sm:text-4xl">
               What a First Responder Sees
             </h2>
             <p className="mt-4 max-w-xl text-muted">
@@ -282,7 +282,7 @@ export default function SafetyPage() {
             <ShieldCheck className="mx-auto h-12 w-12 text-sunset" />
           </ScaleIn>
           <FadeUp>
-            <h2 className="mt-6 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h2 className="mt-6 font-display text-3xl tracking-tight text-white sm:text-4xl">
               Ride Together. Look Out for Each Other.
             </h2>
             <p className="mt-4 max-w-xl text-lg text-slate-300">

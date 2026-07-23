@@ -89,7 +89,7 @@ export default async function ShopDetailPage({ params }: { params: Promise<{ slu
                   {shop.category.replace(/_/g, " ").toLowerCase()}
                 </p>
               )}
-              <h1 className="font-display text-2xl font-semibold text-ink">{shop.name}</h1>
+              <h1 className="font-display text-2xl text-ink">{shop.name}</h1>
               {shop.reviews.length > 0 && (
                 <span className="mt-1 inline-flex items-center gap-2 text-sm text-muted">
                   <Stars value={average} />

@@ -150,7 +150,7 @@ export function BikeCard({ bike, isPrimary = false }: { bike: BikeData; isPrimar
 
       {/* Body — clean: title, specs, latest service, links */}
       <div className="p-4">
-        <h3 className="font-display text-lg font-bold text-ink">{bike.name}</h3>
+        <h3 className="font-display text-lg text-ink">{bike.name}</h3>
         <p className="mt-0.5 text-xs text-muted">
           {[
             bike.type ? bike.type.charAt(0) + bike.type.slice(1).toLowerCase() : null,

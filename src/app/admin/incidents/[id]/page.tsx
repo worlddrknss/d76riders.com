@@ -38,7 +38,7 @@ export default async function IncidentDetailPage(props: { params: Promise<{ id: 
         <Link href="/admin/incidents" className="text-xs font-semibold text-slate-400 hover:text-white">
           ← All incidents
         </Link>
-        <h1 className="mt-2 font-display text-3xl font-bold text-white">{incident.title}</h1>
+        <h1 className="mt-2 font-display text-3xl text-white">{incident.title}</h1>
         <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-400">
           <span>
             Opened by {incident.openedBy.name ?? incident.openedBy.email} on{" "}
@@ -73,7 +73,7 @@ export default async function IncidentDetailPage(props: { params: Promise<{ id: 
 
       {incident.rideIncident ? (
         <section className="rounded-xl border border-red-400/30 bg-red-500/5 p-5 shadow-lg">
-          <h2 className="font-display text-lg font-semibold text-white">Linked Rider Down alert</h2>
+          <h2 className="font-display text-lg text-white">Linked Rider Down alert</h2>
           <p className="mt-1 text-xs text-slate-400">
             Raised {incident.rideIncident.createdAt.toLocaleString("en-US")}
             {incident.rideIncident.locationText ? ` near ${incident.rideIncident.locationText}` : ""}
@@ -85,7 +85,7 @@ export default async function IncidentDetailPage(props: { params: Promise<{ id: 
       ) : null}
 
       <form action={update} className="space-y-4 rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
-        <h2 className="font-display text-lg font-semibold text-white">Case details</h2>
+        <h2 className="font-display text-lg text-white">Case details</h2>
 
         <div>
           <label htmlFor="title" className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
@@ -178,7 +178,7 @@ export default async function IncidentDetailPage(props: { params: Promise<{ id: 
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
         <div className="flex items-center gap-2">
           <Lock className="h-4 w-4 text-slate-400" />
-          <h2 className="font-display text-lg font-semibold text-white">Private notes</h2>
+          <h2 className="font-display text-lg text-white">Private notes</h2>
         </div>
         <p className="mt-1 text-xs text-slate-500">
           Staff-only. Notes are append-only and are never shown to members.

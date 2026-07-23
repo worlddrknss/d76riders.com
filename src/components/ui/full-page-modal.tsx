@@ -50,7 +50,7 @@ export function FullPageModal({
           {eyebrow ? (
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">{eyebrow}</p>
           ) : null}
-          <h1 id="full-page-modal-title" className="font-display text-xl font-bold text-ink sm:text-2xl">
+          <h1 id="full-page-modal-title" className="font-display text-xl text-ink sm:text-2xl">
             {title}
           </h1>
         </div>

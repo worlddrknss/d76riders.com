@@ -277,7 +277,7 @@ export default async function AllEventsPage({ searchParams }: { searchParams: Pr
                         <span className="rounded-full bg-canvas px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-muted">Past</span>
                       )}
                     </div>
-                    <h3 className="mt-2 font-display text-lg font-bold tracking-tight text-asphalt group-hover:text-sunset">
+                    <h3 className="mt-2 font-display text-lg tracking-tight text-asphalt group-hover:text-sunset">
                       {event.title}
                     </h3>
                     <p className="mt-2 line-clamp-2 text-sm text-muted">

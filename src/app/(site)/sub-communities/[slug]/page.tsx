@@ -98,7 +98,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
             </span>
           )}
           <div>
-            <h1 className="font-display text-3xl font-bold text-ink">{crew.name}</h1>
+            <h1 className="font-display text-3xl text-ink">{crew.name}</h1>
             <p className="text-xs text-muted">
               {crew.members.length} member{crew.members.length === 1 ? "" : "s"}
               {crew.open ? "" : " · invite only"}
@@ -112,7 +112,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
       <p className="mt-4 text-sm text-muted">{crew.description}</p>
 
       <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold text-ink">Upcoming rides</h2>
+        <h2 className="font-display text-lg text-ink">Upcoming rides</h2>
         {upcoming.length === 0 ? (
           <p className="mt-2 text-sm text-muted">Nothing on the calendar yet.</p>
         ) : (
@@ -139,7 +139,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
       </section>
 
       <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold text-ink">Members</h2>
+        <h2 className="font-display text-lg text-ink">Members</h2>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {crew.members.map((member) => (
             <li key={member.id}>
@@ -176,7 +176,7 @@ export default async function CrewDetailPage(props: { params: Promise<{ slug: st
 
       {past.length > 0 ? (
         <section className="mt-8">
-          <h2 className="font-display text-lg font-semibold text-ink">Past rides</h2>
+          <h2 className="font-display text-lg text-ink">Past rides</h2>
           <ul className="mt-3 space-y-1">
             {past.map((event) => (
               <li key={event.id}>

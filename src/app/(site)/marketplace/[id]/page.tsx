@@ -78,8 +78,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
         {/* Details */}
         <div>
           <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-            <p className="font-display text-3xl font-bold text-ink">{formatPrice(listing.priceCents)}</p>
-            <h1 className="mt-1 font-display text-xl font-bold text-ink">{listing.title}</h1>
+            <p className="font-display text-3xl text-ink">{formatPrice(listing.priceCents)}</p>
+            <h1 className="mt-1 font-display text-xl text-ink">{listing.title}</h1>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <span className="rounded-full bg-canvas px-2.5 py-1 font-semibold text-asphalt">{CATEGORY_LABEL[listing.category]}</span>
               <span className="rounded-full bg-canvas px-2.5 py-1 font-semibold text-asphalt">{CONDITION_LABEL[listing.condition]}</span>

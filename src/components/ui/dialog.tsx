@@ -58,7 +58,7 @@ function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 }
 
 function DialogTitle({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn("font-display text-lg font-semibold text-ink", className)} {...props} />;
+  return <DialogPrimitive.Title className={cn("font-display text-lg text-ink", className)} {...props} />;
 }
 
 function DialogDescription({ className, ...props }: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {

@@ -33,7 +33,7 @@ export default async function NotificationsPage() {
       <div className="max-w-2xl space-y-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Notifications</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold text-ink">Recent Alerts and Activity</h1>
+          <h1 className="mt-1 font-display text-3xl text-ink">Recent Alerts and Activity</h1>
           <p className="mt-2 text-sm text-muted">Your latest follows, favorites, uploads, and build actions in one feed.</p>
         </div>
 

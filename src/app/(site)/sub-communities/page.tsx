@@ -106,7 +106,7 @@ export default async function CrewsPage() {
                           </span>
                         )}
                         <div className="min-w-0">
-                          <h2 className="truncate font-display text-lg font-semibold text-ink">{crew.name}</h2>
+                          <h2 className="truncate font-display text-lg text-ink">{crew.name}</h2>
                           <p className="text-xs text-muted">
                             {crew._count.members} member{crew._count.members === 1 ? "" : "s"}
                             {crew.open ? "" : " · invite only"}

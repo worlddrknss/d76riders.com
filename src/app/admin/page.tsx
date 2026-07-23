@@ -55,7 +55,7 @@ export default async function AdminOverviewPage() {
     <div className="space-y-6">
       <section className="route-lines rounded-2xl border border-white/10 p-6 shadow-2xl shadow-black/20">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">Operations</p>
-        <h1 className="mt-2 font-display text-4xl font-bold text-white">Control Room</h1>
+        <h1 className="mt-2 font-display text-4xl text-white">Control Room</h1>
         <p className="mt-2 max-w-2xl text-sm text-slate-300">
           Administrative overview for District 76 Riders. Metrics are live from your production database models.
         </p>
@@ -65,7 +65,7 @@ export default async function AdminOverviewPage() {
         {cards.map((card) => (
           <article key={card.title} className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
             <p className="text-sm font-semibold text-slate-300">{card.title}</p>
-            <p className="mt-2 font-display text-4xl font-bold text-sunset">{card.value}</p>
+            <p className="mt-2 font-display text-4xl text-sunset">{card.value}</p>
             <p className="mt-2 text-xs uppercase tracking-[0.08em] text-slate-400">{card.helper}</p>
           </article>
         ))}
@@ -81,7 +81,7 @@ export default async function AdminOverviewPage() {
             }`}
           >
             <p className="text-sm font-semibold text-slate-300">{card.title}</p>
-            <p className={`mt-2 font-display text-4xl font-bold ${card.alert ? "text-red-300" : "text-sunset"}`}>
+            <p className={`mt-2 font-display text-4xl ${card.alert ? "text-red-300" : "text-sunset"}`}>
               {card.value}
             </p>
             <p className="mt-2 text-xs uppercase tracking-[0.08em] text-slate-400">{card.helper}</p>
@@ -91,7 +91,7 @@ export default async function AdminOverviewPage() {
 
       <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-xl font-semibold text-white">Recent Admin Activity</h2>
+          <h2 className="font-display text-xl text-white">Recent Admin Activity</h2>
           <Link href="/admin/audit" className="text-xs font-semibold text-sunset hover:text-orange-300">
             View audit trail →
           </Link>

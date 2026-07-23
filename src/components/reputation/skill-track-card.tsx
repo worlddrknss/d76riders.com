@@ -86,7 +86,7 @@ export function SkillTrackCard({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-display text-base font-semibold text-ink">{name}</h2>
+            <h2 className="font-display text-base text-ink">{name}</h2>
             {verified ? (
               <span className="inline-flex items-center gap-1 rounded-full border border-forest/40 bg-forest/10 px-2 py-0.5 text-[0.6rem] font-semibold uppercase text-forest">
                 <BadgeCheck className="h-3 w-3" />

@@ -49,7 +49,7 @@ export function Footer() {
     <footer className="w-full border-t border-white/10 bg-asphalt text-white">
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr_1fr_auto] lg:px-8">
         <div className="space-y-3">
-          <Link href="/" className="font-display text-2xl font-bold tracking-tight">
+          <Link href="/" className="font-display text-2xl tracking-tight">
             DISTRICT <span className="text-sunset">76</span>
           </Link>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-slate-400">
