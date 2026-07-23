@@ -1,15 +1,30 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createPortal } from "react-dom";
-import { ExternalLink, ImagePlus, Pencil, Plus, Star, Trash2, X } from "lucide-react";
+import { ExternalLink, ImagePlus, Pencil, Plus, Star, Trash2 } from "lucide-react";
 
 import { type CreateNewsPostFormState } from "@/app/admin/content/new/actions";
 import { createNewsPostAction } from "@/app/admin/content/new/actions";
-import { deleteNewsPostFromAdminAction, updateNewsPostAction } from "@/app/admin/news/actions";
+import {
+  bulkDeleteNewsPostsAction,
+  bulkSetNewsFeaturedAction,
+  bulkSetNewsStatusAction,
+  deleteNewsPostFromAdminAction,
+  updateNewsPostAction,
+} from "@/app/admin/news/actions";
 import { ArticlePreview } from "@/components/news/article-preview";
 import { WysiwygEditor } from "@/components/admin/wysiwyg-editor";
+import {
+  AdminComposer,
+  AdminComposerBody,
+  AdminComposerFooter,
+  AdminFormError,
+  adminField,
+  adminLabel,
+} from "@/components/admin/ui/admin-composer";
+import { AdminConfirm } from "@/components/admin/ui/admin-confirm";
+import { AdminDataTable, type AdminColumn } from "@/components/admin/ui/admin-data-table";
 import { Button } from "@/components/ui/button";
 
 type PostData = {
@@ -42,13 +57,21 @@ const initialFormState: CreateNewsPostFormState = { error: null };
 
 function statusBadge(status: string) {
   const styles =
-    status === "PUBLISHED" ? "bg-emerald-500/15 text-emerald-300"
-    : status === "PENDING_REVIEW" ? "bg-amber-500/15 text-amber-300"
-    : status === "REJECTED" ? "bg-red-500/15 text-red-300"
-    : "bg-white/10 text-slate-300";
+    status === "PUBLISHED" ? "border-forest/40 bg-forest/15 text-emerald-200"
+    : status === "PENDING_REVIEW" ? "border-amber-400/30 bg-amber-500/10 text-amber-200"
+    : status === "REJECTED" ? "border-red-500/40 bg-red-500/10 text-red-300"
+    : "border-white/15 bg-white/5 text-slate-300";
   const label = status === "PENDING_REVIEW" ? "Pending" : status;
-  return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${styles}`}>{label}</span>;
+  return (
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] ${styles}`}>
+      {label}
+    </span>
+  );
 }
+
+const iconButton = "rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white";
+const bulkButton =
+  "rounded-md border border-white/20 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-white transition hover:bg-white/15";
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -59,14 +82,8 @@ export function AdminNewsTable({ posts, existingCategories, existingTags }: Admi
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<PostData | null>(null);
   const [contentHtml, setContentHtml] = useState("");
-  const [deletePending, startDeleteTransition] = useTransition();
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [bulkPending, startBulkTransition] = useTransition();
   const router = useRouter();
-
-  const filteredPosts = useMemo(() => {
-    if (statusFilter === "ALL") return posts;
-    return posts.filter((p) => p.status === statusFilter);
-  }, [posts, statusFilter]);
 
   function openCreate() {
     setEditingPost(null);
@@ -80,10 +97,10 @@ export function AdminNewsTable({ posts, existingCategories, existingTags }: Admi
     setDialogOpen(true);
   }
 
-  function handleDelete(slug: string) {
-    if (!confirm("Delete this post permanently?")) return;
-    startDeleteTransition(async () => {
-      await deleteNewsPostFromAdminAction(slug);
+  function runBulk(work: () => Promise<void>, clear: () => void) {
+    startBulkTransition(async () => {
+      await work();
+      clear();
       router.refresh();
     });
   }
@@ -92,136 +109,225 @@ export function AdminNewsTable({ posts, existingCategories, existingTags }: Admi
     ? updateNewsPostAction.bind(null, editingPost.slug)
     : createNewsPostAction;
 
+  const columns: AdminColumn<PostData>[] = [
+    {
+      key: "title",
+      header: "Title",
+      sortValue: (p) => p.title.toLowerCase(),
+      searchValue: (p) => `${p.title} ${p.excerpt}`,
+      cell: (post) => (
+        <div className="flex items-center gap-1.5">
+          {post.featured ? <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" /> : null}
+          <span className="font-semibold text-white">{post.title}</span>
+        </div>
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      sortValue: (p) => p.category.toLowerCase(),
+      searchValue: (p) => p.category,
+      cell: (post) => post.category || "—",
+    },
+    {
+      key: "author",
+      header: "Author",
+      sortValue: (p) => (p.authorHandle || p.authorName).toLowerCase(),
+      searchValue: (p) => `${p.authorHandle} ${p.authorName}`,
+      cell: (post) => post.authorHandle || post.authorName,
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortValue: (p) => p.status,
+      cell: (post) => statusBadge(post.status),
+    },
+    {
+      key: "published",
+      header: "Published",
+      sortValue: (p) => p.publishedAt ?? "",
+      cell: (post) => <span className="text-slate-400">{formatDate(post.publishedAt)}</span>,
+    },
+    {
+      key: "updated",
+      header: "Updated",
+      sortValue: (p) => p.updatedAt,
+      cell: (post) => <span className="text-slate-400">{formatDate(post.updatedAt)}</span>,
+    },
+    {
+      key: "actions",
+      header: "",
+      headerClassName: "text-right",
+      className: "text-right",
+      cell: (post) => (
+        <div className="flex items-center justify-end gap-1">
+          <a
+            href={`/magazine/${post.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={iconButton}
+            title="View on the site"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          <button onClick={() => openEdit(post)} className={iconButton} title="Edit">
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <AdminConfirm
+            title="Delete this article?"
+            body={
+              <>
+                <span className="font-semibold text-white">{post.title}</span> and its cover image are
+                removed for good. Any link to it starts returning a 404.
+              </>
+            }
+            onConfirm={async () => {
+              await deleteNewsPostFromAdminAction(post.slug);
+              router.refresh();
+            }}
+            trigger={(open, pending) => (
+              <button
+                onClick={open}
+                disabled={pending}
+                className="rounded p-1.5 text-red-400 transition hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
+                title="Delete"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          />
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
-      {/* Filters + New button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="rounded-xl border border-white/10 bg-white/3 p-3">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Filters</p>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-slate-200"
-          >
-            <option value="ALL">All Status</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="DRAFT">Draft</option>
-            <option value="PENDING_REVIEW">Pending Review</option>
-          </select>
-        </div>
-        <Button variant="accent" size="sm" onClick={openCreate} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" /> New Post
-        </Button>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/3 shadow-lg">
-        <table className="min-w-full divide-y divide-white/10 text-sm text-slate-200">
-          <thead className="bg-white/[0.03] text-xs uppercase tracking-[0.12em] text-slate-400">
-            <tr>
-              <th className="px-4 py-3 text-left">Title</th>
-              <th className="px-4 py-3 text-left">Category</th>
-              <th className="px-4 py-3 text-left">Author</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Created</th>
-              <th className="px-4 py-3 text-left">Updated</th>
-              <th className="px-4 py-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/10">
-            {filteredPosts.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">No news posts match your filter.</td>
-              </tr>
-            ) : (
-              filteredPosts.map((post) => (
-                <tr key={post.id} className="transition hover:bg-white/[0.02]">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1.5">
-                      {post.featured && <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />}
-                      <span className="font-semibold text-white">{post.title.length > 35 ? `${post.title.slice(0, 35)}…` : post.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-slate-300">{post.category || "—"}</td>
-                  <td className="px-4 py-3 text-slate-300">{post.authorHandle || post.authorName}</td>
-                  <td className="px-4 py-3">{statusBadge(post.status)}</td>
-                  <td className="px-4 py-3 text-slate-400">{formatDate(post.publishedAt)}</td>
-                  <td className="px-4 py-3 text-slate-400">{formatDate(post.updatedAt)}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <a href={`/magazine/${post.slug}`} target="_blank" rel="noopener noreferrer" className="rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white" title="View">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                      <button onClick={() => openEdit(post)} className="rounded p-1.5 text-slate-400 transition hover:bg-white/10 hover:text-white" title="Edit">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => handleDelete(post.slug)} disabled={deletePending} className="rounded p-1.5 text-red-400 transition hover:bg-red-500/10 hover:text-red-300" title="Delete">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Composer — the same full-screen modal with a live preview the site
-          composers use, so an editor works against the article, not a form. */}
-      {dialogOpen && typeof document !== "undefined"
-        ? createPortal(
-            <div
-              className="safe-pb fixed inset-0 z-60 flex flex-col bg-asphalt text-slate-100"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="admin-news-composer-title"
-            >
-              <header className="safe-pt flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-3.5 sm:px-8">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Publishing</p>
-                  <h2 id="admin-news-composer-title" className="truncate font-display text-xl text-white sm:text-2xl">
-                    {editingPost ? editingPost.title : "New Post"}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                  aria-label="Close"
-                  className="-mr-1 rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sunset/50"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </header>
-
-              <NewsPostForm
-                key={editingPost?.id ?? "new"}
-                action={formAction}
-                contentHtml={contentHtml}
-                onContentChange={setContentHtml}
-                existingCategories={existingCategories}
-                existingTags={existingTags}
-                existingCoverUrl={editingPost?.coverImageUrl ?? null}
-                authorName={editingPost?.authorName ?? "District 76 Riders"}
-                initialValues={editingPost ? {
-                  title: editingPost.title,
-                  category: editingPost.category,
-                  tags: editingPost.tags,
-                  excerpt: editingPost.excerpt,
-                  contentHtml: editingPost.contentHtml,
-                  status: editingPost.status as "DRAFT" | "PUBLISHED" | "PENDING_REVIEW",
-                  publishedAt: editingPost.publishedAt?.slice(0, 16) ?? "",
-                  seoTitle: editingPost.seoTitle,
-                  seoDescription: editingPost.seoDescription,
-                  featured: editingPost.featured,
-                } : undefined}
-                onSuccess={() => { setDialogOpen(false); router.refresh(); }}
-                onCancel={() => setDialogOpen(false)}
+      <AdminDataTable
+        rows={posts}
+        columns={columns}
+        rowKey={(post) => post.slug}
+        searchPlaceholder="Search by title, author, or category…"
+        emptyMessage="No articles yet. Write the first one."
+        filters={[
+          {
+            key: "status",
+            label: "Status",
+            options: [
+              { value: "PUBLISHED", label: "Published" },
+              { value: "DRAFT", label: "Draft" },
+              { value: "PENDING_REVIEW", label: "Pending Review" },
+            ],
+          },
+          {
+            key: "featured",
+            label: "Featured",
+            options: [
+              { value: "YES", label: "Featured" },
+              { value: "NO", label: "Not featured" },
+            ],
+          },
+        ]}
+        filterFn={(post, key, value) => {
+          if (key === "status") return post.status === value;
+          if (key === "featured") return value === "YES" ? post.featured : !post.featured;
+          return true;
+        }}
+        toolbar={
+          <Button variant="accent" size="sm" onClick={openCreate} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> New Post
+          </Button>
+        }
+        bulkActions={(selected, clear) => {
+          const slugs = selected.map((p) => p.slug);
+          return (
+            <>
+              <button
+                type="button"
+                disabled={bulkPending}
+                onClick={() => runBulk(() => bulkSetNewsStatusAction(slugs, "PUBLISHED"), clear)}
+                className={bulkButton}
+              >
+                Publish
+              </button>
+              <button
+                type="button"
+                disabled={bulkPending}
+                onClick={() => runBulk(() => bulkSetNewsStatusAction(slugs, "DRAFT"), clear)}
+                className={bulkButton}
+              >
+                Unpublish
+              </button>
+              <button
+                type="button"
+                disabled={bulkPending}
+                onClick={() => runBulk(() => bulkSetNewsFeaturedAction(slugs, true), clear)}
+                className={bulkButton}
+              >
+                Feature
+              </button>
+              <button
+                type="button"
+                disabled={bulkPending}
+                onClick={() => runBulk(() => bulkSetNewsFeaturedAction(slugs, false), clear)}
+                className={bulkButton}
+              >
+                Unfeature
+              </button>
+              <AdminConfirm
+                title={`Delete ${slugs.length} article${slugs.length === 1 ? "" : "s"}?`}
+                confirmLabel={`Delete ${slugs.length}`}
+                body="The articles and their cover images are removed for good. Any link to them starts returning a 404."
+                onConfirm={() => runBulk(() => bulkDeleteNewsPostsAction(slugs), clear)}
+                trigger={(open, pending) => (
+                  <button
+                    type="button"
+                    onClick={open}
+                    disabled={pending || bulkPending}
+                    className="rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                )}
               />
-            </div>,
-            document.body,
-          )
-        : null}
+            </>
+          );
+        }}
+      />
+
+      {/* Create and edit share one composer — the same full-screen shell, live
+          preview and pinned footer the site composers use. */}
+      <AdminComposer
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        eyebrow="Publishing"
+        title={editingPost ? editingPost.title : "New Post"}
+      >
+        <NewsPostForm
+          key={editingPost?.id ?? "new"}
+          action={formAction}
+          contentHtml={contentHtml}
+          onContentChange={setContentHtml}
+          existingCategories={existingCategories}
+          existingTags={existingTags}
+          existingCoverUrl={editingPost?.coverImageUrl ?? null}
+          authorName={editingPost?.authorName ?? "District 76 Riders"}
+          initialValues={editingPost ? {
+            title: editingPost.title,
+            category: editingPost.category,
+            tags: editingPost.tags,
+            excerpt: editingPost.excerpt,
+            contentHtml: editingPost.contentHtml,
+            status: editingPost.status as "DRAFT" | "PUBLISHED" | "PENDING_REVIEW",
+            publishedAt: editingPost.publishedAt?.slice(0, 16) ?? "",
+            seoTitle: editingPost.seoTitle,
+            seoDescription: editingPost.seoDescription,
+            featured: editingPost.featured,
+          } : undefined}
+          onSuccess={() => { setDialogOpen(false); router.refresh(); }}
+          onCancel={() => setDialogOpen(false)}
+        />
+      </AdminComposer>
     </>
   );
 }
@@ -252,10 +358,6 @@ type NewsPostFormProps = {
   onCancel: () => void;
 };
 
-const fieldClass =
-  "rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none";
-const labelClass = "text-xs font-semibold uppercase tracking-[0.1em] text-slate-400";
-
 function NewsPostForm({
   action,
   contentHtml,
@@ -284,19 +386,6 @@ function NewsPostForm({
     if (!state.error) onSuccess();
   }
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onCancel]);
-
   const wordCount = useMemo(() => {
     const plain = contentHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
     return plain ? plain.split(" ").length : 0;
@@ -312,30 +401,39 @@ function NewsPostForm({
 
   return (
     <form action={formAction} className="flex h-full min-h-0 flex-col">
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-        <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-8">
-          <div className="mx-auto max-w-2xl space-y-5">
+      <AdminComposerBody
+        preview={
+          <ArticlePreview
+            title={title}
+            categoryName={category}
+            contentHtml={contentHtml}
+            coverUrl={coverUrl ?? existingCoverUrl}
+            authorName={authorName}
+            authorAvatarUrl={null}
+          />
+        }
+      >
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
-                <span className={labelClass}>Title</span>
+                <span className={adminLabel}>Title</span>
                 <input
                   name="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
-                  className={fieldClass}
+                  className={adminField}
                   placeholder="Post title"
                 />
               </label>
               <label className="grid gap-2">
-                <span className={labelClass}>Category</span>
+                <span className={adminLabel}>Category</span>
                 <input
                   name="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   list="dlg-categories"
                   required
-                  className={fieldClass}
+                  className={adminField}
                   placeholder="Community"
                 />
               </label>
@@ -350,12 +448,12 @@ function NewsPostForm({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
-                <span className={labelClass}>Tags</span>
-                <input name="tags" defaultValue={initialValues?.tags ?? ""} list="dlg-tags" className={fieldClass} placeholder="Safety, Touring" />
+                <span className={adminLabel}>Tags</span>
+                <input name="tags" defaultValue={initialValues?.tags ?? ""} list="dlg-tags" className={adminField} placeholder="Safety, Touring" />
               </label>
               <label className="grid gap-2">
-                <span className={labelClass}>Status</span>
-                <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className={fieldClass}>
+                <span className={adminLabel}>Status</span>
+                <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className={adminField}>
                   <option value="DRAFT">Draft</option>
                   <option value="PUBLISHED">Published</option>
                   <option value="PENDING_REVIEW">Pending Review</option>
@@ -364,19 +462,19 @@ function NewsPostForm({
             </div>
 
             <label className="grid gap-2">
-              <span className={labelClass}>Excerpt</span>
+              <span className={adminLabel}>Excerpt</span>
               <textarea
                 name="excerpt"
                 rows={2}
                 defaultValue={initialValues?.excerpt ?? ""}
                 required
-                className={fieldClass}
+                className={adminField}
                 placeholder="Shown on the magazine listing and in link previews"
               />
             </label>
 
             <div className="grid gap-2">
-              <span className={labelClass}>Cover Image</span>
+              <span className={adminLabel}>Cover Image</span>
               <label
                 htmlFor="admin-news-cover"
                 className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-slate-400 transition hover:border-sunset/50 hover:text-sunset"
@@ -399,25 +497,25 @@ function NewsPostForm({
             </div>
 
             <div>
-              <p className={`mb-2 ${labelClass}`}>Body</p>
+              <p className={`mb-2 ${adminLabel}`}>Body</p>
               <WysiwygEditor tone="admin" value={contentHtml} onChange={onContentChange} placeholder="Write your post…" />
               <input type="hidden" name="contentHtml" value={contentHtml} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="grid gap-2">
-                <span className={labelClass}>Published At</span>
-                <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className={fieldClass} />
+                <span className={adminLabel}>Published At</span>
+                <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className={adminField} />
               </label>
               <label className="grid gap-2">
-                <span className={labelClass}>SEO Title</span>
-                <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className={fieldClass} placeholder="Optional" />
+                <span className={adminLabel}>SEO Title</span>
+                <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className={adminField} placeholder="Optional" />
               </label>
             </div>
 
             <label className="grid gap-2">
-              <span className={labelClass}>SEO Description</span>
-              <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className={fieldClass} placeholder="Optional" />
+              <span className={adminLabel}>SEO Description</span>
+              <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className={adminField} placeholder="Optional" />
             </label>
 
             <label className="flex items-center gap-2 text-sm text-slate-200">
@@ -425,43 +523,17 @@ function NewsPostForm({
               Feature this post
             </label>
 
-            {state.error ? (
-              <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{state.error}</p>
-            ) : null}
-          </div>
-        </div>
+        <AdminFormError>{state.error}</AdminFormError>
+      </AdminComposerBody>
 
-        <aside className="hidden min-h-0 overflow-y-auto border-l border-white/10 bg-white/[0.02] px-5 py-6 sm:px-8 lg:block">
-          <div className="mx-auto max-w-md">
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Preview</p>
-            <div className="mt-3">
-              <ArticlePreview
-                title={title}
-                categoryName={category}
-                contentHtml={contentHtml}
-                coverUrl={coverUrl ?? existingCoverUrl}
-                authorName={authorName}
-                authorAvatarUrl={null}
-              />
-            </div>
-            <p className="mt-3 text-xs text-slate-400">Roughly how it reads on the site.</p>
-          </div>
-        </aside>
-      </div>
-
-      <div className="shrink-0 border-t border-white/10 bg-asphalt px-5 py-4 sm:px-8">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
-          <p className="text-xs text-slate-400">{wordCount} words</p>
-          <div className="flex gap-2">
-            <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-400 transition hover:text-white">
-              Cancel
-            </button>
-            <Button type="submit" variant="accent" size="sm" disabled={pending}>
-              {pending ? "Saving…" : initialValues ? "Update Post" : "Publish Post"}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AdminComposerFooter note={`${wordCount} words`}>
+        <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-400 transition hover:text-white">
+          Cancel
+        </button>
+        <Button type="submit" variant="accent" size="sm" disabled={pending}>
+          {pending ? "Saving…" : initialValues ? "Update Post" : "Publish Post"}
+        </Button>
+      </AdminComposerFooter>
     </form>
   );
 }

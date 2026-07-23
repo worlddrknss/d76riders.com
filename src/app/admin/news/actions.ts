@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 
 import { NewsPostStatus } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { AuthenticationError, AuthorizationError, requireUserRole } from "@/lib/authz";
@@ -185,4 +186,83 @@ export async function deleteNewsPostFromAdminAction(slug: string): Promise<void>
   await deleteFileByUrl(post.coverImageUrl);
 
   redirect("/admin/news");
+}
+
+/**
+ * Bulk status change from the news table.
+ *
+ * Publishing a batch of drafts used to mean opening each one, changing the
+ * dropdown, and saving — eight round trips to do one thing.
+ *
+ * Going live also restamps `publishedAt`, because the column defaults to the
+ * moment the row was created: a draft written a week ago would otherwise
+ * publish a week down the magazine listing, which sorts on that date. Posts
+ * already published keep their date, so a re-run does not reshuffle them.
+ */
+export async function bulkSetNewsStatusAction(
+  slugs: string[],
+  status: "DRAFT" | "PUBLISHED" | "PENDING_REVIEW",
+): Promise<void> {
+  await requireAdminUserId();
+  if (slugs.length === 0) return;
+
+  const nextStatus = NewsPostStatus[status];
+
+  if (nextStatus === NewsPostStatus.PUBLISHED) {
+    await prisma.newsPost.updateMany({
+      where: { slug: { in: slugs }, status: { not: NewsPostStatus.PUBLISHED } },
+      data: { status: nextStatus, publishedAt: new Date() },
+    });
+  } else {
+    await prisma.newsPost.updateMany({
+      where: { slug: { in: slugs } },
+      data: { status: nextStatus },
+    });
+  }
+
+  revalidatePath("/admin/news");
+  revalidatePath("/magazine");
+}
+
+/** Bulk feature/unfeature, for curating the magazine's top of page. */
+export async function bulkSetNewsFeaturedAction(slugs: string[], featured: boolean): Promise<void> {
+  await requireAdminUserId();
+  if (slugs.length === 0) return;
+
+  await prisma.newsPost.updateMany({
+    where: { slug: { in: slugs } },
+    data: { featured },
+  });
+
+  revalidatePath("/admin/news");
+  revalidatePath("/magazine");
+}
+
+/**
+ * Bulk delete. Covers are removed one at a time after the rows are gone — a
+ * single unreachable object should not abandon the rest or surface an error
+ * for work that already succeeded.
+ */
+export async function bulkDeleteNewsPostsAction(slugs: string[]): Promise<void> {
+  await requireAdminUserId();
+  if (slugs.length === 0) return;
+
+  const posts = await prisma.newsPost.findMany({
+    where: { slug: { in: slugs } },
+    select: { id: true, coverImageUrl: true },
+  });
+
+  await prisma.newsPost.deleteMany({ where: { id: { in: posts.map((p) => p.id) } } });
+
+  for (const post of posts) {
+    if (!post.coverImageUrl) continue;
+    try {
+      await deleteFileByUrl(post.coverImageUrl);
+    } catch (error) {
+      console.error("[admin/news] cover cleanup failed", post.coverImageUrl, error);
+    }
+  }
+
+  revalidatePath("/admin/news");
+  revalidatePath("/magazine");
 }
