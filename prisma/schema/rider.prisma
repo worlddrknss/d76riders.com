@@ -43,21 +43,10 @@ model Rider {
   instagramUrl   String?
   twitterUrl     String?
 
-  // Email notification opt-outs. Each in-app activity has a matching email; a
-  // rider can silence a category here. Default on so the platform is useful out
-  // of the box; the /account settings surface these.
-  emailOnMention Boolean @default(true)
-  emailOnRsvp    Boolean @default(true)
-  emailOnComment Boolean @default(true)
-  emailOnEventMessage Boolean @default(true)
-  // Automatic ride changes: cancelled, moved, or a waitlist spot opening. Kept
-  // separate from emailOnEventMessage — that one is a human writing to you, this
-  // one is the plan you committed to changing under you.
-  emailOnRideChange Boolean @default(true)
-  // Scheduled nudges rather than news: the 24h ride reminder, the post-ride
-  // recap, and maintenance coming due.
-  emailOnReminders Boolean @default(true)
-  emailWeeklyRecap Boolean @default(true)
+  // Notification routing lives in NotificationPreference — one row per
+  // (category, channel) a rider has switched off. Absent means on, so a new
+  // rider gets everything without a backfill and a new category or channel
+  // defaults to on rather than silently off.
 
   // Quiet hours (Central time, 0-23). When set and the current hour falls in the
   // window, live web-push is held; those notifications arrive as a single digest
@@ -126,10 +115,34 @@ model Rider {
   romVotes RideOfMonthVote[]
   quests         RiderQuest[]
   crews          CrewMember[]
+  notificationPrefs NotificationPreference[]
   listings       Listing[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+/**
+ * A single switched-off notification route.
+ *
+ * Stored as opt-outs rather than a full matrix: absent means enabled, so adding
+ * a category or a channel turns it on for everyone instead of leaving it off
+ * until each rider notices. It also keeps the table roughly empty, since most
+ * riders never change these.
+ */
+model NotificationPreference {
+  riderId  String
+  /** mention | comment | rsvp | event | rideChange | reminder | weeklyRecap */
+  category String
+  /** push | email | inApp */
+  channel  String
+
+  rider Rider @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([riderId, category, channel])
+  @@index([riderId])
 }

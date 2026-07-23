@@ -4,6 +4,7 @@ import { NotificationPrefsCard } from "@/components/account/notifications-card";
 import { PushSettingsCard } from "@/components/account/push-settings-card";
 import { SettingsNav } from "@/components/account/settings-nav";
 import { AppShell } from "@/components/layout/app-shell";
+import { disabledRoutesFor } from "@/lib/notification-prefs";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -17,18 +18,11 @@ export default async function SettingsPage() {
 
   const rider = await prisma.rider.findUnique({
     where: { userId: currentUser.id },
-    select: {
-      emailOnMention: true,
-      emailOnComment: true,
-      emailOnRsvp: true,
-      emailOnEventMessage: true,
-      emailOnRideChange: true,
-      emailOnReminders: true,
-      emailWeeklyRecap: true,
-      quietHoursStart: true,
-      quietHoursEnd: true,
-    },
+    select: { id: true, quietHoursStart: true, quietHoursEnd: true },
   });
+
+  // Only opt-outs are stored, so everything not listed here is on.
+  const disabledRoutes = rider ? [...(await disabledRoutesFor(rider.id))] : [];
 
   return (
     <AppShell>
@@ -44,17 +38,7 @@ export default async function SettingsPage() {
             initialQuietStart={rider?.quietHoursStart ?? null}
             initialQuietEnd={rider?.quietHoursEnd ?? null}
           />
-          <NotificationPrefsCard
-            prefs={{
-              emailOnMention: rider?.emailOnMention ?? true,
-              emailOnComment: rider?.emailOnComment ?? true,
-              emailOnRsvp: rider?.emailOnRsvp ?? true,
-              emailOnEventMessage: rider?.emailOnEventMessage ?? true,
-              emailOnRideChange: rider?.emailOnRideChange ?? true,
-              emailOnReminders: rider?.emailOnReminders ?? true,
-              emailWeeklyRecap: rider?.emailWeeklyRecap ?? true,
-            }}
-          />
+          <NotificationPrefsCard disabledRoutes={disabledRoutes} />
         </div>
       </div>
     </AppShell>

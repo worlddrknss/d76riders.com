@@ -13,7 +13,7 @@ import { requireUserId } from "@/lib/authz";
 import { resolvePostableCrewId } from "@/lib/crews";
 import { DEFAULT_TIMEZONE, formatEventDate, formatEventTime, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
 import { eventMessageEmail, rideChangeEmail, rsvpEmail } from "@/lib/email-templates";
-import { emailNotifyRiders } from "@/lib/notify";
+import { emailNotifyRiders, pushNotifyRidersByCategory } from "@/lib/notify";
 import { mapWithConcurrency } from "@/lib/concurrency";
 import { syncRiderProgression } from "@/lib/reputation";
 import { optimizeImage } from "@/lib/image";
@@ -317,14 +317,12 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         summary,
         refId: event.id,
       });
-      await mapWithConcurrency(riderIds, 8, (riderId) =>
-        sendPushToRider(riderId, {
+      await pushNotifyRidersByCategory(riderIds, "rideChange", {
           title: "Ride details changed",
           body: summary,
           url: `/events/${event.slug}`,
           tag: `event-updated-${event.id}`,
-        }).catch(() => {}),
-      );
+    });
       await emailNotifyRiders(riderIds, "rideChange", (name) =>
         rideChangeEmail(name, `Changed: ${title}`, summary, absoluteUrl(`/events/${event.slug}`)),
       );
@@ -456,14 +454,12 @@ export async function cancelEventAction(eventId: string): Promise<{ error: strin
   if (riderIds.length > 0) {
     const summary = `${event.title} on ${formatEventDate(event.startsAt, event.timezone)} was cancelled by the organizer.`;
     await logActivityForRiders(riderIds, { type: "EVENT_CANCELLED", summary, refId: event.id });
-    await mapWithConcurrency(riderIds, 8, (riderId) =>
-      sendPushToRider(riderId, {
+    await pushNotifyRidersByCategory(riderIds, "rideChange", {
         title: "Ride cancelled",
         body: summary,
         url: `/events/${event.slug}`,
         tag: `event-cancelled-${event.id}`,
-      }).catch(() => {}),
-    );
+    });
     // Push only reaches riders who granted it. A cancelled ride is the one thing
     // they must not find out about by turning up.
     await emailNotifyRiders(riderIds, "rideChange", (name) =>
@@ -501,14 +497,12 @@ export async function reopenEventAction(eventId: string): Promise<{ error: strin
   if (riderIds.length > 0) {
     const summary = `${event.title} is back on — ${formatEventDate(event.startsAt, event.timezone)} at ${formatEventTime(event.startsAt, event.timezone)}.`;
     await logActivityForRiders(riderIds, { type: "EVENT_UPDATED", summary, refId: event.id });
-    await mapWithConcurrency(riderIds, 8, (riderId) =>
-      sendPushToRider(riderId, {
+    await pushNotifyRidersByCategory(riderIds, "rideChange", {
         title: "Ride is back on",
         body: summary,
         url: `/events/${event.slug}`,
         tag: `event-reopened-${event.id}`,
-      }).catch(() => {}),
-    );
+    });
     await emailNotifyRiders(riderIds, "rideChange", (name) =>
       rideChangeEmail(name, `Back on: ${event.title}`, summary, absoluteUrl(`/events/${event.slug}`)),
     );
@@ -571,14 +565,12 @@ export async function deleteEventAction(eventId: string): Promise<void> {
       summary,
       refId: event.id,
     });
-    await mapWithConcurrency(riderIds, 8, (riderId) =>
-      sendPushToRider(riderId, {
+    await pushNotifyRidersByCategory(riderIds, "rideChange", {
         title: "Ride cancelled",
         body: summary,
         url: "/events",
         tag: `event-cancelled-${event.id}`,
-      }).catch(() => {}),
-    );
+    });
     // No link to the ride — it no longer exists — so the email points at /events.
     await emailNotifyRiders(riderIds, "rideChange", (name) =>
       rideChangeEmail(name, `Cancelled: ${event.title}`, summary, absoluteUrl("/events")),
@@ -745,14 +737,12 @@ export async function rsvpAction(
     // more than an in-app badge the rider may not open before the ride.
     if (promoted.length > 0) {
       const detail = `A spot opened up — you're confirmed for ${event.title}.`;
-      await mapWithConcurrency(promoted, 8, (riderId) =>
-        sendPushToRider(riderId, {
+      await pushNotifyRidersByCategory(promoted, "rideChange", {
           title: "You're in",
           body: detail,
           url: `/events/${event.slug}`,
           tag: `waitlist-promoted-${event.id}`,
-        }).catch(() => {}),
-      );
+    });
       await emailNotifyRiders(promoted, "rideChange", (name) =>
         rideChangeEmail(name, `You're in: ${event.title}`, detail, absoluteUrl(`/events/${event.slug}`)),
       );
@@ -1060,14 +1050,12 @@ export async function closeRideAction(eventId: string): Promise<void> {
       summary: `Ride recap — ${eventTitle}: ${recapBody}`,
       refId: eventId,
     });
-    await mapWithConcurrency(recapRiderIds, 8, (rid) =>
-      sendPushToRider(rid, {
+    await pushNotifyRidersByCategory(recapRiderIds, "reminder", {
         title: `Ride recap — ${eventTitle}`,
         body: recapBody,
         url: `/events/${event.slug}`,
         tag: `ride-recap-${eventId}`,
-      }).catch(() => {}),
-    );
+    });
     await emailNotifyRiders(recapRiderIds, "reminder", (name) =>
       rideChangeEmail(name, `Ride recap — ${eventTitle}`, recapBody, absoluteUrl(`/events/${event.slug}`)),
     );

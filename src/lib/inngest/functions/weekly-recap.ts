@@ -22,7 +22,11 @@ export const weeklyRecap = inngest.createFunction(
   async ({ step }) => {
     const recipients = await step.run("load-recipients", () =>
       prisma.rider.findMany({
-        where: { emailWeeklyRecap: true, user: { emailVerified: { not: null } } },
+        // Opt-outs are rows now, so "wants it" is the absence of one.
+        where: {
+          user: { emailVerified: { not: null } },
+          notificationPrefs: { none: { category: "weeklyRecap", channel: "email" } },
+        },
         select: { id: true, name: true, handle: true, user: { select: { email: true } } },
       }),
     );

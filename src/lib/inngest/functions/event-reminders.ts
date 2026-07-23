@@ -2,11 +2,9 @@ import { formatEventDate, formatEventTime, toZonedInputValue } from "@/lib/datet
 import { inngest } from "@/lib/inngest/client";
 import { prisma } from "@/lib/prisma";
 import { logActivityForRiders } from "@/lib/activity";
-import { mapWithConcurrency } from "@/lib/concurrency";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { rideChangeEmail } from "@/lib/email-templates";
-import { emailNotifyRiders } from "@/lib/notify";
-import { sendPushToRider } from "@/lib/push";
+import { emailNotifyRiders, inAppRecipients, pushNotifyRidersByCategory } from "@/lib/notify";
 import { getDailyForecast, weatherLabel, withinForecastWindow } from "@/lib/weather";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -69,20 +67,18 @@ export const eventReminders = inngest.createFunction(
         // subscription — which is everyone until they opt in, and on iOS until
         // they install the PWA — got no reminder at all and no record that one
         // was ever meant for them.
-        await logActivityForRiders(riderIds, {
+        await logActivityForRiders(await inAppRecipients(riderIds, "reminder"), {
           type: "RIDE_REMINDER",
           summary: `Tomorrow: ${ev.title} — ${body}`,
           refId: ev.id,
         });
 
-        await mapWithConcurrency(riderIds, 8, (riderId) =>
-          sendPushToRider(riderId, {
-            title: `Reminder: ${ev.title}`,
-            body,
-            url: `/events/${ev.slug}`,
-            tag: `event-reminder-${ev.id}`,
-          }).catch(() => {}),
-        );
+        await pushNotifyRidersByCategory(riderIds, "reminder", {
+          title: `Reminder: ${ev.title}`,
+          body,
+          url: `/events/${ev.slug}`,
+          tag: `event-reminder-${ev.id}`,
+        });
 
         await emailNotifyRiders(riderIds, "reminder", (name) =>
           rideChangeEmail(name, `Tomorrow: ${ev.title}`, body, absoluteUrl(`/events/${ev.slug}`)),

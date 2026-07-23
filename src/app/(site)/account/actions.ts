@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 
 import { AuthenticationError, requireUserId } from "@/lib/authz";
 import { isValidTimezone } from "@/lib/datetime";
+import { NOTIFICATION_CATEGORIES } from "@/lib/notification-catalog";
 import { sendVerification } from "@/lib/email-verification";
 import { geocodePlace } from "@/lib/geocode";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
@@ -633,19 +634,27 @@ export async function updateNotificationPrefsAction(
     return { error: "Please log in again.", success: null };
   }
 
-  await prisma.rider.update({
-    where: { userId },
-    data: {
-      emailOnMention: formData.get("emailOnMention") != null,
-      emailOnComment: formData.get("emailOnComment") != null,
-      emailOnRsvp: formData.get("emailOnRsvp") != null,
-      emailOnEventMessage: formData.get("emailOnEventMessage") != null,
-      emailOnRideChange: formData.get("emailOnRideChange") != null,
-      emailOnReminders: formData.get("emailOnReminders") != null,
-      emailWeeklyRecap: formData.get("emailWeeklyRecap") != null,
-    },
-  });
+  const rider = await prisma.rider.findUnique({ where: { userId }, select: { id: true } });
+  if (!rider) return { error: "Profile not found.", success: null };
+
+  // The form posts one field per route that is ON. Anything valid and absent is
+  // an opt-out, so the stored rows are rewritten to exactly that set rather than
+  // patched — which also means a route the form doesn't render can't be
+  // silently dropped, because only rendered routes are considered at all.
+  const offRoutes: { riderId: string; category: string; channel: string }[] = [];
+  for (const category of NOTIFICATION_CATEGORIES) {
+    for (const channel of category.channels) {
+      const on = formData.get(`notify:${category.key}:${channel}`) != null;
+      if (!on) offRoutes.push({ riderId: rider.id, category: category.key, channel });
+    }
+  }
+
+  await prisma.$transaction([
+    prisma.notificationPreference.deleteMany({ where: { riderId: rider.id } }),
+    ...(offRoutes.length ? [prisma.notificationPreference.createMany({ data: offRoutes })] : []),
+  ]);
 
   revalidatePath("/account");
+  revalidatePath("/settings");
   return { error: null, success: "Notification preferences saved." };
 }
