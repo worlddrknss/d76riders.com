@@ -121,10 +121,14 @@ export function CreateJournalDialog({
         </button>
       </header>
 
-      <form action={action} className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* FORM COLUMN */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-8 lg:max-w-2xl">
-          <div className="space-y-5">
+      {/* Same proportional two-column grid the event create modal uses, rather
+          than a fixed-width rail — a 26rem sidebar left the rest of a wide
+          screen empty. */}
+      <form action={action} className="flex h-full min-h-0 flex-col">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          {/* FORM COLUMN */}
+          <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-8">
+            <div className="mx-auto max-w-2xl space-y-5">
             <div>
               <label htmlFor="create-title" className={labelClass}>
                 Title <span className="normal-case text-muted/70">(optional)</span>
@@ -231,31 +235,40 @@ export function CreateJournalDialog({
               </div>
             </div>
 
-            {state.error ? <p className="text-sm font-medium text-red-600">{state.error}</p> : null}
-
-            <div className="flex justify-end gap-2 border-t border-border pt-4">
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" variant="accent" size="sm" disabled={pending}>
-                {pending ? "Publishing…" : "Publish"}
-              </Button>
+              {state.error ? (
+                <p className="text-sm font-medium text-red-600">{state.error}</p>
+              ) : null}
             </div>
           </div>
+
+          {/* PREVIEW COLUMN */}
+          <aside className="hidden min-h-0 overflow-y-auto border-l border-border bg-canvas px-5 py-6 sm:px-8 lg:block">
+            <div className="mx-auto max-w-md">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-muted">Preview</p>
+              <div className="mt-3">
+                <JournalPreview
+                  authorName={authorName}
+                  authorAvatarUrl={authorAvatarUrl}
+                  title={title}
+                  body={body}
+                  photoUrl={mediaType === "photo" ? photoUrl : null}
+                  videoUrl={mediaType === "video" ? videoUrl : ""}
+                />
+              </div>
+              <p className="mt-3 text-xs text-muted">Roughly how your entry will appear in the feed.</p>
+            </div>
+          </aside>
         </div>
 
-        {/* PREVIEW COLUMN */}
-        <div className="min-h-0 shrink-0 overflow-y-auto border-t border-border bg-canvas px-5 py-6 sm:px-8 lg:w-104 lg:border-l lg:border-t-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Preview</p>
-          <div className="mt-3">
-            <JournalPreview
-              authorName={authorName}
-              authorAvatarUrl={authorAvatarUrl}
-              title={title}
-              body={body}
-              photoUrl={mediaType === "photo" ? photoUrl : null}
-              videoUrl={mediaType === "video" ? videoUrl : ""}
-            />
+        {/* Pinned footer, so Publish is reachable without scrolling a long story. */}
+        <div className="shrink-0 border-t border-border bg-surface px-5 py-4 sm:px-8">
+          <div className="mx-auto flex max-w-2xl justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="accent" size="sm" disabled={pending}>
+              {pending ? "Publishing…" : "Publish"}
+            </Button>
           </div>
         </div>
       </form>
