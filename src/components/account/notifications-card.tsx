@@ -1,6 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import {
+  AtSign,
+  Bell,
+  CalendarClock,
+  ChevronDown,
+  Mail,
+  Megaphone,
+  MessageCircle,
+  Newspaper,
+  Smartphone,
+  UserCheck,
+} from "lucide-react";
 
 import {
   requestEmailChangeAction,
@@ -12,6 +24,23 @@ import {
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_CHANNELS,
 } from "@/lib/notification-catalog";
+import type { NotificationCategory, NotificationChannel } from "@/lib/notification-catalog";
+
+const CATEGORY_ICONS: Partial<Record<NotificationCategory, typeof Bell>> = {
+  mention: AtSign,
+  comment: MessageCircle,
+  rsvp: UserCheck,
+  event: Megaphone,
+  rideChange: CalendarClock,
+  reminder: Bell,
+  weeklyRecap: Newspaper,
+};
+
+const CHANNEL_ICONS: Record<NotificationChannel, typeof Bell> = {
+  inApp: Bell,
+  push: Smartphone,
+  email: Mail,
+};
 
 const initial: AccountFormState = { error: null, success: null };
 
@@ -76,42 +105,100 @@ export function NotificationPrefsCard({ disabledRoutes }: { disabledRoutes: stri
     initial,
   );
 
-  // Stored rows are opt-outs, so anything not listed is on.
-  const off = new Set(disabledRoutes);
+  // Stored rows are opt-outs, so anything not listed is on. Held in state rather
+  // than read off the DOM so each row's summary updates as you flip a switch.
+  const [off, setOff] = useState<Set<string>>(() => new Set(disabledRoutes));
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
+  function toggle(route: string, on: boolean) {
+    setOff((prev) => {
+      const next = new Set(prev);
+      if (on) next.delete(route);
+      else next.add(route);
+      return next;
+    });
+  }
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-6 shadow-soft sm:p-8">
-      <h2 className="font-display text-xl text-ink">Notifications</h2>
-      <p className="mt-1 text-sm text-muted">
-        Pick where each kind of alert reaches you. In-app lands in your alerts inbox, push goes to your
-        phone or desktop, email to your inbox.
-      </p>
+    <div className="rounded-xl border border-border bg-surface shadow-soft">
+      <div className="border-b border-border p-6 sm:p-8">
+        <h2 className="font-display text-xl text-ink">Notifications</h2>
+        <p className="mt-1 text-sm text-muted">
+          Pick where each kind of alert reaches you. In-app lands in your alerts inbox, push goes to your
+          phone or desktop, email to your inbox.
+        </p>
+      </div>
 
-      <form action={savePrefs} className="mt-5 space-y-3">
-        {NOTIFICATION_CATEGORIES.map((category) => (
-          <div key={category.key} className="rounded-lg border border-border bg-canvas px-4 py-3">
-            <p className="text-sm font-medium text-ink">{category.label}</p>
-            <p className="mt-0.5 text-xs text-muted">{category.hint}</p>
+      <form action={savePrefs}>
+        <div className="divide-y divide-border">
+          {NOTIFICATION_CATEGORIES.map((category) => {
+            const Icon = CATEGORY_ICONS[category.key] ?? Bell;
+            const isOpen = openKey === category.key;
+            const enabled = category.channels.filter((ch) => !off.has(`${category.key}:${ch}`));
+            const summary = enabled.length
+              ? enabled.map((ch) => CHANNEL_LABELS[ch]).join(", ")
+              : "Off";
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              {NOTIFICATION_CHANNELS.map((channel) => {
-                const available = category.channels.includes(channel);
-                if (!available) return null;
-                const route = `${category.key}:${channel}`;
-                return (
-                  <ChannelToggle
-                    key={channel}
-                    name={`notify:${route}`}
-                    label={CHANNEL_LABELS[channel]}
-                    defaultOn={!off.has(route)}
+            return (
+              <div key={category.key}>
+                {/* Collapsed row: what it is, and where it currently goes. */}
+                <button
+                  type="button"
+                  onClick={() => setOpenKey(isOpen ? null : category.key)}
+                  aria-expanded={isOpen}
+                  className="flex w-full items-center gap-3 px-6 py-4 text-left transition hover:bg-canvas sm:px-8"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-canvas text-muted">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-ink">{category.label}</span>
+                    <span
+                      className={`block text-xs ${enabled.length ? "text-muted" : "font-semibold text-muted/70"}`}
+                    >
+                      {summary}
+                    </span>
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                </button>
 
-        <div className="flex items-center gap-3 pt-1">
+                {isOpen ? (
+                  <div className="px-6 pb-5 sm:px-8">
+                    <p className="text-sm text-muted">{category.hint}</p>
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                      Where you receive these
+                    </p>
+                    <div className="mt-2 divide-y divide-border rounded-lg border border-border">
+                      {NOTIFICATION_CHANNELS.filter((ch) => category.channels.includes(ch)).map((channel) => {
+                        const route = `${category.key}:${channel}`;
+                        const ChannelIcon = CHANNEL_ICONS[channel];
+                        return (
+                          <label
+                            key={channel}
+                            className="flex cursor-pointer items-center gap-3 px-4 py-3"
+                          >
+                            <ChannelIcon className="h-4 w-4 shrink-0 text-muted" />
+                            <span className="flex-1 text-sm text-ink">{CHANNEL_LABELS[channel]}</span>
+                            <Switch
+                              name={`notify:${route}`}
+                              checked={!off.has(route)}
+                              onChange={(on) => toggle(route, on)}
+                              label={`${CHANNEL_LABELS[channel]} for ${category.label}`}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 border-t border-border p-6 sm:p-8">
           <button
             type="submit"
             disabled={pending}
@@ -121,42 +208,57 @@ export function NotificationPrefsCard({ disabledRoutes }: { disabledRoutes: stri
           </button>
           {state.success && <span className="text-sm text-forest">{state.success}</span>}
           {state.error && <span className="text-sm text-red-600">{state.error}</span>}
+          <p className="w-full text-xs text-muted">
+            Rider-down alerts always reach ride organizers on every channel. Safety isn&apos;t a preference.
+          </p>
         </div>
       </form>
-
-      <p className="mt-4 text-xs text-muted">
-        Rider-down alerts always reach ride organizers on every channel. Safety isn&apos;t a preference.
-      </p>
     </div>
   );
 }
 
 /**
- * A switch, not a checkbox — it reads as on/off at a glance across a row of
- * three, which a row of ticks doesn't.
+ * A switch that still posts with the form.
  *
- * Still a real checkbox underneath, so it posts with the form, works without
- * JavaScript and is keyboard- and screen-reader-native; only the visuals are
- * custom, driven by peer-checked.
+ * The visible track is a div and the real checkbox is visually hidden inside the
+ * same label — so it submits, and stays keyboard- and screen-reader-native,
+ * while the appearance is driven by React state rather than :checked. That
+ * matters here because the collapsed row's "In-app, Push, Email" summary has to
+ * update the moment a switch flips, which needs the value in state anyway.
  */
-function ChannelToggle({
+function Switch({
   name,
+  checked,
+  onChange,
   label,
-  defaultOn,
 }: {
   name: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
   label: string;
-  defaultOn: boolean;
 }) {
   return (
-    <label className="relative inline-flex cursor-pointer items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5">
-      <input type="checkbox" name={name} defaultChecked={defaultOn} className="peer sr-only" />
-      {/* Track and knob are both siblings of the input. peer-checked: compiles to
-          `.peer:checked ~ &`, so a knob nested inside the track would never
-          move — it wouldn't be a sibling of the checkbox. */}
-      <span className="h-5 w-9 shrink-0 rounded-full bg-border transition-colors peer-checked:bg-sunset peer-focus-visible:ring-2 peer-focus-visible:ring-sunset/50" />
-      <span className="pointer-events-none absolute left-[0.9rem] h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
-      <span className="text-xs font-semibold text-muted transition-colors peer-checked:text-ink">{label}</span>
-    </label>
+    <span className="relative inline-flex shrink-0 items-center">
+      <input
+        type="checkbox"
+        name={name}
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-label={label}
+        className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
+      />
+      <span
+        aria-hidden
+        className={`h-6 w-11 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sunset/50 ${
+          checked ? "bg-sunset" : "bg-border"
+        }`}
+      />
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${
+          checked ? "left-[1.4rem]" : "left-0.5"
+        }`}
+      />
+    </span>
   );
 }
