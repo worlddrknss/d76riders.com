@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentType, type ReactNode, useMemo, useState } from "react";
-import { Award, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Star, Store, Trophy, Users, UserCog } from "lucide-react";
+import { Award, CalendarDays, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Star, Store, Trophy, Users, UserCog } from "lucide-react";
 
 import { type CurrentUser } from "@/lib/session";
 
@@ -52,6 +52,7 @@ const adminNavSections: NavSection[] = [
   {
     title: "Community",
     items: [
+      { href: "/admin/events", label: "Events", icon: CalendarDays },
       { href: "/admin/community/crews", label: "Sub-communities", icon: Users },
       { href: "/admin/community/challenges", label: "Challenges", icon: Trophy },
       { href: "/admin/community/sponsors", label: "Shops & Sponsors", icon: Store },
@@ -64,7 +65,6 @@ const adminNavSections: NavSection[] = [
     title: "Content",
     items: [
       { href: "/admin/news", label: "Manage Magazine", icon: PenSquare },
-      { href: "/admin/news/new", label: "Write Article", icon: PenSquare },
       { href: "/admin/news/moderation", label: "Moderation", icon: ClipboardCheck },
       { href: "/admin/news/categories", label: "Categories", icon: FolderOpen },
     ],

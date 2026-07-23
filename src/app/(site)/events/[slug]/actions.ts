@@ -140,15 +140,29 @@ function toOptionalUrl(value: string): string | null {
   }
 }
 
+/**
+ * Who may act on a ride.
+ *
+ * Everything here was gated to the host alone, which left an administrator with
+ * no way to cancel or remove a ride whose organizer had gone quiet — the only
+ * option was editing the database by hand. Admins share the host's path rather
+ * than getting a parallel one, so the people tracking a ride are told the same
+ * way whoever ends it.
+ */
+function eventScope(eventId: string, userId: string, isAdmin: boolean, hostOnly: boolean) {
+  if (isAdmin) return { id: eventId };
+  return hostOnly
+    ? { id: eventId, organizers: { some: { rider: { userId }, role: "HOST" as const } } }
+    : { id: eventId, organizers: { some: { rider: { userId } } } };
+}
+
 export async function updateEventAction(eventId: string, formData: FormData): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
   const event = await prisma.rideEvent.findFirst({
-    where: {
-      id: eventId,
-      organizers: { some: { rider: { userId } } },
-    },
+    where: eventScope(eventId, userId, isAdmin, false),
     include: {
       galleryItems: true,
       route: true,
@@ -438,8 +452,9 @@ export async function cancelEventAction(eventId: string): Promise<{ error: strin
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
   const event = await prisma.rideEvent.findFirst({
-    where: { id: eventId, organizers: { some: { rider: { userId }, role: "HOST" } } },
+    where: eventScope(eventId, userId, isAdmin, true),
     select: { id: true, slug: true, title: true, status: true, startsAt: true, timezone: true },
   });
   if (!event) return { error: "Only this ride's host can cancel it." };
@@ -482,8 +497,9 @@ export async function reopenEventAction(eventId: string): Promise<{ error: strin
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
   const event = await prisma.rideEvent.findFirst({
-    where: { id: eventId, organizers: { some: { rider: { userId }, role: "HOST" } } },
+    where: eventScope(eventId, userId, isAdmin, true),
     select: { id: true, slug: true, title: true, status: true, startsAt: true, timezone: true },
   });
   if (!event) return { error: "Only this ride's host can reopen it." };
@@ -518,11 +534,9 @@ export async function deleteEventAction(eventId: string): Promise<void> {
   const currentUser = await getCurrentUser();
   const userId = requireUserId(currentUser?.id);
 
+  const isAdmin = currentUser?.roles?.includes("ADMINISTRATOR") ?? false;
   const event = await prisma.rideEvent.findFirst({
-    where: {
-      id: eventId,
-      organizers: { some: { rider: { userId }, role: "HOST" } },
-    },
+    where: eventScope(eventId, userId, isAdmin, true),
     include: {
       galleryItems: true,
     },
