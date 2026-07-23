@@ -414,6 +414,22 @@ export async function deleteEventAction(eventId: string): Promise<void> {
 
   const urls = event.galleryItems.map((item) => item.url);
 
+  // Who to tell, gathered before the transaction wipes the rows that say so.
+  // Riders who explicitly declined ("NOT_GOING") aren't included — they already
+  // weren't coming, and telling them is noise.
+  const [rsvps, followers, host] = await Promise.all([
+    prisma.rsvp.findMany({
+      where: { eventId: event.id, status: { in: ["GOING", "WAITLISTED", "INTERESTED"] } },
+      select: { riderId: true },
+    }),
+    prisma.eventFollow.findMany({ where: { eventId: event.id }, select: { riderId: true } }),
+    prisma.rider.findUnique({ where: { userId }, select: { id: true } }),
+  ]);
+
+  const audience = new Set([...rsvps, ...followers].map((row) => row.riderId));
+  // The host doing the cancelling knows.
+  if (host) audience.delete(host.id);
+
   await prisma.$transaction(async (tx) => {
     // Delete related records that may not cascade automatically
     await tx.rsvp.deleteMany({ where: { eventId: event.id } });
@@ -425,8 +441,37 @@ export async function deleteEventAction(eventId: string): Promise<void> {
     }
   });
 
+  // Only after the ride is genuinely gone — announcing a cancellation that then
+  // failed to happen would be worse than saying nothing.
+  //
+  // The summary has to stand on its own: the event no longer exists, so there's
+  // nothing to link to and no page that can fill in what "it" was. Activity.refId
+  // is a loose reference with no foreign key, so the record survives the delete.
+  if (audience.size > 0) {
+    const when = formatEventDate(event.startsAt, event.timezone);
+    const summary = `${event.title} on ${when} was cancelled by the organizer.`;
+    const riderIds = [...audience];
+
+    await logActivityForRiders(riderIds, {
+      type: "EVENT_CANCELLED",
+      summary,
+      refId: event.id,
+    });
+    await Promise.all(
+      riderIds.map((riderId) =>
+        sendPushToRider(riderId, {
+          title: "Ride cancelled",
+          body: summary,
+          url: "/events",
+          tag: `event-cancelled-${event.id}`,
+        }).catch(() => {}),
+      ),
+    );
+  }
+
   await deleteFilesByUrls(urls);
   revalidatePath("/events");
+  revalidatePath("/notifications");
 }
 
 export type RsvpResult = {

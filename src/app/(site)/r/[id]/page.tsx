@@ -49,6 +49,7 @@ const PRIVATE_ACTIVITY_TYPES: ActivityType[] = [
   ActivityType.RIDER_DOWN,
   ActivityType.EVENT_MESSAGE,
   ActivityType.EVENT_UPDATED,
+  ActivityType.EVENT_CANCELLED,
   ActivityType.RSVP_WAITLISTED,
   ActivityType.WAITLIST_PROMOTED,
   ActivityType.MENTIONED,
