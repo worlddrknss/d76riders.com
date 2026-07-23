@@ -1,4 +1,5 @@
 import { NavbarClient } from "@/components/layout/navbar-client";
+import { resolveActivityHrefs } from "@/lib/activity-links";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
@@ -9,8 +10,6 @@ export async function Navbar() {
     ? { ...currentUser, avatarUrl: mediaUrl(currentUser.avatarUrl) || null }
     : null;
 
-  // Engagement notifications carry the journal entry id in refId — link to /p/<id>.
-  const POST_LINK_TYPES = new Set(["COMMENTED", "TWO_WHEELS_DOWN", "MENTIONED"]);
 
   let notificationCount = 0;
   let dmUnreadCount = 0;
@@ -33,13 +32,16 @@ export async function Navbar() {
         orderBy: { createdAt: "desc" },
         take: 8,
       });
+      // Shared with the notifications page, so the bell and the inbox can't
+      // disagree about where a notification leads.
+      const hrefs = await resolveActivityHrefs(activities);
       recentActivities = activities.map((a) => ({
         id: a.id,
         summary: a.summary,
         type: a.type.replaceAll("_", " "),
         createdAt: a.createdAt.toISOString(),
         readAt: a.readAt?.toISOString() ?? null,
-        href: a.refId && POST_LINK_TYPES.has(a.type) ? `/p/${a.refId}` : null,
+        href: hrefs[a.id] ?? null,
       }));
     }
   }

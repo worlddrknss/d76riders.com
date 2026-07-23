@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { logoutAction } from "@/app/(site)/(auth)/actions";
-import { markAllReadAction } from "@/app/(site)/notifications/actions";
+import { markActivityReadAction, markAllReadAction } from "@/app/(site)/notifications/actions";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { navItems } from "@/data/community";
 import { type CurrentUser } from "@/lib/session";
@@ -403,15 +403,27 @@ export function NavbarClient({ currentUser, notificationCount, dmUnreadCount, re
                                 )}
                               </>
                             );
-                            const cls = "flex items-start gap-3 border-b border-white/5 px-4 py-3 last:border-0";
+                            const cls = "flex w-full items-start gap-3 border-b border-white/5 px-4 py-3 text-left last:border-0";
+                            // Opening a notification is what "seeing it" means —
+                            // clearing the badge shouldn't need a separate action.
+                            const open = () => {
+                              setNotifOpen(false);
+                              if (!item.readAt) void markActivityReadAction(item.id);
+                            };
                             return item.href ? (
-                              <Link key={item.id} href={item.href} onClick={() => setNotifOpen(false)} className={`${cls} transition hover:bg-white/5`}>
+                              <Link key={item.id} href={item.href} onClick={open} className={`${cls} transition hover:bg-white/5`}>
                                 {body}
                               </Link>
                             ) : (
-                              <div key={item.id} className={cls}>
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={open}
+                                disabled={!!item.readAt}
+                                className={`${cls} transition hover:bg-white/5 disabled:cursor-default disabled:hover:bg-transparent`}
+                              >
                                 {body}
-                              </div>
+                              </button>
                             );
                           })
                         )}

@@ -31,7 +31,7 @@ export type ActivityFeedItem = {
 
 // Each activity kind gets an icon + accent so the feed reads at a glance — the
 // same visual language as the mockups, in d76's sunset/forest palette.
-const STYLES: Partial<Record<ActivityType, { icon: ComponentType<{ className?: string }>; tint: string }>> = {
+export const ACTIVITY_STYLES: Partial<Record<ActivityType, { icon: ComponentType<{ className?: string }>; tint: string }>> = {
   ADDED_BIKE: { icon: Bike, tint: "text-sunset bg-sunset/10" },
   ADDED_MODIFICATION: { icon: Settings2, tint: "text-sunset bg-sunset/10" },
   LOGGED_SERVICE: { icon: Wrench, tint: "text-asphalt bg-asphalt/5" },
@@ -89,7 +89,7 @@ export function ActivityFeed({
       ) : (
         <ul className="divide-y divide-border">
           {items.map((item) => {
-            const style = STYLES[item.type] ?? FALLBACK;
+            const style = ACTIVITY_STYLES[item.type] ?? FALLBACK;
             const Icon = style.icon;
             return (
               <li key={item.id} className="flex items-start gap-4 px-5 py-4 sm:px-6">
