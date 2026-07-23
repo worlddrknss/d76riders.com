@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/og";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MessageSquare, Newspaper } from "lucide-react";
+import { ArrowRight, CalendarDays, MessageSquare, Newspaper, X } from "lucide-react";
 import { NewsPostStatus } from "@prisma/client";
 import { siteImages } from "@/data/images";
 import { AppShell } from "@/components/layout/app-shell";
@@ -22,12 +22,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function NewsPage() {
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; tag?: string }>;
+}) {
   const currentUser = await getCurrentUser();
+  const { category: categoryFilter, tag: tagFilter } = await searchParams;
 
   const dbPosts = "newsPost" in prisma
     ? await prisma.newsPost.findMany({
-        where: { status: NewsPostStatus.PUBLISHED },
+        where: {
+          status: NewsPostStatus.PUBLISHED,
+          // Category is matched by name because that is what the links carry,
+          // and older posts store it as a plain string rather than a relation.
+          ...(categoryFilter
+            ? {
+                OR: [
+                  { newsCategory: { name: { equals: categoryFilter, mode: "insensitive" } } },
+                  { category: { equals: categoryFilter, mode: "insensitive" } },
+                ],
+              }
+            : {}),
+          ...(tagFilter
+            ? { postTags: { some: { tag: { name: { equals: tagFilter, mode: "insensitive" } } } } }
+            : {}),
+        },
         orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
         take: 24,
         include: {
@@ -56,6 +76,7 @@ export default async function NewsPage() {
   }));
 
   const recent = articles.slice(0, 3);
+  const activeFilter = categoryFilter || tagFilter || null;
 
   return (
     <AppShell>
@@ -77,6 +98,28 @@ export default async function NewsPage() {
                 </Link>
               </div>
             ) : null}
+            {activeFilter ? (
+              <div className="mb-6 flex flex-wrap items-center gap-3">
+                <span className="text-sm text-muted">
+                  {articles.length} article{articles.length === 1 ? "" : "s"} in{" "}
+                  <span className="font-semibold text-ink">{activeFilter}</span>
+                </span>
+                <Link
+                  href="/magazine"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-semibold text-muted transition hover:border-sunset/50 hover:text-sunset"
+                >
+                  <X className="h-3 w-3" />
+                  Clear filter
+                </Link>
+              </div>
+            ) : null}
+
+            {articles.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border bg-surface p-8 text-center text-sm text-muted">
+                Nothing here yet{activeFilter ? ` for “${activeFilter}”` : ""}.
+              </p>
+            ) : null}
+
             <StaggerList className="grid gap-8 sm:grid-cols-2">
             {articles.map((article, i) => (
               <StaggerItem key={article.id}>
@@ -115,9 +158,16 @@ export default async function NewsPage() {
               <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
               <ul className="mt-4 space-y-2">
                 {newsCategories.map((cat) => (
-                  <li key={cat.name} className="flex items-center gap-2 text-sm text-muted">
-                    <span className="h-2 w-2 bg-sunset" />
-                    {cat.name}
+                  <li key={cat.name}>
+                    <Link
+                      href={`/magazine?category=${encodeURIComponent(cat.name)}`}
+                      className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition hover:bg-canvas ${
+                        cat.name === categoryFilter ? "font-semibold text-sunset" : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      <span className="h-2 w-2 shrink-0 bg-sunset" />
+                      {cat.name}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -149,9 +199,17 @@ export default async function NewsPage() {
               <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {popularTags.map((tag) => (
-                  <span key={tag.name} className="rounded-md border border-border px-3 py-1 text-xs font-semibold uppercase tracking-wider text-muted">
+                  <Link
+                    key={tag.name}
+                    href={`/magazine?tag=${encodeURIComponent(tag.name)}`}
+                    className={`rounded-md border px-3 py-1 text-xs font-semibold uppercase tracking-wider transition ${
+                      tag.name === tagFilter
+                        ? "border-sunset bg-sunset/10 text-sunset"
+                        : "border-border text-muted hover:border-sunset/50 hover:text-sunset"
+                    }`}
+                  >
                     {tag.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             </div>
