@@ -1,18 +1,29 @@
-# Todo List
+# Todo
 
-Implementation guide: [docs/IMPLEMENTATION_GUIDE.md](docs/IMPLEMENTATION_GUIDE.md)
+What's actually left. The 15-phase implementation guide, the feature backlog and
+the roadmap status doc were completed and removed — `git log -- docs/` has them
+if you need what they said.
 
-- [] Replace placeholder hero and gallery images with real community media
-- [x] Compute road distance from route geometry instead of stored/manual values
-- [] Create GMAIL account for SMTP Transporter
-- [] Decide whether the static Gallery page should become upload-backed
-- [x] Build the member profile dashboard UI shown in the mockups
-- [x] Add build timeline and activity feed pages
-- [x] Add build analytics and spending breakdown charts
-- [x] Add saved collections and favorites for builds and parts
-- [x] Add following, people, and event lists on profile pages
-- [x] Add service record and maintenance history views
-- [x] Add photo gallery and upload management for builds
-- [x] Add map search and nearby builder discovery
-- [x] Add notifications and recent activity alerts
-- [x] Like Garage, create a gear page. This page to show helmets, gloves, jackets, pants, camera gear and accessories
+## Product
+
+- [ ] Replace placeholder hero and gallery images with real community media
+- [ ] Decide whether the static Gallery page should become upload-backed
+- [ ] Route intelligence (was Phase 9, partial): route quality score from rider
+      feedback, difficulty prediction from distance/elevation/pace history, and
+      best-time-to-ride suggestions by season
+
+## Platform
+
+- [ ] Error tracking / observability — the last foundational gap. A Sentry-style
+      tracker plus structured logging; would have surfaced the SMTP hang and the
+      publish hang before a rider hit them.
+- [ ] Grow the test suite — the harness exists (32 tests). Feed ranking and the
+      rate limiter are the next worthwhile targets.
+- [ ] Perf tail — the sequential awaits in `closeRideAction` and the S3 deletes
+      could be bounded `Promise.all`.
+
+## Scheduled
+
+- [ ] 2026-09-01 — review the two accepted advisories in `scripts/audit-check.mjs`.
+      Both are postcss/sharp bundled inside Next with no fix available. Run
+      `npm run audit:check`; it flags an entry once it stops being reported.
