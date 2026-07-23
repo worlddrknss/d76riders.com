@@ -250,13 +250,13 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
           {/* The excerpt was written for every article and shown on none of
               them — it earns its place as the standfirst. */}
           {post.excerpt ? (
-            <p className="border-l-2 border-sunset pl-4 text-lg leading-relaxed text-ink sm:text-xl">
+            <p className="border-l-2 border-sunset pl-4 text-base leading-relaxed text-ink sm:text-lg">
               {post.excerpt}
             </p>
           ) : null}
 
           <div
-            className="prose prose-reading mt-8 max-w-[68ch] prose-headings:uppercase prose-headings:tracking-tight prose-img:rounded-xl"
+            className="prose prose-sm prose-reading mt-8 max-w-[72ch] prose-headings:uppercase prose-headings:tracking-tight prose-h2:text-xl prose-h3:text-lg prose-img:rounded-xl"
             dangerouslySetInnerHTML={{ __html: body }}
           />
 
