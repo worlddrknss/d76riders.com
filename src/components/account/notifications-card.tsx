@@ -16,6 +16,7 @@ type Prefs = {
   emailOnRsvp: boolean;
   emailOnEventMessage: boolean;
   emailOnRideChange: boolean;
+  emailOnReminders: boolean;
   emailWeeklyRecap: boolean;
 };
 
@@ -28,6 +29,11 @@ const TOGGLES: { name: keyof Prefs; label: string; hint: string }[] = [
     name: "emailOnRideChange",
     label: "Ride changes",
     hint: "When a ride you're on is cancelled, moved, or a waitlist spot opens for you.",
+  },
+  {
+    name: "emailOnReminders",
+    label: "Reminders",
+    hint: "Your ride tomorrow, the recap after it, and maintenance coming due.",
   },
   { name: "emailWeeklyRecap", label: "Weekly recap", hint: "A Monday summary of your week in riding." },
 ];

@@ -39,6 +39,7 @@ const EVENT_TYPES = new Set<ActivityType>([
   "COMPLETED_RIDE",
   "RIDER_DOWN",
   "UPLOADED_PHOTO",
+  "RIDE_REMINDER",
 ]);
 
 /** refId is a Challenge id. */

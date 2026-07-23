@@ -1052,15 +1052,24 @@ export async function closeRideAction(eventId: string): Promise<void> {
       event.distanceMiles ? `${event.distanceMiles} mi` : null,
       photoCount > 0 ? `${photoCount} photo${photoCount === 1 ? "" : "s"}` : null,
     ].filter(Boolean);
-    await Promise.all(
-      [...checkedInRiderIds].map((rid) =>
-        sendPushToRider(rid, {
-          title: `Ride recap — ${eventTitle}`,
-          body: `${parts.join(" · ")}. See how it went →`,
-          url: `/events/${event.slug}`,
-          tag: `ride-recap-${eventId}`,
-        }).catch(() => {}),
-      ),
+    const recapBody = `${parts.join(" · ")}. See how it went.`;
+    const recapRiderIds = [...checkedInRiderIds];
+
+    await logActivityForRiders(recapRiderIds, {
+      type: "COMPLETED_RIDE",
+      summary: `Ride recap — ${eventTitle}: ${recapBody}`,
+      refId: eventId,
+    });
+    await mapWithConcurrency(recapRiderIds, 8, (rid) =>
+      sendPushToRider(rid, {
+        title: `Ride recap — ${eventTitle}`,
+        body: recapBody,
+        url: `/events/${event.slug}`,
+        tag: `ride-recap-${eventId}`,
+      }).catch(() => {}),
+    );
+    await emailNotifyRiders(recapRiderIds, "reminder", (name) =>
+      rideChangeEmail(name, `Ride recap — ${eventTitle}`, recapBody, absoluteUrl(`/events/${event.slug}`)),
     );
   }
 
@@ -1278,11 +1287,23 @@ export async function riderDownAction(
   // Emergency push — bypasses quiet hours (sendPushToRider, not pushNotifyRider)
   // because a rider-down alert has to reach organizers immediately, even
   // overnight. Best-effort per organizer; never blocks the report.
+  const riderDownBody = `${affected.name} on ${event.title}${locationSuffix}. Open for details.`;
+
+  // Email too, and forced past the opt-out: an organizer learning a rider is
+  // down is not a notification preference. Push alone reaches only riders who
+  // granted permission.
+  await emailNotifyRiders(
+    organizerIds,
+    "rideChange",
+    (name) => rideChangeEmail(name, `Rider down — ${event.title}`, riderDownBody, absoluteUrl(`/events/${event.slug}`)),
+    { force: true },
+  );
+
   await Promise.all(
     organizerIds.map((rid) =>
       sendPushToRider(rid, {
         title: "🚨 Rider down",
-        body: `${affected.name} on ${event.title}${locationSuffix}. Open for details.`,
+        body: riderDownBody,
         url: `/events/${event.slug}`,
         tag: `rider-down-${incident.id}`,
       }).catch(() => {}),

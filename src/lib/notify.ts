@@ -2,17 +2,23 @@ import { sendEmail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 
 /** Which per-rider opt-out flag gates each notification category. */
-type NotifyCategory = "mention" | "comment" | "rsvp" | "event" | "rideChange";
+type NotifyCategory = "mention" | "comment" | "rsvp" | "event" | "rideChange" | "reminder";
 
 const PREF_FIELD: Record<
   NotifyCategory,
-  "emailOnMention" | "emailOnComment" | "emailOnRsvp" | "emailOnEventMessage" | "emailOnRideChange"
+  | "emailOnMention"
+  | "emailOnComment"
+  | "emailOnRsvp"
+  | "emailOnEventMessage"
+  | "emailOnRideChange"
+  | "emailOnReminders"
 > = {
   mention: "emailOnMention",
   comment: "emailOnComment",
   rsvp: "emailOnRsvp",
   event: "emailOnEventMessage",
   rideChange: "emailOnRideChange",
+  reminder: "emailOnReminders",
 };
 
 type BuiltEmail = { subject: string; html: string };
@@ -30,6 +36,13 @@ export async function emailNotifyRiders(
   riderIds: string[],
   category: NotifyCategory,
   build: (recipientName: string) => BuiltEmail,
+  options?: {
+    /**
+     * Send regardless of the category opt-out. Reserved for safety alerts —
+     * a rider-down report reaching organizers is not a preference.
+     */
+    force?: boolean;
+  },
 ): Promise<void> {
   const unique = [...new Set(riderIds)].filter(Boolean);
   if (unique.length === 0) return;
@@ -37,7 +50,7 @@ export async function emailNotifyRiders(
   const prefField = PREF_FIELD[category];
   try {
     const riders = await prisma.rider.findMany({
-      where: { id: { in: unique }, [prefField]: true },
+      where: options?.force ? { id: { in: unique } } : { id: { in: unique }, [prefField]: true },
       select: { name: true, user: { select: { email: true } } },
     });
 

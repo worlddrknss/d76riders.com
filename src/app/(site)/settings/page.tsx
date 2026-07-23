@@ -23,6 +23,7 @@ export default async function SettingsPage() {
       emailOnRsvp: true,
       emailOnEventMessage: true,
       emailOnRideChange: true,
+      emailOnReminders: true,
       emailWeeklyRecap: true,
       quietHoursStart: true,
       quietHoursEnd: true,
@@ -50,6 +51,7 @@ export default async function SettingsPage() {
               emailOnRsvp: rider?.emailOnRsvp ?? true,
               emailOnEventMessage: rider?.emailOnEventMessage ?? true,
               emailOnRideChange: rider?.emailOnRideChange ?? true,
+              emailOnReminders: rider?.emailOnReminders ?? true,
               emailWeeklyRecap: rider?.emailWeeklyRecap ?? true,
             }}
           />

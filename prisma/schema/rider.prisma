@@ -54,6 +54,9 @@ model Rider {
   // separate from emailOnEventMessage — that one is a human writing to you, this
   // one is the plan you committed to changing under you.
   emailOnRideChange Boolean @default(true)
+  // Scheduled nudges rather than news: the 24h ride reminder, the post-ride
+  // recap, and maintenance coming due.
+  emailOnReminders Boolean @default(true)
   emailWeeklyRecap Boolean @default(true)
 
   // Quiet hours (Central time, 0-23). When set and the current hour falls in the

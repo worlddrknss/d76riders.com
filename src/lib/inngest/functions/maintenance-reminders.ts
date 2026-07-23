@@ -1,5 +1,9 @@
 import { inngest } from "@/lib/inngest/client";
 import { prisma } from "@/lib/prisma";
+import { absoluteUrl } from "@/lib/absolute-url";
+import { logActivity } from "@/lib/activity";
+import { rideChangeEmail } from "@/lib/email-templates";
+import { emailNotifyRiders } from "@/lib/notify";
 import { sendPushToRider } from "@/lib/push";
 
 /**
@@ -55,12 +59,23 @@ export const maintenanceReminders = inngest.createFunction(
           items.length === 1
             ? `${first.title} on your ${first.bike} is due.`
             : `${items.length} maintenance items are due, starting with ${first.title} on your ${first.bike}.`;
+        // Same reasoning as the ride reminder: push-only meant no reminder at
+        // all for a rider who hasn't subscribed.
+        await logActivity({
+          riderId,
+          type: "MAINTENANCE_DUE",
+          summary: body,
+          refId: null,
+        });
         await sendPushToRider(riderId, {
           title: "Maintenance due",
           body,
           url: `/r/${handle}?tab=garage`,
           tag: "d76-maintenance",
         });
+        await emailNotifyRiders([riderId], "reminder", (name) =>
+          rideChangeEmail(name, "Maintenance due", body, absoluteUrl(`/r/${handle}?tab=garage`)),
+        );
         count += 1;
       }
 

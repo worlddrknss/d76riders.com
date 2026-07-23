@@ -1,6 +1,11 @@
 import { formatEventDate, formatEventTime, toZonedInputValue } from "@/lib/datetime";
 import { inngest } from "@/lib/inngest/client";
 import { prisma } from "@/lib/prisma";
+import { logActivityForRiders } from "@/lib/activity";
+import { mapWithConcurrency } from "@/lib/concurrency";
+import { absoluteUrl } from "@/lib/absolute-url";
+import { rideChangeEmail } from "@/lib/email-templates";
+import { emailNotifyRiders } from "@/lib/notify";
 import { sendPushToRider } from "@/lib/push";
 import { getDailyForecast, weatherLabel, withinForecastWindow } from "@/lib/weather";
 
@@ -58,14 +63,30 @@ export const eventReminders = inngest.createFunction(
         }
 
         const body = `Meet ${formatEventTime(ev.startsAt, ev.timezone)}, ${formatEventDate(ev.startsAt, ev.timezone)}.${weather}`;
-        for (const { riderId } of ev.rsvps) {
-          await sendPushToRider(riderId, {
+        const riderIds = ev.rsvps.map((r) => r.riderId);
+
+        // Also into the bell. This was push-only, so a rider without a push
+        // subscription — which is everyone until they opt in, and on iOS until
+        // they install the PWA — got no reminder at all and no record that one
+        // was ever meant for them.
+        await logActivityForRiders(riderIds, {
+          type: "RIDE_REMINDER",
+          summary: `Tomorrow: ${ev.title} — ${body}`,
+          refId: ev.id,
+        });
+
+        await mapWithConcurrency(riderIds, 8, (riderId) =>
+          sendPushToRider(riderId, {
             title: `Reminder: ${ev.title}`,
             body,
             url: `/events/${ev.slug}`,
             tag: `event-reminder-${ev.id}`,
-          });
-        }
+          }).catch(() => {}),
+        );
+
+        await emailNotifyRiders(riderIds, "reminder", (name) =>
+          rideChangeEmail(name, `Tomorrow: ${ev.title}`, body, absoluteUrl(`/events/${ev.slug}`)),
+        );
         count += ev.rsvps.length;
       }
 
