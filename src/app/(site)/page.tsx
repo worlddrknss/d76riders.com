@@ -16,6 +16,7 @@ import { siteImages } from "@/data/images";
 import { FeatureShowcase } from "@/components/home/feature-showcase";
 import { RiderDashboard } from "@/components/feed/rider-dashboard";
 import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
+import { formatPostTimestamp } from "@/lib/datetime";
 import { getCurrentUser } from "@/lib/session";
 import { FadeUp, StaggerList, StaggerItem } from "@/components/ui/motion";
 import { DEFAULT_TIMEZONE, eventDayMonth, formatEventDate } from "@/lib/datetime";
@@ -671,7 +672,7 @@ export default async function Home() {
                           {phrased}
                         </p>
                         <p className="text-xs text-muted">
-                          {item.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          {formatPostTimestamp(item.createdAt, null)}
                         </p>
                       </div>
                     </div>

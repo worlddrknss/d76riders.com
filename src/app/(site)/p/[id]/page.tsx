@@ -6,6 +6,7 @@ import { JournalGrid } from "@/components/profile/journal-grid";
 import { absoluteUrl } from "@/lib/absolute-url";
 import { mediaUrl } from "@/lib/media-url";
 import { OG_IMAGE } from "@/lib/og";
+import { formatPostTimestamp } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -57,7 +58,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
 
   const currentUser = await getCurrentUser();
   const viewer = currentUser
-    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
     : null;
 
   const gridEntry = {
@@ -66,7 +67,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     body: entry.body,
     imageUrl: entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null,
     videoUrl: entry.videoUrl,
-    dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    dateLabel: formatPostTimestamp(entry.createdAt, viewer?.timezone),
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
     isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,

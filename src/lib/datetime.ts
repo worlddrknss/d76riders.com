@@ -46,6 +46,23 @@ export function formatEventTimeShort(utc: Date, tz: string): string {
   return zoned(utc, tz).toFormat("h:mm a");
 }
 
+/**
+ * "Jul 23, 2026 · 8:27 PM" for a post, comment, or anything else stamped with
+ * `createdAt` — rendered in the *viewer's* zone, not the event's.
+ *
+ * These were previously formatted with a bare toLocaleDateString() on the
+ * server, which resolves to the container's zone (UTC). A post written at 8pm
+ * Central was already the next day in UTC, so the feed dated it tomorrow.
+ *
+ * With no viewer zone (signed out, or never set) it falls back to Central and
+ * says so, rather than quietly implying the reader's own local time.
+ */
+export function formatPostTimestamp(utc: Date, viewerTz: string | null | undefined): string {
+  const known = isValidTimezone(viewerTz);
+  const dt = zoned(utc, known ? viewerTz : DEFAULT_TIMEZONE);
+  return dt.toFormat(known ? "LLL d, yyyy · h:mm a" : "LLL d, yyyy · h:mm a ZZZZ");
+}
+
 /** The calendar-badge day + month, in the event's zone. */
 export function eventDayMonth(utc: Date, tz: string): { day: string; month: string } {
   const dt = zoned(utc, tz);

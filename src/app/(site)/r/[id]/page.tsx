@@ -27,7 +27,7 @@ import { GarageTabs } from "@/components/garage/garage-tabs";
 import { CreateBikeDialog } from "@/components/garage/create-bike-dialog";
 import { GearTabbedView } from "@/components/gear/gear-tabbed-view";
 import { VideoEmbed as RiderVideoEmbed } from "@/components/videos/video-embed";
-import { DEFAULT_TIMEZONE, eventDayMonth } from "@/lib/datetime";
+import { DEFAULT_TIMEZONE, eventDayMonth, formatPostTimestamp } from "@/lib/datetime";
 import { toggleRiderFollowAction } from "@/app/(site)/garage/mine/actions";
 import { startConversationAction } from "@/app/(site)/messages/actions";
 import { canDm } from "@/lib/dm";
@@ -340,6 +340,7 @@ export default async function RiderProfilePage({
         where: { userId: currentUser.id },
         select: {
           id: true,
+          timezone: true,
           following: {
             where: { following: { handle: rider.handle } },
             select: { followingId: true },
@@ -441,7 +442,7 @@ export default async function RiderProfilePage({
     body: entry.body,
     imageUrl: entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null,
     videoUrl: entry.videoUrl,
-    dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    dateLabel: formatPostTimestamp(entry.createdAt, viewer?.timezone),
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
     isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,

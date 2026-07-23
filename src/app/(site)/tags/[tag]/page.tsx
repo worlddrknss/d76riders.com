@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { JournalGrid } from "@/components/profile/journal-grid";
 import { mediaUrl } from "@/lib/media-url";
 import { normalizeTag } from "@/lib/journal-tags";
+import { formatPostTimestamp } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
@@ -26,7 +27,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
 
   const currentUser = await getCurrentUser();
   const viewer = currentUser
-    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true } })
+    ? await prisma.rider.findUnique({ where: { userId: currentUser.id }, select: { id: true, timezone: true } })
     : null;
 
   const rows = await prisma.journalHashtag.findMany({
@@ -62,7 +63,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
     body: entry.body,
     imageUrl: entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null,
     videoUrl: entry.videoUrl,
-    dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    dateLabel: formatPostTimestamp(entry.createdAt, viewer?.timezone),
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
     isLiked: viewer ? entry.likes.some((l) => l.riderId === viewer.id) : false,

@@ -1,4 +1,5 @@
 import type { JournalGridEntry } from "@/components/profile/journal-grid";
+import { formatPostTimestamp } from "@/lib/datetime";
 import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
@@ -29,6 +30,13 @@ export async function getFeedEntries({
   skip?: number;
   take?: number;
 }): Promise<JournalGridEntry[]> {
+  // Timestamps render in the viewer's zone. Resolved here because every caller
+  // already passes viewerId, and none of them had the zone to hand.
+  const viewer = await prisma.rider.findUnique({
+    where: { id: viewerId },
+    select: { timezone: true },
+  });
+
   const where = mode === "following" ? { authorId: { in: knownIds } } : {};
   const orderBy =
     mode === "momentum"
@@ -82,7 +90,7 @@ export async function getFeedEntries({
     body: entry.body,
     imageUrl: entry.galleryItems[0]?.url ? mediaUrl(entry.galleryItems[0].url) : null,
     videoUrl: entry.videoUrl,
-    dateLabel: entry.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    dateLabel: formatPostTimestamp(entry.createdAt, viewer?.timezone),
     likeCount: entry._count.likes,
     commentCount: entry._count.comments,
     isLiked: likedSet.has(entry.id),
