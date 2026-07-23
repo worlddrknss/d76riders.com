@@ -69,8 +69,8 @@ export function EventRoutePlannerButton({
 
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-[9999] flex flex-col bg-canvas">
-            <div className="flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
+          <div className="safe-pb fixed inset-0 z-[9999] flex flex-col bg-canvas">
+            <div className="safe-pt flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 sm:px-6">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Event Route Builder</p>
                 <h3 className="font-display text-xl text-asphalt">

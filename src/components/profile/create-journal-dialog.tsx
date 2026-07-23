@@ -99,12 +99,12 @@ export function CreateJournalDialog({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-60 flex flex-col bg-surface"
+      className="safe-pb fixed inset-0 z-60 flex flex-col bg-surface"
       role="dialog"
       aria-modal="true"
       aria-labelledby="journal-modal-title"
     >
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
+      <header className="safe-pt flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Ride Journal</p>
           <h1 id="journal-modal-title" className="font-display text-xl text-ink sm:text-2xl">

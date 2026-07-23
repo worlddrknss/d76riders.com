@@ -76,6 +76,23 @@ body {
   font-variant-numeric: normal;
 }
 
+/* Safe-area insets for full-screen overlays.
+   
+   viewport-fit=cover (plus iOS's black-translucent status bar in an installed
+   PWA) lets the page run under the status bar and the home indicator. That's
+   right for backgrounds and wrong for controls: a modal header rendered at
+   top:0 puts its close button underneath the clock, where it can't be tapped.
+
+   Applied to the overlay's own chrome rather than the whole page so the surface
+   still reaches the screen edges — only the content is inset. */
+.safe-pt {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 a {
   text-decoration: none;
 }

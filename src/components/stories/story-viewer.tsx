@@ -96,7 +96,7 @@ export function StoryViewer({
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black">
+    <div className="safe-pt safe-pb fixed inset-0 z-[80] flex items-center justify-center bg-black">
       {/* progress segments */}
       <div className="absolute inset-x-0 top-0 z-10 flex gap-1 p-3">
         {group.stories.map((s, idx) => (

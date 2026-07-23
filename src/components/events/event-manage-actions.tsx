@@ -260,12 +260,12 @@ export function EventManageActions({
       {/* Full-screen edit modal — mirrors the create modal (form + live preview). */}
       {editOpen ? (
         <div
-          className="fixed inset-0 z-[60] flex flex-col bg-surface"
+          className="safe-pb fixed inset-0 z-[60] flex flex-col bg-surface"
           role="dialog"
           aria-modal="true"
           aria-labelledby="edit-event-modal-title"
         >
-          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
+          <header className="safe-pt flex shrink-0 items-center justify-between gap-3 border-b border-border px-5 py-3.5 sm:px-8">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Rider Tools</p>
               <h1 id="edit-event-modal-title" className="font-display text-xl text-ink sm:text-2xl">
