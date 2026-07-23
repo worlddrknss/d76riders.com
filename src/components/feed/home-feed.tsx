@@ -123,7 +123,11 @@ export async function HomeFeed({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <main className="w-full min-w-0 space-y-4">
-          <JournalComposerBar avatarUrl={viewerAvatar} firstName={viewer.name.split(" ")[0]} />
+          <JournalComposerBar
+            avatarUrl={viewerAvatar}
+            firstName={viewer.name.split(" ")[0]}
+            name={viewer.name}
+          />
 
           {/* Stories — a light bar under the composer */}
           <div className="px-1">

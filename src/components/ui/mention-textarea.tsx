@@ -21,6 +21,7 @@ export function MentionTextarea({
   defaultValue = "",
   required,
   className = "",
+  onValueChange,
 }: {
   name: string;
   id?: string;
@@ -29,9 +30,15 @@ export function MentionTextarea({
   defaultValue?: string;
   required?: boolean;
   className?: string;
+  /** Mirrors the value out for live previews; the field stays uncontrolled. */
+  onValueChange?: (value: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [value, setValue] = useState(defaultValue);
+  const [value, setValueState] = useState(defaultValue);
+  const setValue = (next: string) => {
+    setValueState(next);
+    onValueChange?.(next);
+  };
   const [token, setToken] = useState<ActiveToken | null>(null);
   const [riders, setRiders] = useState<RiderHit[]>([]);
   const [tags, setTags] = useState<TagHit[]>([]);

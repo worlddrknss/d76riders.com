@@ -8,9 +8,11 @@ import { CreateJournalDialog } from "@/components/profile/create-journal-dialog"
 interface JournalComposerBarProps {
   avatarUrl: string | null;
   firstName: string;
+  /** Full name, for the byline on the composer's live preview. */
+  name: string;
 }
 
-export function JournalComposerBar({ avatarUrl, firstName }: JournalComposerBarProps) {
+export function JournalComposerBar({ avatarUrl, firstName, name }: JournalComposerBarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -48,7 +50,12 @@ export function JournalComposerBar({ avatarUrl, firstName }: JournalComposerBarP
         </div>
       </div>
 
-      <CreateJournalDialog open={open} onOpenChange={setOpen} />
+      <CreateJournalDialog
+        open={open}
+        onOpenChange={setOpen}
+        authorName={name}
+        authorAvatarUrl={avatarUrl}
+      />
     </>
   );
 }
