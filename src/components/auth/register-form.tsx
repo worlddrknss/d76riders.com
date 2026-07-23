@@ -105,6 +105,24 @@ export function RegisterForm({ referralCode }: { referralCode?: string }) {
         <p className="text-xs text-muted">Use at least 8 characters.</p>
       </div>
 
+      {/* Consent + age. Required, unticked by default — consent isn't valid if
+          it's pre-agreed, and this is where the privacy policy is surfaced. */}
+      <label className="flex items-start gap-2.5 text-xs text-muted">
+        <input
+          type="checkbox"
+          name="acceptTerms"
+          required
+          className="mt-0.5 h-4 w-4 shrink-0 rounded accent-sunset"
+        />
+        <span>
+          I&apos;m 16 or older and I agree to the{" "}
+          <Link href="/policies/privacy" target="_blank" className="font-semibold text-sunset hover:underline">
+            privacy policy
+          </Link>
+          .
+        </span>
+      </label>
+
       {state.error ? (
         <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {state.error}

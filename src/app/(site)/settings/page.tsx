@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { DataExportCard } from "@/components/account/data-export-card";
 import { NotificationPrefsCard } from "@/components/account/notifications-card";
 import { PushSettingsCard } from "@/components/account/push-settings-card";
 import { SettingsNav } from "@/components/account/settings-nav";
@@ -39,6 +40,7 @@ export default async function SettingsPage() {
             initialQuietEnd={rider?.quietHoursEnd ?? null}
           />
           <NotificationPrefsCard disabledRoutes={disabledRoutes} />
+          <DataExportCard />
         </div>
       </div>
     </AppShell>

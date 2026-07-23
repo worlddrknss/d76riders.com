@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiFacebook } from "@icons-pack/react-simple-icons";
 
+import { CookieSettingsLink } from "@/components/consent/cookie-settings-link";
 import { socialLinks } from "@/data/community";
 
 type FooterLink = {
@@ -92,6 +93,11 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-5 text-center text-xs text-slate-500">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <Link href="/policies/privacy" className="hover:text-white">Privacy</Link>
+          <Link href="/policies" className="hover:text-white">Policies</Link>
+          <CookieSettingsLink className="hover:text-white" />
+        </div>
         <p>© 2026 District 76. All rights reserved.</p>
         <p className="mt-2">
           This site is also community developed. To contribute, visit{" "}

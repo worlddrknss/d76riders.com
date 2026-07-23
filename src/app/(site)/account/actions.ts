@@ -434,6 +434,69 @@ export async function updateAccountProfileAction(
   return { error: null, success: "Profile updated." };
 }
 
+/**
+ * Export the signed-in rider's data as JSON (GDPR right of access + portability).
+ *
+ * Gathers the personal and rider-created records tied to the account into one
+ * document. Returns the JSON string for the client to download — no file is
+ * stored server-side. Read-only.
+ */
+export async function exportMyDataAction(): Promise<{ error: string | null; json: string | null }> {
+  const currentUser = await getCurrentUser();
+  let userId: string;
+  try {
+    userId = requireUserId(currentUser?.id);
+  } catch {
+    return { error: "Please log in again.", json: null };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      name: true,
+      email: true,
+      emailVerified: true,
+      createdAt: true,
+      rider: {
+        select: {
+          handle: true,
+          name: true,
+          bio: true,
+          location: true,
+          timezone: true,
+          favoriteRoad: true,
+          yearsRiding: true,
+          youtubeUrl: true,
+          tiktokUrl: true,
+          instagramUrl: true,
+          twitterUrl: true,
+          joinedAt: true,
+          journalEntries: { select: { title: true, body: true, videoUrl: true, createdAt: true } },
+          bikes: { select: { name: true, make: true, model: true, year: true, createdAt: true } },
+          gearItems: { select: { category: true, name: true, brand: true, createdAt: true } },
+          events: { select: { title: true, slug: true, startsAt: true, createdAt: true } },
+          rsvps: { select: { eventId: true, status: true, createdAt: true } },
+          comments: { select: { body: true, createdAt: true } },
+          listings: { select: { title: true, priceCents: true, status: true, createdAt: true } },
+          roadRatings: { select: { roadId: true, score: true, condition: true, twistiness: true } },
+          roads: { select: { name: true, slug: true, createdAt: true } },
+          notificationPrefs: { select: { category: true, channel: true } },
+        },
+      },
+    },
+  });
+
+  if (!user) return { error: "Account not found.", json: null };
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    note: "Your District 76 account data. Emergency-card contents are encrypted and excluded.",
+    account: user,
+  };
+
+  return { error: null, json: JSON.stringify(payload, null, 2) };
+}
+
 export async function deleteAccountAction(
   _previousState: DeleteAccountFormState,
   formData: FormData,

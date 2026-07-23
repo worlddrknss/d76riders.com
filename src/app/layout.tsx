@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
+import { Analytics } from "@/components/analytics/analytics";
+import { CookieConsent } from "@/components/consent/cookie-consent";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { JsonLd, organizationJsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
@@ -127,6 +129,8 @@ export default function RootLayout({
         <Navbar />
         {children}
         <InstallPrompt />
+        <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );

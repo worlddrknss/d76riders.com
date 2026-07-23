@@ -58,6 +58,11 @@ export async function registerAction(
     return { error: USERNAME_RULE_MESSAGE };
   }
 
+  // A required checkbox is client-side only; enforce the consent here too.
+  if (formData.get("acceptTerms") == null) {
+    return { error: "Please confirm you're 16 or older and accept the privacy policy." };
+  }
+
   if (isReservedUsername(username)) {
     return { error: "That username is reserved." };
   }
