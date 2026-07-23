@@ -61,11 +61,16 @@ export function ProfileTabs({ tabs }: { tabs: ProfileTab[] }) {
     <div>
       {/* Rendered as the bottom rail of the profile header card above it, so it
           carries the card's side/bottom borders and rounding rather than a
-          plain underline. */}
+          plain underline.
+
+          It scrolls only where it has to: five short tabs never overflow a
+          desktop card, but overflow-x-auto still made this a scroll container
+          at every width, which macOS draws scrollbar chrome on. Below sm it can
+          genuinely run out of room, so it scrolls there with the bar hidden. */}
       <div
         role="tablist"
         aria-label="Profile sections"
-        className="flex gap-1 overflow-x-auto rounded-b-2xl border border-t border-border bg-surface px-2 shadow-soft sm:px-4"
+        className="flex gap-1 overflow-x-auto rounded-b-2xl border border-border bg-surface px-2 shadow-soft scrollbar-none sm:overflow-x-visible sm:px-4"
       >
         {tabs.map((tab) => {
           const isActive = tab.id === current?.id;
