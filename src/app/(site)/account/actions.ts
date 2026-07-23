@@ -139,6 +139,60 @@ export async function updateAvatarAction(formData: FormData): Promise<{ error: s
   return { error: null };
 }
 
+/**
+ * Replace the cover photo with an already-cropped banner.
+ *
+ * Mirrors updateAvatarAction: framing happens in the browser and the baked
+ * result arrives here. coverPosition resets to centred because the rider has
+ * just chosen the framing — the stored offset was for the *previous* image and
+ * would re-crop the new one against their intent.
+ */
+export async function updateCoverPhotoAction(formData: FormData): Promise<{ error: string | null }> {
+  const currentUser = await getCurrentUser();
+  const userId = requireUserId(currentUser?.id);
+
+  const file = formData.get("coverFile");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "No image was provided." };
+  }
+  if (!allowedImageTypes.has(file.type)) {
+    return { error: "Cover image must be a JPG, PNG, or WebP image." };
+  }
+  if (!isS3Configured()) {
+    return { error: "Storage is not configured for cover uploads yet." };
+  }
+
+  let secureUpload: { buffer: Buffer; ext: string; contentType: string };
+  try {
+    secureUpload = await validateAndScanImageUpload(file, "account-cover-update");
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to validate cover image." };
+  }
+
+  const existing = await prisma.rider.findUnique({
+    where: { userId },
+    select: { handle: true, coverUrl: true },
+  });
+  if (!existing) return { error: "Profile not found." };
+
+  const key = `covers/${userId}/${crypto.randomUUID()}.${secureUpload.ext}`;
+  const nextCoverUrl = await uploadFile(key, secureUpload.buffer, secureUpload.contentType);
+
+  await prisma.rider.update({
+    where: { userId },
+    data: { coverUrl: nextCoverUrl, coverPosition: 50 },
+  });
+
+  // Only bin the old file once the new one is stored and referenced.
+  if (existing.coverUrl && existing.coverUrl !== nextCoverUrl) {
+    await deleteFileByUrl(existing.coverUrl);
+  }
+
+  revalidatePath(`/r/${existing.handle}`);
+  revalidatePath("/account");
+  return { error: null };
+}
+
 export async function updateAccountProfileAction(
   _previousState: AccountFormState,
   formData: FormData,

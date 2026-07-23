@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, Move, X } from "lucide-react";
 
 import { updateCoverPositionAction } from "@/app/(site)/account/actions";
+import { CoverEditor } from "@/components/profile/cover-editor";
 
 type CoverPhotoProps = {
   url: string | null;
@@ -14,14 +15,17 @@ type CoverPhotoProps = {
 };
 
 /**
- * Profile cover with Facebook-style drag-to-reframe.
+ * Profile cover, with two ways to change it.
  *
- * Only the vertical axis moves: the image is scaled to the full width of the
- * card, so there is only ever vertical slack to pan through.
+ * Edit Cover opens the cropper: pick a photo, zoom and pan, and the framing is
+ * baked into a 3:1 banner. Reposition then nudges the vertical crop of that
+ * stored image — still worth having, because the banner is a different aspect
+ * on a phone than on a desktop, so there is usually slack to shift.
  *
- * Dragging maps pixels to percent using the container height rather than the
- * image's natural height — the image is cropped by the container, so the
- * container is what the drag is actually reframing against.
+ * Only the vertical axis moves here: the image is scaled to the full width of
+ * the card, so there is only ever vertical slack to pan through. Dragging maps
+ * pixels to percent using the container height rather than the image's natural
+ * height — the container is what the drag is actually reframing against.
  */
 export function CoverPhoto({ url, name, position, canReposition }: CoverPhotoProps) {
   const [editing, setEditing] = useState(false);
@@ -111,9 +115,14 @@ export function CoverPhoto({ url, name, position, canReposition }: CoverPhotoPro
       {/* Keeps the avatar and controls readable over a busy photo. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-linear-to-t from-black/45 to-transparent" />
 
-      {canReposition && url ? (
-        <div className="absolute right-3 top-3 flex gap-2">
-          {editing ? (
+      {/* Two controls, two jobs: the cropper replaces the photo and bakes the
+          framing; Reposition nudges the vertical crop of whatever is already
+          there, which is still useful because the banner's aspect changes with
+          the viewport. Reposition only appears once there is a photo. */}
+      {canReposition ? (
+        <div className="absolute right-3 top-3 flex flex-wrap justify-end gap-2">
+          {!editing ? <CoverEditor url={url} /> : null}
+          {!url ? null : editing ? (
             <>
               <button
                 type="button"
