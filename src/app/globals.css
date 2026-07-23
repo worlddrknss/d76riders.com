@@ -37,7 +37,6 @@
   --color-panel-text: var(--panel-text);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
-  --font-reading: var(--font-reading);
   --shadow-soft: 0 18px 40px -30px rgba(15, 23, 42, 0.24);
   --shadow-lift: 0 34px 70px -42px rgba(15, 23, 42, 0.35);
 }
@@ -268,26 +267,16 @@ main {
   font-family: var(--font-display), sans-serif;
 }
 
-/* Magazine article bodies. Opt-in rather than applied to every `prose` block,
-   so policy pages and the admin composer keep the UI sans — the serif is for
-   continuous reading, not for reference text you scan.
+/* Magazine article bodies.
 
-   Body copy also moves from muted to ink: grey is right for a caption beside
-   something else, and tiring for a thousand words of ride report. */
+   These were set in a reading serif for a while. On the page it read as a
+   different product bolted onto the site rather than part of it, so article
+   copy uses the same IBM Plex Sans as everything else and only the things that
+   actually aid long-form reading are kept: ink rather than muted (grey is right
+   for a caption beside something else and tiring for a thousand words), and a
+   slightly looser line than a UI block. */
 .prose-reading {
   --tw-prose-body: var(--ink);
-  font-family: var(--font-reading), Georgia, serif;
-  font-size: 1.125rem;
   line-height: 1.75;
 }
 
-/* Headings stay Anton, so an article still looks like this site. */
-.prose-reading :is(h1, h2, h3, h4) {
-  font-family: var(--font-display), sans-serif;
-}
-
-/* Anything that isn't running prose goes back to the UI face: a serif code
-   block or table header reads as a mistake rather than a choice. */
-.prose-reading :is(code, pre, kbd, samp, th, figcaption) {
-  font-family: var(--font-body), sans-serif;
-}

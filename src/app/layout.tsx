@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, IBM_Plex_Sans, Newsreader } from "next/font/google";
+import { Anton, IBM_Plex_Sans } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Analytics } from "@/components/analytics/analytics";
 import { CookieConsent } from "@/components/consent/cookie-consent";
@@ -33,16 +33,6 @@ const bodyFont = IBM_Plex_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-// Newsreader — magazine article bodies only. A ride report is a thousand words
-// of continuous prose, and a reading serif carries that far more comfortably
-// than a UI sans. Deliberately scoped so the magazine reads like a magazine
-// while the rest of the app still reads like an app.
-const readingFont = Newsreader({
-  variable: "--font-reading",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
 
@@ -118,7 +108,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${displayFont.variable} ${bodyFont.variable} ${readingFont.variable} h-full antialiased`}
+      className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       {/* Bottom padding clears the fixed mobile tab bar (and the home
           indicator beneath it) so page content is never trapped under it. */}
