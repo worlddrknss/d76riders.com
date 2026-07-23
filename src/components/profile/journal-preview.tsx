@@ -1,8 +1,9 @@
 "use client";
 
-import { Bookmark, Heart, MessageCircle, Share2 } from "lucide-react";
+import { Bookmark, MessageCircle, Share2 } from "lucide-react";
 
 import { JournalText } from "@/components/ui/journal-text";
+import { TwoWheelsDownIcon } from "@/components/ui/two-wheels-down-icon";
 import { VideoEmbed } from "@/components/ui/video-embed";
 
 type JournalPreviewProps = {
@@ -83,7 +84,7 @@ export function JournalPreview({
         className="mt-3 flex items-center gap-5 border-t border-border px-4 py-2.5 text-muted/60"
       >
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
-          <Heart className="h-4 w-4" /> Like
+          <TwoWheelsDownIcon className="h-4.5 w-4.5" /> Two down
         </span>
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
           <MessageCircle className="h-4 w-4" /> Comment

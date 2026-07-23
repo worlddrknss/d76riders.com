@@ -92,7 +92,7 @@ export function JournalInteractions({
             isLiked ? "text-forest" : "text-muted hover:text-forest"
           } disabled:opacity-50`}
         >
-          <TwoWheelsDownIcon className="h-4 w-4" filled={isLiked} />
+          <TwoWheelsDownIcon className="h-4.5 w-4.5" filled={isLiked} />
           {likeCount > 0 ? likeCount : "Two down"}
         </button>
 
