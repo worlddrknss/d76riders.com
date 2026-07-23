@@ -234,7 +234,9 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
       </section>
 
       <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <article className="min-w-0">
+        {/* The body sits on a surface card like everything else on the site —
+            long-form copy directly on the canvas read as an unfinished page. */}
+        <article className="min-w-0 rounded-2xl border border-border bg-surface p-6 shadow-soft sm:p-9">
           {/* The excerpt was written for every article and shown on none of
               them — it earns its place as the standfirst. */}
           {post.excerpt ? (
@@ -274,8 +276,9 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
             </div>
           ) : null}
 
-          {/* AUTHOR */}
-          <div className="mt-8 flex items-start gap-4 rounded-xl border border-border bg-surface p-6 shadow-soft">
+          {/* AUTHOR — inset on canvas rather than another surface card, which
+              would stack a card inside a card now that the article has one. */}
+          <div className="mt-8 flex items-start gap-4 rounded-xl border border-border bg-canvas p-5">
             {authorAvatar ? (
               <img src={authorAvatar} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />
             ) : (
