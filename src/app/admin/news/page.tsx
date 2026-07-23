@@ -1,4 +1,5 @@
 import { AdminNewsTable } from "@/components/admin/admin-news-table";
+import { mediaUrl } from "@/lib/media-url";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminNewsPage() {
@@ -44,6 +45,9 @@ export default async function AdminNewsPage() {
     seoTitle: post.seoTitle ?? "",
     seoDescription: post.seoDescription ?? "",
     hasCoverImage: Boolean(post.coverImageUrl),
+    // The composer preview shows the real cover, so the editor sees the article
+    // as it stands rather than a placeholder.
+    coverImageUrl: mediaUrl(post.coverImageUrl) || null,
   }));
 
   return (

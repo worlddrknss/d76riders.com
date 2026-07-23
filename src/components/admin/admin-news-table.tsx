@@ -1,20 +1,16 @@
 "use client";
 
-import { useActionState, useMemo, useState, useTransition } from "react";
+import { useActionState, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { ExternalLink, ImagePlus, Pencil, Plus, Star, Trash2, X } from "lucide-react";
 
 import { type CreateNewsPostFormState } from "@/app/admin/content/new/actions";
 import { createNewsPostAction } from "@/app/admin/content/new/actions";
 import { deleteNewsPostFromAdminAction, updateNewsPostAction } from "@/app/admin/news/actions";
+import { ArticlePreview } from "@/components/news/article-preview";
 import { WysiwygEditor } from "@/components/admin/wysiwyg-editor";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 type PostData = {
   id: string;
@@ -33,6 +29,7 @@ type PostData = {
   seoTitle: string;
   seoDescription: string;
   hasCoverImage: boolean;
+  coverImageUrl: string | null;
 };
 
 type AdminNewsTableProps = {
@@ -170,45 +167,75 @@ export function AdminNewsTable({ posts, existingCategories, existingTags }: Admi
         </table>
       </div>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingPost ? `Edit: ${editingPost.title}` : "New Post"}</DialogTitle>
-          </DialogHeader>
-          <NewsPostForm
-            action={formAction}
-            contentHtml={contentHtml}
-            onContentChange={setContentHtml}
-            existingCategories={existingCategories}
-            existingTags={existingTags}
-            initialValues={editingPost ? {
-              title: editingPost.title,
-              category: editingPost.category,
-              tags: editingPost.tags,
-              excerpt: editingPost.excerpt,
-              contentHtml: editingPost.contentHtml,
-              status: editingPost.status as "DRAFT" | "PUBLISHED" | "PENDING_REVIEW",
-              publishedAt: editingPost.publishedAt?.slice(0, 16) ?? "",
-              seoTitle: editingPost.seoTitle,
-              seoDescription: editingPost.seoDescription,
-              featured: editingPost.featured,
-            } : undefined}
-            onSuccess={() => { setDialogOpen(false); router.refresh(); }}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Composer — the same full-screen modal with a live preview the site
+          composers use, so an editor works against the article, not a form. */}
+      {dialogOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="safe-pb fixed inset-0 z-60 flex flex-col bg-asphalt text-slate-100"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="admin-news-composer-title"
+            >
+              <header className="safe-pt flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5 py-3.5 sm:px-8">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-sunset">Publishing</p>
+                  <h2 id="admin-news-composer-title" className="truncate font-display text-xl text-white sm:text-2xl">
+                    {editingPost ? editingPost.title : "New Post"}
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(false)}
+                  aria-label="Close"
+                  className="-mr-1 rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sunset/50"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </header>
+
+              <NewsPostForm
+                key={editingPost?.id ?? "new"}
+                action={formAction}
+                contentHtml={contentHtml}
+                onContentChange={setContentHtml}
+                existingCategories={existingCategories}
+                existingTags={existingTags}
+                existingCoverUrl={editingPost?.coverImageUrl ?? null}
+                authorName={editingPost?.authorName ?? "District 76 Riders"}
+                initialValues={editingPost ? {
+                  title: editingPost.title,
+                  category: editingPost.category,
+                  tags: editingPost.tags,
+                  excerpt: editingPost.excerpt,
+                  contentHtml: editingPost.contentHtml,
+                  status: editingPost.status as "DRAFT" | "PUBLISHED" | "PENDING_REVIEW",
+                  publishedAt: editingPost.publishedAt?.slice(0, 16) ?? "",
+                  seoTitle: editingPost.seoTitle,
+                  seoDescription: editingPost.seoDescription,
+                  featured: editingPost.featured,
+                } : undefined}
+                onSuccess={() => { setDialogOpen(false); router.refresh(); }}
+                onCancel={() => setDialogOpen(false)}
+              />
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
 
-// Inline form for dialog
+// Composer body, shared by create and edit.
 type NewsPostFormProps = {
   action: (state: CreateNewsPostFormState, formData: FormData) => Promise<CreateNewsPostFormState>;
   contentHtml: string;
   onContentChange: (html: string) => void;
   existingCategories: string[];
   existingTags: string[];
+  /** Cover already on the post, so the preview shows the article as it stands. */
+  existingCoverUrl: string | null;
+  authorName: string;
   initialValues?: {
     title?: string;
     category?: string;
@@ -222,97 +249,218 @@ type NewsPostFormProps = {
     featured?: boolean;
   };
   onSuccess: () => void;
+  onCancel: () => void;
 };
 
-function NewsPostForm({ action, contentHtml, onContentChange, existingCategories, existingTags, initialValues, onSuccess }: NewsPostFormProps) {
+const fieldClass =
+  "rounded-lg border border-white/15 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none";
+const labelClass = "text-xs font-semibold uppercase tracking-[0.1em] text-slate-400";
+
+function NewsPostForm({
+  action,
+  contentHtml,
+  onContentChange,
+  existingCategories,
+  existingTags,
+  existingCoverUrl,
+  authorName,
+  initialValues,
+  onSuccess,
+  onCancel,
+}: NewsPostFormProps) {
   const [state, formAction, pending] = useActionState<CreateNewsPostFormState, FormData>(action, initialFormState);
 
-  // If no error and we had a submission, it means success
-  // useEffect would be better but keeping it simple
-  if (state && !state.error && state !== initialFormState) {
-    // Next tick to avoid setState during render
-    setTimeout(onSuccess, 0);
+  // Controlled only for the fields the preview reads; the rest stay uncontrolled.
+  const [title, setTitle] = useState(initialValues?.title ?? "");
+  const [category, setCategory] = useState(initialValues?.category ?? "");
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverName, setCoverName] = useState<string | null>(null);
+
+  // Close on a completed save, keyed on the state object rather than a flag —
+  // the old version fired a setTimeout on every render that saw a clean state.
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
+    if (!state.error) onSuccess();
+  }
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onCancel]);
+
+  const wordCount = useMemo(() => {
+    const plain = contentHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    return plain ? plain.split(" ").length : 0;
+  }, [contentHtml]);
+
+  function pickCover(file: File | undefined) {
+    setCoverUrl((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return file ? URL.createObjectURL(file) : null;
+    });
+    setCoverName(file?.name ?? null);
   }
 
   return (
-    <form action={formAction} className="mt-4 space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Title</span>
-          <input name="title" defaultValue={initialValues?.title ?? ""} required className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Post title" />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Category</span>
-          <input name="category" defaultValue={initialValues?.category ?? ""} list="dlg-categories" required className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Community" />
-        </label>
+    <form action={formAction} className="flex h-full min-h-0 flex-col">
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div className="min-h-0 overflow-y-auto px-5 py-6 sm:px-8">
+          <div className="mx-auto max-w-2xl space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className={labelClass}>Title</span>
+                <input
+                  name="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  className={fieldClass}
+                  placeholder="Post title"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className={labelClass}>Category</span>
+                <input
+                  name="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  list="dlg-categories"
+                  required
+                  className={fieldClass}
+                  placeholder="Community"
+                />
+              </label>
+            </div>
+
+            <datalist id="dlg-categories">
+              {existingCategories.map((c) => <option key={c} value={c} />)}
+            </datalist>
+            <datalist id="dlg-tags">
+              {existingTags.map((tag) => <option key={tag} value={tag} />)}
+            </datalist>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className={labelClass}>Tags</span>
+                <input name="tags" defaultValue={initialValues?.tags ?? ""} list="dlg-tags" className={fieldClass} placeholder="Safety, Touring" />
+              </label>
+              <label className="grid gap-2">
+                <span className={labelClass}>Status</span>
+                <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className={fieldClass}>
+                  <option value="DRAFT">Draft</option>
+                  <option value="PUBLISHED">Published</option>
+                  <option value="PENDING_REVIEW">Pending Review</option>
+                </select>
+              </label>
+            </div>
+
+            <label className="grid gap-2">
+              <span className={labelClass}>Excerpt</span>
+              <textarea
+                name="excerpt"
+                rows={2}
+                defaultValue={initialValues?.excerpt ?? ""}
+                required
+                className={fieldClass}
+                placeholder="Shown on the magazine listing and in link previews"
+              />
+            </label>
+
+            <div className="grid gap-2">
+              <span className={labelClass}>Cover Image</span>
+              <label
+                htmlFor="admin-news-cover"
+                className="flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-white/5 px-4 py-6 text-slate-400 transition hover:border-sunset/50 hover:text-sunset"
+              >
+                <ImagePlus className="h-6 w-6" />
+                <span className="text-sm font-semibold">
+                  {coverName || existingCoverUrl ? "Choose a different photo" : "Add a cover photo"}
+                </span>
+                <span className="text-xs">JPG, PNG or WebP</span>
+              </label>
+              <input
+                id="admin-news-cover"
+                name="coverImage"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => pickCover(e.target.files?.[0])}
+              />
+              {coverName ? <p className="text-xs text-slate-400">{coverName}</p> : null}
+            </div>
+
+            <div>
+              <p className={`mb-2 ${labelClass}`}>Body</p>
+              <WysiwygEditor tone="admin" value={contentHtml} onChange={onContentChange} placeholder="Write your post…" />
+              <input type="hidden" name="contentHtml" value={contentHtml} />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className={labelClass}>Published At</span>
+                <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className={fieldClass} />
+              </label>
+              <label className="grid gap-2">
+                <span className={labelClass}>SEO Title</span>
+                <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className={fieldClass} placeholder="Optional" />
+              </label>
+            </div>
+
+            <label className="grid gap-2">
+              <span className={labelClass}>SEO Description</span>
+              <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className={fieldClass} placeholder="Optional" />
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-slate-200">
+              <input name="featured" type="checkbox" defaultChecked={initialValues?.featured ?? false} className="h-4 w-4 rounded border-white/20 bg-white/5 accent-sunset" />
+              Feature this post
+            </label>
+
+            {state.error ? (
+              <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{state.error}</p>
+            ) : null}
+          </div>
+        </div>
+
+        <aside className="hidden min-h-0 overflow-y-auto border-l border-white/10 bg-white/[0.02] px-5 py-6 sm:px-8 lg:block">
+          <div className="mx-auto max-w-md">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Preview</p>
+            <div className="mt-3">
+              <ArticlePreview
+                title={title}
+                categoryName={category}
+                contentHtml={contentHtml}
+                coverUrl={coverUrl ?? existingCoverUrl}
+                authorName={authorName}
+                authorAvatarUrl={null}
+              />
+            </div>
+            <p className="mt-3 text-xs text-slate-400">Roughly how it reads on the site.</p>
+          </div>
+        </aside>
       </div>
 
-      <datalist id="dlg-categories">
-        {existingCategories.map((c) => <option key={c} value={c} />)}
-      </datalist>
-      <datalist id="dlg-tags">
-        {existingTags.map((t) => <option key={t} value={t} />)}
-      </datalist>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Tags</span>
-          <input name="tags" defaultValue={initialValues?.tags ?? ""} list="dlg-tags" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Safety, Touring" />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Status</span>
-          <select name="status" defaultValue={initialValues?.status ?? "PUBLISHED"} className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm">
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="PENDING_REVIEW">Pending Review</option>
-          </select>
-        </label>
-      </div>
-
-      <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">Excerpt</span>
-        <textarea name="excerpt" rows={2} defaultValue={initialValues?.excerpt ?? ""} required className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Short summary" />
-      </label>
-
-      <div>
-        <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Body</p>
-        <WysiwygEditor tone="admin" value={contentHtml} onChange={onContentChange} placeholder="Write your post…" />
-        <input type="hidden" name="contentHtml" value={contentHtml} />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Published At</span>
-          <input name="publishedAt" type="datetime-local" defaultValue={initialValues?.publishedAt ?? ""} className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Cover Image</span>
-          <input name="coverImage" type="file" accept="image/png,image/jpeg,image/webp" className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm file:mr-2 file:rounded file:border-0 file:bg-sunset file:px-2 file:py-1 file:text-xs file:font-semibold file:text-white" />
-        </label>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">SEO Title</span>
-          <input name="seoTitle" defaultValue={initialValues?.seoTitle ?? ""} className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Optional" />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted">SEO Description</span>
-          <input name="seoDescription" defaultValue={initialValues?.seoDescription ?? ""} className="rounded-lg border border-border bg-canvas px-3 py-2 text-sm" placeholder="Optional" />
-        </label>
-      </div>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input name="featured" type="checkbox" defaultChecked={initialValues?.featured ?? false} className="h-4 w-4 rounded border-border" />
-        Feature this post
-      </label>
-
-      {state.error ? <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p> : null}
-
-      <div className="flex justify-end gap-2 border-t border-border pt-4">
-        <Button type="submit" variant="accent" size="sm" disabled={pending}>
-          {pending ? "Saving…" : initialValues ? "Update Post" : "Publish Post"}
-        </Button>
+      <div className="shrink-0 border-t border-white/10 bg-asphalt px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3">
+          <p className="text-xs text-slate-400">{wordCount} words</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onCancel} className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-400 transition hover:text-white">
+              Cancel
+            </button>
+            <Button type="submit" variant="accent" size="sm" disabled={pending}>
+              {pending ? "Saving…" : initialValues ? "Update Post" : "Publish Post"}
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );
