@@ -19,6 +19,7 @@ export function PolicyBodyEditor({ defaultValue }: { defaultValue?: string }) {
       <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Body</span>
       <div className="mt-1">
         <WysiwygEditor
+          tone="admin"
           value={bodyHtml}
           onChange={setBodyHtml}
           placeholder="Write the policy — headings for each rule, and plain language under them…"

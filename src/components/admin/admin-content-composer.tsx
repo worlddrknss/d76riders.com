@@ -53,7 +53,7 @@ export function AdminContentComposer() {
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Body</p>
-            <WysiwygEditor value={content} onChange={setContent} placeholder="Share ride updates, route notes, and reminders..." />
+            <WysiwygEditor tone="admin" value={content} onChange={setContent} placeholder="Share ride updates, route notes, and reminders..." />
           </div>
         </div>
       </section>

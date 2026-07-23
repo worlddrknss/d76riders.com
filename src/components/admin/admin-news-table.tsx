@@ -276,7 +276,7 @@ function NewsPostForm({ action, contentHtml, onContentChange, existingCategories
 
       <div>
         <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted">Body</p>
-        <WysiwygEditor value={contentHtml} onChange={onContentChange} placeholder="Write your post…" />
+        <WysiwygEditor tone="admin" value={contentHtml} onChange={onContentChange} placeholder="Write your post…" />
         <input type="hidden" name="contentHtml" value={contentHtml} />
       </div>
 

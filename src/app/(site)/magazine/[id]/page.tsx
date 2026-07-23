@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, ChevronRight, Clock, Tag as TagIcon } from "lu
 import { NewsPostStatus } from "@prisma/client";
 
 import { deleteNewsPostAction } from "@/app/(site)/magazine/[id]/actions";
+import { ArticleManageActions } from "@/components/news/article-manage-actions";
 import { AppShell } from "@/components/layout/app-shell";
 import { ShareRow } from "@/components/magazine/share-row";
 import { JsonLd, breadcrumbJsonLd } from "@/components/seo/json-ld";
@@ -127,6 +128,15 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
   ]);
 
   const isAdmin = currentUser?.roles.includes("ADMINISTRATOR") ?? false;
+  // Authors can fix their own work without waiting on a moderator; publishing
+  // decisions stay in /admin.
+  const canEdit = isAdmin || (!!currentUser?.id && post.authorUserId === currentUser.id);
+  const editCategories = canEdit
+    ? await safeQuery(
+        () => prisma.newsCategory.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+        [],
+      )
+    : [];
   const shareUrl = absoluteUrl(`/magazine/${post.slug}`);
 
   return (
@@ -303,12 +313,31 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
             </div>
           </div>
 
-          {isAdmin ? (
-            <form action={deleteNewsPostAction.bind(null, post.slug)} className="mt-6">
-              <button className="rounded-md border border-red-300 px-4 py-2 text-xs font-semibold uppercase tracking-[0.06em] text-red-700 transition hover:bg-red-50">
-                Delete Article
-              </button>
-            </form>
+          {canEdit || isAdmin ? (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              {canEdit ? (
+                <ArticleManageActions
+                  article={{
+                    slug: post.slug,
+                    title: post.title,
+                    excerpt: post.excerpt,
+                    contentHtml: post.contentHtml,
+                    categoryId: post.categoryId,
+                    coverImageUrl: hasCover ? cover : null,
+                    authorName,
+                    authorAvatarUrl: authorAvatar || null,
+                  }}
+                  categories={editCategories}
+                />
+              ) : null}
+              {isAdmin ? (
+                <form action={deleteNewsPostAction.bind(null, post.slug)}>
+                  <button className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50">
+                    Delete Article
+                  </button>
+                </form>
+              ) : null}
+            </div>
           ) : null}
         </article>
 

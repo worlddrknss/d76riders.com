@@ -146,7 +146,7 @@ export function CreateNewsPostForm({
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-400">Body</p>
-            <WysiwygEditor value={contentHtml} onChange={setContentHtml} placeholder="Share ride updates, route notes, and reminders..." />
+            <WysiwygEditor tone="admin" value={contentHtml} onChange={setContentHtml} placeholder="Share ride updates, route notes, and reminders..." />
             <input type="hidden" name="contentHtml" value={contentHtml} />
           </div>
 
