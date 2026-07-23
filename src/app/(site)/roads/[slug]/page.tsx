@@ -346,7 +346,7 @@ export default async function RoadDetailPage({ params }: { params: Promise<{ slu
             )}
 
             <div className="mt-5 border-t border-border pt-4">
-              <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-asphalt">
                 Hazards on this road
               </h3>
               <div className="mt-3">

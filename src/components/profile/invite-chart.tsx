@@ -61,7 +61,7 @@ export function InviteChart({ data }: { data: InvitePoint[] }) {
   return (
     <div className="rounded-xl border border-border bg-surface p-4 shadow-soft">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-display text-sm font-semibold text-ink">Last 30 days</h3>
+        <h3 className="text-sm font-semibold text-ink">Last 30 days</h3>
         {/* Two series always get a legend — identity is never colour alone. */}
         <div className="flex items-center gap-4 text-xs text-muted">
           <span className="inline-flex items-center gap-1.5">

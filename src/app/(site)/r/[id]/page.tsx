@@ -459,7 +459,7 @@ export default async function RiderProfilePage({
   }));
 
   const cardClass = "rounded-xl border border-border bg-surface p-5 shadow-soft";
-  const headingClass = "flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt";
+  const headingClass = "flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-asphalt";
 
   // ─── Overview tab ───────────────────────────────────────────────
   // Onboarding is the owner's own checklist — never shown to visitors.

@@ -240,13 +240,13 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
           {/* The excerpt was written for every article and shown on none of
               them — it earns its place as the standfirst. */}
           {post.excerpt ? (
-            <p className="border-l-2 border-sunset pl-4 font-display text-lg leading-snug text-ink sm:text-xl">
+            <p className="border-l-2 border-sunset pl-4 font-reading text-xl italic leading-snug text-ink sm:text-2xl">
               {post.excerpt}
             </p>
           ) : null}
 
           <div
-            className="prose prose-lg mt-8 max-w-[68ch] prose-headings:font-display prose-headings:uppercase prose-headings:tracking-tight prose-img:rounded-xl"
+            className="prose prose-reading mt-8 max-w-[68ch] prose-headings:uppercase prose-headings:tracking-tight prose-img:rounded-xl"
             dangerouslySetInnerHTML={{ __html: body }}
           />
 
@@ -287,7 +287,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
               </span>
             )}
             <div className="min-w-0">
-              <p className="font-display text-sm font-bold uppercase tracking-tight text-asphalt">
+              <p className="text-sm font-bold uppercase tracking-tight text-asphalt">
                 {rider ? (
                   <Link href={`/r/${rider.handle}`} className="transition hover:text-sunset">
                     {authorName}
@@ -317,7 +317,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
           <div className="space-y-6">
             {dbCategories.length > 0 ? (
               <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <h2 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h2>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h2>
                 <ul className="mt-3 space-y-1">
                   {dbCategories.map((cat) => (
                     <li key={cat.name}>
@@ -341,7 +341,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
 
             {dbTags.length > 0 ? (
               <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-                <h2 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h2>
+                <h2 className="text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h2>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {dbTags.map((tag) => (
                     <Link
@@ -381,7 +381,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ id
                   }}
                 />
                 <div className="p-4">
-                  <h3 className="font-display text-sm font-bold uppercase leading-tight tracking-tight text-asphalt transition group-hover:text-sunset">
+                  <h3 className="text-sm font-bold uppercase leading-tight tracking-tight text-asphalt transition group-hover:text-sunset">
                     {item.title}
                   </h3>
                   <p className="mt-1 text-xs text-muted">{formatDate(item.publishedAt)}</p>

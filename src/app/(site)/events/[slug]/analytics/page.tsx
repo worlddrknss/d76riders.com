@@ -92,7 +92,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
 
         {/* ── THIS RIDE ── */}
         <section className="space-y-4">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">This ride</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-asphalt">This ride</h2>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {rideTiles.map((t) => (
@@ -157,7 +157,7 @@ export default async function EventAnalyticsPage({ params }: { params: Promise<{
         {/* ── YOUR RIDES OVERALL ── */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-asphalt">
               Your rides overall
             </h2>
             <span className="text-xs text-muted">

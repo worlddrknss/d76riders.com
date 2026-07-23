@@ -7,7 +7,7 @@ export function RouteStops({ waypoints }: { waypoints: PlannerWaypoint[] }) {
 
   return (
     <div>
-      <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">Route Stops</h3>
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-asphalt">Route Stops</h3>
       <ol className="mt-3">
         {waypoints.map((wp, i) => {
           const meta = KIND_META[wp.kind];

@@ -694,7 +694,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
           {/* SUMMARY */}
           <div className="glass-card rounded-2xl border border-white/40 p-4 shadow-lift">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-sm font-bold uppercase tracking-wide text-asphalt">
+              <h2 className="text-sm font-bold uppercase tracking-wide text-asphalt">
                 Route Summary
               </h2>
               {routing && (
@@ -847,7 +847,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
 
           {/* WAYPOINTS / TRACE POINTS */}
           <div className="glass-card rounded-2xl border border-white/40 p-4 shadow-lift">
-            <h2 className="font-display text-sm font-bold uppercase tracking-wide text-asphalt">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-asphalt">
               {mode === "trace" ? "Trace Points" : "Waypoints"}
             </h2>
             {activeCount === 0 ? (
@@ -960,7 +960,7 @@ export function RoutePlanner({ onRouteDataChange }: RoutePlannerProps) {
           {/* EXPORT (matches Prisma Route/Waypoint shape) */}
           {activeCount > 0 && (
             <details className="glass-card rounded-2xl border border-white/40 p-4 shadow-lift">
-              <summary className="cursor-pointer font-display text-sm font-bold uppercase tracking-wide text-asphalt">
+              <summary className="cursor-pointer text-sm font-bold uppercase tracking-wide text-asphalt">
                 Route data (JSON)
               </summary>
               <pre className="mt-3 max-h-48 overflow-auto rounded-xl bg-asphalt p-3 text-[11px] leading-relaxed text-panel-text">

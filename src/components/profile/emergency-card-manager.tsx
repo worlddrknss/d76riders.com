@@ -55,7 +55,7 @@ export function EmergencyCardManager({
   return (
     <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-asphalt">
           <HeartPulse className="h-4 w-4 text-red-600" />
           Emergency Card
         </h2>

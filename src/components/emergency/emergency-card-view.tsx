@@ -123,7 +123,7 @@ export function EmergencyCardView({ token, rider, data }: EmergencyCardViewProps
 
       {data.contacts.length > 0 && (
         <div className="rounded-xl border border-border bg-surface p-5 shadow-soft">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-asphalt">
             Emergency Contacts
           </h2>
           <div className="mt-3 space-y-2">

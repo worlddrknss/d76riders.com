@@ -155,7 +155,7 @@ export default async function NewsPage({
           {/* SIDEBAR */}
           <aside className="space-y-8">
             <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-asphalt">Categories</h3>
               <ul className="mt-4 space-y-2">
                 {newsCategories.map((cat) => (
                   <li key={cat.name}>
@@ -174,7 +174,7 @@ export default async function NewsPage({
             </div>
 
             <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Recent Posts</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-asphalt">Recent Posts</h3>
               <ul className="mt-4 space-y-4">
                 {recent.map((article, i) => (
                   <li key={article.id}>
@@ -196,7 +196,7 @@ export default async function NewsPage({
             </div>
 
             <div className="rounded-xl border border-border bg-surface p-6 shadow-soft">
-              <h3 className="font-display text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-asphalt">Popular Tags</h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {popularTags.map((tag) => (
                   <Link

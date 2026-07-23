@@ -896,7 +896,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 {event.routeId && (
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-asphalt">
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-asphalt">
                         Hazards on this route
                       </h3>
                       {currentUser ? (

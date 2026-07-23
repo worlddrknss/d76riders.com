@@ -25,7 +25,7 @@ export default async function InviteSettingsPage() {
   const referral = await referralStats(rider.id);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
   const cardClass = "rounded-xl border border-border bg-surface p-5 shadow-soft";
-  const headingClass = "flex items-center gap-1.5 font-display text-sm font-semibold uppercase tracking-wide text-asphalt";
+  const headingClass = "flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-asphalt";
 
   return (
     <AppShell>

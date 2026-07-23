@@ -1,27 +1,45 @@
 import type { Metadata, Viewport } from "next";
-import { Anton, Manrope } from "next/font/google";
+import { Anton, IBM_Plex_Sans, Newsreader } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { JsonLd, organizationJsonLd } from "@/components/seo/json-ld";
 import "./globals.css";
 
-// Anton for headings and Manrope for body — the same pair 93rdavenue uses, and a
-// condensed poster face suits the ride flyers better than Geist did.
+// Three faces, three jobs.
 //
-// Anton is published in a single weight. Headings across the site ask for
-// font-bold anyway, so globals.css turns off synthetic bolding rather than
-// stripping the weight from 200-odd call sites: the browser would otherwise
-// smear an already-heavy face into a fake bold.
+// Anton — the brand. A condensed poster grotesque that reads like race numbers
+// and event flyers. Kept for headings at display sizes only: its counters are
+// tiny, so below roughly 20px (and especially uppercase) it stops being legible
+// on a phone. Small caps labels use the body face instead.
+//
+// Anton is published in a single weight, and headings across the site ask for
+// font-bold anyway, so globals.css turns off synthetic bolding — the browser
+// would otherwise smear an already-heavy face into a fake bold.
 const displayFont = Anton({
   variable: "--font-display",
   subsets: ["latin"],
   weight: "400",
 });
 
-const bodyFont = Manrope({
+// IBM Plex Sans — app chrome, labels, and anything numeric. Drawn for
+// interfaces, holds its shape at 12–14px far better than a geometric sans, and
+// carries true tabular figures, which this site needs: ride counts, mileage,
+// distances and times all sit in columns that jitter with proportional digits.
+const bodyFont = IBM_Plex_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+// Newsreader — magazine article bodies only. A ride report is a thousand words
+// of continuous prose, and a reading serif carries that far more comfortably
+// than a UI sans. Deliberately scoped so the magazine reads like a magazine
+// while the rest of the app still reads like an app.
+const readingFont = Newsreader({
+  variable: "--font-reading",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://district76riders.com";
@@ -98,7 +116,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
+      className={`${displayFont.variable} ${bodyFont.variable} ${readingFont.variable} h-full antialiased`}
     >
       {/* Bottom padding clears the fixed mobile tab bar (and the home
           indicator beneath it) so page content is never trapped under it. */}
