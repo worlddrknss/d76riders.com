@@ -640,6 +640,7 @@ export async function updateNotificationPrefsAction(
       emailOnComment: formData.get("emailOnComment") != null,
       emailOnRsvp: formData.get("emailOnRsvp") != null,
       emailOnEventMessage: formData.get("emailOnEventMessage") != null,
+      emailOnRideChange: formData.get("emailOnRideChange") != null,
       emailWeeklyRecap: formData.get("emailWeeklyRecap") != null,
     },
   });

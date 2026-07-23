@@ -50,6 +50,10 @@ model Rider {
   emailOnRsvp    Boolean @default(true)
   emailOnComment Boolean @default(true)
   emailOnEventMessage Boolean @default(true)
+  // Automatic ride changes: cancelled, moved, or a waitlist spot opening. Kept
+  // separate from emailOnEventMessage — that one is a human writing to you, this
+  // one is the plan you committed to changing under you.
+  emailOnRideChange Boolean @default(true)
   emailWeeklyRecap Boolean @default(true)
 
   // Quiet hours (Central time, 0-23). When set and the current hour falls in the

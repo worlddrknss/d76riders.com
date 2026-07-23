@@ -12,7 +12,7 @@ import { sendPushToRider } from "@/lib/push";
 import { requireUserId } from "@/lib/authz";
 import { resolvePostableCrewId } from "@/lib/crews";
 import { DEFAULT_TIMEZONE, formatEventDate, formatEventTime, isValidTimezone, zonedInputToUtc } from "@/lib/datetime";
-import { eventMessageEmail, rsvpEmail } from "@/lib/email-templates";
+import { eventMessageEmail, rideChangeEmail, rsvpEmail } from "@/lib/email-templates";
 import { emailNotifyRiders } from "@/lib/notify";
 import { mapWithConcurrency } from "@/lib/concurrency";
 import { syncRiderProgression } from "@/lib/reputation";
@@ -54,16 +54,22 @@ async function organizerRiderIds(eventId: string): Promise<string[]> {
   return organizers.map((o) => o.riderId);
 }
 
-// Promote the earliest-waitlisted riders into any spots freed under maxCapacity.
+/**
+ * Promote the earliest-waitlisted riders into any spots freed under maxCapacity.
+ *
+ * Returns the riders promoted, so the caller can email them *after* the
+ * transaction commits — sending mail from inside one risks telling someone
+ * they're in for a ride whose transaction then rolls back.
+ */
 async function promoteFromWaitlist(
   tx: Prisma.TransactionClient,
   eventId: string,
   eventTitle: string,
   maxCapacity: number,
-) {
+): Promise<string[]> {
   const goingCount = await tx.rsvp.count({ where: { eventId, status: "GOING" } });
   const openSpots = maxCapacity - goingCount;
-  if (openSpots <= 0) return;
+  if (openSpots <= 0) return [];
 
   const nextUp = await tx.rsvp.findMany({
     where: { eventId, status: "WAITLISTED" },
@@ -84,6 +90,8 @@ async function promoteFromWaitlist(
       tx,
     );
   }
+
+  return nextUp.map((rsvp) => rsvp.riderId);
 }
 
 async function requireOrganizerRider(userId: string) {
@@ -309,15 +317,16 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
         summary,
         refId: event.id,
       });
-      await Promise.all(
-        riderIds.map((riderId) =>
-          sendPushToRider(riderId, {
-            title: "Ride details changed",
-            body: summary,
-            url: `/events/${event.slug}`,
-            tag: `event-updated-${event.id}`,
-          }).catch(() => {}),
-        ),
+      await mapWithConcurrency(riderIds, 8, (riderId) =>
+        sendPushToRider(riderId, {
+          title: "Ride details changed",
+          body: summary,
+          url: `/events/${event.slug}`,
+          tag: `event-updated-${event.id}`,
+        }).catch(() => {}),
+      );
+      await emailNotifyRiders(riderIds, "rideChange", (name) =>
+        rideChangeEmail(name, `Changed: ${title}`, summary, absoluteUrl(`/events/${event.slug}`)),
       );
     }
   }
@@ -455,6 +464,11 @@ export async function cancelEventAction(eventId: string): Promise<{ error: strin
         tag: `event-cancelled-${event.id}`,
       }).catch(() => {}),
     );
+    // Push only reaches riders who granted it. A cancelled ride is the one thing
+    // they must not find out about by turning up.
+    await emailNotifyRiders(riderIds, "rideChange", (name) =>
+      rideChangeEmail(name, `Cancelled: ${event.title}`, summary, absoluteUrl(`/events/${event.slug}`)),
+    );
   }
 
   revalidatePath(`/events/${event.slug}`);
@@ -494,6 +508,9 @@ export async function reopenEventAction(eventId: string): Promise<{ error: strin
         url: `/events/${event.slug}`,
         tag: `event-reopened-${event.id}`,
       }).catch(() => {}),
+    );
+    await emailNotifyRiders(riderIds, "rideChange", (name) =>
+      rideChangeEmail(name, `Back on: ${event.title}`, summary, absoluteUrl(`/events/${event.slug}`)),
     );
   }
 
@@ -554,15 +571,17 @@ export async function deleteEventAction(eventId: string): Promise<void> {
       summary,
       refId: event.id,
     });
-    await Promise.all(
-      riderIds.map((riderId) =>
-        sendPushToRider(riderId, {
-          title: "Ride cancelled",
-          body: summary,
-          url: "/events",
-          tag: `event-cancelled-${event.id}`,
-        }).catch(() => {}),
-      ),
+    await mapWithConcurrency(riderIds, 8, (riderId) =>
+      sendPushToRider(riderId, {
+        title: "Ride cancelled",
+        body: summary,
+        url: "/events",
+        tag: `event-cancelled-${event.id}`,
+      }).catch(() => {}),
+    );
+    // No link to the ride — it no longer exists — so the email points at /events.
+    await emailNotifyRiders(riderIds, "rideChange", (name) =>
+      rideChangeEmail(name, `Cancelled: ${event.title}`, summary, absoluteUrl("/events")),
     );
   }
 
@@ -708,7 +727,7 @@ export async function rsvpAction(
   }
 
   if (intent === "CANCEL") {
-    await prisma.$transaction(async (tx) => {
+    const promoted = await prisma.$transaction(async (tx) => {
       const existing = await tx.rsvp.findUnique({
         where: { eventId_riderId: { eventId, riderId: rider.id } },
         select: { status: true },
@@ -717,9 +736,27 @@ export async function rsvpAction(
 
       // Freeing a GOING spot promotes the earliest waitlisted rider.
       if (existing?.status === "GOING" && event.maxCapacity != null) {
-        await promoteFromWaitlist(tx, event.id, event.title, event.maxCapacity);
+        return promoteFromWaitlist(tx, event.id, event.title, event.maxCapacity);
       }
+      return [];
     });
+
+    // Coming off a waitlist means you're now expected to turn up, which is worth
+    // more than an in-app badge the rider may not open before the ride.
+    if (promoted.length > 0) {
+      const detail = `A spot opened up — you're confirmed for ${event.title}.`;
+      await mapWithConcurrency(promoted, 8, (riderId) =>
+        sendPushToRider(riderId, {
+          title: "You're in",
+          body: detail,
+          url: `/events/${event.slug}`,
+          tag: `waitlist-promoted-${event.id}`,
+        }).catch(() => {}),
+      );
+      await emailNotifyRiders(promoted, "rideChange", (name) =>
+        rideChangeEmail(name, `You're in: ${event.title}`, detail, absoluteUrl(`/events/${event.slug}`)),
+      );
+    }
 
     revalidatePath(`/events/${event.slug}`);
     revalidatePath("/events");

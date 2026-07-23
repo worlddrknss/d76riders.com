@@ -253,3 +253,25 @@ export function eventMessageEmail(name: string, senderName: string, eventTitle: 
     }),
   };
 }
+
+/**
+ * A ride you're on changed under you: cancelled, moved, or a waitlist spot came
+ * free. Sent for the automatic changes, not for an organizer's own message —
+ * that's eventMessageEmail, and it reads differently because a person wrote it.
+ *
+ * The heading carries the news so it survives a notification preview, and the
+ * detail line repeats the ride and its date because an email is often read long
+ * after and far away from the page.
+ */
+export function rideChangeEmail(name: string, heading: string, detail: string, url: string) {
+  return {
+    subject: heading,
+    html: emailLayout({
+      preheader: detail,
+      heading,
+      paragraphs: [`Hey ${escapeHtml(name)},`, escapeHtml(detail)],
+      cta: { label: "Open the ride", href: url },
+      footnote: "You can turn off ride-change emails in Settings → Notifications.",
+    }),
+  };
+}
