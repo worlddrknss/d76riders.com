@@ -13,11 +13,13 @@ import { readConsentCookie, subscribeConsent } from "@/lib/consent";
  * sets a cookie, or pings until the rider opts in, and it unloads on the next
  * navigation if they later reject.
  *
- * Wired but dormant until NEXT_PUBLIC_GA_ID is set, so dropping in the measurement
- * ID is the only step left to turn analytics on — the consent gate already exists.
+ * The measurement ID arrives as a prop from the root layout, which reads it
+ * server-side at request time. Deliberately NOT a NEXT_PUBLIC_ var: those are
+ * inlined into the client bundle during `next build`, so the value would be
+ * frozen into the image and changing it would need a rebuild. As a prop it is a
+ * true runtime setting — set GA_MEASUREMENT_ID in the cluster and restart.
  */
-export function Analytics() {
-  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+export function Analytics({ gaId }: { gaId?: string }) {
   const allowed = useSyncExternalStore(
     subscribeConsent,
     () => readConsentCookie() === "all",

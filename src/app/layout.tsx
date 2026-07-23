@@ -130,7 +130,7 @@ export default function RootLayout({
         {children}
         <InstallPrompt />
         <CookieConsent />
-        <Analytics />
+        <Analytics gaId={process.env.GA_MEASUREMENT_ID} />
       </body>
     </html>
   );
