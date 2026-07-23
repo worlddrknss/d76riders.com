@@ -297,8 +297,8 @@ export default async function Home() {
               </h1>
               <p className="mt-5 max-w-xl text-lg text-slate-200">
                 District 76 is where riders share the road and everything around it. Post your rides, plan
-                the next one, log your build, and always know who is out there with you. No patches, no
-                politics, no brand requirements.
+                the next one, log your build — and put your emergency info on your helmet, so a first
+                responder can reach your people with one tap. No patches, no politics, no brand requirements.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -308,11 +308,14 @@ export default async function Home() {
                   Join District 76
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
+                {/* Secondary CTA points at the emergency card, not the events
+                    list — it's the one thing here worth a signup on day one when
+                    there's no crowd yet, and there are only a handful of events. */}
                 <Link
-                  href="/events"
+                  href="/emergency-response"
                   className="inline-flex items-center rounded-md border border-white/30 bg-black/20 px-5 py-3 text-sm font-medium text-white/90 backdrop-blur transition hover:border-white/45 hover:bg-black/30 hover:text-white"
                 >
-                  View Upcoming Rides
+                  Free Emergency ID for Riders
                 </Link>
               </div>
               <div className="mt-10 flex flex-wrap gap-x-9 gap-y-5">

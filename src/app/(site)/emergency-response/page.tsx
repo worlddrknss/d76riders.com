@@ -283,17 +283,19 @@ export default function SafetyPage() {
           </ScaleIn>
           <FadeUp>
             <h2 className="mt-6 font-display text-3xl tracking-tight text-white sm:text-4xl">
-              Ride Together. Look Out for Each Other.
+              Put Your Emergency Info on Your Helmet.
             </h2>
             <p className="mt-4 max-w-xl text-lg text-slate-300">
-              Safety is a community effort. Join District 76 and ride with people who take it seriously.
+              Free for every rider, and it takes about two minutes. Set up your card, write it to an NFC
+              sticker, and a first responder can reach your people and see your medical info with one tap —
+              no app, no unlock. You don&apos;t need to know a soul here for it to work.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
               <Link
                 href="/join"
                 className="rounded-lg bg-sunset px-6 py-3 text-sm font-semibold uppercase tracking-[0.06em] text-white transition hover:bg-[#cf5a26]"
               >
-                Join the Community
+                Create Your Free Card
               </Link>
               <Link
                 href="/events"
