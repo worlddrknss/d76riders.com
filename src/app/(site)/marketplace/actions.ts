@@ -41,17 +41,36 @@ async function currentRider() {
   return rider;
 }
 
+/**
+ * Upload a listing's photos, all or nothing.
+ *
+ * This used to throw out of the middle of the loop, which left every photo it
+ * had already stored sitting in the bucket with nothing in the database
+ * pointing at it. One rejected file in a five-photo post — wrong type, failed
+ * malware scan, anything — stranded the four that had gone up fine. That is
+ * where the orphaned marketplace objects came from.
+ *
+ * A partial upload is never useful here, so a failure now takes its own work
+ * back out before rethrowing.
+ */
 async function uploadListingImages(files: File[], riderId: string, source: string): Promise<string[]> {
   const urls: string[] = [];
-  for (const file of files.slice(0, MAX_IMAGES)) {
-    if (!(file instanceof File) || file.size === 0) continue;
-    if (!allowedImageTypes.has(file.type)) {
-      throw new Error("Photos must be JPG, PNG, or WebP.");
+  try {
+    for (const file of files.slice(0, MAX_IMAGES)) {
+      if (!(file instanceof File) || file.size === 0) continue;
+      if (!allowedImageTypes.has(file.type)) {
+        throw new Error("Photos must be JPG, PNG, or WebP.");
+      }
+      const secure = await validateAndScanImageUpload(file, source);
+      const optimized = await optimizeImage(secure.buffer);
+      const key = `marketplace/${riderId}/${crypto.randomUUID()}.${optimized.ext}`;
+      urls.push(await uploadFile(key, optimized.data, optimized.contentType));
     }
-    const secure = await validateAndScanImageUpload(file, source);
-    const optimized = await optimizeImage(secure.buffer);
-    const key = `marketplace/${riderId}/${crypto.randomUUID()}.${optimized.ext}`;
-    urls.push(await uploadFile(key, optimized.data, optimized.contentType));
+  } catch (error) {
+    // deleteFilesByUrls logs and skips what it can't reach, so cleanup can
+    // never mask the error the caller actually needs to see.
+    await deleteFilesByUrls(urls);
+    throw error;
   }
   return urls;
 }
@@ -91,19 +110,28 @@ export async function createListingAction(
     return { error: err instanceof Error ? err.message : "Couldn't process your photos." };
   }
 
-  const listing = await prisma.listing.create({
-    data: {
-      sellerId: rider.id,
-      title,
-      description,
-      priceCents,
-      category: category as ListingCategory,
-      condition: condition as ListingCondition,
-      location: location || null,
-      images: { create: imageUrls.map((url, order) => ({ url, order })) },
-    },
-    select: { id: true },
-  });
+  // The photos are already in the bucket by this point, so a failed insert has
+  // to take them back out — otherwise they are orphaned with no row that will
+  // ever reference them.
+  let listing: { id: string };
+  try {
+    listing = await prisma.listing.create({
+      data: {
+        sellerId: rider.id,
+        title,
+        description,
+        priceCents,
+        category: category as ListingCategory,
+        condition: condition as ListingCondition,
+        location: location || null,
+        images: { create: imageUrls.map((url, order) => ({ url, order })) },
+      },
+      select: { id: true },
+    });
+  } catch (error) {
+    await deleteFilesByUrls(imageUrls);
+    throw error;
+  }
 
   revalidatePath("/marketplace");
   redirect(`/marketplace/${listing.id}`);
@@ -158,7 +186,7 @@ export async function deleteListingAction(listingId: string): Promise<void> {
   if (!listing) return; // not theirs (or gone) — no-op
 
   await prisma.listing.delete({ where: { id: listing.id } });
-  await deleteFilesByUrls(listing.images.map((i) => i.url)).catch(() => {});
+  await deleteFilesByUrls(listing.images.map((i) => i.url));
   revalidatePath("/marketplace");
   redirect("/marketplace");
 }

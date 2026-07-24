@@ -54,7 +54,7 @@ export function StorageCleanup() {
 
         {scanResult && (
           <div className="mt-6 space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">S3 Objects</p>
                 <p className="mt-1 font-display text-2xl text-white">{scanResult.totalS3Keys}</p>
@@ -66,6 +66,14 @@ export function StorageCleanup() {
               <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Orphaned</p>
                 <p className="mt-1 font-display text-2xl text-red-300">{scanResult.orphanedKeys.length}</p>
+              </div>
+              {/* Unreferenced, but uploaded too recently to call garbage — a scan
+                  races every upload in flight, so these are held back for a day
+                  rather than deleted out from under someone mid-post. */}
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Too recent</p>
+                <p className="mt-1 font-display text-2xl text-amber-200">{scanResult.tooRecentCount}</p>
+                <p className="mt-1 text-xs text-slate-500">Unreferenced, under 24h old</p>
               </div>
             </div>
 

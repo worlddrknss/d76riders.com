@@ -9,7 +9,7 @@ import { isGalleryOpen } from "@/lib/event-gallery";
 import { optimizeImage } from "@/lib/image";
 import { allowedImageTypes, validateAndScanImageUpload } from "@/lib/image-upload-security";
 import { prisma } from "@/lib/prisma";
-import { deleteFileByUrl, isS3Configured, uploadFile } from "@/lib/s3";
+import { deleteFileByUrl, deleteFilesByUrls, isS3Configured, uploadFile } from "@/lib/s3";
 import { getCurrentUser } from "@/lib/session";
 
 /**
@@ -39,15 +39,23 @@ export async function addEventPhotosAction(eventId: string, formData: FormData):
   let uploaded = 0;
   for (const file of files.slice(0, 10)) {
     if (!allowedImageTypes.has(file.type)) continue;
+    let storedUrl: string | null = null;
     try {
       const secure = await validateAndScanImageUpload(file, "event-gallery-photo");
       const optimized = await optimizeImage(secure.buffer);
       const key = `events/${event.id}/${crypto.randomUUID()}.${optimized.ext}`;
-      const url = await uploadFile(key, optimized.data, optimized.contentType);
-      await prisma.galleryItem.create({ data: { eventId: event.id, riderId: rider.id, url, caption } });
+      storedUrl = await uploadFile(key, optimized.data, optimized.contentType);
+      await prisma.galleryItem.create({
+        data: { eventId: event.id, riderId: rider.id, url: storedUrl, caption },
+      });
       uploaded += 1;
     } catch {
-      // Skip a bad file rather than failing the whole batch.
+      // Skip a bad file rather than failing the whole batch — but if the upload
+      // landed and only the row failed, take the object back out. Silently
+      // skipping there is what leaves a file nothing will ever reference.
+      // deleteFileByUrl can itself throw; letting that escape a catch block
+      // would abandon the rest of the batch over a cleanup failure.
+      if (storedUrl) await deleteFilesByUrls([storedUrl]);
     }
   }
 

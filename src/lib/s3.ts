@@ -134,10 +134,20 @@ export async function deleteFilesByUrls(urls: Array<string | null | undefined>):
   });
 }
 
-export async function listAllKeys(prefix?: string): Promise<string[]> {
+export type StoredObject = { key: string; lastModified: Date | null; size: number };
+
+/**
+ * Every object in the bucket, with the metadata an orphan scan needs.
+ *
+ * `lastModified` matters: a scan races every upload in flight, and an object
+ * written a second ago has not had time to be referenced by anything. Without
+ * an age to check against, cleanup would eventually eat a photo out from under
+ * someone mid-post.
+ */
+export async function listAllObjects(prefix?: string): Promise<StoredObject[]> {
   if (!isS3Configured()) return [];
   const client = createClient();
-  const keys: string[] = [];
+  const objects: StoredObject[] = [];
   let continuationToken: string | undefined;
 
   do {
@@ -150,10 +160,19 @@ export async function listAllKeys(prefix?: string): Promise<string[]> {
       }),
     );
     for (const obj of response.Contents ?? []) {
-      if (obj.Key) keys.push(obj.Key);
+      if (!obj.Key) continue;
+      objects.push({
+        key: obj.Key,
+        lastModified: obj.LastModified ?? null,
+        size: obj.Size ?? 0,
+      });
     }
     continuationToken = response.NextContinuationToken;
   } while (continuationToken);
 
-  return keys;
+  return objects;
+}
+
+export async function listAllKeys(prefix?: string): Promise<string[]> {
+  return (await listAllObjects(prefix)).map((obj) => obj.key);
 }
