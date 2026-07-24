@@ -5,6 +5,7 @@ import { linkSponsorToEventAction } from "@/app/admin/community/actions";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { SponsorDirectory } from "@/components/admin/sponsor-directory";
 import { SponsorReviewActions } from "@/components/admin/sponsor-review-actions";
+import { formatEventDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,8 @@ const ERRORS: Record<string, string> = {
 };
 
 const inputClass =
-  "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500";
+  "w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-sunset/70 focus:outline-none";
+const fieldLabelClass = "text-xs font-semibold uppercase tracking-widest text-slate-400";
 const submitClass =
   "w-full rounded-lg border border-sunset/40 bg-sunset/15 px-4 py-2 text-sm font-semibold text-orange-100 hover:bg-sunset/25";
 
@@ -27,7 +29,7 @@ export default async function AdminSponsorsPage(props: {
   const searchParams = await props.searchParams;
   const error = searchParams.error ? ERRORS[searchParams.error] : null;
 
-  const [pending, reviewed] = await Promise.all([
+  const [pending, reviewed, linkableEvents] = await Promise.all([
     prisma.sponsor.findMany({
       where: { status: "PENDING_REVIEW" },
       orderBy: { createdAt: "asc" },
@@ -41,7 +43,16 @@ export default async function AdminSponsorsPage(props: {
         submittedBy: { select: { handle: true } },
       },
     }),
+    // Upcoming first, then recent past — you sometimes credit a sponsor after
+    // the ride has happened.
+    prisma.rideEvent.findMany({
+      orderBy: { startsAt: "desc" },
+      take: 100,
+      select: { slug: true, title: true, startsAt: true, timezone: true, status: true },
+    }),
   ]);
+
+  const approvedSponsors = reviewed.filter((sponsor) => sponsor.status === "APPROVED");
 
   return (
     <div className="space-y-6">
@@ -162,22 +173,47 @@ export default async function AdminSponsorsPage(props: {
         }))}
       />
 
-      {/* Linking a sponsor to a ride is its own job, not part of editing one. */}
-      <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg lg:max-w-md">
+      {/* Linking a sponsor to a ride is its own job, not part of editing one.
+          The ride used to be a free-text "Event slug" box, which meant knowing
+          the slug by heart and getting a silent redirect when you mistyped it. */}
+      <section className="rounded-xl border border-white/10 bg-white/3 p-5 shadow-lg">
         <h2 className="font-display text-lg text-white">Sponsor a ride</h2>
-        <p className="mt-1 text-xs text-slate-400">Attach a business to a specific event.</p>
-        <form action={linkSponsorToEventAction} className="mt-4 space-y-3">
-          <select name="sponsorId" required className={inputClass}>
-            {reviewed
-              .filter((sponsor) => sponsor.status === "APPROVED")
-              .map((sponsor) => (
-                <option key={sponsor.id} value={sponsor.id}>
-                  {sponsor.name}
-                </option>
-              ))}
-          </select>
-          <input name="eventSlug" required placeholder="Event slug" className={inputClass} />
-          <button type="submit" className={submitClass}>
+        <p className="mt-1 text-xs text-slate-400">
+          Credit a business on a specific ride. It appears on the ride&apos;s page.
+        </p>
+        <form action={linkSponsorToEventAction} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <label className="grid gap-1.5">
+            <span className={fieldLabelClass}>Business</span>
+            <select name="sponsorId" required className={inputClass}>
+              {approvedSponsors.length === 0 ? (
+                <option value="">No approved businesses yet</option>
+              ) : (
+                approvedSponsors.map((sponsor) => (
+                  <option key={sponsor.id} value={sponsor.id}>{sponsor.name}</option>
+                ))
+              )}
+            </select>
+          </label>
+          <label className="grid gap-1.5">
+            <span className={fieldLabelClass}>Ride</span>
+            <select name="eventSlug" required className={inputClass}>
+              {linkableEvents.length === 0 ? (
+                <option value="">No rides on the calendar</option>
+              ) : (
+                linkableEvents.map((event) => (
+                  <option key={event.slug} value={event.slug}>
+                    {formatEventDate(event.startsAt, event.timezone)} — {event.title}
+                    {event.status === "CANCELLED" ? " (cancelled)" : ""}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+          <button
+            type="submit"
+            disabled={approvedSponsors.length === 0 || linkableEvents.length === 0}
+            className={`${submitClass} self-end disabled:cursor-not-allowed disabled:opacity-50`}
+          >
             Link Sponsor
           </button>
         </form>
