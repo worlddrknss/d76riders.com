@@ -9,18 +9,45 @@ import {
   removeReportedContentAction,
   setReportPriorityAction,
 } from "@/app/admin/triage/actions";
+import { AdminConfirm } from "@/components/admin/ui/admin-confirm";
 
-// What the destructive button does per subject type — mirrors the switch in
-// removeReportedContentAction. Rider reports have no takedown path.
-const REMOVE_COPY: Record<ReportSubjectType, { label: string; confirm: string } | null> = {
+/**
+ * What the destructive button does per subject type — mirrors the switch in
+ * removeReportedContentAction. Rider reports have no takedown path.
+ *
+ * Note these are not all equally severe, which the old shared confirm() prompt
+ * flattened: unpublishing an article returns it to its author and can be undone,
+ * while removing a photo destroys the file.
+ */
+const REMOVE_COPY: Record<
+  ReportSubjectType,
+  { label: string; title: string; body: string } | null
+> = {
   JOURNAL_ENTRY: {
     label: "Remove Post",
-    confirm: "Remove this journal entry permanently? This cannot be undone.",
+    title: "Remove this journal entry?",
+    body: "The entry and its comments are deleted for good. The rider is not told which report caused it.",
   },
-  COMMENT: { label: "Remove Comment", confirm: "Remove this comment permanently? This cannot be undone." },
-  GALLERY_ITEM: { label: "Remove Photo", confirm: "Remove this photo permanently? This cannot be undone." },
-  EVENT: { label: "Cancel Event", confirm: "Cancel this event? Riders who RSVP'd will see it as cancelled." },
-  NEWS_POST: { label: "Unpublish Post", confirm: "Unpublish this news post and send it back to the author?" },
+  COMMENT: {
+    label: "Remove Comment",
+    title: "Remove this comment?",
+    body: "The comment is deleted for good, and any replies to it lose their context.",
+  },
+  GALLERY_ITEM: {
+    label: "Remove Photo",
+    title: "Remove this photo?",
+    body: "The photo is deleted from the gallery and the file is removed from storage. There is no copy to restore from.",
+  },
+  EVENT: {
+    label: "Cancel Event",
+    title: "Cancel this ride?",
+    body: "Everyone going to or tracking it is notified by push and email. The ride stays on the site marked cancelled, and its host can reopen it.",
+  },
+  NEWS_POST: {
+    label: "Unpublish Post",
+    title: "Unpublish this article?",
+    body: "It goes back to its author as a draft and comes off the magazine. Nothing is deleted — they can revise and resubmit it.",
+  },
   RIDER: null,
 };
 
@@ -75,19 +102,23 @@ export function TriageActions({ reportId, priority, subjectType }: TriageActions
       </form>
 
       {removeCopy ? (
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm(removeCopy.confirm)) {
-              start(() => removeReportedContentAction(reportId));
-            }
-          }}
-          disabled={pending}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:border-red-500/50 hover:bg-red-500/20 disabled:opacity-50"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          {removeCopy.label}
-        </button>
+        <AdminConfirm
+          title={removeCopy.title}
+          confirmLabel={removeCopy.label}
+          body={removeCopy.body}
+          onConfirm={() => removeReportedContentAction(reportId)}
+          trigger={(open, confirmPending) => (
+            <button
+              type="button"
+              onClick={open}
+              disabled={pending || confirmPending}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition hover:border-red-500/50 hover:bg-red-500/20 disabled:opacity-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {removeCopy.label}
+            </button>
+          )}
+        />
       ) : null}
     </div>
   );
