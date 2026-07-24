@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ComponentType, type ReactNode, useMemo, useState } from "react";
-import { Award, CalendarDays, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Star, Store, Trophy, Users, UserCog } from "lucide-react";
+import { Award, CalendarDays, Route, TriangleAlert, ChevronLeft, ChevronRight, ClipboardCheck, ClipboardList, FileCheck2, Flag, FolderOpen, HardDrive, LayoutDashboard, Menu, PenSquare, ScrollText, Shield, Sprout, Star, Store, Trophy, Users, UserCog } from "lucide-react";
 
 import { type CurrentUser } from "@/lib/session";
 
@@ -37,6 +37,7 @@ const adminNavSections: NavSection[] = [
     items: [
       { href: "/admin/triage", label: "Triage Queue", icon: Flag },
       { href: "/admin/incidents", label: "Incidents", icon: ClipboardList },
+      { href: "/admin/hazards", label: "Hazards", icon: TriangleAlert },
       { href: "/admin/audit", label: "Audit Trail", icon: ScrollText },
       { href: "/admin/policies", label: "Policies", icon: FileCheck2 },
     ],
@@ -53,6 +54,7 @@ const adminNavSections: NavSection[] = [
     title: "Community",
     items: [
       { href: "/admin/events", label: "Events", icon: CalendarDays },
+      { href: "/admin/roads", label: "Roads", icon: Route },
       { href: "/admin/community/crews", label: "Sub-communities", icon: Users },
       { href: "/admin/community/challenges", label: "Challenges", icon: Trophy },
       { href: "/admin/community/sponsors", label: "Shops & Sponsors", icon: Store },
